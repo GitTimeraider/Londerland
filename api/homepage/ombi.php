@@ -71,7 +71,7 @@ trait OmbiHomepageItem
 		$url = $this->qualifyURL($this->config['ombiURL']);
 		try {
 			$options = $this->requestOptions($url, null, $this->config['ombiDisableCertCheck'], $this->config['ombiUseCustomCertificate']);
-			$test = Requests::get($url . "/api/v1/Settings/about", $headers, $options);
+			$test = \WpOrg\Requests\Requests::get($url . "/api/v1/Settings/about", $headers, $options);
 			if ($test->success) {
 				$this->setAPIResponse('success', 'API Connection succeeded', 200);
 				return true;
@@ -79,7 +79,7 @@ trait OmbiHomepageItem
 				$this->setResponse(401, $test->body);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Ombi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -143,14 +143,14 @@ trait OmbiHomepageItem
 			$options = $this->requestOptions($url, $this->config['ombiRefresh'], $this->config['ombiDisableCertCheck'], $this->config['ombiUseCustomCertificate']);
 			switch ($type) {
 				case 'movie':
-					$movie = Requests::get($url . "/api/v1/Request/movie", $headers, $options);
+					$movie = \WpOrg\Requests\Requests::get($url . "/api/v1/Request/movie", $headers, $options);
 					break;
 				case 'tv':
-					$tv = Requests::get($url . "/api/v1/Request/tv", $headers, $options);
+					$tv = \WpOrg\Requests\Requests::get($url . "/api/v1/Request/tv", $headers, $options);
 					break;
 				default:
-					$movie = Requests::get($url . "/api/v1/Request/movie", $headers, $options);
-					$tv = Requests::get($url . "/api/v1/Request/tv", $headers, $options);
+					$movie = \WpOrg\Requests\Requests::get($url . "/api/v1/Request/movie", $headers, $options);
+					$tv = \WpOrg\Requests\Requests::get($url . "/api/v1/Request/tv", $headers, $options);
 					break;
 			}
 			if ($movie->success || $tv->success) {
@@ -221,7 +221,7 @@ trait OmbiHomepageItem
 					return $item1['request_date'] > $item2['request_date'] ? -1 : 1;
 				});
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Ombi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -277,7 +277,7 @@ trait OmbiHomepageItem
 			}
 			//https://api.themoviedb.org/3/movie/157336?api_key=83cf4ee97bb728eeaf9d4a54e64356a1
 			// Lets check if it exists inside Ombi first... but since I can't search with ID - i have to query title from id
-			$tmdbResponse = Requests::get('https://api.themoviedb.org/3/' . $type . '/' . $id . '?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
+			$tmdbResponse = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/' . $type . '/' . $id . '?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
 			if ($tmdbResponse->success) {
 				$details = json_decode($tmdbResponse->body, true);
 				if (count($details) > 0) {
@@ -285,7 +285,7 @@ trait OmbiHomepageItem
 						case 'tv':
 							$title = $details['name'];
 							$idType = 'theTvDbId';
-							$tmdbResponseID = Requests::get('https://api.themoviedb.org/3/tv/' . $id . '/external_ids?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
+							$tmdbResponseID = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/tv/' . $id . '/external_ids?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
 							if ($tmdbResponseID->success) {
 								$detailsID = json_decode($tmdbResponseID->body, true);
 								if (count($detailsID) > 0) {
@@ -319,7 +319,7 @@ trait OmbiHomepageItem
 				return false;
 			}
 			$options = $this->requestOptions($url, null, $this->config['ombiDisableCertCheck'], $this->config['ombiUseCustomCertificate']);
-			$searchResponse = Requests::get($url . '/api/v1/Search/' . $type . '/' . urlencode($title), $headers, $options);
+			$searchResponse = \WpOrg\Requests\Requests::get($url . '/api/v1/Search/' . $type . '/' . urlencode($title), $headers, $options);
 			if ($searchResponse->success) {
 				$details = json_decode($searchResponse->body, true);
 				if (count($details) > 0) {
@@ -339,7 +339,7 @@ trait OmbiHomepageItem
 				$this->setAPIResponse('error', 'Ombi Error Occurred', 500);
 				return false;
 			}
-			$response = Requests::post($url . "/api/v1/Request/" . $type, $headers, json_encode($add), $options);
+			$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Request/" . $type, $headers, json_encode($add), $options);
 			if ($response->success) {
 				$this->setAPIResponse('success', 'Ombi Request submitted', 200);
 				return true;
@@ -347,7 +347,7 @@ trait OmbiHomepageItem
 				$this->setAPIResponse('error', 'Ombi Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Ombi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -396,23 +396,23 @@ trait OmbiHomepageItem
 			$options = $this->requestOptions($url, 60, $this->config['ombiDisableCertCheck'], $this->config['ombiUseCustomCertificate']);
 			switch ($action) {
 				case 'approve':
-					$response = Requests::post($url . "/api/v1/Request/" . $type . "/approve", $headers, json_encode($data), $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Request/" . $type . "/approve", $headers, json_encode($data), $options);
 					$message = 'Ombi Request has been approved';
 					break;
 				case 'available':
-					$response = Requests::post($url . "/api/v1/Request/" . $type . "/available", $headers, json_encode($data), $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Request/" . $type . "/available", $headers, json_encode($data), $options);
 					$message = 'Ombi Request has been marked available';
 					break;
 				case 'unavailable':
-					$response = Requests::post($url . "/api/v1/Request/" . $type . "/unavailable", $headers, json_encode($data), $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Request/" . $type . "/unavailable", $headers, json_encode($data), $options);
 					$message = 'Ombi Request has been marked unavailable';
 					break;
 				case 'deny':
-					$response = Requests::put($url . "/api/v1/Request/" . $type . "/deny", $headers, json_encode($data), $options);
+					$response = \WpOrg\Requests\Requests::put($url . "/api/v1/Request/" . $type . "/deny", $headers, json_encode($data), $options);
 					$message = 'Ombi Request has been denied';
 					break;
 				case 'delete':
-					$response = Requests::delete($url . "/api/v1/Request/" . $type . "/" . $id, $headers, $options);
+					$response = \WpOrg\Requests\Requests::delete($url . "/api/v1/Request/" . $type . "/" . $id, $headers, $options);
 					$message = 'Ombi Request has been deleted';
 					break;
 				default:
@@ -425,7 +425,7 @@ trait OmbiHomepageItem
 				$this->setAPIResponse('error', 'Ombi Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Ombi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

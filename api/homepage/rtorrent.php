@@ -88,11 +88,11 @@ trait RTorrentHomepageItem
 			$url = $this->rTorrentURL();
 			$options = $this->requestOptions($url, null, $this->config['rTorrentDisableCertCheck'], $this->config['rTorrentUseCustomCertificate']);
 			if ($this->config['rTorrentUsername'] !== '' && $this->decrypt($this->config['rTorrentPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Digest(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
+				$credentials = array('auth' => new OrganizrDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
 			$data = xmlrpc_encode_request("system.listMethods", null);
-			$response = Requests::post($url, [], $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, [], $data, $options);
 			if ($response->success) {
 				$methods = xmlrpc_decode(str_replace('i8>', 'i4>', $response->body));
 				if (count($methods) !== 0) {
@@ -103,7 +103,7 @@ trait RTorrentHomepageItem
 			$this->setAPIResponse('error', 'rTorrent error occurred', 500);
 			return false;
 		} catch
-		(Requests_Exception $e) {
+		(\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('rTorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -187,7 +187,7 @@ trait RTorrentHomepageItem
 			$url = $this->rTorrentURL();
 			$options = $this->requestOptions($url, $this->config['rTorrentRefresh'], $this->config['rTorrentDisableCertCheck'], $this->config['rTorrentUseCustomCertificate']);
 			if ($this->config['rTorrentUsername'] !== '' && $this->decrypt($this->config['rTorrentPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Digest(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
+				$credentials = array('auth' => new OrganizrDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
 			$data = xmlrpc_encode_request("d.multicall2", array(
@@ -219,7 +219,7 @@ trait RTorrentHomepageItem
 				"d.custom4=",
 				"d.custom5=",
 			), array());
-			$response = Requests::post($url, [], $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, [], $data, $options);
 			if ($response->success) {
 				$torrentList = xmlrpc_decode(str_replace('i8>', 'string>', $response->body));
 				if (is_array($torrentList)) {
@@ -276,7 +276,7 @@ trait RTorrentHomepageItem
 				$api['content']['historyItems'] = false;
 			}
 		} catch
-		(Requests_Exception $e) {
+		(\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('rTorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

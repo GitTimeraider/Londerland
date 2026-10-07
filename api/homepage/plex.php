@@ -91,7 +91,7 @@ trait PlexHomepageItem
 			$url = $this->qualifyURL($this->config['plexURL']) . "/servers?X-Plex-Token=" . $this->config['plexToken'];
 			try {
 				$options = $this->requestOptions($url, null, $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
-				$response = Requests::get($url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($url, [], $options);
 				libxml_use_internal_errors(true);
 				if ($response->success) {
 					$this->setAPIResponse('success', 'API Connection succeeded', 200);
@@ -100,7 +100,7 @@ trait PlexHomepageItem
 					$this->setAPIResponse('error', 'URL and/or Token not setup correctly', 422);
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setResponse(500, $e->getMessage());
 				return false;
 			}
@@ -254,7 +254,7 @@ trait PlexHomepageItem
 		$url = $url . "/status/sessions?X-Plex-Token=" . $this->config['plexToken'];
 		$options = $this->requestOptions($url, $this->config['homepageStreamRefresh'], $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			libxml_use_internal_errors(true);
 			if ($response->success) {
 				$items = array();
@@ -295,7 +295,7 @@ trait PlexHomepageItem
 		try {
 			foreach ($urls as $k => $v) {
 				$options = $this->requestOptions($url, $this->config['homepageRecentRefresh'], $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
-				$response = Requests::get($v, [], $options);
+				$response = \WpOrg\Requests\Requests::get($v, [], $options);
 				libxml_use_internal_errors(true);
 				if ($response->success) {
 					$items = array();
@@ -337,7 +337,7 @@ trait PlexHomepageItem
 		$url = $url . "/playlists?X-Plex-Token=" . $this->config['plexToken'];
 		$options = $this->requestOptions($url, null, $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			libxml_use_internal_errors(true);
 			if ($response->success) {
 				$items = array();
@@ -348,7 +348,7 @@ trait PlexHomepageItem
 						$playlistURL = $this->qualifyURL($this->config['plexURL']);
 						$playlistURL = $playlistURL . $child['key'] . "?X-Plex-Token=" . $this->config['plexToken'];
 						$options = ($this->localURL($url)) ? array('verify' => false) : array();
-						$playlistResponse = Requests::get($playlistURL, array(), $options);
+						$playlistResponse = \WpOrg\Requests\Requests::get($playlistURL, array(), $options);
 						if ($playlistResponse->success) {
 							$playlistResponse = simplexml_load_string($playlistResponse->body);
 							$items[$playlistTitleClean]['title'] = (string)$child['title'];
@@ -393,7 +393,7 @@ trait PlexHomepageItem
 		$url = $url . "/library/metadata/" . $key . "?X-Plex-Token=" . $this->config['plexToken'];
 		$options = $this->requestOptions($url, null, $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			libxml_use_internal_errors(true);
 			if ($response->success) {
 				$items = array();
@@ -433,7 +433,7 @@ trait PlexHomepageItem
 		$url = $url . "/search?query=" . rawurlencode($query) . "&X-Plex-Token=" . $this->config['plexToken'];
 		$options = $this->requestOptions($url, null, $this->config['plexDisableCertCheck'], $this->config['plexUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			libxml_use_internal_errors(true);
 			if ($response->success) {
 				$items = array();
@@ -662,7 +662,7 @@ trait PlexHomepageItem
 		$url .= '&cmd=get_users';
 		$options = $this->requestOptions($url, null, $this->config['tautulliDisableCertCheck'], $this->config['tautulliUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$response = json_decode($response->body, true);
 				foreach ($response['response']['data'] as $user) {
@@ -718,7 +718,7 @@ trait PlexHomepageItem
 					"Accept" => "application/json",
 					"X-Plex-Token" => $this->config['plexToken']
 				);
-				$response = Requests::get($url, $headers, array());
+				$response = \WpOrg\Requests\Requests::get($url, $headers, array());
 				libxml_use_internal_errors(true);
 				if ($response->success) {
 					$libraryList = array();
@@ -729,7 +729,7 @@ trait PlexHomepageItem
 					$libraryList = array_change_key_case($libraryList, CASE_LOWER);
 					return $libraryList;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Plex')->error($e);
 				return false;
 			};

@@ -7,7 +7,6 @@ FROM composer:2.10 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
-COPY api/packages ./packages
 # Platform requirements are checked against the runtime image below, not this one
 RUN composer install \
         --no-dev \

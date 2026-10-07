@@ -93,7 +93,7 @@ trait JackettHomepageItem
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['jackettDisableCertCheck'], $this->config['jackettUseCustomCertificate']);
-			$response = Requests::get($endpoint, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($endpoint, $headers, $options);
 			if ($response->success) {
 				$apiData = json_decode($response->body, true);
 				$api['content'] = $apiData;
@@ -102,7 +102,7 @@ trait JackettHomepageItem
 				$this->setResponse(403, 'Error connecting to Jackett');
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		};
@@ -125,13 +125,13 @@ trait JackettHomepageItem
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['jackettDisableCertCheck'], $this->config['jackettUseCustomCertificate']);
-			$response = Requests::get($endpoint, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($endpoint, $headers, $options);
 			if ($response->success) {
 				$apiData = json_decode($response->body, true);
 				$api['content'] = $apiData;
 				unset($apiData);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		};
@@ -155,13 +155,13 @@ trait JackettHomepageItem
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['jackettDisableCertCheck'], $this->config['jackettUseCustomCertificate']);
-			$response = Requests::get($endpoint, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($endpoint, $headers, $options);
 			if ($response->success) {
 				$apiData = json_decode($response->body, true);
 				$api['content'] = $apiData;
 				unset($apiData);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Jackett')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

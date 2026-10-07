@@ -89,7 +89,7 @@ trait OrganizrFunctions
 			);
 			$data = array();
 			$url = $this->config['embyURL'] . '/emby/Users/New?name=' . $username . '&api_key=' . $this->config['embyToken'];
-			$response = Requests::Post($url, $headers, json_encode($data), array());
+			$response = \WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
 			$response = $response->body;
 			//return($response);
 			$response = json_decode($response, true);
@@ -112,7 +112,7 @@ trait OrganizrFunctions
 				"Username" => $username
 			);
 			$url = $this->config['embyURL'] . '/emby/Users/AuthenticateByName';
-			$response = Requests::Post($url, $headers, json_encode($data), array());
+			$response = \WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
 			$response = $response->body;
 			$response = json_decode($response, true);
 			$userToken = $response["AccessToken"];
@@ -129,14 +129,14 @@ trait OrganizrFunctions
 				"Id" => $userID
 			);
 			$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Password';
-			Requests::Post($url, $headers, json_encode($data), array());
+			\WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
 			#update config
 			$headers = array(
 				"Accept" => "application/json",
 				"Content-Type" => "application/json"
 			);
 			$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Policy?api_key=' . $this->config['embyToken'];
-			$response = Requests::Post($url, $headers, $this->getEmbyTemplateUserJson(), array());
+			$response = \WpOrg\Requests\Requests::Post($url, $headers, $this->getEmbyTemplateUserJson(), array());
 			#add emby.media
 			try {
 				#seperate because this is not required
@@ -148,15 +148,15 @@ trait OrganizrFunctions
 					"ConnectUsername " => $email
 				);
 				$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Connect/Link';
-				Requests::Post($url, $headers, json_encode($data), array());
-			} catch (Requests_Exception $e) {
+				\WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Emby')->error($e);
 				$this->setResponse(500, $e->getMessage());
 				return false;
 			}
 			$this->setAPIResponse('success', 'User has joined Emby', 200);
 			return true;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -172,7 +172,7 @@ trait OrganizrFunctions
 		);
 		$data = array();
 		$url = $this->config['embyURL'] . '/emby/Users?api_key=' . $this->config['embyToken'];
-		$response = Requests::Get($url, $headers, array());
+		$response = \WpOrg\Requests\Requests::Get($url, $headers, array());
 		$response = $response->body;
 		$response = json_decode($response, true);
 		//$correct stores the template users object
@@ -528,7 +528,7 @@ trait OrganizrFunctions
 				exit;
 			}
 			$options = array('verify' => false);
-			$response = Requests::get($image_src, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($image_src, array(), $options);
 			if ($response->success) {
 				ob_start(); // Start the output buffer
 				header('Content-type: image/jpeg');
@@ -793,13 +793,13 @@ trait OrganizrFunctions
 			try {
 				$url = $this->qualifyURL($this->config['komgaURL']);
 				$options = $this->requestOptions($url, 60000, true, false);
-				$response = Requests::post($url . '/api/v1/users/logout', ['X-Auth-Token' => $_COOKIE['komga_token']], $options);
+				$response = \WpOrg\Requests\Requests::post($url . '/api/v1/users/logout', ['X-Auth-Token' => $_COOKIE['komga_token']], $options);
 				if ($response->success) {
 					$this->setLoggerChannel('Komga')->info('Logged User out');
 				} else {
 					$this->setLoggerChannel('Komga')->warning('Unable to Logged User out');
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Komga')->error($e);
 			}
 			$this->coookie('delete', 'komga_token');

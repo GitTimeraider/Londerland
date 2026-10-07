@@ -11,18 +11,6 @@ $app->get('/', function ($request, $response, $args) {
 		->withStatus(302);
 });
 $app->get('/status[/]', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     path="/api/v2/status",
-	 *     summary="Query Organizr API to perform a Status Check",
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Success",
-	 *      @OA\JsonContent(ref="#/components/schemas/status"),
-	 *     ),
-	 *     @OA\Response(response="401",description="Unauthorized")
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->checkRoute($request)) {
 		$GLOBALS['api']['response']['data'] = $Organizr->status(false);

@@ -80,7 +80,7 @@ trait SpeedTestHomepageItem
 		$options = $this->requestOptions($url, null, $this->config['speedtestDisableCertCheck'], $this->config['speedtestUseCustomCertificate']);
 		$dataUrl = $url . '/api/speedtest/latest';
 		try {
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$api['data'] = [
@@ -109,7 +109,7 @@ trait SpeedTestHomepageItem
 				$this->setAPIResponse('error', 'SpeedTest connection error', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Speedtest')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

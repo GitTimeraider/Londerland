@@ -87,7 +87,7 @@ trait OIDCFunctions
 		}
 		try {
 			$options = ($this->localURL($config['discoveryUrl'])) ? array('verify' => false) : array('verify' => $this->getCert());
-			$response = Requests::get($config['discoveryUrl'], [], $options);
+			$response = \WpOrg\Requests\Requests::get($config['discoveryUrl'], [], $options);
 			if ($response->success) {
 				$discovery = json_decode($response->body, true);
 				$_SESSION[$cacheKey] = [
@@ -98,7 +98,7 @@ trait OIDCFunctions
 			}
 			$this->setLoggerChannel('OIDC')->warning('Failed to fetch discovery document: ' . $response->status_code);
 			return null;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('OIDC')->error($e);
 			return null;
 		}
@@ -211,7 +211,7 @@ trait OIDCFunctions
 		];
 		try {
 			$options = ($this->localURL($discovery['token_endpoint'])) ? array('verify' => false) : array('verify' => $this->getCert());
-			$response = Requests::post($discovery['token_endpoint'], [
+			$response = \WpOrg\Requests\Requests::post($discovery['token_endpoint'], [
 				'Content-Type' => 'application/x-www-form-urlencoded',
 			], http_build_query($data), $options);
 			if ($response->success) {
@@ -221,7 +221,7 @@ trait OIDCFunctions
 			}
 			$this->setLoggerChannel('OIDC')->warning('Token exchange failed: ' . $response->body);
 			return null;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('OIDC')->error($e);
 			return null;
 		}
@@ -239,7 +239,7 @@ trait OIDCFunctions
 		}
 		try {
 			$options = ($this->localURL($discovery['userinfo_endpoint'])) ? array('verify' => false) : array('verify' => $this->getCert());
-			$response = Requests::get($discovery['userinfo_endpoint'], [
+			$response = \WpOrg\Requests\Requests::get($discovery['userinfo_endpoint'], [
 				'Authorization' => 'Bearer ' . $accessToken,
 			], $options);
 			if ($response->success) {
@@ -247,7 +247,7 @@ trait OIDCFunctions
 			}
 			$this->setLoggerChannel('OIDC')->warning('Userinfo request failed: ' . $response->status_code);
 			return null;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('OIDC')->error($e);
 			return null;
 		}

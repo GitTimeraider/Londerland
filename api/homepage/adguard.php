@@ -62,7 +62,7 @@ trait AdGuardHomepageItem
 				$options = array(
 					'auth' => array($this->config['adGuardUsername'], $this->decrypt($this->config['adGuardPassword']))
 				);
-				$response = Requests::get($url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($url, [], $options);
 				if ($response->success) {
 					@$test = json_decode($response->body, true);
 					if (!is_array($test)) {
@@ -76,7 +76,7 @@ trait AdGuardHomepageItem
 					$errors .= $ip . ": Unknown Failure";
 					$failed = true;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$failed = true;
 				$ip = $this->qualifyURL($url, true)['host'];
 				$errors .= $ip . ': ' . $e->getMessage();
@@ -140,7 +140,7 @@ trait AdGuardHomepageItem
 				$options = array(
 					'auth' => array($this->config['adGuardUsername'], $this->decrypt($this->config['adGuardPassword']))
 				);
-				$response = Requests::get($stats_url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($stats_url, [], $options);
 				if ($response->success) {
 					@$adguardResults = json_decode($response->body, true);
 					if (is_array($adguardResults)) {
@@ -148,7 +148,7 @@ trait AdGuardHomepageItem
 						$stats['data'][$ip] = $adguardResults;
 					}
 				}
-				$response = Requests::get($filter_url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($filter_url, [], $options);
 				if ($response->success) {
 					@$adguardFilterResults = json_decode($response->body, true);
 					if (is_array($adguardFilterResults)) {
@@ -156,7 +156,7 @@ trait AdGuardHomepageItem
 						$stats['filters'][$ip] = $adguardFilterResults;
 					}
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setResponse(500, $e->getMessage());
 				$this->setLoggerChannel('AdGuard')->error($e);
 				return false;

@@ -68,7 +68,7 @@ trait OverseerrHomepageItem
 		$url = $this->qualifyURL($this->config['overseerrURL']);
 		try {
 			$options = $this->requestOptions($url, null, $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate']);
-			$test = Requests::get($url . "/api/v1/settings/main", $headers, $options);
+			$test = \WpOrg\Requests\Requests::get($url . "/api/v1/settings/main", $headers, $options);
 			$testData = json_decode($test->body, true);
 			if ($test->success && isset($testData["apiKey"]) && $testData["apiKey"] == $this->config['overseerrToken']) {
 				$this->setAPIResponse('success', 'API Connection succeeded', 200);
@@ -77,7 +77,7 @@ trait OverseerrHomepageItem
 				$this->setResponse(401, 'API Connection failed');
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -160,7 +160,7 @@ trait OverseerrHomepageItem
 		$url = $this->qualifyURL($this->config['overseerrURL']);
 		try {
 			$options = $this->requestOptions($url, $this->config['overseerrRefresh'], $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate']);
-			$request = Requests::get($url . "/api/v1/request?take=" . $limit . '&skip=' . $offset, $headers, $options);
+			$request = \WpOrg\Requests\Requests::get($url . "/api/v1/request?take=" . $limit . '&skip=' . $offset, $headers, $options);
 			if ($request->success) {
 				$requestAll = [];
 				$requestsData = json_decode($request->body, true);
@@ -172,7 +172,7 @@ trait OverseerrHomepageItem
 						$requestAll[$value['media']['tmdbId']] = [
 							'url' => $url . '/api/v1/' . $value['type'] . '/' . $value['media']['tmdbId'],
 							'headers' => $headers,
-							'type' => Requests::GET,
+							'type' => \WpOrg\Requests\Requests::GET,
 						];
 						$api['count'][$value['type']]++;
 						$requests[$value['media']['tmdbId']] = [
@@ -190,7 +190,7 @@ trait OverseerrHomepageItem
 							'color' => ($value['type'] == 'movie') ? 'palette-Deep-Purple-900 bg white' : 'grayish-blue-bg',
 						];
 						/* OLD WAY
-						$requestItem = Requests::get($url . '/api/v1/' . $value['type'] . '/' . $value['media']['tmdbId'], $headers, $options);
+						$requestItem = \WpOrg\Requests\Requests::get($url . '/api/v1/' . $value['type'] . '/' . $value['media']['tmdbId'], $headers, $options);
 						$requestsItemData = json_decode($requestItem->body, true);
 						if ($requestItem->success) {
 							$api['count'][$value['type']]++;
@@ -216,7 +216,7 @@ trait OverseerrHomepageItem
 						}*/
 					}
 				}
-				$requestItems = Requests::request_multiple($requestAll, $options);
+				$requestItems = \WpOrg\Requests\Requests::request_multiple($requestAll, $options);
 				foreach ($requestItems as $key => $requestedItem) {
 					if ($requestedItem->success) {
 						$requestsItemData = json_decode($requestedItem->body, true);
@@ -237,7 +237,7 @@ trait OverseerrHomepageItem
 					return $item1['request_date'] > $item2['request_date'] ? -1 : 1;
 				});
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -296,11 +296,11 @@ trait OverseerrHomepageItem
 				'Content-Type' => 'application/json',
 				'X-Api-Key' => $this->config['overseerrToken']
 			);
-			$cookieJar = new Requests_Cookie_Jar(['connect.sid' => $_COOKIE['connect_sid']]);
+			$cookieJar = new \WpOrg\Requests\Cookie\Jar(['connect.sid' => $_COOKIE['connect_sid']]);
 			$optionsUser = $this->requestOptions($url, null, $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate'], ['cookies' => $cookieJar]);
 			$optionsAPI = $this->requestOptions($url, null, $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate']);
 			// Check if requested already
-			$searchResponse = Requests::get($url . '/api/v1/request/', $headers, $optionsAPI);
+			$searchResponse = \WpOrg\Requests\Requests::get($url . '/api/v1/request/', $headers, $optionsAPI);
 			if ($searchResponse->success) {
 				$details = json_decode($searchResponse->body, true);
 				if (count($details['results']) > 0) {
@@ -321,7 +321,7 @@ trait OverseerrHomepageItem
 				return false;
 			}
 			// Get User info
-			$response = Requests::get($url . '/api/v1/auth/me', [], $optionsUser);
+			$response = \WpOrg\Requests\Requests::get($url . '/api/v1/auth/me', [], $optionsUser);
 			if ($response->success) {
 				$userInfo = json_decode($response->body, true);
 			} else {
@@ -348,7 +348,7 @@ trait OverseerrHomepageItem
 							return false;
 						}
 					}
-					$response = Requests::get($url . '/api/v1/tv/' . $id, $headers, $optionsAPI);
+					$response = \WpOrg\Requests\Requests::get($url . '/api/v1/tv/' . $id, $headers, $optionsAPI);
 					if ($response->success) {
 						$seriesInfo = json_decode($response->body, true);
 					} else {
@@ -369,7 +369,7 @@ trait OverseerrHomepageItem
 							}
 						}
 					}
-					$response = Requests::get($url . '/api/v1/service/sonarr', $headers, $optionsAPI);
+					$response = \WpOrg\Requests\Requests::get($url . '/api/v1/service/sonarr', $headers, $optionsAPI);
 					if ($response->success) {
 						$serviceInfo = $this->getDefaultService(json_decode($response->body, true));
 						if (!$serviceInfo) {
@@ -395,7 +395,7 @@ trait OverseerrHomepageItem
 					];
 					break;
 				default:
-					$response = Requests::get($url . '/api/v1/service/radarr', $headers, $optionsAPI);
+					$response = \WpOrg\Requests\Requests::get($url . '/api/v1/service/radarr', $headers, $optionsAPI);
 					if ($response->success) {
 						$serviceInfo = $this->getDefaultService(json_decode($response->body, true));
 						if (!$serviceInfo) {
@@ -417,7 +417,7 @@ trait OverseerrHomepageItem
 					];
 					break;
 			}
-			$response = Requests::post($url . "/api/v1/request", ['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($add), $optionsUser);
+			$response = \WpOrg\Requests\Requests::post($url . "/api/v1/request", ['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($add), $optionsUser);
 			if ($response->success) {
 				$this->setAPIResponse('success', 'Overseerr Request submitted', 200);
 				return true;
@@ -430,7 +430,7 @@ trait OverseerrHomepageItem
 				$this->setAPIResponse('error', $message, 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -467,15 +467,15 @@ trait OverseerrHomepageItem
 			$options = $this->requestOptions($url, null, $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate']);
 			switch ($action) {
 				case 'approve':
-					$response = Requests::post($url . "/api/v1/request/" . $id . "/approve", $headers, [], $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/request/" . $id . "/approve", $headers, [], $options);
 					$message = 'Overseerr Request has been approved';
 					break;
 				case 'pending':
-					$response = Requests::post($url . '/api/v1/request/' . $id . '/pending', $headers, [], $options);
+					$response = \WpOrg\Requests\Requests::post($url . '/api/v1/request/' . $id . '/pending', $headers, [], $options);
 					$message = 'Overseerr Request has been approved';
 					break;
 				case 'available':
-					$requestInfoResponse = Requests::get($url . '/api/v1/request/' . $id, $headers, $options);
+					$requestInfoResponse = \WpOrg\Requests\Requests::get($url . '/api/v1/request/' . $id, $headers, $options);
 					if ($requestInfoResponse->success) {
 						$requestInfo = json_decode($requestInfoResponse->body, true);
 						$mediaId = $requestInfo['media']['id'];
@@ -483,11 +483,11 @@ trait OverseerrHomepageItem
 						$this->setResponse(500, 'Error getting request information');
 						return false;
 					}
-					$response = Requests::post($url . '/api/v1/media/' . $mediaId . '/available', $headers, [], $options);
+					$response = \WpOrg\Requests\Requests::post($url . '/api/v1/media/' . $mediaId . '/available', $headers, [], $options);
 					$message = 'Overseerr Request has been marked available';
 					break;
 				case 'unavailable':
-					$requestInfoResponse = Requests::get($url . '/api/v1/request/' . $id, $headers, $options);
+					$requestInfoResponse = \WpOrg\Requests\Requests::get($url . '/api/v1/request/' . $id, $headers, $options);
 					if ($requestInfoResponse->success) {
 						$requestInfo = json_decode($requestInfoResponse->body, true);
 						$mediaId = $requestInfo['media']['id'];
@@ -495,15 +495,15 @@ trait OverseerrHomepageItem
 						$this->setResponse(500, 'Error getting request information');
 						return false;
 					}
-					$response = Requests::post($url . "/api/v1/media/" . $mediaId . "/pending", $headers, [], $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/media/" . $mediaId . "/pending", $headers, [], $options);
 					$message = 'Overseerr Request has been marked unavailable';
 					break;
 				case 'deny':
-					$response = Requests::post($url . "/api/v1/request/" . $id . "/decline", $headers, [], $options);
+					$response = \WpOrg\Requests\Requests::post($url . "/api/v1/request/" . $id . "/decline", $headers, [], $options);
 					$message = 'Overseerr Request has been denied';
 					break;
 				case 'delete':
-					$response = Requests::delete($url . "/api/v1/request/" . $id, $headers, $options);
+					$response = \WpOrg\Requests\Requests::delete($url . "/api/v1/request/" . $id, $headers, $options);
 					$message = 'Overseerr Request has been deleted';
 					break;
 				default:
@@ -521,7 +521,7 @@ trait OverseerrHomepageItem
 				$this->setAPIResponse('error', $message, 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -549,7 +549,7 @@ trait OverseerrHomepageItem
 				'X-Api-Key' => $this->config['overseerrToken']
 			);
 			$options = $this->requestOptions($url, null, $this->config['overseerrDisableCertCheck'], $this->config['overseerrUseCustomCertificate']);
-			$response = Requests::get($url . '/api/v1/' . $type . '/' . $id, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url . '/api/v1/' . $type . '/' . $id, $headers, $options);
 			if ($response->success) {
 				$metadata = json_decode($response->body, true);
 				$this->setResponse(200, null, $metadata);
@@ -558,7 +558,7 @@ trait OverseerrHomepageItem
 				$this->setResponse(500, 'Error getting series information');
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

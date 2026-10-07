@@ -103,7 +103,7 @@ trait UnifiHomepageItem
 					$this->setResponse(500, 'Unifi OS does not support Multi Site');
 					return false;
 				}
-				$response = Requests::get($url . '/api/self/sites', [], $login['options']);
+				$response = \WpOrg\Requests\Requests::get($url . '/api/self/sites', [], $login['options']);
 				if ($response->success) {
 					$body = json_decode($response->body, true);
 					$this->setAPIResponse('success', null, 200, $body);
@@ -115,7 +115,7 @@ trait UnifiHomepageItem
 			} else {
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Unifi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -128,14 +128,14 @@ trait UnifiHomepageItem
 			// Is this UnifiOs or Regular
 			$url = $this->qualifyURL($this->config['unifiURL']);
 			$options = $this->requestOptions($url, $this->config['homepageUnifiRefresh'], $this->config['unifiDisableCertCheck'], $this->config['unifiUseCustomCertificate'], ['follow_redirects' => true]);
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				return ($response->headers['x-csrf-token']) ?? false;
 			} else {
 				$this->setAPIResponse('error', 'Unifi response error - Check URL', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Unifi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -157,7 +157,7 @@ trait UnifiHomepageItem
 			$data = ($csrfToken) ? $data : json_encode($data);
 			$headers = ($csrfToken) ? ['x-csrf-token' => $csrfToken] : [];
 			$urlLogin = ($csrfToken) ? $url . '/api/auth/login' : $url . '/api/login';
-			$response = Requests::post($urlLogin, $headers, $data, $options);
+			$response = \WpOrg\Requests\Requests::post($urlLogin, $headers, $data, $options);
 			if ($response->success) {
 				$options['cookies'] = $response->cookies;
 				return [
@@ -168,7 +168,7 @@ trait UnifiHomepageItem
 				$this->setAPIResponse('error', 'Unifi response error - Check Credentials', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Unifi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -189,7 +189,7 @@ trait UnifiHomepageItem
 				$unifiOS = $login['unifiOS'];
 				$headers = ($unifiOS) ? ['x-csrf-token' => $unifiOS] : [];
 				$urlStat = ($unifiOS) ? $url . '/proxy/network/api/s/default/stat/health' : $url . '/api/s/' . $this->config['unifiSiteName'] . '/stat/health';
-				$response = Requests::get($urlStat, $headers, $login['options']);
+				$response = \WpOrg\Requests\Requests::get($urlStat, $headers, $login['options']);
 				if ($response->success) {
 					$api['content']['unifi'] = json_decode($response->body, true);
 				} else {
@@ -197,7 +197,7 @@ trait UnifiHomepageItem
 					return false;
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Unifi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -220,7 +220,7 @@ trait UnifiHomepageItem
 				$unifiOS = $login['unifiOS'];
 				$headers = ($unifiOS) ? ['x-csrf-token' => $unifiOS] : [];
 				$urlStat = ($unifiOS) ? $url . '/proxy/network/api/s/default/stat/health' : $url . '/api/s/' . $this->config['unifiSiteName'] . '/stat/health';
-				$response = Requests::get($urlStat, $headers, $login['options']);
+				$response = \WpOrg\Requests\Requests::get($urlStat, $headers, $login['options']);
 				if ($response->success) {
 					$api['content']['unifi'] = json_decode($response->body, true);
 				} else {
@@ -228,7 +228,7 @@ trait UnifiHomepageItem
 					return false;
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Unifi')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

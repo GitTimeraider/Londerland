@@ -59,10 +59,10 @@ trait NZBGetHomepageItem
 			$options = $this->requestOptions($url, null, $this->config['nzbgetDisableCertCheck'], $this->config['nzbgetUseCustomCertificate']);
 			$urlGroups = $url . '/jsonrpc/listgroups';
 			if ($this->config['nzbgetUsername'] !== '' && $this->decrypt($this->config['nzbgetPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Basic(array($this->config['nzbgetUsername'], $this->decrypt($this->config['nzbgetPassword']))));
+				$credentials = array('auth' => new \WpOrg\Requests\Auth\Basic(array($this->config['nzbgetUsername'], $this->decrypt($this->config['nzbgetPassword']))));
 				$options = array_merge($options, $credentials);
 			}
-			$response = Requests::get($urlGroups, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($urlGroups, array(), $options);
 			if ($response->success) {
 				$this->setAPIResponse('success', 'API Connection succeeded', 200);
 				return true;
@@ -70,7 +70,7 @@ trait NZBGetHomepageItem
 				$this->setAPIResponse('success', 'NZBGet: An Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('NZBGet')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -125,21 +125,21 @@ trait NZBGetHomepageItem
 			$urlGroups = $url . '/jsonrpc/listgroups';
 			$urlHistory = $url . '/jsonrpc/history';
 			if ($this->config['nzbgetUsername'] !== '' && $this->decrypt($this->config['nzbgetPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Basic(array($this->config['nzbgetUsername'], $this->decrypt($this->config['nzbgetPassword']))));
+				$credentials = array('auth' => new \WpOrg\Requests\Auth\Basic(array($this->config['nzbgetUsername'], $this->decrypt($this->config['nzbgetPassword']))));
 				$options = array_merge($options, $credentials);
 			}
-			$response = Requests::get($urlGroups, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($urlGroups, array(), $options);
 			if ($response->success) {
 				$api['content']['queueItems'] = json_decode($response->body, true);
 			}
-			$response = Requests::get($urlHistory, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($urlHistory, array(), $options);
 			if ($response->success) {
 				$api['content']['historyItems'] = json_decode($response->body, true);
 			}
 			$api['content'] = isset($api['content']) ? $api['content'] : false;
 			$this->setAPIResponse('success', null, 200, $api);
 			return $api;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('NZBGet')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

@@ -85,7 +85,7 @@ trait OctoPrintHomepageItem
 			try {
 				$headers = array('X-API-KEY' => $this->config['octoprintToken']);
 				$options = $this->requestOptions($url, $this->config['homepageOctoprintRefresh'], $this->config['octoprintDisableCertCheck'], $this->config['octoprintUseCustomCertificate']);
-				$response = Requests::get($dataUrl, $headers, $options);
+				$response = \WpOrg\Requests\Requests::get($dataUrl, $headers, $options);
 				if ($response->success) {
 					$json = json_decode($response->body, true);
 					$api['data'][$endpoint] = $json;
@@ -97,7 +97,7 @@ trait OctoPrintHomepageItem
 					$this->setAPIResponse('error', 'OctoPrint connection error', 409);
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Octoprint')->error($e);
 				$this->setResponse(500, $e->getMessage());
 				return false;

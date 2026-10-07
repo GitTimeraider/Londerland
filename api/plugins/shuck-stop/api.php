@@ -1,19 +1,5 @@
 <?php
 $app->get('/plugins/shuck-stop/settings', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     tags={"plugins-shuck-stop"},
-	 *     path="/api/v2/plugins/shuck-stop/settings",
-	 *     summary="Get settings",
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Success",
-	 *      @OA\JsonContent(ref="#/components/schemas/pluginSettingsPage"),
-	 *     ),
-	 *     @OA\Response(response="401",description="Unauthorized"),
-	 *     security={{ "api_key":{} }}
-	 * )
-	 */
 	$shuckStop = new ShuckStop();
 	if ($shuckStop->checkRoute($request)) {
 		if ($shuckStop->qualifyRequest(1, true)) {
@@ -26,20 +12,6 @@ $app->get('/plugins/shuck-stop/settings', function ($request, $response, $args) 
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/plugins/shuck-stop/run', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     tags={"plugins-shuck-stop"},
-	 *     path="/api/v2/plugins/shuck-stop/run",
-	 *     summary="Run ShuckStop plugin",
-	 *     @OA\Response(
-	 *      response="200",
-	 *      description="Success",
-	 *      @OA\JsonContent(ref="#/components/schemas/shuckStopRun"),
-	 *     ),
-	 *     @OA\Response(response="401",description="Unauthorized"),
-	 *     security={{ "api_key":{} }}
-	 * )
-	 */
 	$shuckStop = new ShuckStop();
 	if ($shuckStop->checkRoute($request)) {
 		if ($shuckStop->qualifyRequest(1, true)) {

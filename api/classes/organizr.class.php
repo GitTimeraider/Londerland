@@ -101,7 +101,7 @@ class Organizr
 	public $warnings;
 	public $errors;
 	public bool $loggerSetup = false;
-	public \Nekonomokochan\PhpJsonLogger\Logger $logger;
+	public OrganizrLogger $logger;
 
 	public function __construct($checkForUpdates = false)
 	{
@@ -732,7 +732,7 @@ class Organizr
 		}
 		try {
 			$options = array('verify' => false);
-			$response = Requests::get('https://ipinfo.io/' . $ip . '/?token=ddd0c072ad5021', array(), $options);
+			$response = \WpOrg\Requests\Requests::get('https://ipinfo.io/' . $ip . '/?token=ddd0c072ad5021', array(), $options);
 			if ($response->success) {
 				$api = json_decode($response->body, true);
 				$this->setResponse(200, null, $api);
@@ -740,7 +740,7 @@ class Organizr
 			} else {
 				$this->setResponse(500, 'An error occurred', null);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, 'An error occurred', $e->getMessage());
 		}
 		return false;
@@ -5857,7 +5857,7 @@ class Organizr
 	{
 		$url = 'https://api.github.com/repos/causefx/organizr/contents/' . $plugin . '?ref=v2-plugins';
 		$options = array('verify' => false);
-		$response = Requests::get($url, array(), $options);
+		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 		if ($response->success) {
 			return json_decode($response->body, true);
 		}
@@ -5868,7 +5868,7 @@ class Organizr
 	{
 		$url = 'https://api.github.com/repos/' . $repo;
 		$options = array('verify' => false);
-		$response = Requests::get($url, $this->setGithubAccessToken(), $options);
+		$response = \WpOrg\Requests\Requests::get($url, $this->setGithubAccessToken(), $options);
 		try {
 			if ($response->success) {
 				$github = json_decode($response->body, true);
@@ -5878,7 +5878,7 @@ class Organizr
 				$this->logger->warning('Plugin failed to get branch from Github', $this->apiResponseFormatter($response->body));
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->error($e);
 			$this->setAPIResponse('error', $e->getMessage(), 401);
 			return false;
@@ -5892,7 +5892,7 @@ class Organizr
 		}
 		$url = 'https://api.github.com/repos/' . $repo . '/git/trees/' . $branch . '?recursive=1';
 		$options = array('verify' => false);
-		$response = Requests::get($url, $this->setGithubAccessToken(), $options);
+		$response = \WpOrg\Requests\Requests::get($url, $this->setGithubAccessToken(), $options);
 		try {
 			if ($response->success) {
 				$github = json_decode($response->body, true);
@@ -5902,7 +5902,7 @@ class Organizr
 				$this->logger->warning('Plugin failed to get branch from Github', $this->apiResponseFormatter($response->body));
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->error($e);
 			$this->setAPIResponse('error', $e->getMessage(), 401);
 			return false;
@@ -6094,7 +6094,7 @@ class Organizr
 	{
 		$url = 'https://raw.githubusercontent.com/causefx/Organizr/v2-themes/themes.json';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		$response = Requests::get($url, array(), $options);
+		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 		if ($response->success) {
 			return json_decode($response->body, true);
 		}
@@ -6106,11 +6106,11 @@ class Organizr
 		$url = 'https://raw.githubusercontent.com/causefx/Organizr/v2-plugins/plugins.json';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
 		try {
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			if ($response->success) {
 				return json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			return false;
 		}
 		return false;
@@ -6151,7 +6151,7 @@ class Organizr
 		foreach ($urls as $repo) {
 			$options = ($this->localURL($repo)) ? array('verify' => false) : array();
 			try {
-				$response = Requests::get($repo, array(), $options);
+				$response = \WpOrg\Requests\Requests::get($repo, array(), $options);
 				if ($response->success) {
 					$themes = array_merge($themes, json_decode($response->body, true));
 				} else {
@@ -6159,7 +6159,7 @@ class Organizr
 					$this->logger->warning('Getting Marketplace items from Github', $this->apiResponseFormatter($response->body));
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				//return false;
 			}
 		}
@@ -6188,7 +6188,7 @@ class Organizr
 		foreach ($urls as $repo) {
 			$options = ($this->localURL($repo)) ? array('verify' => false) : array();
 			try {
-				$response = Requests::get($repo, array(), $options);
+				$response = \WpOrg\Requests\Requests::get($repo, array(), $options);
 				if ($response->success) {
 					$plugins = array_merge($plugins, json_decode($response->body, true));
 				} else {
@@ -6196,7 +6196,7 @@ class Organizr
 					$this->logger->warning('Getting Marketplace items from Github', $this->apiResponseFormatter($response->body));
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				//return false;
 			}
 		}
@@ -6212,7 +6212,7 @@ class Organizr
 			$newURL = 'https://api.github.com/repos/' . $repo[1] . '/contents';
 			$options = ($this->localURL($newURL)) ? array('verify' => false) : array();
 			try {
-				$response = Requests::get($newURL, $this->setGithubAccessToken(), $options);
+				$response = \WpOrg\Requests\Requests::get($newURL, $this->setGithubAccessToken(), $options);
 				if ($response->success) {
 					$jsonFiles = json_decode($response->body, true);
 					foreach ($jsonFiles as $file) {
@@ -6226,7 +6226,7 @@ class Organizr
 					$this->logger->warning('Getting Marketplace JSON from Github', $this->apiResponseFormatter($response->body));
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				return false;
 			}
 		}
@@ -6253,7 +6253,7 @@ class Organizr
 		$url = 'https://opencollective.com/organizr/members/users.json?limit=100&offset=0';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
 		try {
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			if ($response->success) {
 				$api = json_decode($response->body, true);
 				foreach ($api as $k => $backer) {
@@ -6262,7 +6262,7 @@ class Organizr
 				$this->setAPIResponse('success', '', 200, $api);
 				return $api;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		}
@@ -6274,7 +6274,7 @@ class Organizr
 	{
 		$url = 'https://github.com/sponsors/causefx';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		$response = Requests::get($url, array(), $options);
+		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 		if ($response->success) {
 			$sponsors = [];
 			try {
@@ -6332,11 +6332,11 @@ class Organizr
 		$url = 'https://api.organizr.app/?cmd=smtp';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
 		try {
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			if ($response->success) {
 				return json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		}
@@ -6613,7 +6613,7 @@ class Organizr
 				$headers = array(
 					'X-Plex-Token' => $this->config['plexToken'],
 				);
-				$response = Requests::get($url, $headers);
+				$response = \WpOrg\Requests\Requests::get($url, $headers);
 				if ($response->success) {
 					libxml_use_internal_errors(true);
 					$userXML = simplexml_load_string($response->body);
@@ -6660,7 +6660,7 @@ class Organizr
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('User Management');
 			$this->logger->error($e);
 		}
@@ -6673,7 +6673,7 @@ class Organizr
 			if (!empty($this->config['jellyfinURL']) && !empty($this->config['jellyfinToken'])) {
 				$url = $this->qualifyURL($this->config['jellyfinURL']) . '/Users?api_key=' . $this->config['jellyfinToken'];
 				$headers = array();
-				$response = Requests::get($url, $headers);
+				$response = \WpOrg\Requests\Requests::get($url, $headers);
 				if ($response->success) {
 					$users = json_decode($response->body, true);
 					if (is_array($users) || is_object($users)) {
@@ -6701,7 +6701,7 @@ class Organizr
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('User Management');
 			$this->logger->error($e);
 		}
@@ -6714,7 +6714,7 @@ class Organizr
 			if (!empty($this->config['embyURL']) && !empty($this->config['embyToken'])) {
 				$url = $this->qualifyURL($this->config['embyURL']) . '/Users?api_key=' . $this->config['embyToken'];
 				$headers = array();
-				$response = Requests::get($url, $headers);
+				$response = \WpOrg\Requests\Requests::get($url, $headers);
 				if ($response->success) {
 					$users = json_decode($response->body, true);
 					if (is_array($users) || is_object($users)) {
@@ -6742,7 +6742,7 @@ class Organizr
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('User Management');
 			$this->logger->error($e);
 		}
@@ -7174,7 +7174,7 @@ class Organizr
 							"Accept" => "application/json",
 							"X-Plex-Token" => $this->config['plexToken']
 						);
-						$response = Requests::get($url, $headers, array());
+						$response = \WpOrg\Requests\Requests::get($url, $headers, array());
 						libxml_use_internal_errors(true);
 						if ($response->success) {
 							$libraryList = array();
@@ -7191,7 +7191,7 @@ class Organizr
 							$libraryList = array_change_key_case($libraryList, CASE_LOWER);
 							return $libraryList;
 						}
-					} catch (Requests_Exception $e) {
+					} catch (\WpOrg\Requests\Exception $e) {
 						$this->setLoggerChannel('User Management');
 						$this->logger->error($e);
 					}
@@ -7331,7 +7331,7 @@ class Organizr
 				'username' => $username,
 				'password' => $password,
 			);
-			$response = Requests::post($url, $headers, $data, array());
+			$response = \WpOrg\Requests\Requests::post($url, $headers, $data, array());
 			$json = json_decode($response->body, true);
 			$errors = !empty($json['errors']);
 			$success = empty($json['errors']);
@@ -7349,7 +7349,7 @@ class Organizr
 			$code = (!empty($success) && empty($errors)) ? 200 : 422;
 			$this->setAPIResponse($status, $msg, $code);
 			return (!empty($success) && empty($errors));
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('User Management');
 			$this->logger->error($e);
 			$this->setAPIResponse('error', 'An Error Occurred', 409);
@@ -7449,7 +7449,7 @@ public function youtubeSearch($query)
 		// Ensure query is URL-encoded to avoid API errors
 		$safeQuery = urlencode($query . ' official trailer');
 		$url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q={$safeQuery}&maxResults=1&type=video&videoDuration=short&key={$apikey}";
-		$response = Requests::get($url);
+		$response = \WpOrg\Requests\Requests::get($url);
 		if ($response->success) {
 			$results = json_decode($response->body, true);
 			$this->setAPIResponse('success', null, 200, $results);
@@ -7568,7 +7568,7 @@ public function youtubeSearch($query)
 				'drill_url' => $this->qualifyURL($url, true)
 			);
 			$options = array('verify' => false);
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			$data['response_code'] = $response->status_code;
 			if ($response->success) {
 				$data['result'] = 'Success';
@@ -7588,7 +7588,7 @@ public function youtubeSearch($query)
 				$this->setAPIResponse('error', 'Error getting successful response', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		}
@@ -7862,19 +7862,19 @@ public function youtubeSearch($query)
 		try {
 			switch ($requestObject->getMethod()) {
 				case 'GET':
-					$call = Requests::get($url, $headers, $options);
+					$call = \WpOrg\Requests\Requests::get($url, $headers, $options);
 					break;
 				case 'POST':
-					$call = Requests::post($url, $headers, $apiData, $options);
+					$call = \WpOrg\Requests\Requests::post($url, $headers, $apiData, $options);
 					break;
 				case 'DELETE':
-					$call = Requests::delete($url, $headers, $options);
+					$call = \WpOrg\Requests\Requests::delete($url, $headers, $options);
 					break;
 				case 'PUT':
-					$call = Requests::put($url, $headers, $apiData, $options);
+					$call = \WpOrg\Requests\Requests::put($url, $headers, $apiData, $options);
 					break;
 				default:
-					$call = Requests::get($url, $headers, $options);
+					$call = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			}
 			if ($this->config['socksDebug']) {
 				if ($this->json_validator($call->body)) {
@@ -7891,7 +7891,7 @@ public function youtubeSearch($query)
 			}
 			$this->setLoggerChannel('Socks')->debug('Socks Response', ['body' => $logData, 'debug' => $debugInformation]);
 			return $call->body;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			$this->setLoggerChannel('Socks')->critical($e, $debugInformation);
 			return null;
@@ -7914,7 +7914,7 @@ public function youtubeSearch($query)
 			'X-Plex-Token' => $this->config['plexToken'],
 		];
 		try {
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			libxml_use_internal_errors(true);
 			if ($response->success) {
 				$items = array();
@@ -7946,7 +7946,7 @@ public function youtubeSearch($query)
 				$this->setLoggerChannel('Plex Connection')->warning('Plex Error', $message);
 				return $message;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Plex Connection')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

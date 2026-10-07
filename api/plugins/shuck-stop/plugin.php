@@ -73,7 +73,7 @@ class ShuckStop extends Organizr
 				}
 				$url = 'https://shucks.top/';
 				$options = ($this->localURL($url)) ? ['verify' => false] : [];
-				$response = Requests::get($url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($url, [], $options);
 				if ($response->success) {
 					$drives = [
 						'run_date' => $this->currentTime,

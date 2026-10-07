@@ -69,7 +69,7 @@ trait JellyfinHomepageItem
 		$url = $url . "/Users?api_key=" . $this->config['jellyfinToken'];
 		$options = $this->requestOptions($url, null, $this->config['jellyfinDisableCertCheck'], $this->config['jellyfinUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body);
 				if (is_array($json) || is_object($json)) {
@@ -83,7 +83,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Connection Error', 500);
 				return true;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		}
@@ -177,7 +177,7 @@ trait JellyfinHomepageItem
 		$url = $url . '/Sessions?api_key=' . $this->config['jellyfinToken'] . '&Fields=Overview,People,Genres,CriticRating,Studios,Taglines';
 		$options = $this->requestOptions($url, $this->config['homepageStreamRefresh'], $this->config['jellyfinDisableCertCheck'], $this->config['jellyfinUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$jellyfin = json_decode($response->body, true);
@@ -193,7 +193,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Jellyfin')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -216,7 +216,7 @@ trait JellyfinHomepageItem
 			}
 			// Get A User
 			$userIds = $url . "/Users?api_key=" . $this->config['jellyfinToken'];
-			$response = Requests::get($userIds, [], $options);
+			$response = \WpOrg\Requests\Requests::get($userIds, [], $options);
 			if ($response->success) {
 				$jellyfin = json_decode($response->body, true);
 				foreach ($jellyfin as $value) { // Scan for admin user
@@ -234,7 +234,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Error Occurred', 500);
 				return false;
 			}
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$jellyfin = json_decode($response->body, true);
@@ -250,7 +250,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('JellyFin')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -278,7 +278,7 @@ trait JellyfinHomepageItem
 			}
 			// Get A User
 			$userIds = $url . "/Users?api_key=" . $this->config['jellyfinToken'];
-			$response = Requests::get($userIds, [], $options);
+			$response = \WpOrg\Requests\Requests::get($userIds, [], $options);
 			if ($response->success) {
 				$jellyfin = json_decode($response->body, true);
 				foreach ($jellyfin as $value) { // Scan for admin user
@@ -296,7 +296,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Error Occurred', 500);
 				return false;
 			}
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$jellyfin = json_decode($response->body, true);
@@ -310,7 +310,7 @@ trait JellyfinHomepageItem
 				$this->setAPIResponse('error', 'Jellyfin Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('JellyFin')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

@@ -98,7 +98,7 @@ trait TraktHomepageItem
 		$url = $this->qualifyURL('https://api.trakt.tv/calendars/my/shows/' . $startDate . '/' . $totalDays . '?extended=full');
 		$options = $this->requestOptions($url, $this->config['calendarRefresh']);
 		try {
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			if ($response->success) {
 				$data = json_decode($response->body, true);
 				$traktTv = $this->formatTraktCalendarTv($data);
@@ -106,14 +106,14 @@ trait TraktHomepageItem
 					$calendarItems = array_merge($calendarItems, $traktTv);
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Trakt')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			$errors = true;
 		}
 		$url = $this->qualifyURL('https://api.trakt.tv/calendars/my/movies/' . $startDate . '/' . $totalDays . '?extended=full');
 		try {
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			if ($response->success) {
 				$data = json_decode($response->body, true);
 				$traktMovies = $this->formatTraktCalendarMovies($data);
@@ -121,7 +121,7 @@ trait TraktHomepageItem
 					$calendarItems = array_merge($calendarItems, $traktMovies);
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Trakt')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			$errors = true;

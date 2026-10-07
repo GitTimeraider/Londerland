@@ -55,7 +55,7 @@ trait TransmissionHomepageItem
 		$url = $digest['scheme'] . '://' . $passwordInclude . $digest['host'] . $digest['port'] . $digest['path'] . '/rpc';
 		try {
 			$options = $this->requestOptions($this->config['transmissionURL'], $this->config['transmissionRefresh'], $this->config['transmissionDisableCertCheck'], $this->config['transmissionUseCustomCertificate']);
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->headers['x-transmission-session-id']) {
 				$headers = array(
 					'X-Transmission-Session-Id' => $response->headers['x-transmission-session-id'],
@@ -70,7 +70,7 @@ trait TransmissionHomepageItem
 					),
 					'tags' => ''
 				);
-				$response = Requests::post($url, $headers, json_encode($data), $options);
+				$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data), $options);
 				if ($response->success) {
 					$this->setAPIResponse('success', 'API Connection succeeded', 200);
 					return true;
@@ -83,7 +83,7 @@ trait TransmissionHomepageItem
 				$this->setAPIResponse('error', 'Transmission Connect Function - Error: Could not get session ID', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Transmission')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -137,7 +137,7 @@ trait TransmissionHomepageItem
 		$url = $digest['scheme'] . '://' . $passwordInclude . $digest['host'] . $digest['port'] . $digest['path'] . '/rpc';
 		try {
 			$options = $this->requestOptions($this->config['transmissionURL'], $this->config['transmissionRefresh'], $this->config['transmissionDisableCertCheck'], $this->config['transmissionUseCustomCertificate']);
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			if ($response->headers['x-transmission-session-id']) {
 				$headers = array(
 					'X-Transmission-Session-Id' => $response->headers['x-transmission-session-id'],
@@ -152,7 +152,7 @@ trait TransmissionHomepageItem
 					),
 					'tags' => ''
 				);
-				$response = Requests::post($url, $headers, json_encode($data), $options);
+				$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data), $options);
 				if ($response->success) {
 					$torrentList = json_decode($response->body, true)['arguments']['torrents'];
 					if ($this->config['transmissionHideSeeding'] || $this->config['transmissionHideCompleted']) {
@@ -183,7 +183,7 @@ trait TransmissionHomepageItem
 				$this->setAPIResponse('error', 'Transmission Connect Function - Error: Could not get session ID', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Transmission')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

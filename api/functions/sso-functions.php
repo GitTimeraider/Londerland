@@ -166,10 +166,10 @@ trait SSOFunctions
 					$password = $this->decrypt($this->config['komgaSSOMasterPassword']);
 				}
 			}
-			$credentials = array('auth' => new Requests_Auth_Digest(array($email, $password)));
+			$credentials = array('auth' => new OrganizrDigestAuth(array($email, $password)));
 			$url = $this->qualifyURL($this->config['komgaURL']);
 			$options = $this->requestOptions($url, $this->getSSOTimeout(), true, false, $credentials);
-			$response = Requests::get($url . '/api/v2/users/me', ['X-Auth-Token' => 'organizrSSO'], $options);
+			$response = \WpOrg\Requests\Requests::get($url . '/api/v2/users/me', ['X-Auth-Token' => 'organizrSSO'], $options);
 			if ($response->success) {
 				if ($response->headers['x-auth-token']) {
 					$this->setLoggerChannel('Komga')->info('Grabbed token');
@@ -184,7 +184,7 @@ trait SSOFunctions
 					$this->setLoggerChannel('Komga')->warning('Komga did not return Token');
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Komga')->error($e);
 		}
 		if ($token) {
@@ -214,7 +214,7 @@ trait SSOFunctions
 			);
 			$endpoint = '/Users/authenticatebyname';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
-			$response = Requests::post($url . $endpoint, $headers, json_encode($data), $options);
+			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
 				$token = json_decode($response->body, true);
 				$this->setLoggerChannel('JellyFin')->info('Grabbed token');
@@ -225,7 +225,7 @@ trait SSOFunctions
 			} else {
 				$this->setLoggerChannel('JellyFin')->warning('JellyFin did not return Token');
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Jellyfin')->error($e);
 		}
 		return false;
@@ -249,7 +249,7 @@ trait SSOFunctions
 			);
 			$endpoint = ($oAuthToken) ? '/api/v1/Token/plextoken' : '/api/v1/Token';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
-			$response = Requests::post($url . $endpoint, $headers, json_encode($data), $options);
+			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
 				$token = json_decode($response->body, true)['access_token'];
 				$this->setLoggerChannel('Ombi')->info('Grabbed token');
@@ -260,7 +260,7 @@ trait SSOFunctions
 					$this->setLoggerChannel('Ombi')->warning('Ombi did not return Token');
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Ombi')->error($e);
 		}
 		if ($token) {
@@ -293,7 +293,7 @@ trait SSOFunctions
 						"remember_me" => 1,
 					);
 					$options = $this->requestOptions($url, $this->getSSOTimeout());
-					$response = Requests::post($url . '/auth/signin', $headers, $data, $options);
+					$response = \WpOrg\Requests\Requests::post($url . '/auth/signin', $headers, $data, $options);
 					if ($response->success) {
 						$qualifiedURL = $this->qualifyURL($url, true);
 						$path = ($qualifiedURL['path']) ? $qualifiedURL['path'] : '/';
@@ -304,7 +304,7 @@ trait SSOFunctions
 					} else {
 						$this->setLoggerChannel('Tautulli')->warning('Error on URL: ' . $url);
 					}
-				} catch (Requests_Exception $e) {
+				} catch (\WpOrg\Requests\Exception $e) {
 					$this->setLoggerChannel('Tautulli')->error($e);
 				}
 			}
@@ -328,7 +328,7 @@ trait SSOFunctions
 			);
 			$endpoint = ($oAuthToken ? '/api/v1/auth/plex' : '/api/v1/auth/local');
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
-			$response = Requests::post($url . $endpoint, $headers, json_encode($data), $options);
+			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
 				$user = json_decode($response->body, true); // not really needed yet
 				$token = $response->cookies['connect.sid']->value;
@@ -340,7 +340,7 @@ trait SSOFunctions
 					$this->setLoggerChannel('Overseerr')->warning('Overseerr did not return Token');
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Overseerr')->error($e);
 		}
 		if ($token) {
@@ -372,7 +372,7 @@ trait SSOFunctions
 			);
 			$endpoint = ($oAuthToken) ? '/api/login/plex_login' : '/api/login';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
-			$response = Requests::post($url . $endpoint, $headers, json_encode($data), $options);
+			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
 				$user = json_decode($response->body, true)['user'];
 				$token = json_decode($response->body, true)['token'];
@@ -384,7 +384,7 @@ trait SSOFunctions
 					$this->setLoggerChannel('Petio')->warning('Petio did not return Token');
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Petio')->error($e);
 		}
 		if ($token) {

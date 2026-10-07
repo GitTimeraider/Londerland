@@ -2,68 +2,68 @@
 
 trait AuthFunctions
 {
+	public function ldapConnection()
+	{
+		return new \LdapRecord\Connection($this->ldapConfig());
+	}
+
+	// LDAP connection settings for the configured hosts (the first host's port is used for all of them)
+	public function ldapConfig()
+	{
+		$ldapHosts = [];
+		$ldapPort = 389;
+		foreach (explode(',', $this->config['authBackendHost']) as $i => $value) {
+			$digest = parse_url(trim($value));
+			$scheme = strtolower(($digest['scheme'] ?? 'ldap'));
+			$ldapHosts[] = ($digest['host'] ?? ($digest['path'] ?? ''));
+			if ($i == 0) {
+				$ldapPort = ($digest['port'] ?? ($scheme == 'ldap' ? 389 : 636));
+			}
+		}
+		return [
+			'hosts' => $ldapHosts,
+			'base_dn' => $this->config['authBaseDN'],
+			'username' => (empty($this->config['ldapBindUsername'])) ? null : $this->config['ldapBindUsername'],
+			'password' => (empty($this->config['ldapBindPassword'])) ? null : $this->decrypt($this->config['ldapBindPassword']),
+			'port' => (int)$ldapPort,
+			'follow_referrals' => false,
+			// LdapRecord: use_tls = ldaps:// (Organizr "SSL"), use_starttls = STARTTLS (Organizr "TLS")
+			'use_tls' => (bool)$this->config['ldapSSL'],
+			'use_starttls' => (bool)$this->config['ldapTLS'],
+			'version' => 3,
+			'timeout' => 5,
+			'options' => [
+				// See: http://php.net/ldap_set_option
+				LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_ALLOW
+			]
+		];
+	}
+
+	// Username as it is bound to LDAP, including the configured account prefix/suffix
+	public function ldapAccountName($username)
+	{
+		return ((empty($this->config['authBackendHostPrefix'])) ? '' : $this->config['authBackendHostPrefix']) . $username . ((empty($this->config['authBackendHostSuffix'])) ? '' : $this->config['authBackendHostSuffix']);
+	}
+
+	public function ldapErrorMessage(\LdapRecord\LdapRecordException $e)
+	{
+		return $e->getDetailedError() ? $e->getDetailedError()->getErrorMessage() : $e->getMessage();
+	}
+
 	public function testConnectionLdap()
 	{
 		if (!empty($this->config['authBaseDN']) && !empty($this->config['authBackendHost'])) {
-			$ad = new \Adldap\Adldap();
-			// Create a configuration array.
-			$ldapServers = explode(',', $this->config['authBackendHost']);
-			$i = 0;
-			foreach ($ldapServers as $key => $value) {
-				// Calculate parts
-				$digest = parse_url(trim($value));
-				$scheme = strtolower(($digest['scheme'] ?? 'ldap'));
-				$host = ($digest['host'] ?? ($digest['path'] ?? ''));
-				$port = ($digest['port'] ?? (strtolower($scheme) == 'ldap' ? 389 : 636));
-				// Reassign
-				$ldapHosts[] = $host;
-				if ($i == 0) {
-					$ldapPort = $port;
-				}
-				$i++;
-			}
-			$config = [
-				// Mandatory Configuration Options
-				'hosts' => $ldapHosts,
-				'base_dn' => $this->config['authBaseDN'],
-				'username' => (empty($this->config['ldapBindUsername'])) ? null : $this->config['ldapBindUsername'],
-				'password' => (empty($this->config['ldapBindPassword'])) ? null : $this->decrypt($this->config['ldapBindPassword']),
-				// Optional Configuration Options
-				'schema' => (($this->config['ldapType'] == '1') ? Adldap\Schemas\ActiveDirectory::class : (($this->config['ldapType'] == '2') ? Adldap\Schemas\OpenLDAP::class : Adldap\Schemas\FreeIPA::class)),
-				'account_prefix' => '',
-				'account_suffix' => '',
-				'port' => $ldapPort,
-				'follow_referrals' => false,
-				'use_ssl' => $this->config['ldapSSL'],
-				'use_tls' => $this->config['ldapTLS'],
-				'version' => 3,
-				'timeout' => 5,
-				// Custom LDAP Options
-				'custom_options' => [
-					// See: http://php.net/ldap_set_option
-					LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_ALLOW
-				]
-			];
-			// Add a connection provider to Adldap.
-			$ad->addProvider($config);
 			try {
-				// If a successful connection is made to your server, the provider will be returned.
-				$provider = $ad->connect();
-			} catch (\Adldap\Auth\BindException $e) {
-				$detailedError = $e->getDetailedError();
-				$this->setLoggerChannel('LDAP')->error($e);
-				$this->setAPIResponse('error', $detailedError->getErrorMessage(), 409);
-				return $detailedError->getErrorMessage();
+				// Binds with the configured bind user (or anonymously)
+				$this->ldapConnection()->connect();
+			} catch (\LdapRecord\LdapRecordException $e) {
 				// There was an issue binding / connecting to the server.
+				$this->setLoggerChannel('LDAP')->error($e);
+				$this->setAPIResponse('error', $this->ldapErrorMessage($e), 409);
+				return $this->ldapErrorMessage($e);
 			}
-			if ($provider) {
-				$this->setAPIResponse('success', 'LDAP connection successful', 200);
-				return true;
-			} else {
-				$this->setAPIResponse('error', 'Could not connect', 500);
-				return false;
-			}
-			return ($provider) ? true : false;
+			$this->setAPIResponse('success', 'LDAP connection successful', 200);
+			return true;
 		} else {
 			$this->setAPIResponse('error', 'authBaseDN and/or BackendHost not supplied', 422);
 			return false;
@@ -79,60 +79,9 @@ trait AuthFunctions
 			return false;
 		}
 		if (!empty($this->config['authBaseDN']) && !empty($this->config['authBackendHost'])) {
-			$ad = new \Adldap\Adldap();
-			// Create a configuration array.
-			$ldapServers = explode(',', $this->config['authBackendHost']);
-			$i = 0;
-			foreach ($ldapServers as $key => $value) {
-				// Calculate parts
-				$digest = parse_url(trim($value));
-				$scheme = strtolower(($digest['scheme'] ?? 'ldap'));
-				$host = ($digest['host'] ?? ($digest['path'] ?? ''));
-				$port = ($digest['port'] ?? (strtolower($scheme) == 'ldap' ? 389 : 636));
-				// Reassign
-				$ldapHosts[] = $host;
-				$ldapServersNew[$key] = $scheme . '://' . $host . ':' . $port; // May use this later
-				if ($i == 0) {
-					$ldapPort = $port;
-				}
-				$i++;
-			}
-			$config = [
-				// Mandatory Configuration Options
-				'hosts' => $ldapHosts,
-				'base_dn' => $this->config['authBaseDN'],
-				'username' => (empty($this->config['ldapBindUsername'])) ? null : $this->config['ldapBindUsername'],
-				'password' => (empty($this->config['ldapBindPassword'])) ? null : $this->decrypt($this->config['ldapBindPassword']),
-				// Optional Configuration Options
-				'schema' => (($this->config['ldapType'] == '1') ? Adldap\Schemas\ActiveDirectory::class : (($this->config['ldapType'] == '2') ? Adldap\Schemas\OpenLDAP::class : Adldap\Schemas\FreeIPA::class)),
-				'account_prefix' => (empty($this->config['authBackendHostPrefix'])) ? null : $this->config['authBackendHostPrefix'],
-				'account_suffix' => (empty($this->config['authBackendHostSuffix'])) ? null : $this->config['authBackendHostSuffix'],
-				'port' => $ldapPort,
-				'follow_referrals' => false,
-				'use_ssl' => $this->config['ldapSSL'],
-				'use_tls' => $this->config['ldapTLS'],
-				'version' => 3,
-				'timeout' => 5,
-				// Custom LDAP Options
-				'custom_options' => [
-					// See: http://php.net/ldap_set_option
-					LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_ALLOW
-				]
-			];
-			// Add a connection provider to Adldap.
-			$ad->addProvider($config);
 			try {
-				// If a successful connection is made to your server, the provider will be returned.
-				$provider = $ad->connect();
-				//prettyPrint($provider);
-				if ($provider->auth()->attempt($username, $password, true)) {
+				if ($this->ldapConnection()->auth()->attempt($this->ldapAccountName($username), $password, true)) {
 					// Passed.
-					$user = $provider->search()->find($username);
-					//return $user->getFirstAttribute('cn');
-					//return $user->getGroups(['cn']);
-					//return $user;
-					//return $user->getUserPrincipalName();
-					//return $user->getGroups(['cn']);
 					$this->setResponse(200, 'LDAP connection successful');
 					return true;
 				} else {
@@ -140,24 +89,16 @@ trait AuthFunctions
 					$this->setResponse(401, 'Username/Password Failed to authenticate');
 					return false;
 				}
-			} catch (\Adldap\Auth\BindException $e) {
-				$detailedError = $e->getDetailedError();
+			} catch (\LdapRecord\Auth\UsernameRequiredException|\LdapRecord\Auth\PasswordRequiredException $e) {
+				// The user didn't supply a username or password.
 				$this->setLoggerChannel('LDAP')->error($e);
-				$this->setAPIResponse('error', $detailedError->getErrorMessage(), 500);
-				return $detailedError->getErrorMessage();
+				$this->setAPIResponse('error', $this->ldapErrorMessage($e), 422);
+				return $this->ldapErrorMessage($e);
+			} catch (\LdapRecord\LdapRecordException $e) {
 				// There was an issue binding / connecting to the server.
-			} catch (Adldap\Auth\UsernameRequiredException $e) {
-				$detailedError = $e->getDetailedError();
 				$this->setLoggerChannel('LDAP')->error($e);
-				$this->setAPIResponse('error', $detailedError->getErrorMessage(), 422);
-				return $detailedError->getErrorMessage();
-				// The user didn't supply a username.
-			} catch (Adldap\Auth\PasswordRequiredException $e) {
-				$detailedError = $e->getDetailedError();
-				$this->setLoggerChannel('LDAP')->error($e);
-				$this->setAPIResponse('error', $detailedError->getErrorMessage(), 422);
-				return $detailedError->getErrorMessage();
-				// The user didn't supply a password.
+				$this->setAPIResponse('error', $this->ldapErrorMessage($e), 500);
+				return $this->ldapErrorMessage($e);
 			}
 		} else {
 			$this->setAPIResponse('error', 'authBaseDN and/or BackendHost not supplied', 422);
@@ -175,14 +116,14 @@ trait AuthFunctions
 					'Content-Type' => 'application/json',
 					'Accept' => 'application/json'
 				);
-				$response = Requests::get($url, $headers);
+				$response = \WpOrg\Requests\Requests::get($url, $headers);
 				if ($response->success) {
 					return json_decode($response->body, true);
 				}
 			} else {
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Plex')->error($e);
 		}
 		return false;
@@ -196,7 +137,7 @@ trait AuthFunctions
 				$headers = array(
 					'X-Plex-Token' => $this->config['plexToken'],
 				);
-				$response = Requests::get($url, $headers);
+				$response = \WpOrg\Requests\Requests::get($url, $headers);
 				if ($response->success) {
 					libxml_use_internal_errors(true);
 					$userXML = simplexml_load_string($response->body);
@@ -227,7 +168,7 @@ trait AuthFunctions
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Plex')->error($e);
 		}
 		return false;
@@ -251,7 +192,7 @@ trait AuthFunctions
 				'user[password]' => $password,
 			);
 			$options = array('timeout' => 30);
-			$response = Requests::post($url, $headers, $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, $headers, $data, $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				if ((is_array($json) && isset($json['user']) && isset($json['user']['username'])) && strtolower($json['user']['username']) == $usernameLower || strtolower($json['user']['email']) == $usernameLower) {
@@ -266,7 +207,7 @@ trait AuthFunctions
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Plex')->error($e);
 		}
 		return false;
@@ -276,79 +217,22 @@ trait AuthFunctions
 	public function plugin_auth_ldap($username, $password)
 	{
 		if (!empty($this->config['authBaseDN']) && !empty($this->config['authBackendHost'])) {
-			$ad = new \Adldap\Adldap();
-			// Create a configuration array.
-			$ldapServers = explode(',', $this->config['authBackendHost']);
-			$i = 0;
-			foreach ($ldapServers as $key => $value) {
-				// Calculate parts
-				$digest = parse_url(trim($value));
-				$scheme = strtolower((isset($digest['scheme']) ? $digest['scheme'] : 'ldap'));
-				$host = (isset($digest['host']) ? $digest['host'] : (isset($digest['path']) ? $digest['path'] : ''));
-				$port = (isset($digest['port']) ? $digest['port'] : (strtolower($scheme) == 'ldap' ? 389 : 636));
-				// Reassign
-				$ldapHosts[] = $host;
-				$ldapServersNew[$key] = $scheme . '://' . $host . ':' . $port; // May use this later
-				if ($i == 0) {
-					$ldapPort = $port;
-				}
-				$i++;
-			}
-			$config = [
-				// Mandatory Configuration Options
-				'hosts' => $ldapHosts,
-				'base_dn' => $this->config['authBaseDN'],
-				'username' => (empty($this->config['ldapBindUsername'])) ? null : $this->config['ldapBindUsername'],
-				'password' => (empty($this->config['ldapBindPassword'])) ? null : $this->decrypt($this->config['ldapBindPassword']),
-				// Optional Configuration Options
-				'schema' => (($this->config['ldapType'] == '1') ? Adldap\Schemas\ActiveDirectory::class : (($this->config['ldapType'] == '2') ? Adldap\Schemas\OpenLDAP::class : Adldap\Schemas\FreeIPA::class)),
-				'account_prefix' => (empty($this->config['authBackendHostPrefix'])) ? null : $this->config['authBackendHostPrefix'],
-				'account_suffix' => (empty($this->config['authBackendHostSuffix'])) ? null : $this->config['authBackendHostSuffix'],
-				'port' => $ldapPort,
-				'follow_referrals' => false,
-				'use_ssl' => $this->config['ldapSSL'],
-				'use_tls' => $this->config['ldapTLS'],
-				'version' => 3,
-				'timeout' => 5,
-				// Custom LDAP Options
-				'custom_options' => [
-					// See: http://php.net/ldap_set_option
-					LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_ALLOW
-				]
-			];
-			// Add a connection provider to Adldap.
-			$ad->addProvider($config);
 			try {
-				// If a successful connection is made to your server, the provider will be returned.
-				$provider = $ad->connect();
-				//prettyPrint($provider);
-				if ($provider->auth()->attempt($username, $password)) {
-					try {
-						// Try and get email from LDAP server
-						$accountDN = ((empty($this->config['authBackendHostPrefix'])) ? null : $this->config['authBackendHostPrefix']) . $username . ((empty($this->config['authBackendHostSuffix'])) ? null : $this->config['authBackendHostSuffix']);
-						$record = $provider->search()->findByDnOrFail($accountDN);
-						$email = $record->getFirstAttribute('mail');
-					} catch (Adldap\Models\ModelNotFoundException $e) {
-						// Record wasn't found!
-						$email = null;
-					}
-					// Passed.
+				$connection = $this->ldapConnection();
+				$accountDN = $this->ldapAccountName($username);
+				if ($connection->auth()->attempt($accountDN, $password)) {
+					// Passed - try and get email from LDAP server
+					$record = $connection->query()->find($accountDN);
 					return array(
-						'email' => $email
+						'email' => $record['mail'][0] ?? null
 					);
 				} else {
 					// Failed.
 					return false;
 				}
-			} catch (\Adldap\Auth\BindException $e) {
+			} catch (\LdapRecord\LdapRecordException $e) {
+				// There was an issue binding / connecting to the server, or no username/password was supplied.
 				$this->setLoggerChannel('LDAP')->error($e);
-				// There was an issue binding / connecting to the server.
-			} catch (Adldap\Auth\UsernameRequiredException $e) {
-				$this->setLoggerChannel('LDAP')->error($e);
-				// The user didn't supply a username.
-			} catch (Adldap\Auth\PasswordRequiredException $e) {
-				$this->setLoggerChannel('LDAP')->error($e);
-				// The user didn't supply a password.
 			}
 		}
 		return false;
@@ -407,7 +291,7 @@ trait AuthFunctions
 				'Password' => sha1($password),
 				'PasswordMd5' => md5($password),
 			);
-			$response = Requests::post($url, $headers, json_encode($data));
+			$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data));
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				if (is_array($json) && isset($json['SessionInfo']) && isset($json['User']) && $json['User']['HasPassword'] == true) {
@@ -416,14 +300,14 @@ trait AuthFunctions
 						'X-Emby-Token' => $json['AccessToken'],
 						'X-Mediabrowser-Token' => $json['AccessToken'],
 					);
-					$response = Requests::post($this->qualifyURL($this->config['embyURL']) . '/Sessions/Logout', $headers, array());
+					$response = \WpOrg\Requests\Requests::post($this->qualifyURL($this->config['embyURL']) . '/Sessions/Logout', $headers, array());
 					if ($response->success) {
 						return true;
 					}
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 		}
 		return false;
@@ -442,7 +326,7 @@ trait AuthFunctions
 				'Username' => $username,
 				'Pw' => $password
 			);
-			$response = Requests::post($url, $headers, json_encode($data));
+			$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data));
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				if (is_array($json) && isset($json['SessionInfo']) && isset($json['User']) && $json['User']['HasPassword'] == true) {
@@ -452,14 +336,14 @@ trait AuthFunctions
 						'X-Emby-Authorization' => 'MediaBrowser Client="Organizr Auth", Device="Organizr", DeviceId="orgv2", Version="2.0", Token="' . $json['AccessToken'] . '"',
 						'Content-Type' => 'application/json',
 					);
-					$response = Requests::post($this->qualifyURL($this->config['jellyfinURL']) . '/Sessions/Logout', $headers, array());
+					$response = \WpOrg\Requests\Requests::post($this->qualifyURL($this->config['jellyfinURL']) . '/Sessions/Logout', $headers, array());
 					if ($response->success) {
 						return true;
 					}
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('JellyFin')->error($e);
 		}
 		return false;
@@ -482,7 +366,7 @@ trait AuthFunctions
 				'nameOrEmail' => $username,
 				'rawpw' => $password,
 			);
-			$response = Requests::post($connectURL, $headers, $data);
+			$response = \WpOrg\Requests\Requests::post($connectURL, $headers, $data);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				if (is_array($json) && isset($json['AccessToken']) && isset($json['User'])) {
@@ -498,7 +382,7 @@ trait AuthFunctions
 			// Get A User
 			if ($connectUser) {
 				$url = $this->qualifyURL($this->config['embyURL']) . '/Users?api_key=' . $this->config['embyToken'];
-				$response = Requests::get($url);
+				$response = \WpOrg\Requests\Requests::get($url);
 				if ($response->success) {
 					$json = json_decode($response->body, true);
 					if (is_array($json)) {
@@ -518,7 +402,7 @@ trait AuthFunctions
 				}
 			}
 			return false;
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 			return false;
 		}

@@ -56,7 +56,7 @@ trait SabNZBdHomepageItem
 			$url = $url . '/api?mode=queue&output=json&apikey=' . $this->config['sabnzbdToken'];
 			try {
 				$options = $this->requestOptions($url, null, $this->config['sabnzbdDisableCertCheck'], $this->config['sabnzbdUseCustomCertificate']);
-				$response = Requests::get($url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($url, [], $options);
 				if ($response->success) {
 					$data = json_decode($response->body, true);
 					$status = 'success';
@@ -75,7 +75,7 @@ trait SabNZBdHomepageItem
 					$this->logger->debug('API Connection Test was unsuccessful');
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->logger->critical($e, [$url]);
 				$this->setResponse(500, $e->getMessage());
 				return false;
@@ -135,11 +135,11 @@ trait SabNZBdHomepageItem
 		$url = $url . '/api?mode=queue&output=json&apikey=' . $this->config['sabnzbdToken'];
 		try {
 			$options = $this->requestOptions($url, $this->config['sabnzbdRefresh'], $this->config['sabnzbdDisableCertCheck'], $this->config['sabnzbdUseCustomCertificate']);
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$api['content']['queueItems'] = json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -148,11 +148,11 @@ trait SabNZBdHomepageItem
 		$url = $url . '/api?mode=history&output=json&limit=100&apikey=' . $this->config['sabnzbdToken'];
 		try {
 			$options = $this->requestOptions($url, $this->config['sabnzbdRefresh'], $this->config['sabnzbdDisableCertCheck'], $this->config['sabnzbdUseCustomCertificate']);
-			$response = Requests::get($url, array(), $options);
+			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
 			if ($response->success) {
 				$api['content']['historyItems'] = json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -173,11 +173,11 @@ trait SabNZBdHomepageItem
 		$url = $url . '/api?' . $id . '&output=json&apikey=' . $this->config['sabnzbdToken'];
 		try {
 			$options = $this->requestOptions($url, $this->config['sabnzbdRefresh'], $this->config['sabnzbdDisableCertCheck'], $this->config['sabnzbdUseCustomCertificate']);
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$api['content'] = json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -198,11 +198,11 @@ trait SabNZBdHomepageItem
 		$url = $url . '/api?' . $id . '&output=json&apikey=' . $this->config['sabnzbdToken'];
 		try {
 			$options = $this->requestOptions($url, $this->config['sabnzbdRefresh'], $this->config['sabnzbdDisableCertCheck'], $this->config['sabnzbdUseCustomCertificate']);
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$api['content'] = json_decode($response->body, true);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;

@@ -9,16 +9,6 @@ updates:
     groups:
       composer-minor-and-patch:
         update-types: [minor, patch]
-    ignore:
-      # Major versions below need code changes in Organizr before they can be used
-      - dependency-name: rmccue/requests
-        update-types: [version-update:semver-major] # 2.x renames classes and type-checks ~300 call sites
-      - dependency-name: zircote/swagger-php
-        update-types: [version-update:semver-major] # 5.x+ dropped the docblock analyser used for the API docs
-      - dependency-name: monolog/monolog
-        update-types: [version-update:semver-major] # pinned by the bundled php-json-logger package
-      - dependency-name: psr/log
-        update-types: [version-update:semver-major] # pinned by monolog 1.x
 
   # Base images in the Dockerfile (php, composer)
   - package-ecosystem: docker
