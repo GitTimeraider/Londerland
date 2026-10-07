@@ -62,6 +62,28 @@ Do you have quite a bit of services running on your computer or server? Do you h
 
 [![Feature Requests]](https://vote.organizr.app/)
 
+### Self-contained image (ghcr.io)
+
+This repository builds its own image with `.github/workflows/docker.yml` and publishes it to `ghcr.io/gittimeraider/organizr`.
+Everything (PHP extensions, Composer dependencies, fonts, cron) is baked into the image at build time, so the container does not download anything when it starts.
+To update, pull a newer image and recreate the container.
+
+```yaml
+services:
+  organizr:
+    image: ghcr.io/gittimeraider/organizr:latest
+    container_name: organizr
+    ports:
+      - 80:80
+    environment:
+      - TZ=Etc/UTC
+    volumes:
+      - ./organizr-data:/var/www/html/data
+    restart: unless-stopped
+```
+
+In the setup wizard, set the database location to a folder inside the volume, for example `/var/www/html/data/db/`.
+
 ![OrganizrDocker](https://user-images.githubusercontent.com/16184466/53667702-fcdcc600-3c2e-11e9-8828-860e531e8096.png)
 
 [![Repository](https://img.shields.io/github/stars/organizr/docker-organizr?color=402885&style=for-the-badge&logo=github&logoColor=41add3&)](https://github.com/Organizr/docker-organizr)

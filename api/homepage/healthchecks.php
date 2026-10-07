@@ -87,12 +87,12 @@ trait HealthChecksHomepageItem
 			try {
 				$headers = array('X-Api-Key' => $token);
 				$options = $this->requestOptions($url, $this->config['homepageHealthChecksRefresh'], $this->config['healthChecksDisableCertCheck'], $this->config['healthChecksUseCustomCertificate']);
-				$response = Requests::get($url, $headers, $options);
+				$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 				if ($response->success) {
 					$healthResults = json_decode($response->body, true);
 					$api['content']['checks'] = array_merge($api['content']['checks'], $healthResults['checks']);
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('HealthChecks')->error($e);
 			};
 		}

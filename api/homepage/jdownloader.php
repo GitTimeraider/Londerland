@@ -77,7 +77,7 @@ trait JDownloaderHomepageItem
         $url = $this->qualifyURL($this->config['jdownloaderURL']);
         try {
             $options = $this->requestOptions($url, $this->config['jdownloaderRefresh'], $this->config['jdownloaderDisableCertCheck'], $this->config['jdownloaderUseCustomCertificate'], $auth);
-            $response = Requests::get($url, [], $options);
+            $response = \WpOrg\Requests\Requests::get($url, [], $options);
             if ($response->success) {
                 $this->setAPIResponse('success', 'API Connection succeeded', 200);
                 return true;
@@ -86,7 +86,7 @@ trait JDownloaderHomepageItem
                 $this->setAPIResponse('success', 'JDownloader Error Occurred', 500);
 				return false;
             }
-        } catch (Requests_Exception $e) {
+        } catch (\WpOrg\Requests\Exception $e) {
             $this->setLoggerChannel('JDownloader')->error($e);
             $this->setResponse(500, $e->getMessage());
             return false;
@@ -143,7 +143,7 @@ trait JDownloaderHomepageItem
         }
         try {
             $options = $this->requestOptions($url, $this->config['jdownloaderRefresh'], $this->config['jdownloaderDisableCertCheck'], $this->config['jdownloaderUseCustomCertificate'], $auth);
-            $response = Requests::get($url, [], $options);
+            $response = \WpOrg\Requests\Requests::get($url, [], $options);
             if ($response->success) {
                 $temp = json_decode($response->body, true);
                 $packages = $temp['packages'];
@@ -169,7 +169,7 @@ trait JDownloaderHomepageItem
                 }
                 $api['content']['$status'] = array($temp['downloader_state'], $temp['grabber_collecting'], $temp['update_ready']);
             }
-        } catch (Requests_Exception $e) {
+        } catch (\WpOrg\Requests\Exception $e) {
             $this->setLoggerChannel('JDownloader')->error($e);
             $this->setResponse(500, $e->getMessage());
             return false;

@@ -73,7 +73,7 @@ class ShuckStop extends Organizr
 				}
 				$url = 'https://shucks.top/';
 				$options = ($this->localURL($url)) ? ['verify' => false] : [];
-				$response = Requests::get($url, [], $options);
+				$response = \WpOrg\Requests\Requests::get($url, [], $options);
 				if ($response->success) {
 					$drives = [
 						'run_date' => $this->currentTime,
@@ -84,18 +84,17 @@ class ShuckStop extends Organizr
 						'lowest_priced_drives' => [],
 						'recent_decent_drives' => [],
 					];
-					$dom = new PHPHtmlParser\Dom;
 					try {
-						$dom->loadStr($response->body);
-						$contents = $dom->find('tbody tr');
+						$dom = \Dom\HTMLDocument::createFromString($response->body, LIBXML_NOERROR);
+						$contents = $dom->querySelectorAll('tbody tr');
 						foreach ($contents as $content) {
-							//$html = $content->innerHtml;
+							$cells = iterator_to_array($content->querySelectorAll('td'));
 							$capacity = $content->getAttribute('data-capacity');
-							$model = str_replace(' ', '-', $content->find('td')[1]->text);
-							$lastDecent = $content->find('td')[8]->text;
-							$lowestDollars = $content->find('td')[7]->getAttribute('data-dollars');
-							$lowestPerTB = $content->find('td')[7]->getAttribute('data-per-tb');
-							$lowestNow = $content->find('td')[7]->find('p')[1]->text;
+							$model = str_replace(' ', '-', trim($cells[1]->textContent));
+							$lastDecent = trim($cells[8]->textContent);
+							$lowestDollars = $cells[7]->getAttribute('data-dollars');
+							$lowestPerTB = $cells[7]->getAttribute('data-per-tb');
+							$lowestNow = trim($cells[7]->querySelectorAll('p')->item(1)?->textContent ?? '');
 							$drives['drives'][$capacity][strtolower($model)]['capacity'] = $capacity;
 							$drives['drives'][$capacity][strtolower($model)]['model'] = strtolower($model);
 							$drives['drives'][$capacity][strtolower($model)]['last_decent'] = $lastDecent;
@@ -106,11 +105,11 @@ class ShuckStop extends Organizr
 							$drives['drives'][$capacity][strtolower($model)]['decent_now'] = $lastDecent == 'now';
 
 							$checkItems = [
-								'amazon' => $this->_checkShuckClassNA('amazon', $content->find('td')[2]->getAttribute('class')),
-								'bestbuy' => $this->_checkShuckClassNA('bestbuy', $content->find('td')[3]->getAttribute('class')),
-								'bhphoto' => $this->_checkShuckClassNA('bhphoto', $content->find('td')[4]->getAttribute('class')),
-								'ebay' => $this->_checkShuckClassNA('ebay', $content->find('td')[5]->getAttribute('class')),
-								'newegg' => $this->_checkShuckClassNA('newegg', $content->find('td')[6]->getAttribute('class'))
+								'amazon' => $this->_checkShuckClassNA('amazon', $cells[2]->getAttribute('class')),
+								'bestbuy' => $this->_checkShuckClassNA('bestbuy', $cells[3]->getAttribute('class')),
+								'bhphoto' => $this->_checkShuckClassNA('bhphoto', $cells[4]->getAttribute('class')),
+								'ebay' => $this->_checkShuckClassNA('ebay', $cells[5]->getAttribute('class')),
+								'newegg' => $this->_checkShuckClassNA('newegg', $cells[6]->getAttribute('class'))
 							];
 							$i = 2;
 							foreach ($checkItems as $store => $class) {
@@ -118,10 +117,10 @@ class ShuckStop extends Organizr
 									$driveInfo = $class;
 								} else {
 									$driveInfo = $this->_checkShuckStore($store, [
-										'data-per-tb' => $content->find('td')[$i]->getAttribute('data-per-tb'),
-										'data-dollars' => $content->find('td')[$i]->getAttribute('data-dollars'),
-										'title' => $content->find('td')[$i]->getAttribute('title'),
-										'link' => $content->find('td')[$i]->find('a')->getAttribute('href'),
+										'data-per-tb' => $cells[$i]->getAttribute('data-per-tb'),
+										'data-dollars' => $cells[$i]->getAttribute('data-dollars'),
+										'title' => $cells[$i]->getAttribute('title'),
+										'link' => $cells[$i]->querySelector('a')?->getAttribute('href') ?? '',
 										'lowest_dollars' => $lowestDollars,
 										'lowest_now' => $lowestNow == 'now'
 									]);
@@ -204,7 +203,7 @@ class ShuckStop extends Organizr
 						file_put_contents($file, safe_json_encode($drives, JSON_HEX_QUOT | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 						$this->setResponse(200, null, $drives);
 						return $drives;
-					} catch (\PHPHtmlParser\Exceptions\ChildNotFoundException|\PHPHtmlParser\Exceptions\CircularException|\PHPHtmlParser\Exceptions\LogicalException|\PHPHtmlParser\Exceptions\StrictException|\PHPHtmlParser\Exceptions\ContentLengthException|\PHPHtmlParser\Exceptions\NotLoadedException $e) {
+					} catch (\Throwable $e) {
 						$this->setResponse(500, 'Error connecting to ShuckStop');
 						return false;
 					}

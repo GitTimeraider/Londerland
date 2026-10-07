@@ -72,7 +72,7 @@ trait CouchPotatoHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], 60, $this->config['couchpotatoDisableCertCheck'], $this->config['couchpotatoUseCustomCertificate']);
-				$downloader = new Kryptonit3\CouchPotato\CouchPotato($value['url'], $value['token'], null, null, $options);
+				$downloader = new OrganizrCouchPotatoClient($value['url'], $value['token'], null, null, $options);
 				$calendar = $this->formatCouchCalendar($downloader->getMediaList(array('status' => 'active,done')), $key);
 			} catch (Exception $e) {
 				$this->setLoggerChannel('Radarr')->error($e);

@@ -1,24 +1,5 @@
 <?php
-/**
- * @OA\Tag(
- *     name="update",
- *     description="Organizr Update"
- * )
- */
 $app->get('/update', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update",
-	 *     summary="Update Organizr install using update script",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->updateOrganizr();
@@ -29,19 +10,6 @@ $app->get('/update', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/download/{branch}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/download/{branch}",
-	 *     summary="Download Organizr Update Files",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->upgradeInstall($args['branch'], '1');
@@ -52,19 +20,6 @@ $app->get('/update/download/{branch}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/unzip/{branch}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/unzip/{branch}",
-	 *     summary="Unzip Organizr Update Files",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->upgradeInstall($args['branch'], '2');
@@ -75,19 +30,6 @@ $app->get('/update/unzip/{branch}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/move/{branch}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/move/{branch}",
-	 *     summary="Move Organizr Update Files",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->upgradeInstall($args['branch'], '3');
@@ -98,19 +40,6 @@ $app->get('/update/move/{branch}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/cleanup/{branch}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/cleanup/{branch}",
-	 *     summary="Cleanup Organizr Update Files",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->upgradeInstall($args['branch'], '4');
@@ -121,19 +50,6 @@ $app->get('/update/cleanup/{branch}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/docker', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/docker",
-	 *     summary="Update Organizr install using Docker Container script",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->dockerUpdate();
@@ -144,19 +60,6 @@ $app->get('/update/docker', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/windows', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/windows",
-	 *     summary="Update Organizr install using Windows script",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->windowsUpdate();
@@ -167,19 +70,6 @@ $app->get('/update/windows', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/linux', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/linux",
-	 *     summary="Update Organizr install using Linux script",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->linuxUpdate();
@@ -190,19 +80,6 @@ $app->get('/update/linux', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/migrate/{version}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/migrate/{version}",
-	 *     summary="Run Organizr Version Mirgation for specific version",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->upgradeToVersion($args['version']);
@@ -213,19 +90,6 @@ $app->get('/update/migrate/{version}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/update/reset/{feature}', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     security={{ "api_key":{} }},
-	 *     tags={"update"},
-	 *     path="/api/v2/update/reset/{feature}",
-	 *     summary="Reset an Organizr feature back to default values",
-	 *     @OA\Response(response="200",description="Success",@OA\JsonContent(ref="#/components/schemas/success-message")),
-	 *     @OA\Response(response="401",description="Unauthorized",@OA\JsonContent(ref="#/components/schemas/unauthorized-message")),
-	 *     @OA\Response(response="404",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="422",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 *     @OA\Response(response="500",description="Error",@OA\JsonContent(ref="#/components/schemas/error-message")),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->qualifyRequest(1, true)) {
 		$Organizr->resetUpdateFeature($args['feature']);

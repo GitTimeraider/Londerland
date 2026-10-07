@@ -138,7 +138,7 @@ class HealthChecks extends Organizr
 		$headers = array('Token' => $this->config['organizrAPI']);
 		$url = $this->qualifyURL($url);
 		try {
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			if ($response->success) {
 				$success = true;
 			}
@@ -155,7 +155,7 @@ class HealthChecks extends Organizr
 					$success = true;
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('HealthChecks')->error($e);
 			return false;
 		}
@@ -184,7 +184,7 @@ class HealthChecks extends Organizr
 		$url = $this->_healthCheckSelfHostedURLValidation($this->config['HEALTHCHECKS-PingURL']);
 		$uuid = '/' . $uuid;
 		$options = ($this->localURL($url)) ? array('verify' => false) : array('verify' => $this->getCert());
-		return Requests::get($url . $uuid . '/start', [], $options);
+		return \WpOrg\Requests\Requests::get($url . $uuid . '/start', [], $options);
 	}
 
 	public function _healthCheckPluginUUID($uuid, $pass = false)
@@ -196,7 +196,7 @@ class HealthChecks extends Organizr
 		$uuid = '/' . $uuid;
 		$path = !$pass ? '/fail' : '';
 		$options = ($this->localURL($url)) ? array('verify' => false) : array('verify' => $this->getCert());
-		return Requests::get($url . $uuid . $path, [], $options);
+		return \WpOrg\Requests\Requests::get($url . $uuid . $path, [], $options);
 	}
 
 	public function _healthCheckPluginRun()

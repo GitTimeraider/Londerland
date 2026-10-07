@@ -1,17 +1,5 @@
 <?php
 $app->get('/ping', function ($request, $response, $args) {
-	/**
-	 * @OA\Get(
-	 *     path="/api/v2/ping",
-	 *     summary="Ping the Organizr API",
-	 *     @OA\Response(
-	 *         response="200",
-	 *         description="Success",
-	 *         @OA\JsonContent(ref="#/components/schemas/ping"),
-	 *     ),
-	 *   @OA\Response(response="401",description="Unauthorized"),
-	 * )
-	 */
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	$GLOBALS['api']['response']['data'] = 'pong';
 	$response->getBody()->write(jsonE($GLOBALS['api']));

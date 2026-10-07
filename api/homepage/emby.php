@@ -64,7 +64,7 @@ trait EmbyHomepageItem
 		$url = $url . "/Users?api_key=" . $this->config['embyToken'];
 		$options = $this->requestOptions($url, null, $this->config['embyDisableCertCheck'], $this->config['embyUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$this->setAPIResponse('success', 'API Connection succeeded', 200);
 				return true;
@@ -72,7 +72,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Connection Error', 500);
 				return true;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		}
@@ -178,7 +178,7 @@ trait EmbyHomepageItem
 		$url = $url . '/Sessions?api_key=' . $this->config['embyToken'] . '&Fields=Overview,People,Genres,CriticRating,Studios,Taglines';
 		$options = $this->requestOptions($url, $this->config['homepageStreamRefresh'], $this->config['embyDisableCertCheck'], $this->config['embyUseCustomCertificate']);
 		try {
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$emby = json_decode($response->body, true);
@@ -194,7 +194,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -218,7 +218,7 @@ trait EmbyHomepageItem
 			}
 			// Get A User
 			$userIds = $url . "/Users?api_key=" . $this->config['embyToken'];
-			$response = Requests::get($userIds, [], $options);
+			$response = \WpOrg\Requests\Requests::get($userIds, [], $options);
 			if ($response->success) {
 				$emby = json_decode($response->body, true);
 				foreach ($emby as $value) { // Scan for admin user
@@ -236,7 +236,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Error Occurred', 500);
 				return false;
 			}
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$emby = json_decode($response->body, true);
@@ -252,7 +252,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -280,7 +280,7 @@ trait EmbyHomepageItem
 			}
 			// Get A User
 			$userIds = $url . "/Users?api_key=" . $this->config['embyToken'];
-			$response = Requests::get($userIds, [], $options);
+			$response = \WpOrg\Requests\Requests::get($userIds, [], $options);
 			if ($response->success) {
 				$emby = json_decode($response->body, true);
 				foreach ($emby as $value) { // Scan for admin user
@@ -298,7 +298,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Error Occurred', 500);
 				return false;
 			}
-			$response = Requests::get($url, [], $options);
+			$response = \WpOrg\Requests\Requests::get($url, [], $options);
 			if ($response->success) {
 				$items = array();
 				$emby = json_decode($response->body, true);
@@ -312,7 +312,7 @@ trait EmbyHomepageItem
 				$this->setAPIResponse('error', 'Emby Error Occurred', 500);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Emby')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

@@ -93,7 +93,7 @@ trait ProwlarrHomepageItem
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['prowlarrDisableCertCheck'], $this->config['prowlarrUseCustomCertificate']);
-			$response = Requests::get($endpoint, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($endpoint, $headers, $options);
 			if ($response->success) {
 				$apiData = json_decode($response->body, true);
 				$api['content'] = $apiData;
@@ -102,7 +102,7 @@ trait ProwlarrHomepageItem
 				$this->setResponse(403, 'Error connecting to Prowlarr');
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		};
@@ -125,13 +125,13 @@ trait ProwlarrHomepageItem
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['prowlarrDisableCertCheck'], $this->config['prowlarrUseCustomCertificate']);
-			$response = Requests::get($endpoint, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($endpoint, $headers, $options);
 			if ($response->success) {
 				$apiData = json_decode($response->body, true);
 				$api['content'] = $apiData;
 				unset($apiData);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		};
@@ -169,7 +169,7 @@ trait ProwlarrHomepageItem
 			if ($response) {
 				$api['content'] = $response;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Prowlarr')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

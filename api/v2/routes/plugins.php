@@ -1,9 +1,4 @@
 <?php
-/**
- * @OA\Tag(
- *     name="plugins"
- * )
- */
 $app->get('/plugins', function ($request, $response, $args) {
 	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
 	if ($Organizr->checkRoute($request)) {

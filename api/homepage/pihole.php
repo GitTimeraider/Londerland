@@ -105,7 +105,7 @@ trait PiHoleHomepageItem
 		try {
 			$sid = $this->doRequest($base_url, "createAuth", [], ['password' => $token]);
 			$this->cleanSessions($base_url, $sid);
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$errors .= $ip . ': ' . $e->getMessage();
 			$this->setLoggerChannel('PiHole')->error($e);
 		};
@@ -196,12 +196,12 @@ trait PiHoleHomepageItem
 		$url = $this->qualifyURL("$baseUrl/api/{$urlHandler($data)}");
 		$headers = $headers + ["User-Agent" => 'Organizr'];
 		try {
-			$response = Requests::$requestType($url, $headers, $payloadHandler($data));
+			$response = \WpOrg\Requests\Requests::request($url, $headers, $payloadHandler($data), strtoupper($requestType));
 			
 			if ($response->success) {
 				$processedResponse = $responseHandler($this->testAndFormatString($response->body)["data"]);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 				$this->setResponse(500, $e->getMessage());
 				$this->setLoggerChannel('PiHole')->error($e);
 				throw $e;

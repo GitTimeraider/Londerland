@@ -274,7 +274,7 @@ class Invites extends Organizr
 							"Accept" => "application/json",
 							"X-Plex-Token" => $this->config['plexToken']
 						);
-						$response = Requests::get($url, $headers, array());
+						$response = \WpOrg\Requests\Requests::get($url, $headers, array());
 						libxml_use_internal_errors(true);
 						if ($response->success) {
 							$libraryList = array();
@@ -295,7 +295,7 @@ class Invites extends Organizr
 							$libraryList = array_change_key_case($libraryList, CASE_LOWER);
 							return $libraryList;
 						}
-					} catch (Requests_Exception $e) {
+					} catch (\WpOrg\Requests\Exception $e) {
 						$this->setLoggerChannel('Plex')->error($e);
 						return false;
 					};
@@ -619,7 +619,7 @@ class Invites extends Organizr
 					try {
 						switch ($action) {
 							case 'share':
-								$response = Requests::post($url, $headers, json_encode($data), array());
+								$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data), array());
 
 								if($this->config['INVITES-add-plex-home']) {
 									$this->_addUserPlexHome($mail);
@@ -637,7 +637,7 @@ class Invites extends Organizr
 							case 'unshare':
 								$id = (is_numeric($username) ? $username : $this->_invitesPluginConvertPlexName($username, "id"));
 								$url = $url . $id;
-								$response = Requests::delete($url, $headers, array());
+								$response = \WpOrg\Requests\Requests::delete($url, $headers, array());
 								break;
 							default:
 								$this->setAPIResponse('error', 'No Action supplied', 409);
@@ -667,7 +667,7 @@ class Invites extends Organizr
 									return false;
 							}
 						}
-					} catch (Requests_Exception $e) {
+					} catch (\WpOrg\Requests\Exception $e) {
 						$this->setLoggerChannel('Plex')->error($e);
 						$this->setAPIResponse('error', $e->getMessage(), 409);
 						return false;
@@ -683,7 +683,7 @@ class Invites extends Organizr
 					#add emby user to system
 					$this->setAPIResponse('success', 'User now has access to system', 200);
 					return true;
-				} catch (Requests_Exception $e) {
+				} catch (\WpOrg\Requests\Exception $e) {
 					$this->setLoggerChannel('Emby')->error($e);
 					$this->setAPIResponse('error', $e->getMessage(), 409);
 					return false;
@@ -759,14 +759,14 @@ class Invites extends Organizr
 		);
 
 		try {
-			$response = Requests::post($endpoint, $headers, json_encode($payload));
+			$response = \WpOrg\Requests\Requests::post($endpoint, $headers, json_encode($payload));
 			if ($response->success) {
 				$this->setLoggerChannel('Komga')->info('User created ' . $email . ' with roles: ' . implode(',', $roles) . ' and libraries: ' . implode(',', $libraryIds));
 				return true;
 			}
 			$this->setLoggerChannel('Komga')->warning('User not created ' . $email . ' HTTP ' . $response->status_code);
-		} catch (Requests_Exception $e) {
-			$this->setLoggerChannel('Komga')->error('User not created ' . $email . ' Requests_Exception: ' . $e->getMessage());
+		} catch (\WpOrg\Requests\Exception $e) {
+			$this->setLoggerChannel('Komga')->error('User not created ' . $email . ' \WpOrg\Requests\Exception: ' . $e->getMessage());
 		}
 		return false;
 	}
@@ -825,7 +825,7 @@ class Invites extends Organizr
         );
 
         try {
-            $response = Requests::get($endpoint, $headers);
+            $response = \WpOrg\Requests\Requests::get($endpoint, $headers);
             if ($response->success) {
                 $libraries = json_decode($response->body, true);
                 // Komga retourne un tableau d'objets librairie
@@ -843,7 +843,7 @@ class Invites extends Organizr
             } else {
                 $this->logger->warning("Error HTTP ".$response->status_code.' body='.$response->body);
             }
-        } catch (Requests_Exception $e) {
+        } catch (\WpOrg\Requests\Exception $e) {
             $this->logger->warning("Exception: " . $e->getMessage());
         }
         return $libraryListDefault;
@@ -874,7 +874,7 @@ class Invites extends Organizr
 			$options = array(
 				'auth' => array($adminUser, $adminPass),
 			);
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			if ($response->success) {
 				$body = json_decode($response->body, true);
 				if (isset($body['ocs']['data']['groups'])) {
@@ -894,7 +894,7 @@ class Invites extends Organizr
 			} else {
 				$this->logger->warning("Error HTTP ".$response->status_code.' body='.$response->body);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->warning("Exception: " . $e->getMessage());
 		}
 		return false;
@@ -1023,13 +1023,13 @@ class Invites extends Organizr
 			$options = array(
 				'auth' => array($adminUser, $adminPass),
 			);
-			$response = Requests::post($url, $headers, $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, $headers, $data, $options);
 			if ($response->success) {
 				$this->logger->info("User created ($email)");
 				return true;
 			}
 			$this->logger->warning("Error ($email) HTTP ".$response->status_code.' body='.$response->body);
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->warning("Exception: " . $e->getMessage());
 		}
 		return false;
@@ -1055,7 +1055,7 @@ class Invites extends Organizr
 			"X-Plex-Token" => $this->config['plexToken']
 		);
 		try {
-			$response = Requests::get($url, $headers);
+			$response = \WpOrg\Requests\Requests::get($url, $headers);
 			if ($response->success) {
 				$xml = simplexml_load_string($response->body);
 				// Parcourt les éléments <Invite> du MediaContainer
@@ -1069,7 +1069,7 @@ class Invites extends Organizr
 				}
 			}
 			$this->logger->warning("No userId found for $email");
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->warning("Exception: " . $e->getMessage());
 		}
 		return null;
@@ -1118,14 +1118,14 @@ class Invites extends Organizr
 		}
 		$url = 'https://clients.plex.tv/api/home/users?invitedEmail=' . urlencode($email) . '&skipFriendship=1&X-Plex-Token=' . urlencode($this->config['plexToken']);
 		try {
-			$response = Requests::post($url, $headers);
+			$response = \WpOrg\Requests\Requests::post($url, $headers);
 			if ($response->success) {
 				$this->logger->info('User added on plex home');
 				return json_decode($response->body, true);
 			} else {
 				$this->logger->info('_getPlexHomeUserByEmail: error (HTTP ' . $response->status_code . ')');
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->info('_addUserPlexHome: ' . $e->getMessage());
 		}
 		return false;

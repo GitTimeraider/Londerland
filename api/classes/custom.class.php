@@ -1,6 +1,6 @@
 <?php
 
-class Requests_Auth_Digest extends Requests_Auth_Basic
+class OrganizrDigestAuth extends \WpOrg\Requests\Auth\Basic
 {
 	
 	/**

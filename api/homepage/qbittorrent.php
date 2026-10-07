@@ -65,7 +65,7 @@ trait QBitTorrentHomepageItem
 		$url = $digest['scheme'] . '://' . $digest['host'] . $digest['port'] . $digest['path'] . $apiVersionLogin;
 		try {
 			$options = $this->requestOptions($this->config['qBittorrentURL'], null, $this->config['qBittorrentDisableCertCheck'], $this->config['qBittorrentUseCustomCertificate']);
-			$response = Requests::post($url, [], $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, [], $data, $options);
 			$reflection = new ReflectionClass($response->cookies);
 			$cookie = $reflection->getProperty("cookies");
 			$cookie->setAccessible(true);
@@ -76,7 +76,7 @@ trait QBitTorrentHomepageItem
 				);
 				$reverse = $this->config['qBittorrentReverseSorting'] ? 'true' : 'false';
 				$url = $digest['scheme'] . '://' . $digest['host'] . $digest['port'] . $digest['path'] . $apiVersionQuery . $this->config['qBittorrentSortOrder'] . '&reverse=' . $reverse;
-				$response = Requests::get($url, $headers, $options);
+				$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 				if ($response) {
 					$torrents = json_decode($response->body, true);
 					if (is_array($torrents)) {
@@ -95,7 +95,7 @@ trait QBitTorrentHomepageItem
 				$this->setAPIResponse('error', 'qBittorrent Connect Function - Error: Could not get session ID', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('qBittorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -151,7 +151,7 @@ trait QBitTorrentHomepageItem
 		$url = $digest['scheme'] . '://' . $digest['host'] . $digest['port'] . $digest['path'] . $apiVersionLogin;
 		try {
 			$options = $this->requestOptions($this->config['qBittorrentURL'], $this->config['qBittorrentRefresh'], $this->config['qBittorrentDisableCertCheck'], $this->config['qBittorrentUseCustomCertificate']);
-			$response = Requests::post($url, [], $data, $options);
+			$response = \WpOrg\Requests\Requests::post($url, [], $data, $options);
 			$reflection = new ReflectionClass($response->cookies);
 			$cookie = $reflection->getProperty("cookies");
 			$cookie->setAccessible(true);
@@ -162,7 +162,7 @@ trait QBitTorrentHomepageItem
 				);
 				$reverse = $this->config['qBittorrentReverseSorting'] ? 'true' : 'false';
 				$url = $digest['scheme'] . '://' . $digest['host'] . $digest['port'] . $digest['path'] . $apiVersionQuery . $this->config['qBittorrentSortOrder'] . '&reverse=' . $reverse;
-				$response = Requests::get($url, $headers, $options);
+				$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 				if ($response) {
 					$torrentList = json_decode($response->body, true);
 					if ($this->config['qBittorrentHideSeeding'] || $this->config['qBittorrentHideCompleted']) {
@@ -193,7 +193,7 @@ trait QBitTorrentHomepageItem
 				$this->setAPIResponse('error', 'qBittorrent Connect Function - Error: Could not get session ID', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('qBittorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

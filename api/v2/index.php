@@ -1,27 +1,4 @@
 <?php
-/**
- * @OA\Info(title="Organizr API", description="Organizr - Accept no others", version="2.0")
- * @OA\Server(url=API_HOST,description="This Organizr Install")
- * @OA\Server(url="https://demo.organizr.app",description="Organizr Demo API")
- * @OA\Server(url="{schema}://{hostPath}",description="Custom Organizr API",
- *      @OA\ServerVariable(
- *          serverVariable="schema",
- *          enum={"https", "http"},
- *          default="http"
- *      ),
- *     @OA\ServerVariable(
- *          serverVariable="hostPath",
- *          description="Your Organizr URL",
- *          default="localhost"
- *      )
- * )
- * @OA\SecurityScheme(
- *   securityScheme="api_key",
- *   type="apiKey",
- *   in="header",
- *   name="Token"
- * )
- */
 require_once '../functions.php';
 
 use Psr\Http\Message\ResponseInterface as Response;

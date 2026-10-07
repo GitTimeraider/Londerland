@@ -57,14 +57,14 @@ trait EmbyLiveTVTrackerHomepageItem
         $url = $url . "/emby/System/Info?api_key=" . $this->config['embyToken'];
         $options = $this->requestOptions($url, null, $this->config['embyDisableCertCheck'], $this->config['embyUseCustomCertificate']);
         try {
-            $response = Requests::get($url, [], $options);
+            $response = \WpOrg\Requests\Requests::get($url, [], $options);
             if ($response->success) {
                 $info = json_decode($response->body, true);
                 if (isset($info['ServerName'])) {
                     // Test LiveTV functionality
                     $liveTvUrl = $this->qualifyURL($this->config['embyURL']) . '/emby/LiveTv/Info?api_key=' . $this->config['embyToken'];
                     try {
-                        $liveTvResponse = Requests::get($liveTvUrl, [], $options);
+                        $liveTvResponse = \WpOrg\Requests\Requests::get($liveTvUrl, [], $options);
                         $liveTvInfo = json_decode($liveTvResponse->body, true);
                         $hasLiveTV = isset($liveTvInfo['Services']) && count($liveTvInfo['Services']) > 0;
                         $message = 'Successfully connected to ' . $info['ServerName'];
@@ -85,7 +85,7 @@ trait EmbyLiveTVTrackerHomepageItem
                 $this->setAPIResponse('error', 'Emby Connection Error', 500);
                 return false;
             }
-        } catch (Requests_Exception $e) {
+        } catch (\WpOrg\Requests\Exception $e) {
             $this->setResponse(500, $e->getMessage());
             return false;
         }
@@ -477,7 +477,7 @@ trait EmbyLiveTVTrackerHomepageItem
             // Get active timers
             $timersUrl = $baseUrl . '/emby/LiveTv/Timers?api_key=' . $this->config['embyToken'];
             try {
-                $timersResponse = Requests::get($timersUrl, [], $options);
+                $timersResponse = \WpOrg\Requests\Requests::get($timersUrl, [], $options);
                 if ($timersResponse->success) {
                     $timers = json_decode($timersResponse->body, true);
                     $stats['activeTimers'] = count($timers['Items'] ?? []);
@@ -489,7 +489,7 @@ trait EmbyLiveTVTrackerHomepageItem
             // Get series timers
             $seriesTimersUrl = $baseUrl . '/emby/LiveTv/SeriesTimers?api_key=' . $this->config['embyToken'];
             try {
-                $seriesTimersResponse = Requests::get($seriesTimersUrl, [], $options);
+                $seriesTimersResponse = \WpOrg\Requests\Requests::get($seriesTimersUrl, [], $options);
                 if ($seriesTimersResponse->success) {
                     $seriesTimers = json_decode($seriesTimersResponse->body, true);
                     $stats['seriesTimers'] = count($seriesTimers['Items'] ?? []);
@@ -501,7 +501,7 @@ trait EmbyLiveTVTrackerHomepageItem
             // Get recordings from the last 90 days
             $recordingsUrl = $baseUrl . '/emby/LiveTv/Recordings?api_key=' . $this->config['embyToken'] . '&StartIndex=0&Limit=50&Fields=Overview,DateCreated&SortBy=DateCreated&SortOrder=Descending';
             try {
-                $recordingsResponse = Requests::get($recordingsUrl, [], $options);
+                $recordingsResponse = \WpOrg\Requests\Requests::get($recordingsUrl, [], $options);
                 if ($recordingsResponse->success) {
                     $recordings = json_decode($recordingsResponse->body, true);
                     $allRecordings = $recordings['Items'] ?? [];
@@ -585,7 +585,7 @@ trait EmbyLiveTVTrackerHomepageItem
             if ($showUserInfo) {
                 $usersUrl = $baseUrl . '/emby/Users?api_key=' . $this->config['embyToken'];
                 try {
-                    $usersResponse = Requests::get($usersUrl, [], $options);
+                    $usersResponse = \WpOrg\Requests\Requests::get($usersUrl, [], $options);
                     if ($usersResponse->success) {
                         $users = json_decode($usersResponse->body, true);
                         foreach ($users as $user) {
@@ -606,7 +606,7 @@ trait EmbyLiveTVTrackerHomepageItem
                 $this->setLoggerChannel('EmbyLiveTVTracker')->info('Fetching timers from URL: ' . $timersUrl);
             }
             try {
-                $timersResponse = Requests::get($timersUrl, [], $options);
+                $timersResponse = \WpOrg\Requests\Requests::get($timersUrl, [], $options);
                 if ($debugEnabled) {
                     $this->setLoggerChannel('EmbyLiveTVTracker')->info('Timers API response status: ' . ($timersResponse->success ? 'success' : 'failed'));
                     $this->setLoggerChannel('EmbyLiveTVTracker')->info('Timers API response code: ' . $timersResponse->status_code);
@@ -742,7 +742,7 @@ trait EmbyLiveTVTrackerHomepageItem
                 $recordingsUrl = $baseUrl . '/emby/LiveTv/Recordings?api_key=' . $this->config['embyToken'] . '&StartIndex=0&Limit=' . $maxCompletedItems . '&Fields=DateCreated,SeriesName,RunTimeTicks&SortBy=DateCreated&SortOrder=Descending';
                 $this->setLoggerChannel('EmbyLiveTVTracker')->info('Fetching completed recordings from URL: ' . $recordingsUrl);
                 try {
-                    $recordingsResponse = Requests::get($recordingsUrl, [], $options);
+                    $recordingsResponse = \WpOrg\Requests\Requests::get($recordingsUrl, [], $options);
                     if ($recordingsResponse->success) {
                         $recordings = json_decode($recordingsResponse->body, true);
                         $allRecordings = $recordings['Items'] ?? [];

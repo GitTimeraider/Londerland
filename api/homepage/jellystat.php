@@ -89,7 +89,7 @@ trait JellyStatHomepageItem
             // For iframe mode, just test if the URL is reachable (use main URL for frontend)
             try {
                 $options = $this->requestOptions($url, null, $disableCert, $customCert);
-                $response = Requests::get($this->qualifyURL($url), [], $options);
+                $response = \WpOrg\Requests\Requests::get($this->qualifyURL($url), [], $options);
                 if ($response->success) {
                     $this->setAPIResponse('success', 'Successfully connected to JellyStat', 200);
                     return true;
@@ -118,7 +118,7 @@ trait JellyStatHomepageItem
                 // Test JellyStat API - use query parameter authentication
                 $testUrl = $this->qualifyURL($apiUrl) . '/api/getLibraries?apiKey=' . urlencode($token);
                 
-                $response = Requests::get($testUrl, [], $options);
+                $response = \WpOrg\Requests\Requests::get($testUrl, [], $options);
                 if ($response->success) {
                     $data = json_decode($response->body, true);
                     if (isset($data) && is_array($data) && !isset($data['error'])) {
@@ -143,7 +143,7 @@ trait JellyStatHomepageItem
                 $this->error('JellyStat API key appears to be invalid or JellyStat API is not responding');
                 
                 // Try basic connection test to see if JellyStat is even running
-                $response = Requests::get($this->qualifyURL($apiUrl), [], $options);
+                $response = \WpOrg\Requests\Requests::get($this->qualifyURL($apiUrl), [], $options);
                 if ($response->success) {
                     $this->setAPIResponse('error', 'JellyStat is reachable but API key is invalid or API endpoints are not responding correctly.', 500);
                 } else {
@@ -283,7 +283,7 @@ trait JellyStatHomepageItem
                     
                     // First, get a user ID (preferably admin)
                     $userIds = $mediaServerUrl . "/Users?api_key=" . $mediaServerToken;
-                    $response = Requests::get($userIds, [], $options);
+                    $response = \WpOrg\Requests\Requests::get($userIds, [], $options);
                     
                     if ($response->success) {
                         $users = json_decode($response->body, true);
@@ -305,7 +305,7 @@ trait JellyStatHomepageItem
                         if ($userId) {
                             // Fetch the item metadata
                             $metadataUrl = $mediaServerUrl . '/Users/' . $userId . '/Items/' . $key . '?EnableImages=true&api_key=' . $mediaServerToken . '&Fields=Overview,People,Genres,CommunityRating,CriticRating,Studios,Taglines,ProductionYear,PremiereDate,RunTimeTicks';
-                            $metadataResponse = Requests::get($metadataUrl, [], $options);
+                            $metadataResponse = \WpOrg\Requests\Requests::get($metadataUrl, [], $options);
                             
                             if ($metadataResponse->success) {
                                 $details = json_decode($metadataResponse->body, true);
@@ -351,7 +351,7 @@ trait JellyStatHomepageItem
                 foreach ($tryEndpoints as $index => $endpoint) {
                     try {
                         $this->info("JellyStat metadata: Trying endpoint {$index}: {$endpoint}");
-                        $resp = Requests::get($endpoint, [], $options);
+                        $resp = \WpOrg\Requests\Requests::get($endpoint, [], $options);
                         if ($resp->success) {
                             $json = json_decode($resp->body, true);
                             if (is_array($json) && !isset($json['error']) && !empty($json)) {
@@ -1349,7 +1349,7 @@ trait JellyStatHomepageItem
         try {
             // Get Library Statistics - use query parameter authentication
             $librariesUrl = $baseUrl . '/api/getLibraries?apiKey=' . urlencode($token);
-            $response = Requests::get($librariesUrl, [], $options);
+            $response = \WpOrg\Requests\Requests::get($librariesUrl, [], $options);
             if ($response->success) {
                 $data = json_decode($response->body, true);
                 if (is_array($data) && !isset($data['error'])) {
@@ -1458,7 +1458,7 @@ trait JellyStatHomepageItem
                          '&size=' . $pageSize . 
                          '&startDate=' . urlencode($startDate);
 
-            $response = Requests::get($historyUrl, [], $options);
+            $response = \WpOrg\Requests\Requests::get($historyUrl, [], $options);
             if (!$response->success) {
                 // Stop if there is an error
                 break;

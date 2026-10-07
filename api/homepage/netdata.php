@@ -234,7 +234,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=system.io&dimensions=' . $dimension . '&format=array&points=540&group=average&gtime=0&options=absolute|jsonwrap|nonzero&after=-540';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json['latest_values'][0] / 1000;
@@ -242,7 +242,7 @@ trait NetDataHomepageItem
 				$data['units'] = 'MiB/s';
 				$data['max'] = $json['max'];
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		};
 		return $data;
@@ -255,7 +255,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=disk_space._&format=json&points=509&group=average&gtime=0&options=ms|jsonwrap|nonzero&after=-540&dimension=' . $dimension;
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json['result']['data'][0][1];
@@ -263,7 +263,7 @@ trait NetDataHomepageItem
 				$data['units'] = '%';
 				$data['max'] = 100;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		}
 		return $data;
@@ -276,7 +276,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=system.net&dimensions=' . $dimension . '&format=array&points=540&group=average&gtime=0&options=absolute|jsonwrap|nonzero&after=-540';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json['latest_values'][0] / 1000;
@@ -284,7 +284,7 @@ trait NetDataHomepageItem
 				$data['units'] = 'Mbit/s';
 				$data['max'] = $json['max'];
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		}
 		return $data;
@@ -296,7 +296,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=system.cpu&format=array';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json[0];
@@ -304,7 +304,7 @@ trait NetDataHomepageItem
 				$data['max'] = 100;
 				$data['units'] = '%';
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		}
 		return $data;
@@ -316,7 +316,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=system.ram&format=array&points=540&group=average&gtime=0&options=absolute|percentage|jsonwrap|nonzero&after=-540&dimensions=used|buffers|active|wired';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json['result'][0];
@@ -324,7 +324,7 @@ trait NetDataHomepageItem
 				$data['max'] = 100;
 				$data['units'] = '%';
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		}
 		return $data;
@@ -336,7 +336,7 @@ trait NetDataHomepageItem
 		$dataUrl = $url . '/api/v1/data?chart=system.swap&format=array&points=540&group=average&gtime=0&options=absolute|percentage|jsonwrap|nonzero&after=-540&dimensions=used';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-			$response = Requests::get($dataUrl, [], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 			if ($response->success) {
 				$json = json_decode($response->body, true);
 				$data['value'] = $json['result'][0];
@@ -344,7 +344,7 @@ trait NetDataHomepageItem
 				$data['max'] = 100;
 				$data['units'] = '%';
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Netdata')->error($e);
 		}
 		return $data;
@@ -384,7 +384,7 @@ trait NetDataHomepageItem
 				$dataUrl = $url . '/' . $custom['url'];
 				try {
 					$options = $this->requestOptions($url, $this->config['homepageNetdataRefresh'], $this->config['netdataDisableCertCheck'], $this->config['netdataUseCustomCertificate']);
-					$response = Requests::get($dataUrl, [], $options);
+					$response = \WpOrg\Requests\Requests::get($dataUrl, [], $options);
 					if ($response->success) {
 						$json = json_decode($response->body, true);
 						if (!isset($custom['max']) || $custom['max'] == '') {
@@ -415,7 +415,7 @@ trait NetDataHomepageItem
 							$data['percent'] = ($data['value'] / $data['max']) * 100;
 						}
 					}
-				} catch (Requests_Exception $e) {
+				} catch (\WpOrg\Requests\Exception $e) {
 					$this->setLoggerChannel('Netdata')->error($e);
 				}
 			} else {

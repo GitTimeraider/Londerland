@@ -104,14 +104,12 @@ trait LogFunctions
 				if ($logs) {
 					foreach ($logs as $log) {
 						if (file_exists($log)) {
-							$lineGenerator = Bcremer\LineReader\LineReader::readLinesBackwards($log);
-							$lines = array_merge($lines, iterator_to_array($lineGenerator));
+							$lines = array_merge($lines, $this->readLinesNewestFirst($log));
 						}
 					}
 				}
 			} else {
-				$lineGenerator = Bcremer\LineReader\LineReader::readLinesBackwards($file);
-				$lines = iterator_to_array($lineGenerator);
+				$lines = $this->readLinesNewestFirst($file);
 			}
 			if ($filter || $trace_id) {
 				$results = [];
@@ -131,6 +129,12 @@ trait LogFunctions
 			return $this->formatLogResults($lines, $pageSize, $offset);
 		}
 		return false;
+	}
+
+	public function readLinesNewestFirst($file)
+	{
+		$lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		return $lines ? array_reverse($lines) : [];
 	}
 
 	public function formatLogResults($lines, $pageSize, $offset)
@@ -225,14 +229,11 @@ trait LogFunctions
 			if ($this->loggerSetup) {
 				if ($channel) {
 					if (strtolower($this->logger->getChannel()) !== strtolower($channel)) {
-						$this->logger->setChannel($channel);
 						$setLogger = true;
 					}
 				}
 				if ($username) {
-					$currentUsername = $this->logger->getTraceId() !== '' ? strtolower($this->logger->getTraceId()) : '';
-					if ($currentUsername !== strtolower($username)) {
-						$this->logger->setUsername($username);
+					if (strtolower($this->logger->getTraceId()) !== strtolower($username)) {
 						$setLogger = true;
 					}
 				}
@@ -251,28 +252,28 @@ trait LogFunctions
 	{
 		switch ($level) {
 			case 'DEBUG':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::DEBUG;
+				$logLevel = Monolog\Level::Debug->value;
 				break;
 			case 'INFO':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::INFO;
+				$logLevel = Monolog\Level::Info->value;
 				break;
 			case 'NOTICE':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::NOTICE;
+				$logLevel = Monolog\Level::Notice->value;
 				break;
 			case 'ERROR':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::ERROR;
+				$logLevel = Monolog\Level::Error->value;
 				break;
 			case 'CRITICAL':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::CRITICAL;
+				$logLevel = Monolog\Level::Critical->value;
 				break;
 			case 'ALERT':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::ALERT;
+				$logLevel = Monolog\Level::Alert->value;
 				break;
 			case 'EMERGENCY':
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::EMERGENCY;
+				$logLevel = Monolog\Level::Emergency->value;
 				break;
 			default:
-				$logLevel = Nekonomokochan\PhpJsonLogger\LoggerBuilder::WARNING;
+				$logLevel = Monolog\Level::Warning->value;
 				break;
 		}
 		if ($slack) {
@@ -289,22 +290,28 @@ trait LogFunctions
 		if (!$username) {
 			$username = $this->user['username'] ?? 'System';
 		}
-		$loggerBuilder = new OrganizrLogger();
-		$loggerBuilder->setReadyStatus($this->hasDB() && $this->logFile);
-		$loggerBuilder->setMaxFiles($this->config['maxLogFiles']);
-		$loggerBuilder->setFileName($this->tempLogIfNeeded());
-		$loggerBuilder->setTraceId($username);
-		$loggerBuilder->setChannel(ucwords(strtolower($channel)));
-		$loggerBuilder->setLogLevel($this->getLogLevelClass($this->config['logLevel']));
+		// Until the database and log file exist, log everything to a temporary file
+		$ready = $this->hasDB() && $this->logFile;
+		$channel = $ready ? ucwords(strtolower($channel)) : 'Organizr';
+		$logLevel = $ready ? $this->getLogLevelClass($this->config['logLevel']) : Monolog\Level::Debug->value;
+		$maxFiles = $ready ? (int)$this->config['maxLogFiles'] : 1;
 		try {
+			$slackHandler = null;
 			if ($this->config['sendLogsToSlack']) {
 				if ($this->config['slackLogWebhook'] !== '') {
-					$slackHandlerBuilder = new Nekonomokochan\PhpJsonLogger\SlackWebhookHandlerBuilder($this->config['slackLogWebhook'], $this->config['slackLogWebHookChannel']);
-					$slackHandlerBuilder->setLevel($this->getLogLevelClass($this->config['slackLogLevel'], true));
-					$loggerBuilder->setSlackWebhookHandler($slackHandlerBuilder->build());
+					$slackHandler = new Monolog\Handler\SlackWebhookHandler(
+						$this->config['slackLogWebhook'],
+						$this->config['slackLogWebHookChannel'] ?: null,
+						'Organizr',
+						true,
+						':cat:',
+						true,
+						true,
+						Monolog\Level::fromValue($this->getLogLevelClass($this->config['slackLogLevel'], true))
+					);
 				}
 			}
-			$this->logger = $loggerBuilder->build();
+			$this->logger = new OrganizrLogger($channel, $username, $this->tempLogIfNeeded(), $maxFiles, Monolog\Level::fromValue($logLevel), $slackHandler);
 			$this->loggerSetup = true;
 			return $this->logger;
 		} catch (Exception $e) {

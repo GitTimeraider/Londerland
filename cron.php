@@ -5,7 +5,7 @@ if ($Organizr->isLocalOrServer() && $Organizr->hasDB()) {
 	// Set user as Organizr API
 	$_GET['apikey'] = $Organizr->config['organizrAPI'];
 	// Create a new scheduler
-	$scheduler = new GO\Scheduler();
+	$scheduler = new OrganizrScheduler();
 	// Clear any pre-existing jobs if any
 	$scheduler->clearJobs();
 	$Organizr->log('Cron')->debug('Cron process starting');

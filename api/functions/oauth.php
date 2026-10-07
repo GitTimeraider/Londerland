@@ -4,11 +4,14 @@ trait OAuthFunctions
 {
 	public function traktOAuth()
 	{
-		$provider = new Bogstag\OAuth2\Client\Provider\Trakt(
+		$provider = new League\OAuth2\Client\Provider\GenericProvider(
 			[
 				'clientId' => $this->config['traktClientId'],
 				'clientSecret' => $this->config['traktClientSecret'],
-				'redirectUri' => $this->getServerPath() . 'api/v2/oauth/trakt'
+				'redirectUri' => $this->getServerPath() . 'api/v2/oauth/trakt',
+				'urlAuthorize' => 'https://trakt.tv/oauth/authorize',
+				'urlAccessToken' => 'https://api.trakt.tv/oauth/token',
+				'urlResourceOwnerDetails' => 'https://api.trakt.tv/users/settings'
 			],
 			[
 				'httpClient' => new GuzzleHttp\Client(['verify' => $this->getCert()]),
@@ -60,7 +63,7 @@ trait OAuthFunctions
 					</html>
 				';
 				exit;
-			} catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+			} catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException|\UnexpectedValueException $e) {
 				exit($e->getMessage());
 			}
 		}
@@ -83,7 +86,7 @@ trait OAuthFunctions
 			];
 			$url = $this->qualifyURL('https://api.trakt.tv/oauth/token');
 			try {
-				$response = Requests::post($url, $headers, json_encode($data), []);
+				$response = \WpOrg\Requests\Requests::post($url, $headers, json_encode($data), []);
 				if ($response->success) {
 					$data = json_decode($response->body, true);
 					$newExp = date('Y-m-d\TH:i:s\Z', strtotime($this->currentTime . ' + 90 days'));
@@ -95,7 +98,7 @@ trait OAuthFunctions
 					$this->updateConfig($traktDetails);
 					return true;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Trakt')->error($e);
 				$this->setResponse(500, $e->getMessage());
 				return false;

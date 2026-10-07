@@ -77,7 +77,7 @@ trait uTorrentHomepageItem
 		try {
 
 			$response = $this->getuTorrentToken();
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('uTorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -112,13 +112,12 @@ trait uTorrentHomepageItem
 			$data = array('username' => $this->config['uTorrentUsername'], 'password' => $this->decrypt($this->config['uTorrentPassword']));
 			$options = $this->requestOptions($url, null, $this->config['uTorrentDisableCertCheck'], $this->config['uTorrentUseCustomCertificate']);
 			if ($this->config['uTorrentUsername'] !== '' && $this->decrypt($this->config['uTorrentPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Basic(array($this->config['uTorrentUsername'], $this->decrypt($this->config['uTorrentPassword']))));
+				$credentials = array('auth' => new \WpOrg\Requests\Auth\Basic(array($this->config['uTorrentUsername'], $this->decrypt($this->config['uTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
-			$response = Requests::post($url, [], $data, $options);
-			$dom = new PHPHtmlParser\Dom;
-			$dom->loadStr($response->body);
-			$id = $dom->getElementById('token')->text;
+			$response = \WpOrg\Requests\Requests::post($url, [], $data, $options);
+			$dom = \Dom\HTMLDocument::createFromString($response->body, LIBXML_NOERROR);
+			$id = $dom->getElementById('token')?->textContent;
 			$uTorrentConfig = array(
 				"uTorrentToken" => $id,
 				"uTorrentCookie" => "",
@@ -133,7 +132,7 @@ trait uTorrentHomepageItem
 			if ($uTorrentConfig['uTorrentToken'] || $uTorrentConfig['uTorrentCookie']) {
 				$this->updateConfigItems($uTorrentConfig);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('uTorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -154,18 +153,18 @@ trait uTorrentHomepageItem
 			$url = $digest['scheme'] . '://' . $digest['host'] . $digest['port'] . $digest['path'] . $queryUrl;
 			$options = $this->requestOptions($url, null, $this->config['uTorrentDisableCertCheck'], $this->config['uTorrentUseCustomCertificate']);
 			if ($this->config['uTorrentUsername'] !== '' && $this->decrypt($this->config['uTorrentPassword']) !== '') {
-				$credentials = array('auth' => new Requests_Auth_Basic(array($this->config['uTorrentUsername'], $this->decrypt($this->config['uTorrentPassword']))));
+				$credentials = array('auth' => new \WpOrg\Requests\Auth\Basic(array($this->config['uTorrentUsername'], $this->decrypt($this->config['uTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
 			$headers = array(
 				'Cookie' => 'GUID=' . $this->config['uTorrentCookie']
 			);
-			$response = Requests::get($url, $headers, $options);
+			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 			$httpResponse = $response->status_code;
 			if ($httpResponse == 400) {
 				$this->setLoggerChannel('uTorrent')->warning('Token or Cookie Expired. Generating new session...');
 				$this->getuTorrentToken();
-				$response = Requests::get($url, $headers, $options);
+				$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
 				$httpResponse = $response->status_code;
 			}
 			if ($httpResponse == 200) {
@@ -222,7 +221,7 @@ trait uTorrentHomepageItem
 				$this->setAPIResponse('success', null, 200, $api);
 				return $api;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('uTorrent')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

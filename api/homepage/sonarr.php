@@ -86,7 +86,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$downloader = new Kryptonit3\Sonarr\Sonarr($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$results = $downloader->getRootFolder();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -179,7 +179,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], $this->config['homepageSonarrQueueRefresh'], $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$downloader = new Kryptonit3\Sonarr\Sonarr($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$results = $downloader->getQueue();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -217,7 +217,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$sonarr = new Kryptonit3\Sonarr\Sonarr($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$sonarr = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$sonarr = $sonarr->getCalendar($startDate, $endDate, $this->config['sonarrUnmonitored']);
 				$result = json_decode($sonarr, true);
 				if (is_array($result) || is_object($result)) {

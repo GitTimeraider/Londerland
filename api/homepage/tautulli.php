@@ -94,7 +94,7 @@ trait TautulliHomepageItem
 		try {
 			$homestatsUrl = $apiURL . '&cmd=get_home_stats&grouping=1';
 			$options = $this->requestOptions($this->config['tautulliURL'], $this->config['homepageTautulliRefresh'], $this->config['tautulliDisableCertCheck'], $this->config['tautulliUseCustomCertificate'], ['follow_redirects' => false]);
-			$homestats = Requests::get($homestatsUrl, [], $options);
+			$homestats = \WpOrg\Requests\Requests::get($homestatsUrl, [], $options);
 			if ($homestats->success) {
 				$this->setAPIResponse('success', 'API Connection succeeded', 200);
 				return true;
@@ -102,7 +102,7 @@ trait TautulliHomepageItem
 				$this->setAPIResponse('error', 'Tautulli Error Occurred - Check URL or Credentials', 409);
 				return false;
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -172,7 +172,7 @@ trait TautulliHomepageItem
 		try {
 			$homestatsUrl = $apiURL . '&cmd=get_home_stats&grouping=1';
 			$options = $this->requestOptions($this->config['tautulliURL'], $this->config['homepageTautulliRefresh'], $this->config['tautulliDisableCertCheck'], $this->config['tautulliUseCustomCertificate']);
-			$homestats = Requests::get($homestatsUrl, [], $options);
+			$homestats = \WpOrg\Requests\Requests::get($homestatsUrl, [], $options);
 			if ($homestats->success) {
 				$homepageTautulliViewingStatsExclude = explode(",", $this->config['homepageTautulliViewingStatsExclude']);
 				$homestats = json_decode($homestats->body, true);
@@ -208,7 +208,7 @@ trait TautulliHomepageItem
 				}
 				$libstatsUrl = $apiURL . '&cmd=get_libraries_table';
 				$options = $this->requestOptions($this->config['tautulliURL'], $this->config['homepageTautulliRefresh'], $this->config['tautulliDisableCertCheck'], $this->config['tautulliUseCustomCertificate']);
-				$libstats = Requests::get($libstatsUrl, [], $options);
+				$libstats = \WpOrg\Requests\Requests::get($libstatsUrl, [], $options);
 				if ($libstats->success) {
 					$homepageTautulliLibraryStatsExclude = explode(',', $this->config['homepageTautulliLibraryStatsExclude']);
 					$libstats = json_decode($libstats->body, true);
@@ -254,7 +254,7 @@ trait TautulliHomepageItem
 					}
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->logger->critical($e, [$url]);
 			$this->setResponse(500, $e->getMessage());
 			return false;
@@ -272,7 +272,7 @@ trait TautulliHomepageItem
 			$liblistUrl = $apiURL . '&cmd=get_libraries';
 			$options = $this->requestOptions($this->config['tautulliURL'], 10, $this->config['tautulliDisableCertCheck'], $this->config['tautulliUseCustomCertificate']);
 			try {
-				$liblist = Requests::get($liblistUrl, [], $options);
+				$liblist = \WpOrg\Requests\Requests::get($liblistUrl, [], $options);
 				$libraryList = array();
 				if ($liblist->success) {
 					$liblist = json_decode($liblist->body, true);
@@ -282,7 +282,7 @@ trait TautulliHomepageItem
 					$libraryList = array_change_key_case($libraryList, CASE_LOWER);
 					return $libraryList;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Tautulli')->error($e);
 				return false;
 			}

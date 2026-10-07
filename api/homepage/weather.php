@@ -85,12 +85,12 @@ trait WeatherHomepageItem
 				return false;
 			}
 			$url = $this->qualifyURL('https://api.mapbox.com/geocoding/v5/mapbox.places/' . urlencode($query) . '.json?access_token=pk.eyJ1IjoiY2F1c2VmeCIsImEiOiJjazhyeGxqeXgwMWd2M2ZydWQ4YmdjdGlzIn0.R50iYuMewh1CnUZ7sFPdHA&limit=5&fuzzyMatch=true');
-			$response = Requests::get($url);
+			$response = \WpOrg\Requests\Requests::get($url);
 			if ($response->success) {
 				$this->setAPIResponse('success', null, 200, json_decode($response->body));
 				return json_decode($response->body);
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;
 		};
@@ -112,7 +112,7 @@ trait WeatherHomepageItem
 			if ($this->config['homepageWeatherAndAirWeatherEnabled']) {
 				$endpoint = '/weather/v1/forecast/hourly?hours=120&metadata=true';
 				$options = $this->requestOptions($apiURL, $this->config['homepageWeatherAndAirRefresh']);
-				$response = Requests::get($apiURL . $endpoint . $info, [], $options);
+				$response = \WpOrg\Requests\Requests::get($apiURL . $endpoint . $info, [], $options);
 				if ($response->success) {
 					$apiData = json_decode($response->body, true);
 					$api['content']['weather'] = ($apiData['error'] === null) ? $apiData : false;
@@ -121,7 +121,7 @@ trait WeatherHomepageItem
 			}
 			if ($this->config['homepageWeatherAndAirAirQualityEnabled']) {
 				$endpoint = '/air-quality/v2/current-conditions?features=breezometer_aqi,local_aqi,health_recommendations,sources_and_effects,dominant_pollutant_concentrations,pollutants_concentrations,pollutants_aqi_information&metadata=true';
-				$response = Requests::get($apiURL . $endpoint . $info);
+				$response = \WpOrg\Requests\Requests::get($apiURL . $endpoint . $info);
 				if ($response->success) {
 					$apiData = json_decode($response->body, true);
 					$api['content']['air'] = ($apiData['error'] === null) ? $apiData : false;
@@ -130,14 +130,14 @@ trait WeatherHomepageItem
 			}
 			if ($this->config['homepageWeatherAndAirPollenEnabled']) {
 				$endpoint = '/pollen/v2/forecast/daily?features=plants_information,types_information&days=1&metadata=true';
-				$response = Requests::get($apiURL . $endpoint . $info);
+				$response = \WpOrg\Requests\Requests::get($apiURL . $endpoint . $info);
 				if ($response->success) {
 					$apiData = json_decode($response->body, true);
 					$api['content']['pollen'] = ($apiData['error'] === null) ? $apiData : false;
 					unset($apiData);
 				}
 			}
-		} catch (Requests_Exception $e) {
+		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setLoggerChannel('Weather & Air')->error($e);
 			$this->setResponse(500, $e->getMessage());
 			return false;

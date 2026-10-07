@@ -192,3 +192,6 @@ api/pages/custom/*.php
 /plugins/images/cache/tautulli-samsung.svg
 /plugins/images/cache/tautulli-chrome.svg
 .vscode
+
+# Composer dependencies are installed from api/composer.lock (the Docker image does this at build time)
+api/vendor/

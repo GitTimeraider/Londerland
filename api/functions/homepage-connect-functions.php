@@ -66,10 +66,10 @@ trait HomepageConnectFunctions
 					case 'emby_local':
 					case 'emby_connect':
 					case 'emby_all':
-						$response = Requests::post($url . "/api/v1/Job/embyuserimporter", $headers, $options);
+						$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Job/embyuserimporter", $headers, $options);
 						break;
 					case 'plex':
-						$response = Requests::post($url . "/api/v1/Job/plexuserimporter", $headers, $options);
+						$response = \WpOrg\Requests\Requests::post($url . "/api/v1/Job/plexuserimporter", $headers, $options);
 						break;
 					default:
 						return false;
@@ -82,7 +82,7 @@ trait HomepageConnectFunctions
 					$this->setLoggerChannel('Ombi')->warning('Unsuccessful connection');
 					return false;
 				}
-			} catch (Requests_Exception $e) {
+			} catch (\WpOrg\Requests\Exception $e) {
 				$this->setLoggerChannel('Ombi')->error($e);
 				return false;
 			}

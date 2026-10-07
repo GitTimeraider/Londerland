@@ -60,7 +60,7 @@ trait SickRageHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sickrageDisableCertCheck'], $this->config['sickrageUseCustomCertificate']);
-				$downloader = new Kryptonit3\SickRage\SickRage($value['url'], $value['token'], null, null, $options);
+				$downloader = new OrganizrSickRageClient($value['url'], $value['token'], null, null, $options);
 				$results = $downloader->sb();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -120,7 +120,7 @@ trait SickRageHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sickrageDisableCertCheck'], $this->config['sickrageUseCustomCertificate']);
-				$downloader = new Kryptonit3\SickRage\SickRage($value['url'], $value['token'], null, null, $options);
+				$downloader = new OrganizrSickRageClient($value['url'], $value['token'], null, null, $options);
 				$sickrageFuture = $this->formatSickrageCalendarWanted($downloader->future(), $key);
 				$sickrageHistory = $this->formatSickrageCalendarHistory($downloader->history("100", "downloaded"), $key);
 				if (!empty($sickrageFuture)) {
