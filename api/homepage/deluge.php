@@ -20,13 +20,13 @@ trait DelugeHomepageItem
 				'FYI' => [
 					$this->settingsOption('html', null, ['override' => 12, 'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-info">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-info">
+									<div class="card-header">
 										<span lang="en">Notice</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<ul class="list-icons">
 												<li><i class="fa fa-chevron-right text-danger"></i> <a href="https://github.com/idlesign/deluge-webapi/tree/master/dist" target="_blank">Download Plugin</a></li>
 												<li><i class="fa fa-chevron-right text-danger"></i> Open Deluge Web UI, go to "Preferences -> Plugins -> Install plugin" and choose egg file.</li>

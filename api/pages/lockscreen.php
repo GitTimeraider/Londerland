@@ -16,20 +16,20 @@ function get_page_lockscreen($Organizr)
     <div class="white-box">
       <form class="form-horizontal form-material" id="form-lockscreen" onsubmit="return false;">
         <div class="form-group">
-          <div class="col-xs-12 text-center">
-            <div class="user-thumb text-center"> <img alt="thumbnail" class="img-circle" width="100" src="' . $Organizr->user['image'] . '">
+          <div class="col-12 text-center">
+            <div class="user-thumb text-center"> <img alt="thumbnail" class="rounded-circle" width="100" src="' . $Organizr->user['image'] . '">
               <h3>' . $Organizr->user['username'] . '</h3>
             </div>
           </div>
         </div>
         <div class="form-group ">
-          <div class="col-xs-12">
+          <div class="col-12">
             <input id="unlockPassword" name="password" class="form-control" type="password" required="" placeholder="password" lang="en" autofocus>
           </div>
         </div>
         <div class="form-group text-center">
-          <div class="col-xs-12">
-            <button class="btn btn-info btn-lg btn-block text-uppercase waves-effect waves-light unlockButton" type="submit" lang="en">Unlock</button>
+          <div class="col-12">
+            <button class="btn btn-info btn-lg w-100 text-uppercase waves-effect waves-light unlockButton" type="submit" lang="en">Unlock</button>
           </div>
         </div>
       </form>

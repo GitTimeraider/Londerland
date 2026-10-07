@@ -5,7 +5,7 @@ $('body').arrive('#activeInfo', {onceOnly: true}, function() {
 function chatLaunch(){
 	if(activeInfo.plugins["CHAT-enabled"] == true && activeInfo.plugins.includes["CHAT-authKey-include"] !== '' && activeInfo.plugins.includes["CHAT-appID-include"] !== '' && activeInfo.plugins.includes["CHAT-cluster-include"] !== ''){
 		if (activeInfo.user.groupID <= activeInfo.plugins.includes["CHAT-Auth-include"]) {
-			var menuList = `<li><a class=""  href="javascript:void(0)" onclick="switchToPlugin('chat');chatEntry();"><i class="fa fa-comments-o fa-fw"></i> <span lang="en">Chat</span><small class="chat-counter label label-rouded label-info pull-right hidden">0</small></a></li>`;
+			var menuList = `<li><a class=""  href="javascript:void(0)" onclick="switchToPlugin('chat');chatEntry();"><i class="fa fa-comments-o fa-fw"></i> <span lang="en">Chat</span><small class="chat-counter badge rounded-pill text-bg-info float-end hidden">0</small></a></li>`;
 			var htmlDOM = `
 			<div id="container-plugin-chat" class="plugin-container hidden">
 				<div class="chat-main-box bg-org">
@@ -20,7 +20,7 @@ function chatLaunch(){
 						<div class="chat-box">
 							<ul class="chat-list p-t-30"></ul>
 							<div class="row send-chat-box">
-								<div class="col-sm-12">
+								<div class="col-md-12">
 									<textarea class="form-control chat-input-send" placeholder="Type your message" lang="en"></textarea>
 									<div class="custom-send">
 										<button type="button" class="btn btn-info btn-lg custom-send-button"><i class="fa fa-paper-plane fa-2x"></i> </button>
@@ -41,7 +41,7 @@ function chatLaunch(){
 			// Add API Key & cluster here to make the connection
 			var pusher = new Pusher(activeInfo.plugins.includes["CHAT-authKey-include"], {
 				cluster: activeInfo.plugins.includes["CHAT-cluster-include"],
-				encrypted: true
+				forceTLS: true
 			});
 			// Enter a unique channel you wish your users to be subscribed in.
 			var channel = pusher.subscribe('org_channel');
@@ -70,19 +70,8 @@ function chatLaunch(){
 			/*global $, jQuery, alert*/
 			$(document).ready(function () {
 				"use strict";
-				$('.chat-left-inner > .chatonline').slimScroll({
-					height: '100%',
-					position: 'right',
-					size: "0px",
-					color: '#dcdcdc'
-				});
-				$('.chat-list').slimScroll({
-					height: '100%',
-					position: 'right',
-					size: "0px",
-					color: '#dcdcdc',
-					start: 'bottom',
-				});
+				$('.chat-left-inner > .chatonline').css({ height: '100%', 'overflow-y': 'auto' });
+				$('.chat-list').css({ height: '100%', 'overflow-y': 'auto' }); $('.chat-list').scrollTop(function () { return this.scrollHeight; });
 				$(".open-panel").on("click", function () {
 					$(".chat-left-aside").toggleClass("open-pnl");
 					$(".open-panel i").toggleClass("ti-angle-left");
@@ -106,7 +95,7 @@ $('body').on('click', '.custom-send-button', function(e) {
 	var message = $('.chat-input-send').val();
 	// Validate Name field
 	if (message !== '') {
-		organizrAPI2('POST','api/v2/plugins/chat/message',{ message : message }).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/chat/message',{ message : message }).done(function(data) {
 			// Nada yet
 		}).fail(function(xhr) {
 			console.error("Organizr Function: API Connection Failed");
@@ -152,7 +141,7 @@ function formatUsers(array){
 	$.each(users, function (i, v) {
 		userList += `
 			<li>
-				<a href="javascript:void(0)"><img src="`+v.gravatar+`" alt="user-img" class="img-circle"> <span>`+i+`<small class="text-success">`+moment.utc(v.last, "YYYY-MM-DD hh:mm[Z]").local().fromNow()+`</small></span></a>
+				<a href="javascript:void(0)"><img src="`+v.gravatar+`" alt="user-img" class="rounded-circle"> <span>`+i+`<small class="text-success">`+moment.utc(v.last, "YYYY-MM-DD hh:mm[Z]").local().fromNow()+`</small></span></a>
 			</li>
 		`;
 	});
@@ -166,7 +155,7 @@ function chatEntry(){
 }
 function getMessagesAndUsers(timeout, initial = false){
 	var timeout = (typeof timeout !== 'undefined') ? timeout : activeInfo.settings.homepage.refresh["CHAT-userRefreshTimeout"];
-	organizrAPI2('GET','api/v2/plugins/chat/message').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/chat/message').done(function(data) {
 		var response = data.response;
 		if(initial == true){
 			$.each(response.data, function (i, v){

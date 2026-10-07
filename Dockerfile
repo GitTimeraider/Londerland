@@ -17,7 +17,20 @@ RUN composer install \
         --ignore-platform-reqs
 
 # ---------------------------------------------------------------------------
-# Stage 2: runtime image (Apache + PHP), everything baked in
+# Stage 2: frontend libraries (package-lock.json) and minified Organizr CSS/JS
+# ---------------------------------------------------------------------------
+FROM node:26-alpine AS frontend
+
+WORKDIR /build
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY scripts/build-frontend.mjs scripts/
+COPY css css
+COPY js js
+RUN npm run build
+
+# ---------------------------------------------------------------------------
+# Stage 3: runtime image (Apache + PHP), everything baked in
 # ---------------------------------------------------------------------------
 FROM php:8.5-apache
 
@@ -53,11 +66,14 @@ COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/organizr-entrypoint
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /build/api/vendor ./api/vendor
+COPY --from=frontend --chown=www-data:www-data /build/assets/vendor ./assets/vendor
+COPY --from=frontend --chown=www-data:www-data /build/css/*.min.css ./css/
+COPY --from=frontend --chown=www-data:www-data /build/js/*.min.js ./js/
 
 # Docker.txt marks this as a Docker install (disables the in-app updater);
 # Github.txt holds the commit used for cache-busting static files.
 RUN set -eux; \
-    rm -rf docker Dockerfile .dockerignore; \
+    rm -rf docker Dockerfile .dockerignore package.json package-lock.json scripts/build-frontend.mjs; \
     touch Docker.txt; \
     printf '%s' "$ORGANIZR_COMMIT" > Github.txt; \
     mkdir -p data; \

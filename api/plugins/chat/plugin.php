@@ -25,13 +25,13 @@ class Chat extends Organizr
 		return array(
 			'custom' => '
 				<div class="row">
-					<div class="col-lg-12">
-						<div class="panel panel-info">
-							<div class="panel-heading">
+					<div class="col-xl-12">
+						<div class="card card-info">
+							<div class="card-header">
 								<span lang="en">Notice</span>
 							</div>
-							<div class="panel-wrapper collapse in" aria-expanded="true">
-								<div class="panel-body">
+							<div class="card-wrapper collapse show" aria-expanded="true">
+								<div class="card-body">
 									<ul class="list-icons">
 										<li><i class="fa fa-chevron-right text-danger"></i> <a href="https://dashboard.pusher.com/accounts/sign_up" target="_blank"><span lang="en">Signup for Pusher [FREE]</span></a></li>
 										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Create an App called whatever you like and choose a cluster (Close to you)</span></li>

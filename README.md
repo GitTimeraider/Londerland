@@ -66,6 +66,8 @@ Do you have quite a bit of services running on your computer or server? Do you h
 
 This repository builds its own image with `.github/workflows/docker.yml` and publishes it to `ghcr.io/gittimeraider/organizr`.
 Everything (PHP extensions, Composer dependencies, fonts, cron) is baked into the image at build time, so the container does not download anything when it starts.
+Frontend libraries (Bootstrap 5, jQuery 4, Font Awesome 7 and the rest) are installed from `package.json` with npm during the image build and served from `assets/vendor`.
+Running from a git checkout without Docker? Run `npm ci && npm run build` in the repository folder first; it creates `assets/vendor` and the minified CSS/JS.
 To update, pull a newer image and recreate the container.
 
 ```yaml

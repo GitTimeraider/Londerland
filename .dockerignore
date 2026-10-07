@@ -7,3 +7,5 @@ data
 Docker.txt
 Github.txt
 Dev.txt
+node_modules
+assets/vendor

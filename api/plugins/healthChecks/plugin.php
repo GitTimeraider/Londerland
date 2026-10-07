@@ -28,13 +28,13 @@ class HealthChecks extends Organizr
 					'override' => 12,
 					'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-info">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-info">
+									<div class="card-header">
 										<span lang="en">ATTENTION</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<h4 lang="en">Once this plugin is setup, you will need to setup a CRON job</h4>
 											<br/>
 											<span>
@@ -99,13 +99,13 @@ class HealthChecks extends Organizr
 					'override' => 12,
 					'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-danger">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-danger">
+									<div class="card-header">
 										<span lang="en">ATTENTION</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<h4 lang="en">Please use a Full Access Token</h4>
 											<br/>
 											<div>

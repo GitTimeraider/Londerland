@@ -23,12 +23,12 @@ trait DonateHomepageItem
 				],
 				'Setup' => [
 					$this->settingsOption('html', null, ['label' => 'Instructions', 'override' => 12, 'html' => '
-					<div class="panel panel-default">
-						<div class="panel-heading">
-							<a href="https://dashboard.stripe.com//" target="_blank"><span class="label label-info m-l-5">Visit Stripe Site</span></a>
+					<div class="card card-default">
+						<div class="card-header">
+							<a href="https://dashboard.stripe.com//" target="_blank"><span class="badge text-bg-info m-l-5">Visit Stripe Site</span></a>
 						</div>
-						<div class="panel-wrapper collapse in">
-							<div class="panel-body">
+						<div class="card-wrapper collapse show">
+							<div class="card-body">
 								<ul class="list-icons">
 									<li lang="en"><i class="fa fa-caret-right text-info"></i> Create or Login if you already have an account</li>
 									<li lang="en"><i class="fa fa-caret-right text-info"></i> Goto products and click [Add Product]</li>
@@ -193,7 +193,7 @@ trait DonateHomepageItem
 	{
 		if ($this->homepageItemPermissions($this->donateHomepagePermissions('main'))) {
 			$minimum = $this->config['homepageDonateMinimum'] / 100;
-			$history = $this->config['homepageDonateShowUserHistory'] ? '<div class="pull-right"><a href="javascript:void(0)" class="toggle-donation-history" data-status="hidden"><i class="fa fa-clock-o"></i></a> </div>' : '';
+			$history = $this->config['homepageDonateShowUserHistory'] ? '<div class="float-end"><a href="javascript:void(0)" class="toggle-donation-history" data-status="hidden"><i class="fa fa-clock-o"></i></a> </div>' : '';
 			return '
 			<script>
 				$(document).on("keyup", "#custom-donation-amount", function () {
@@ -201,20 +201,18 @@ trait DonateHomepageItem
 				});
 			</script>
 				<div id="' . __FUNCTION__ . '">
-					<div class="panel panel-primary" style="position: static; zoom: 1;">
-						<div class="panel-heading"> ' . $this->config['homepageDonateCustomizeHeading'] . $history . '</div>
-						<div class="panel-wrapper collapse in" aria-expanded="true">
-							<div class="panel-body">
+					<div class="card card-primary" style="position: static; zoom: 1;">
+						<div class="card-header"> ' . $this->config['homepageDonateCustomizeHeading'] . $history . '</div>
+						<div class="card-wrapper collapse show" aria-expanded="true">
+							<div class="card-body">
 								<p>' . $this->config['homepageDonateCustomizeDescription'] . '</p>
 								<script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
 								<script src="https://js.stripe.com/v3/"></script>
 								<form id="homepage-donation-form" action="api/v2/homepage/donate?amount=' . $minimum . '" method="POST" target="_blank">
 									<div class="input-group m-b-30">
-										<span class="input-group-addon">$</span>
+										<span class="input-group-text">$</span>
 										<input type="number" class="form-control" name="amount" id="custom-donation-amount" placeholder="' . $minimum . '" min="' . $minimum . '"/>
-										<span class="input-group-btn"> 
-											<button class="btn btn-info" type="submit" id="checkout-button" lang="en">Donate</button> 
-										</span>
+										<button class="btn btn-info" type="submit" id="checkout-button" lang="en">Donate</button>
 									</div>
 								</form>
 								<div class="donation-history hidden"></div>

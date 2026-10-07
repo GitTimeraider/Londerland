@@ -6,7 +6,7 @@ $('body').arrive('#settings-main-tab-editor .nav-tabs', {onceOnly: true}, functi
 });
 function bookmarkCheckForTab() {
 	// Let check for tab with bookmark url
-	organizrAPI2('GET', 'api/v2/plugins/bookmark/setup/tab').success(function (data) {
+	organizrAPI2('GET', 'api/v2/plugins/bookmark/setup/tab').done(function (data) {
 		try {
 			let response = data.response;
 			$('.bookmark-check-tab small').text('Bookmark Tab');
@@ -28,7 +28,7 @@ $('body').arrive('.bookmark-check-tab', {onceOnly: false}, function() {
 });
 function bookmarkCheckForCategory(){
 	// Let check for tab with bookmark url
-	organizrAPI2('GET','api/v2/plugins/bookmark/setup/category').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/bookmark/setup/category').done(function(data) {
 		try {
 			let response = data.response;
 			$('.bookmark-check-category small').text('Bookmark Categories');
@@ -51,7 +51,7 @@ function bookmarkLaunch(){
 
 // TAB MANAGEMENT
 function bookmarkTabsLaunch(){
-	var menuList = `<li class="bookmarkTabsMenu-added" onclick="changeSettingsMenu('Settings::Tab Editor::Bookmark Tabs');loadSettingsPage2('api/v2/plugins/bookmark/settings_tab_editor_bookmark_tabs','#settings-tab-editor-bookmark-tabs','Bookmark Tab Editor');" role="presentation"><a id="settings-tab-editor-bookmark-tabs-anchor" href="#settings-tab-editor-bookmark-tabs" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-layout-tab-v"></i></span><span class="hidden-xs" lang="en">Bookmark Tabs</span></a></li>`;
+	var menuList = `<li class="bookmarkTabsMenu-added" onclick="changeSettingsMenu('Settings::Tab Editor::Bookmark Tabs');loadSettingsPage2('api/v2/plugins/bookmark/settings_tab_editor_bookmark_tabs','#settings-tab-editor-bookmark-tabs','Bookmark Tab Editor');" role="presentation"><a id="settings-tab-editor-bookmark-tabs-anchor" href="#settings-tab-editor-bookmark-tabs" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-layout-tab-v"></i></span><span class="hidden-xs" lang="en">Bookmark Tabs</span></a></li>`;
 	let menuListAlt = `<option value="#settings-tab-editor-bookmark-tabs-anchor" lang="en">Bookmark Tabs</option>`;
 	let div = `
 	<div role="tabpanel" class="tab-pane fade" id="settings-tab-editor-bookmark-tabs">
@@ -65,13 +65,9 @@ function bookmarkTabsLaunch(){
 	}
 }
 
-function getColorPickerOptionsWithCallback(func){
-	return ;
-}
-
 var colorPickerInitialized = false;
 function buildBookmarkTabEditor(){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -81,13 +77,9 @@ function buildBookmarkTabEditor(){
 
 		// initialize color pickers only first time
 		if(!colorPickerInitialized){
-			$("input.bookmark-pick-a-color").ColorPickerSliders({
-				placement: 'bottom',
-				color: '#987654',
-				hsvpanel: true,
-				previewformat: 'hex',
-				flat: true,
-				onchange: function(container, color){
+			initColorPickers("input.bookmark-pick-a-color", {
+				inline: true,
+				onChange: function() {
 					generatePreviewBookmarkNewTab();
 					generatePreviewBookmarkEditTab();
 				}
@@ -119,7 +111,7 @@ function buildBookmarkTabEditorItem(array){
 					</div>
 				</div>
 			</td>
-			<td><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="`+v.url+`">`+v.name+`</span></td>
+			<td><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="`+v.url+`">`+v.name+`</span></td>
             `+buildBookmarkTabCategorySelect(array.categories,v.id, v.category_id)+`
 			`+buildBookmarkTabGroupSelect(array.groups,v.id, v.group_id)+`
 			<td style="text-align:center"><input type="checkbox" class="js-switch bookmarkEnabledSwitch" data-size="small" data-color="#99d683" data-secondary-color="#f96262" name="tab[`+v.id+`].enabled" value="true" `+tof(v.enabled,'c')+`/><input type="hidden" class="form-control" name="tab[`+v.id+`].enabled" value="false"></td>
@@ -158,7 +150,7 @@ function buildBookmarkTabCategorySelect(array,tabID, categoryID){
 }
 
 function editBookmarkTabForm(id){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs/' + id,true).success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/bookmark/tabs/' + id,true).done(function(data) {
 		try {
 			let response = data.response;
 			console.log(response);
@@ -192,7 +184,7 @@ $(document).on("change", ".bookmarkEnabledSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"enabled":enabled},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"enabled":enabled},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -209,7 +201,7 @@ $(document).on("change", ".bookmarkTabGroupSelect", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"group_id":groupID},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"group_id":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -227,7 +219,7 @@ $(document).on("change", ".bookmarkTabCategorySelect", function () {
 	var categoryID = $(this).find("option:selected").val();
 	console.log("CategoryID: " + categoryID);
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"category_id":categoryID},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -242,21 +234,20 @@ $(document).on("change", ".bookmarkTabCategorySelect", function () {
 //DELETE TAB
 $(document).on("click", ".bookmarkDeleteTab", function () {
 	var tab = $(this);
-	swal({
+	Swal.fire({
 		title: window.lang.translate('Delete ') + tab.parent().parent().attr("data-name") + '?',
 		icon: "warning",
-		buttons: {
-			cancel: window.lang.translate('No'),
-			confirm: window.lang.translate('Yes'),
-		},
-		dangerMode: true,
+		showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
 		confirmButtonColor: "#DD6B55"
-	}).then(function(willDelete) {
+	}).then(function(result) {
+        let willDelete = result.isConfirmed;
 		if (willDelete) {
 			var id = tab.parent().parent().attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkTabEditor );
-			organizrAPI2('DELETE','api/v2/plugins/bookmark/tabs/' + id, null,true).success(function(data) {
+			organizrAPI2('DELETE','api/v2/plugins/bookmark/tabs/' + id, null,true).done(function(data) {
 				message('Tab Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 				if(callbacks){ callbacks.fire(); }
 			}).fail(function(xhr) {
@@ -296,7 +287,7 @@ $(document).on("click", ".editBookmarkTab", function () {
 	if(tabInfo.id !== '' && tabInfo.tabName !== '' && tabInfo.tabImage !== '' && tabInfo.background_color !== '' && tabInfo.text_color !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkTabEditor );
-		organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + tabInfo.id,tabInfo,true).success(function(data) {
+		organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
@@ -341,11 +332,10 @@ $(document).on("click", ".addNewBookmarkTab", function () {
 	if(tabInfo.order !== '' && tabInfo.name !== '' && tabInfo.url !== '' && tabInfo.image !== '' && tabInfo.background_color !== '' && tabInfo.text_color !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkTabEditor );
-		organizrAPI2('POST','api/v2/plugins/bookmark/tabs',tabInfo,true).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/bookmark/tabs',tabInfo,true).done(function(data) {
 			try {
 				var response = data.response;
-				$('.bookmarkTabIconImageList').val(null).trigger('change');
-				$('.bookmarkTabIconIconList').val(null).trigger('change');
+				clearSelect('.bookmarkTabIconImageList, .bookmarkTabIconIconList');
 			}catch(e) {
 				organizrCatchError(e,data);
 			}
@@ -381,7 +371,7 @@ function submitBookmarkTabOrder(newTabs){
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildBookmarkTabEditor );
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs',data,true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs',data,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -483,7 +473,7 @@ $(document).on('input', "#edit-bookmark-tab-form-inputTextColor", generatePrevie
 
 // CATEGORY MANAGEMENT
 function bookmarkCategoriesLaunch(){
-	var menuList = `<li class="bookmarkCategoryMenu-added" onclick="changeSettingsMenu('Settings::Tab Editor::Bookmark Categories');loadSettingsPage2('api/v2/plugins/bookmark/settings_tab_editor_bookmark_categories','#settings-tab-editor-bookmark-categories','Bookmark Category Editor');" role="presentation"><a id="settings-tab-editor-bookmark-categories-anchor" href="#settings-tab-editor-bookmark-categories" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-layout-tab-v"></i></span><span class="hidden-xs" lang="en">Bookmark Categories</span></a></li>`;
+	var menuList = `<li class="bookmarkCategoryMenu-added" onclick="changeSettingsMenu('Settings::Tab Editor::Bookmark Categories');loadSettingsPage2('api/v2/plugins/bookmark/settings_tab_editor_bookmark_categories','#settings-tab-editor-bookmark-categories','Bookmark Category Editor');" role="presentation"><a id="settings-tab-editor-bookmark-categories-anchor" href="#settings-tab-editor-bookmark-categories" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-layout-tab-v"></i></span><span class="hidden-xs" lang="en">Bookmark Categories</span></a></li>`;
 	let menuListAlt = `<option value="#settings-tab-editor-bookmark-categories-anchor" lang="en">Bookmark Categories</option>`;
 	let div = `
 	<div role="tabpanel" class="tab-pane fade" id="settings-tab-editor-bookmark-categories">
@@ -499,7 +489,7 @@ function bookmarkCategoriesLaunch(){
 }
 
 function buildBookmarkCategoryEditor(){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -551,7 +541,7 @@ $(document).on("click", ".addNewBookmarkCategory", function () {
 	if(categoryInfo.category !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkCategoryEditor );
-		organizrAPI2('POST','api/v2/plugins/bookmark/categories',categoryInfo,true).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/bookmark/categories',categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
@@ -570,21 +560,20 @@ $(document).on("click", ".addNewBookmarkCategory", function () {
 //DELETE CATEGORY
 $(document).on("click", ".deleteBookmarkCategory", function () {
 	var category = $(this);
-	swal({
+	Swal.fire({
 		title: window.lang.translate('Delete ')+category.parent().parent().attr("data-name")+'?',
 		icon: "warning",
-		buttons: {
-			cancel: window.lang.translate('No'),
-			confirm: window.lang.translate('Yes'),
-		},
-		dangerMode: true,
+		showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
 		confirmButtonColor: "#DD6B55"
-	}).then(function(willDelete) {
+	}).then(function(result) {
+        let willDelete = result.isConfirmed;
 		if (willDelete) {
 			var id = category.parent().parent().attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkCategoryEditor );
-			organizrAPI2('DELETE','api/v2/plugins/bookmark/categories/' + id, null,true).success(function(data) {
+			organizrAPI2('DELETE','api/v2/plugins/bookmark/categories/' + id, null,true).done(function(data) {
 				message('Category Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 				if(callbacks){ callbacks.fire(); }
 			}).fail(function(xhr) {
@@ -612,7 +601,7 @@ $(document).on("click", ".editBookmarkCategory", function () {
 	if(categoryInfo.id !== '' && categoryInfo.category !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkCategoryEditor );
-		organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + categoryInfo.id,categoryInfo,true).success(function(data) {
+		organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
@@ -633,7 +622,7 @@ $(document).on("click", ".changeDefaultBookmarkCategory", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildBookmarkCategoryEditor );
-	organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + id, {"default":1},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -662,7 +651,7 @@ function submitBookmarkCategoryOrder(){
 			data.push(temp);
 		}
 	})
-	organizrAPI2('PUT','api/v2/plugins/bookmark/categories',data,true).success(function(data) {
+	organizrAPI2('PUT','api/v2/plugins/bookmark/categories',data,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {

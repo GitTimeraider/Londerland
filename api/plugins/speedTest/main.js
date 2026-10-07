@@ -39,7 +39,7 @@ function startStop(){
 			var prog=(Number(data[6])*2+Number(data[7])*2+Number(data[8]))/5;
 			I("progress").style.width=(100*prog)+"%";
 			$('#downloadPercent').attr('class', 'css-bar css-bar-'+downloadPercent+' css-bar-lg css-bar-default').attr('data-label', downloadText+'Mbps');
-			$('#uploadPercent').attr('class', 'css-bar css-bar-'+uploadPercent+' css-bar-lg css-bar-warning pull-right').attr('data-label', uploadText+'Mbps');
+			$('#uploadPercent').attr('class', 'css-bar css-bar-'+uploadPercent+' css-bar-lg css-bar-warning float-end').attr('data-label', uploadText+'Mbps');
 		};
 	}
 }
@@ -56,7 +56,7 @@ function initUI(){
 	I("ip").textContent="";
 	I("progress").style.width="";
 	$('#downloadPercent').attr('class', 'css-bar css-bar-0 css-bar-lg css-bar-default').attr('data-label', '0Mbps');
-	$('#uploadPercent').attr('class', 'css-bar css-bar-0 css-bar-lg css-bar-warning pull-right').attr('data-label', '0Mbps');
+	$('#uploadPercent').attr('class', 'css-bar css-bar-0 css-bar-lg css-bar-warning float-end').attr('data-label', '0Mbps');
 }
 // FUNCTIONS
 function speedTestLaunch(){
@@ -65,41 +65,41 @@ function speedTestLaunch(){
 			var menuList = `<li><a class="inline-popups speedTestModal" href="#speedtest-area" data-effect="mfp-zoom-out"><i class="fa fa-rocket fa-fw"></i> <span lang="en">Test Server Speed</span></a></li>`;
 			var htmlDOM = `
 			<div id="speedtest-area" class="white-popup mfp-with-anim mfp-hide">
-				<div class="col-md-4 col-md-offset-4">
-					<div class="panel bg-org panel-info">
-						<div class="panel-heading">
+				<div class="col-lg-4 offset-lg-4">
+					<div class="card bg-org card-info">
+						<div class="card-header">
 							<span lang="en">Test Speed to Server</span>
-							<button id="startStopBtn" onclick="startStop()" class="btn btn-info waves-effect waves-light pull-right"><span lang="en" id="speedTestButtonText">Start</span> <i class="fa fa-rocket m-l-5"></i></button>
+							<button id="startStopBtn" onclick="startStop()" class="btn btn-info waves-effect waves-light float-end"><span lang="en" id="speedTestButtonText">Start</span> <i class="fa fa-rocket m-l-5"></i></button>
 						</div>
-						<div class="panel-body">
+						<div class="card-body">
 							<div id="test">
 								<div class="row hidden-xs">
-									<div class="col-md-6 col-xs-6"><div id="downloadPercent" data-label="0Mbps" style="font-size: 15px;"></div></div>
-									<div class="col-md-6 col-xs-6"><div id="uploadPercent" data-label="0Mbps" style="font-size: 15px;"></div></div>
+									<div class="col-lg-6 col-6"><div id="downloadPercent" data-label="0Mbps" style="font-size: 15px;"></div></div>
+									<div class="col-lg-6 col-6"><div id="uploadPercent" data-label="0Mbps" style="font-size: 15px;"></div></div>
 								</div>
 								<div class="progress progress-sm">
-									<div id="progress" class="progress-bar progress-bar-info active progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-										<span class="sr-only">0% Complete (success)</span>
+									<div id="progress" class="progress-bar bg-info active progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+										<span class="visually-hidden">0% Complete (success)</span>
 									</div>
 								</div>
 								<div class="white-box m-b-0">
 									<div class="user-btm-box">
-										<div class="col-md-3 col-xs-6 p-l-0 p-r-0 text-center">
+										<div class="col-lg-3 col-6 p-l-0 p-r-0 text-center">
 											<p class="text-success"><i class="ti-download fa-2x"></i></p>
 											<h1 id="dlText"></h1>
 											<h4 class="">Mbps</h4>
 										</div>
-										<div class="col-md-3 col-xs-6 p-l-0 p-r-0 text-center">
+										<div class="col-lg-3 col-6 p-l-0 p-r-0 text-center">
 											<p class="text-warning"><i class="ti-upload fa-2x"></i></p>
 											<h1 id="ulText"></h1>
 											<h4 class="">Mbps</h4>
 										</div>
-										<div class="col-md-3 col-xs-6 p-l-0 p-r-0 text-center">
+										<div class="col-lg-3 col-6 p-l-0 p-r-0 text-center">
 											<p class="text-purple"><i class="ti-direction-alt fa-2x"></i></p>
 											<h1 id="pingText"></h1>
 											<h4 class="">ms</h4>
 										</div>
-										<div class="col-md-3 col-xs-6 p-l-0 p-r-0 text-center">
+										<div class="col-lg-3 col-6 p-l-0 p-r-0 text-center">
 											<p class="text-info"><i class="ti-pulse fa-2x"></i></p>
 											<h1 id="jitText"></h1>
 											<h4 class="">ms</h4>
@@ -109,7 +109,7 @@ function speedTestLaunch(){
 							</div>
 							<script type="text/javascript">initUI();</script>
 						</div>
-						<div class="panel-footer"> IP Address: <span id="ip"></span> </div>
+						<div class="card-footer"> IP Address: <span id="ip"></span> </div>
 					</div>
 				</div>
 			</div>

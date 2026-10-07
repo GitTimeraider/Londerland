@@ -101,8 +101,8 @@ function orgDebug() {
     $("#debugResultsBox").removeClass("hidden");
     $("#debugResults").html(formatDebug(result));
     $(".cmdName").text(cmd);
-    if (bowser.mobile !== true) {
-      $("#debugResults > .whitebox").slimScroll();
+    if (browserInfo.mobile !== true) {
+      $("#debugResults > .whitebox").css({ height: "250px", "overflow-y": "auto" });
     }
   } else {
   }
@@ -229,8 +229,8 @@ function getDebugPreInfo() {
   formatted =
     '<pre class="whitebox bg-org text-success">' + formatted + "</pre>";
   $("#debugPreInfo").html(formatted);
-  if (bowser.mobile !== true) {
-    $("#debugPreInfo > .whitebox").slimScroll();
+  if (browserInfo.mobile !== true) {
+    $("#debugPreInfo > .whitebox").css({ height: "250px", "overflow-y": "auto" });
   }
 }
 function orgDebugList(cmd) {
@@ -251,15 +251,15 @@ function updateIssueLink(line) {
         ? '<i class="icon-arrow-up-circle"></i> feature'
         : '<i class="fa fa-github"></i> issue';
     let colorType =
-      issueType.toLowerCase() == "fr" ? "label-info" : "label-primary";
+      issueType.toLowerCase() == "fr" ? "text-bg-info" : "text-bg-primary";
     let issueLink =
       issueType.toLowerCase() == "fr"
         ? "https://feature.organizr.app/posts/" + issueNumber
         : "https://github.com/causefx/Organizr/issues/" + issueNumber;
     issueLink =
-      '<span class="label upgrade-label text-uppercase ' +
+      '<span class="badge upgrade-label text-uppercase ' +
       colorType +
-      ' label-rounded font-12 pull-right"><a class="text-white text-uppercase" href="' +
+      ' rounded-pill font-12 float-end"><a class="text-white text-uppercase" href="' +
       issueLink +
       '" target="_blank">' +
       issueWord +
@@ -557,6 +557,7 @@ function iconPrefix(source) {
   var icons = {
     materialize: "mdi mdi-",
     fontawesome: "fa fa-",
+    "fontawesome-brands": "fa-brands fa-",
     themify: "ti-",
     simpleline: "icon-",
     weathericon: "wi wi-",
@@ -579,6 +580,7 @@ function iconPrefixSplash(source) {
   var icons = {
     materialize: "mdi mdi-",
     fontawesome: "fa fa-",
+    "fontawesome-brands": "fa-brands fa-",
     themify: "ti-",
     simpleline: "icon-",
     weathericon: "wi wi-",
@@ -611,7 +613,7 @@ function dirtyHash(hash) {
 function noTabs(arrayItems) {
   if (arrayItems.data.user.loggedin === true) {
     organizrAPI2("GET", "api/v2/page/tabs")
-      .success(function (data) {
+      .done(function (data) {
         try {
           var json = data.response;
           organizrConsole("Organizr Function", "No tabs available");
@@ -660,7 +662,7 @@ function logout() {
     "10000"
   );
   organizrAPI2("GET", "api/v2/logout")
-    .success(function (data) {
+    .done(function (data) {
       local("set", "message", "Goodbye|Logout Successful|success");
       history.replaceState(null, null, " ");
       if (
@@ -780,8 +782,8 @@ function swapDisplay(type, split) {
 function toggleParentActive(id) {
   var childTab = $("#menu-" + id);
   if (childTab.parent().hasClass("nav-second-level")) {
-    if (!childTab.parent().hasClass("in")) {
-      childTab.parent().addClass("collapse in");
+    if (!childTab.parent().hasClass("show")) {
+      childTab.parent().addClass("collapse show");
       childTab.parent().parent().addClass("active");
     }
   }
@@ -1138,7 +1140,7 @@ function loadNextTab(loadNextTabIfNotLoaded = false) {
   if (typeof next !== "undefined") {
     let parent = $("#menu-" + next).parent();
     if (
-      parent.hasClass("in") === false &&
+      parent.hasClass("show") === false &&
       parent.hasClass("nav-second-level")
     ) {
       parent.parent().find("a").first().trigger("click");
@@ -1291,7 +1293,7 @@ function tabActions(event, id, redirectURL = "") {
   } else {
     switchTab(id);
     if (type !== 2) {
-      $(".splash-screen").removeClass("in").addClass("hidden");
+      $(".splash-screen").removeClass("show").addClass("hidden");
     }
     if (redirectURL) {
       $(".close-popup").trigger("click");
@@ -1367,13 +1369,13 @@ function accordionOptions(options, parentID) {
     }
     accordionOptions +=
       `
-		<div class="panel">
-			<div class="panel-heading" id="` +
+		<div class="card">
+			<div class="card-header" id="` +
       id +
       `-heading" role="tab">
-				<a class="panel-title collapsed" data-toggle="collapse" href="#` +
+				<a class="card-title collapsed" data-bs-toggle="collapse" href="#` +
       id +
-      `-collapse" data-parent="#` +
+      `-collapse" data-bs-parent="#` +
       parentID +
       `" aria-expanded="false" aria-controls="` +
       id +
@@ -1381,12 +1383,12 @@ function accordionOptions(options, parentID) {
       header +
       `</span></a>
 			</div>
-			<div class="panel-collapse collapse" id="` +
+			<div class="card-collapse collapse" id="` +
       id +
       `-collapse" aria-labelledby="` +
       id +
       `-heading" role="tabpanel" aria-expanded="false" style="height: 0px;">
-				<div class="panel-body">` +
+				<div class="card-body">` +
       body +
       `</div>
 			</div>
@@ -1399,33 +1401,33 @@ function buildAccordion(array, open = false) {
   var items = "";
   var mainId = createRandomString(10);
   $.each(array, function (i, v) {
-    var collapse = open && i == 0 ? "collapse in" : "collapse";
+    var collapse = open && i == 0 ? "collapse show" : "collapse";
     var collapsed = open && i == 0 ? "" : "collapsed";
     var id = mainId + "-" + i;
     items +=
       `
-        <div class="panel">
-            <div class="panel-heading bg-org" id="` +
+        <div class="card">
+            <div class="card-header bg-org" id="` +
       id +
-      `-heading" role="tab"> <a class="panel-title ` +
+      `-heading" role="tab"> <a class="card-title ` +
       collapsed +
-      `" data-toggle="collapse" href="#` +
+      `" data-bs-toggle="collapse" href="#` +
       id +
-      `-collapse" data-parent="#` +
+      `-collapse" data-bs-parent="#` +
       mainId +
       `" aria-expanded="false" aria-controls="` +
       id +
       `-collapse"> <span lang="en">` +
       v.title +
       `</span> </a> </div>
-            <div class="panel-collapse ` +
+            <div class="card-collapse ` +
       collapse +
       `" id="` +
       id +
       `-collapse" aria-labelledby="` +
       id +
       `-heading" role="tabpanel">
-                <div class="panel-body" lang="en"> ` +
+                <div class="card-body" lang="en"> ` +
       v.body +
       ` </div>
             </div>
@@ -1433,7 +1435,7 @@ function buildAccordion(array, open = false) {
         `;
   });
   return (
-    '<div class="panel-group" id="' +
+    '<div class="card-stack" id="' +
     mainId +
     '" aria-multiselectable="true" role="tablist">' +
     items +
@@ -1600,7 +1602,7 @@ function buildFormItem(item) {
         type +
         label +
         attr +
-        ' autocomplete="new-password" /><span class="input-group-btn"> <button class="btn btn-default showPassword" type="button"><i class="fa fa-eye passwordToggle"></i></button></span></div>'
+        ' autocomplete="new-password" /><button class="btn btn-secondary showPassword" type="button"><i class="fa fa-eye passwordToggle"></i></button></div>'
       );
     case "password-alt-copy":
       return (
@@ -1618,9 +1620,9 @@ function buildFormItem(item) {
         type +
         label +
         attr +
-        ' autocomplete="new-password" /><span class="input-group-btn"> <button class="btn btn-primary clipboard" type="button" data-clipboard-text="' +
+        ' autocomplete="new-password" /><button class="btn btn-primary clipboard" type="button" data-clipboard-text="' +
         item.value +
-        '"><i class="fa icon-docs"></i></button></span><span class="input-group-btn"> <button class="btn btn-inverse showPassword" type="button"><i class="fa fa-eye passwordToggle"></i></button></span></div>'
+        '"><i class="fa icon-docs"></i></button><button class="btn btn-inverse showPassword" type="button"><i class="fa fa-eye passwordToggle"></i></button></div>'
       );
     case "hidden":
       return (
@@ -1673,11 +1675,11 @@ function buildFormItem(item) {
         attr +
         ' multiple="multiple" data-placeholder="">' +
         selectOptions(item.options, item.value) +
-        '</select><script>$("' +
+        '</select><script>initMultiSelect("' +
         select2ID +
-        '").select2(' +
+        '", ' +
         settings +
-        ').on("select2:unselecting", function() { $(this).data("unselecting", true); }).on("select2:opening", function(e) { if ($(this).data("unselecting")) { $(this).removeData("unselecting");  e.preventDefault(); } });</script>'
+        ');</script>'
       );
     case "switch":
     case "checkbox":
@@ -1716,7 +1718,7 @@ function buildFormItem(item) {
       return "";
     case "accordion":
       return (
-        '<div class="panel-group' +
+        '<div class="card-stack' +
         extraClass +
         '"' +
         placeholder +
@@ -1736,9 +1738,9 @@ function buildFormItem(item) {
     case "arrayMultiple":
       return '<span class="text-danger">BuildFormItem Class not setup...';
     case "cron":
-      return `${smallLabel}<div class="input-group"><input data-changed="false" class="form-control ${extraClass}" ${placeholder} ${value} ${id} ${name} ${disabled} ${type} ${label} ${attr} autocomplete="new-password"><span class="input-group-btn"><button class="btn btn-info test-cron" type="button"><i class="fa fa-flask"></i></button></span></div>`;
+      return `${smallLabel}<div class="input-group"><input data-changed="false" class="form-control ${extraClass}" ${placeholder} ${value} ${id} ${name} ${disabled} ${type} ${label} ${attr} autocomplete="new-password"><button class="btn btn-info test-cron" type="button"><i class="fa fa-flask"></i></button></div>`;
     case "folder":
-      return `${smallLabel}<div class="input-group"><input data-changed="false" class="form-control ${extraClass}" ${placeholder} ${value} ${id} ${name} ${disabled} ${type} ${label} ${attr} autocomplete="new-password"><span class="input-group-btn"><button class="btn btn-info test-folder" type="button"><i class="fa fa-flask"></i></button></span></div>`;
+      return `${smallLabel}<div class="input-group"><input data-changed="false" class="form-control ${extraClass}" ${placeholder} ${value} ${id} ${name} ${disabled} ${type} ${label} ${attr} autocomplete="new-password"><button class="btn btn-info test-folder" type="button"><i class="fa fa-flask"></i></button></div>`;
     default:
       return '<span class="text-danger">BuildFormItem Class not setup...';
   }
@@ -1746,7 +1748,7 @@ function buildFormItem(item) {
 function checkCronFile() {
   $(".cron-results-container").removeClass("hidden");
   organizrAPI2("GET", "api/v2/test/cron")
-    .success(function (data) {
+    .done(function (data) {
       try {
         $(".cron-results").text("Cron file is setup correctly");
       } catch (e) {
@@ -1769,20 +1771,20 @@ function buildPluginsItem(array, type = "enabled") {
 		<!-- Plugin Settings Page -->
 		<form id="` +
           v.idPrefix +
-          `-settings-page" class="mfp-hide white-popup mfp-with-anim addFormTick col-md-10 col-md-offset-1" autocomplete="off">
-            <div class="panel bg-org panel-info">
-                <div class="panel-heading">
+          `-settings-page" class="mfp-hide white-popup mfp-with-anim addFormTick col-lg-10 offset-lg-1" autocomplete="off">
+            <div class="card bg-org card-info">
+                <div class="card-header">
                     <span lang="en">` +
           v.name +
           ` Settings</span>
-                    <button type="button" class="btn bg-org btn-circle close-popup pull-right"><i class="fa fa-times"></i> </button>
+                    <button type="button" class="btn bg-org btn-circle close-popup float-end"><i class="fa fa-times"></i> </button>
                     <button id="` +
           v.idPrefix +
           `-settings-page-save" onclick="submitSettingsForm('` +
           v.idPrefix +
-          `-settings-page')" class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right hidden animated loop-animation rubberBand m-r-20" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save</span></button>
+          `-settings-page')" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end hidden animated loop-animation rubberBand m-r-20" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save</span></button>
                 </div>
-                <div class="panel-wrapper collapse in" aria-expanded="true">
+                <div class="card-wrapper collapse show" aria-expanded="true">
                     <div class="bg-org">
                         <fieldset id="` +
           v.idPrefix +
@@ -1830,7 +1832,7 @@ function buildPluginsItem(array, type = "enabled") {
     }
     var plugin =
       `
-		<div class="col-lg-2 col-md-2 col-sm-6 col-xs-6 m-b-10">
+		<div class="col-xl-2 col-lg-2 col-md-6 col-6 m-b-10">
 			<div class="white-box m-0">
 				<div class="el-card-item p-0">
 					<div class="el-card-avatar el-overlay-1 m-0"> <img class="lazyload" data-src="` +
@@ -1870,12 +1872,12 @@ function buildPluginsItem(array, type = "enabled") {
       : '<h2 class="text-center" lang="en">Everything Active</h2>';
   return type === "enabled"
     ? `
-	<div class="panel bg-org panel-info">
-		<div class="panel-heading">
+	<div class="card bg-org card-info">
+		<div class="card-header">
 			<span lang="en">Active Plugins</span>
 		</div>
-		<div class="panel-wrapper collapse in" aria-expanded="true">
-			<div class="panel-body bg-org">
+		<div class="card-wrapper collapse show" aria-expanded="true">
+			<div class="card-body bg-org">
 				<div class="row el-element-overlay m-b-40">` +
         activePlugins +
         `</div>
@@ -1884,12 +1886,12 @@ function buildPluginsItem(array, type = "enabled") {
 	</div>
 	<div class="clearfix"></div>`
     : `	
-	<div class="panel bg-org panel-info">
-		<div class="panel-heading">
+	<div class="card bg-org card-info">
+		<div class="card-header">
 			<span lang="en">Inactive Plugins</span>
 		</div>
-		<div class="panel-wrapper collapse in" aria-expanded="true">
-			<div class="panel-body bg-org">
+		<div class="card-wrapper collapse show" aria-expanded="true">
+			<div class="card-body bg-org">
 				<div class="row el-element-overlay m-b-40">` +
         inactivePlugins +
         `</div>
@@ -1907,20 +1909,20 @@ function buildPluginsItemOld(array) {
 		<!-- Plugin Settings Page -->
 		<form id="` +
           v.idPrefix +
-          `-settings-page" class="mfp-hide white-popup mfp-with-anim addFormTick col-md-10 col-md-offset-1" autocomplete="off">
-            <div class="panel bg-org panel-info">
-                <div class="panel-heading">
+          `-settings-page" class="mfp-hide white-popup mfp-with-anim addFormTick col-lg-10 offset-lg-1" autocomplete="off">
+            <div class="card bg-org card-info">
+                <div class="card-header">
                     <span lang="en">` +
           v.name +
           ` Settings</span>
-                    <button type="button" class="btn bg-org btn-circle close-popup pull-right"><i class="fa fa-times"></i> </button>
+                    <button type="button" class="btn bg-org btn-circle close-popup float-end"><i class="fa fa-times"></i> </button>
                     <button id="` +
           v.idPrefix +
           `-settings-page-save" onclick="submitSettingsForm('` +
           v.idPrefix +
-          `-settings-page')" class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right hidden animated loop-animation rubberBand m-r-20" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save</span></button>
+          `-settings-page')" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end hidden animated loop-animation rubberBand m-r-20" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save</span></button>
                 </div>
-                <div class="panel-wrapper collapse in" aria-expanded="true">
+                <div class="card-wrapper collapse show" aria-expanded="true">
                     <div class="bg-org">
                         <fieldset id="` +
           v.idPrefix +
@@ -1968,7 +1970,7 @@ function buildPluginsItemOld(array) {
     }
     var plugin =
       `
-		<div class="col-lg-2 col-md-2 col-sm-4 col-xs-4">
+		<div class="col-xl-2 col-lg-2 col-md-4 col-4">
 			<div class="white-box m-0">
 				<div class="el-card-item p-0">
 					<div class="el-card-avatar el-overlay-1 m-0"> <img class="lazyload" data-src="` +
@@ -2014,22 +2016,22 @@ function buildPluginsItemOld(array) {
 		<option value="#settings-plugins-marketplace-anchor" lang="en">Marketplace</option>
 	</select>
 	<ul class="nav customtab2 nav-tabs nav-non-mobile hidden-xs" data-dropdown="plugin-menu" role="tablist">
-		<li onclick="changeSettingsMenu('Settings::Plugins::Active')" role="presentation" class="active"><a id="settings-plugins-active-anchor" href="#settings-plugins-active" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-file"></i></span><span class="hidden-xs" lang="en">Active</span></a>
+		<li onclick="changeSettingsMenu('Settings::Plugins::Active')" role="presentation" class="active"><a id="settings-plugins-active-anchor" href="#settings-plugins-active" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-file"></i></span><span class="hidden-xs" lang="en">Active</span></a>
 		</li>
-		<li onclick="changeSettingsMenu('Settings::Plugins::Inactive')" role="presentation" class=""><a id="settings-plugins-inactive-anchor" href="#settings-plugins-inactive" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-zip"></i></span><span class="hidden-xs" lang="en">Inactive</span></a>
+		<li onclick="changeSettingsMenu('Settings::Plugins::Inactive')" role="presentation" class=""><a id="settings-plugins-inactive-anchor" href="#settings-plugins-inactive" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-zip"></i></span><span class="hidden-xs" lang="en">Inactive</span></a>
 		</li>
-		<li onclick="changeSettingsMenu('Settings::Plugins::Marketplace');loadMarketplace('plugins');" role="presentation" class=""><a id="settings-plugins-marketplace-anchor" href="#settings-plugins-marketplace" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-shopping-cart-full"></i></span><span class="hidden-xs" lang="en">Marketplace</span></a>
+		<li onclick="changeSettingsMenu('Settings::Plugins::Marketplace');loadMarketplace('plugins');" role="presentation" class=""><a id="settings-plugins-marketplace-anchor" href="#settings-plugins-marketplace" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-shopping-cart-full"></i></span><span class="hidden-xs" lang="en">Marketplace</span></a>
 		</li>
 	</ul>
 	<!-- Tab panes -->
 	<div class="tab-content">
-		<div role="tabpanel" class="tab-pane fade in active" id="settings-plugins-active">
-			<div class="panel bg-org panel-info">
-				<div class="panel-heading">
+		<div role="tabpanel" class="tab-pane fade show active" id="settings-plugins-active">
+			<div class="card bg-org card-info">
+				<div class="card-header">
 					<span lang="en">Active Plugins</span>
 				</div>
-				<div class="panel-wrapper collapse in" aria-expanded="true">
-					<div class="panel-body bg-org">
+				<div class="card-wrapper collapse show" aria-expanded="true">
+					<div class="card-body bg-org">
 						<div class="row el-element-overlay m-b-40">` +
     activePlugins +
     `</div>
@@ -2039,12 +2041,12 @@ function buildPluginsItemOld(array) {
 			<div class="clearfix"></div>
 		</div>
 		<div role="tabpanel" class="tab-pane fade" id="settings-plugins-inactive">
-			<div class="panel bg-org panel-info">
-				<div class="panel-heading">
+			<div class="card bg-org card-info">
+				<div class="card-header">
 					<span lang="en">Inactive Plugins</span>
 				</div>
-				<div class="panel-wrapper collapse in" aria-expanded="true">
-					<div class="panel-body bg-org">
+				<div class="card-wrapper collapse show" aria-expanded="true">
+					<div class="card-body bg-org">
 						<div class="row el-element-overlay m-b-40">` +
     inactivePlugins +
     `</div>
@@ -2053,11 +2055,11 @@ function buildPluginsItemOld(array) {
 			</div>
 		</div>
 		<div role="tabpanel" class="tab-pane fade" id="settings-plugins-marketplace">
-			<div class="panel bg-org panel-info">
-				<div class="panel-heading">
+			<div class="card bg-org card-info">
+				<div class="card-header">
 					<span lang="en">Plugin Marketplace</span>
 				</div>
-				<div class="panel-wrapper collapse in" aria-expanded="true">
+				<div class="card-wrapper collapse show" aria-expanded="true">
 					<div class="table-responsive">
                         <table class="table table-hover manage-u-table">
                             <thead>
@@ -2085,7 +2087,7 @@ function buildPluginsItemOld(array) {
 }
 function loadMarketplace(type) {
   marketplaceJSON(type)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -2110,7 +2112,7 @@ function loadThemeMarketplace() {
     '<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>'
   );
   organizrAPI2("GET", "api/v2/themes/marketplace")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         loadMarketplaceThemesItems(response.data);
@@ -2127,7 +2129,7 @@ function loadPluginMarketplace() {
     '<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>'
   );
   organizrAPI2("GET", "api/v2/plugins/marketplace")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         loadMarketplacePluginsItems(response.data);
@@ -2237,7 +2239,7 @@ function loadMarketplaceThemesItems(themes) {
                     <br><span class="text-muted">${v.version}</span>
                     <br><span class="text-muted">${v.author}</span>
                 </td>
-                <td><span data-toggle="tooltip" title="${categoryTooltip}" data-placement="bottom">${category}</span></td>
+                <td><span data-bs-toggle="tooltip" title="${categoryTooltip}" data-bs-placement="bottom">${category}</span></td>
                 <td lang="en">${v.status}</td>
                 <td style="text-align:center"><button type="button" onclick='aboutTheme(${JSON.stringify(
                   v
@@ -2264,13 +2266,13 @@ function aboutPluginImages(images) {
       var active = imageCount == 1 ? "active" : "";
       imageList +=
         `
-            <div class="` +
+            <div class="carousel-item ` +
         active +
-        ` item">
+        `">
                 <div class="overlaybg"><img src="` +
         v +
         `" /></div>
-                <div class="news-content"><span class="label label-info label-rounded">` +
+                <div class="news-content"><span class="badge text-bg-info rounded-pill">` +
         i +
         `</span></div>
             </div>
@@ -2278,12 +2280,27 @@ function aboutPluginImages(images) {
     });
   } else {
     imageList += `
-            <div class="active item">
-                <div class="overlaybg"><img src="https://via.placeholder.com/350x150" /></div>
+            <div class="carousel-item active">
+                <div class="overlaybg"><img src="plugins/images/organizr/logo-wide.png" /></div>
             </div>
         `;
   }
   return imageList;
+}
+// Folder/file list rendered with native <details> elements
+function buildFileTree(files) {
+  let escape = (text) => $("<div>").text(text).html();
+  return files
+    .map(
+      (folder) => `
+      <details class="file-tree">
+        <summary><i class="ti-folder m-r-5"></i>${escape(folder.text)}</summary>
+        <ul class="list-unstyled m-l-20">${(folder.nodes || [])
+          .map((file) => `<li><i class="ti-file m-r-5"></i>${escape(file.text)}</li>`)
+          .join("")}</ul>
+      </details>`
+    )
+    .join("");
 }
 function aboutPluginFiles(fileList) {
   var files = [];
@@ -2338,9 +2355,9 @@ function aboutTheme(theme) {
   var infoBox =
     `
     <div class="row">
-        <div class="col-lg-6 col-sm-12 col-xs-12">
+        <div class="col-xl-6 col-md-12 col-12">
             <div class="row">
-                <div class="col-lg-12 col-sm-12 col-xs-12">
+                <div class="col-xl-12 col-md-12 col-12">
                     <div class="white-box p-10" id="aboutThemeScroll">
                         ` +
     theme.description +
@@ -2348,14 +2365,14 @@ function aboutTheme(theme) {
                     </div>
                 </div>
                 <div class="clearfix">&nbsp;</div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse">
                         <ul class="list-inline two-part text-center m-b-0">
                             <li><i class="icon-envelope-open text-info"></i></li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse" ` +
     homepageLink +
     `>
@@ -2364,21 +2381,21 @@ function aboutTheme(theme) {
                         </ul>
                     </div>
                 </div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse" onclick="$('.themeFileList').toggleClass('hidden');">
                         <ul class="list-inline two-part text-center m-b-0">
                             <li><i class="icon-folder text-purple"></i></li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-sm-12 col-xs-12 themeFileList hidden">
+                <div class="col-md-12 col-12 themeFileList hidden">
                     <div id="treeviewTheme" class=""></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 col-sm-12 col-xs-12">
+        <div class="col-xl-6 col-md-12 col-12">
             <div class="news-slide m-b-15">
-                <div class="vcarousel slide">
+                <div class="vcarousel carousel slide">
                     <!-- Carousel items -->
                     <div class="carousel-inner">
                         ` +
@@ -2396,17 +2413,8 @@ function aboutTheme(theme) {
   $(".vcarousel").carousel({
     interval: 3000,
   });
-  $("#treeviewTheme").treeview({
-    levels: 1,
-    expandIcon: "ti-angle-right",
-    onhoverColor: "rgba(0, 0, 0, 0.05)",
-    selectedBackColor: "#03a9f3",
-    collapseIcon: "ti-angle-down",
-    data: JSON.stringify(files),
-  });
-  $("#aboutThemeScroll").slimScroll({
-    height: "225px",
-  });
+  $("#treeviewTheme").html(buildFileTree(files));
+  $("#aboutThemeScroll").css({ height: "225px", "overflow-y": "auto" });
 }
 function aboutPlugin(plugin) {
   var files = aboutPluginFiles(plugin.files);
@@ -2419,9 +2427,9 @@ function aboutPlugin(plugin) {
   var infoBox =
     `
     <div class="row">
-        <div class="col-lg-6 col-sm-12 col-xs-12">
+        <div class="col-xl-6 col-md-12 col-12">
             <div class="row">
-                <div class="col-lg-12 col-sm-12 col-xs-12">
+                <div class="col-xl-12 col-md-12 col-12">
                     <div class="white-box p-10" id="aboutPluginScroll">
                         ` +
     plugin.description +
@@ -2429,14 +2437,14 @@ function aboutPlugin(plugin) {
                     </div>
                 </div>
                 <div class="clearfix">&nbsp;</div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse">
                         <ul class="list-inline two-part text-center m-b-0">
                             <li><i class="icon-envelope-open text-info"></i></li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse" ` +
     homepageLink +
     `>
@@ -2445,21 +2453,21 @@ function aboutPlugin(plugin) {
                         </ul>
                     </div>
                 </div>
-                <div class="col-lg-4 col-sm-4 col-xs-12">
+                <div class="col-xl-4 col-md-4 col-12">
                     <div class="white-box mouse" onclick="$('.pluginFileList').toggleClass('hidden');">
                         <ul class="list-inline two-part text-center m-b-0">
                             <li><i class="icon-folder text-purple"></i></li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-sm-12 col-xs-12 pluginFileList hidden">
+                <div class="col-md-12 col-12 pluginFileList hidden">
                     <div id="treeview5" class=""></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 col-sm-12 col-xs-12">
+        <div class="col-xl-6 col-md-12 col-12">
             <div class="news-slide m-b-15">
-                <div class="vcarousel slide">
+                <div class="vcarousel carousel slide">
                     <!-- Carousel items -->
                     <div class="carousel-inner">
                         ` +
@@ -2477,17 +2485,8 @@ function aboutPlugin(plugin) {
   $(".vcarousel").carousel({
     interval: 3000,
   });
-  $("#treeview5").treeview({
-    levels: 1,
-    expandIcon: "ti-angle-right",
-    onhoverColor: "rgba(0, 0, 0, 0.05)",
-    selectedBackColor: "#03a9f3",
-    collapseIcon: "ti-angle-down",
-    data: JSON.stringify(files),
-  });
-  $("#aboutPluginScroll").slimScroll({
-    height: "225px",
-  });
+  $("#treeview5").html(buildFileTree(files));
+  $("#aboutPluginScroll").css({ height: "225px", "overflow-y": "auto" });
 }
 function removePlugin(plugin = null) {
   if (plugin == null) {
@@ -2502,7 +2501,7 @@ function removePlugin(plugin = null) {
     "5000"
   );
   organizrAPI2("DELETE", "api/v2/plugins/manage/" + plugin, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         let html = data.response;
         loadPluginMarketplace();
@@ -2535,7 +2534,7 @@ function removeTheme(theme = null) {
     "5000"
   );
   organizrAPI2("DELETE", "api/v2/themes/manage/" + theme, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         let html = data.response;
         loadThemeMarketplace();
@@ -2568,7 +2567,7 @@ function installPlugin(plugin = null) {
     "5000"
   );
   organizrAPI2("POST", "api/v2/plugins/manage/" + plugin, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         var html = data.response;
         loadPluginMarketplace();
@@ -2601,7 +2600,7 @@ function installTheme(theme = null) {
     "5000"
   );
   organizrAPI2("POST", "api/v2/themes/manage/" + theme, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         var html = data.response;
         loadThemeMarketplace();
@@ -2667,7 +2666,7 @@ function themeStatus(name = null, version = null) {
 }
 function copyHomepageJSON(item) {
   organizrAPI2("GET", "api/v2/settings/homepage/" + item + "/debug")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         let debug = response.data;
@@ -2692,12 +2691,12 @@ function homepageItemFormHTML(v) {
   let docs =
     typeof v.docs == "undefined"
       ? ""
-      : `<small class="pull-right m-r-5"><a data-toggle="tooltip" title="Go to Support Doc" data-placement="bottom" class="btn btn-circle btn-primary waves-effect waves-light" href="${v.docs}" target="_blank"> <i class="fa-fw fa fa-question-circle"></i></a></small>`;
+      : `<small class="float-end m-r-5"><a data-bs-toggle="tooltip" title="Go to Support Doc" data-bs-placement="bottom" class="btn btn-circle btn-primary waves-effect waves-light" href="${v.docs}" target="_blank"> <i class="fa-fw fa fa-question-circle"></i></a></small>`;
   let debug = typeof v.debug == "undefined" ? false : true;
   debug = debug === true ? v.debug : false;
   debug =
     debug === true
-      ? `<small class="pull-right m-r-5"><a data-toggle="tooltip" title="Copy JSON Settings" data-placement="bottom" href="javascript:copyHomepageJSON('${v.name}')" class="btn btn-circle btn-info waves-effect waves-light copyHomepageJSON"> <i class="fa-fw ti-clipboard"></i></a></small>`
+      ? `<small class="float-end m-r-5"><a data-bs-toggle="tooltip" title="Copy JSON Settings" data-bs-placement="bottom" href="javascript:copyHomepageJSON('${v.name}')" class="btn btn-circle btn-info waves-effect waves-light copyHomepageJSON"> <i class="fa-fw ti-clipboard"></i></a></small>`
       : "";
   return (
     `
@@ -2705,26 +2704,26 @@ function homepageItemFormHTML(v) {
 	<form id="homepage-` +
     v.name +
     `-form" class="white-popup mfp-with-anim homepageForm addFormTick">
-		<fieldset style="border:0;" class="col-md-10 col-md-offset-1">
-            <div class="panel bg-org panel-info">
-                <div class="panel-heading">
+		<fieldset style="border:0;" class="col-lg-10 offset-lg-1">
+            <div class="card bg-org card-info">
+                <div class="card-header">
                     <span class="" lang="en">` +
     v.name +
     `</span>
-                    <button data-toggle="tooltip" title="Close" data-placement="bottom"  type="button" class="btn btn-default btn-circle close-popup pull-right close-editHomepageItemDiv"><i class="fa fa-times"></i> </button>
+                    <button data-bs-toggle="tooltip" title="Close" data-bs-placement="bottom"  type="button" class="btn btn-secondary btn-circle close-popup float-end close-editHomepageItemDiv"><i class="fa fa-times"></i> </button>
                     ${docs}${debug}
-                    <button data-toggle="tooltip" title="Reset" data-placement="bottom" id="homepage-` +
+                    <button data-bs-toggle="tooltip" title="Reset" data-bs-placement="bottom" id="homepage-` +
     v.name +
     `-form-reset" onclick="editHomepageItem('` +
     v.name +
-    `', true)" class="btn btn-inverse btn-circle waves-effect waves-light pull-right hidden m-r-5" type="button"><span class=""><i class="fa fa-undo"></i></span></button>
-                    <button data-toggle="tooltip" title="Save" data-placement="bottom" id="homepage-` +
+    `', true)" class="btn btn-inverse btn-circle waves-effect waves-light float-end hidden m-r-5" type="button"><span class=""><i class="fa fa-undo"></i></span></button>
+                    <button data-bs-toggle="tooltip" title="Save" data-bs-placement="bottom" id="homepage-` +
     v.name +
     `-form-save" onclick="submitSettingsForm('homepage-` +
     v.name +
-    `-form', true)" class="btn btn-success btn-circle waves-effect waves-light pull-right hidden animated loop-animation rubberBand m-r-5" type="button"><span class=""><i class="fa fa-save"></i></span></button>
+    `-form', true)" class="btn btn-success btn-circle waves-effect waves-light float-end hidden animated loop-animation rubberBand m-r-5" type="button"><span class=""><i class="fa fa-save"></i></span></button>
                 </div>
-                <div class="panel-wrapper collapse in" aria-expanded="true">
+                <div class="card-wrapper collapse show" aria-expanded="true">
                     <div class="bg-org">
                         ` +
     buildFormGroup(v.settings) +
@@ -2738,6 +2737,12 @@ function homepageItemFormHTML(v) {
 	`
   );
 }
+function closeHomepageItemModal() {
+  let modalElement = document.getElementById("editHomepageItemDiv");
+  if (modalElement) {
+    bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+  }
+}
 function clearHomepageOriginal() {
   $("#editHomepageItem").html("");
 }
@@ -2749,9 +2754,8 @@ function completeHomepageLoad(item, data) {
 			let iterationString = (parseInt(iteration, 10) + 101).toString().substr(1);
 			let customEditor = 'customHTML'+iterationString+'Editor';
 			let customTextarea = 'customHTML'+iterationString+'Textarea';
-			let HTMLMode = ace.require("ace/mode/html").Mode;
 			customHTMLEditorObject[iterationString] = ace.edit(customEditor);
-			customHTMLEditorObject[iterationString].session.setMode(new HTMLMode());
+			customHTMLEditorObject[iterationString].session.setMode("ace/mode/html");
 			customHTMLEditorObject[iterationString].setTheme("ace/theme/idle_fingers");
 			customHTMLEditorObject[iterationString].setShowPrintMargin(false);
 			customHTMLEditorObject[iterationString].session.on('change', function(delta) {
@@ -2767,7 +2771,7 @@ function completeHomepageLoad(item, data) {
 function editHomepageItem(item, reload = false) {
   ajaxloader(".editHomepageItemBox-" + item, "in");
   organizrAPI2("GET", "api/v2/settings/homepage/" + item)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         let html = homepageItemFormHTML(response.data);
@@ -2776,32 +2780,14 @@ function editHomepageItem(item, reload = false) {
           ajaxloader(".editHomepageItemBox-" + item);
           return false;
         }
-        /*$("#editHomepageItemCall").animatedModal({
-				top: '40px',
-				left: '0px',
-				color: '#000000eb',
-				animatedIn: 'bounceInUp',
-				animatedOut: 'bounceOutDown',
-				position: 'fixed',
-				afterClose: function() {
-					$('body, html').css({'overflow':'hidden'});
-				}
-			});*/
-        new Custombox.modal({
-          content: {
-            effect: "slidetogether",
-            animateFrom: "bottom",
-            animateTo: "bottom",
-            target: "#editHomepageItemDiv",
-            width: "100%",
-            delay: 0,
-            fullscreen: true,
-            clone: false,
-            onComplete: completeHomepageLoad(item, response.data),
-            onClose: clearHomepageOriginal,
-          },
-          loader: { active: true },
-        }).open();
+        completeHomepageLoad(item, response.data);
+        let modalElement = document.getElementById("editHomepageItemDiv");
+        // Bootstrap modals must live directly under <body> to stack above the page
+        document.body.appendChild(modalElement);
+        modalElement.addEventListener("hidden.bs.modal", clearHomepageOriginal, {
+          once: true,
+        });
+        bootstrap.Modal.getOrCreateInstance(modalElement).show();
         //$('#editHomepageItemCall').click();
       } catch (e) {
         organizrCatchError(e, data);
@@ -2820,7 +2806,7 @@ function buildHomepageItem(array) {
       if (v.enabled) {
         listing +=
           `
-				<div class="col-lg-2 col-md-2 col-sm-6 col-xs-6">
+				<div class="col-xl-2 col-lg-2 col-md-6 col-6">
 					<div class="white-box bg-org m-0">
 						<div class="el-card-item p-0 editHomepageItemBox-` +
           v.name +
@@ -2851,7 +2837,7 @@ function buildHomepageItem(array) {
 }
 function buildPluginsOLD() {
   organizrAPI2("GET", "api/v2/plugins")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -2865,7 +2851,7 @@ function buildPluginsOLD() {
 }
 function buildPlugins(status = "enabled") {
   organizrAPI2("GET", "api/v2/plugins/" + status)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -2881,7 +2867,7 @@ function buildPlugins(status = "enabled") {
 }
 function buildHomepage() {
   organizrAPI2("GET", "api/v2/settings/homepage")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -2915,13 +2901,13 @@ function buildFormGroup(array) {
         cleanClass(i) +
         `" aria-controls="` +
         i +
-        `" role="tab" data-toggle="tab" aria-expanded="false"><span lang="en">` +
+        `" role="tab" data-bs-toggle="tab" aria-expanded="false"><span lang="en">` +
         i +
         `</span></a></li>`;
       group +=
         `
 				<!-- FORM GROUP -->
-				<div role="tabpanel" class="tab-pane fade in ` +
+				<div role="tabpanel" class="tab-pane fade show ` +
         active +
         `" id="` +
         customID +
@@ -2945,9 +2931,9 @@ function buildFormGroup(array) {
         }
         var helpID = "#help-info-" + v.name;
         var helpTip = v.help
-          ? '<sup><a class="help-tip" data-toggle="collapse" href="' +
+          ? '<sup><a class="help-tip" data-bs-toggle="collapse" href="' +
             helpID +
-            '" aria-expanded="true"><i class="m-l-5 fa fa-question-circle text-info" title="Help" data-toggle="tooltip"></i></a></sup>'
+            '" aria-expanded="true"><i class="m-l-5 fa fa-question-circle text-info" title="Help" data-bs-toggle="tooltip"></i></a></sup>'
           : "";
         var builtItems = "";
         if (arrayMultiple == true) {
@@ -2961,12 +2947,12 @@ function buildFormGroup(array) {
                     : "";
                 builtItems += `
                                     <!-- INPUT BOX  Yes Multiple -->
-                                    <div class="col-md-6 p-b-10">
+                                    <div class="col-lg-6 p-b-10">
                                         <div class="form-group">
-                                            <label class="control-label col-md-12"><span lang="en">${
+                                            <label class="form-label col-lg-12"><span lang="en">${
                                               formItem.label
                                             }</span>${helpTip}</label>
-                                            <div class="col-md-12">${buildFormItem(
+                                            <div class="col-lg-12">${buildFormItem(
                                               formItem
                                             )}</div> <!-- end div -->
                                         </div>
@@ -2984,14 +2970,14 @@ function buildFormGroup(array) {
           builtItems =
             `
 					<!-- INPUT BOX  no Multiple-->
-					<div class="col-md-` +
+					<div class="col-lg-` +
             override +
             ` p-b-10">
 						<div class="form-group">
-							<label class="control-label col-md-12"><span lang="en">${
+							<label class="form-label col-lg-12"><span lang="en">${
                 v.label
               }</span>${helpTip}</label>
-							<div class="col-md-12">
+							<div class="col-lg-12">
 								${buildFormItem(v)}
 							</div>
 						</div>
@@ -3017,14 +3003,14 @@ function createImageSwal(attr) {
   let extension = attr.attr("data-image-name-ext");
   let div =
     `
-		<div class="panel panel-default">
-            <div class="panel-heading"><h1><img class="center" src="` +
+		<div class="card card-default">
+            <div class="card-header"><h1><img class="center" src="` +
     fullPath +
     `" style="height: 50px; width: 50px">` +
     title +
     `</h1></div>
-            <div class="panel-wrapper collapse in">
-                <div class="panel-body">
+            <div class="card-wrapper collapse show">
+                <div class="card-body">
                 	<h5 lang="en">Choose action:</h5>
 					<div class="button-box">
                         <button class="btn btn-info waves-effect waves-light clipboard" type="button" data-clipboard-text="` +
@@ -3042,10 +3028,10 @@ function createImageSwal(attr) {
             </div>
         </div>
         `;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "bg-org",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
   });
 }
 function buildImageManagerViewItem(array) {
@@ -3058,7 +3044,7 @@ function buildImageManagerViewItem(array) {
       var fileAndExt = filepath[filepath.length - 1];
       imageListing +=
         `
-			<a class="imageManagerItem" href="javascript:void(0);" data-toggle="lightbox" data-gallery="multiimages" data-title="` +
+			<a class="imageManagerItem" href="javascript:void(0);" data-gallery="multiimages" data-title="` +
         name[0] +
         `" data-clipboard-text="` +
         clipboardText +
@@ -3068,7 +3054,7 @@ function buildImageManagerViewItem(array) {
         name[0] +
         `" data-image-name-ext="` +
         fileAndExt +
-        `"><img data-toggle="tooltip" title="${name[0]}" data-placement="bottom"  data-src="` +
+        `"><img data-bs-toggle="tooltip" title="${name[0]}" data-bs-placement="bottom"  data-src="` +
         v +
         `" alt="tabImage" class="all studio lazyload" /> </a>
 			`;
@@ -3078,23 +3064,12 @@ function buildImageManagerViewItem(array) {
 }
 function buildImageManagerView() {
   organizrAPI2("GET", "api/v2/image")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         $(".settings-image-manager-list").html(
           buildImageManagerViewItem(response.data)
         );
-        $container = $("#gallery-content-center");
-        try {
-          if (typeof $container.isotope == "undefined") {
-            $container.isotope({ itemSelector: "img" });
-          } else {
-            $container.isotope({ itemSelector: "img" });
-          }
-        } catch (e) {
-          $container.isotope("destroy");
-          $container.isotope({ itemSelector: "img" });
-        }
       } catch (e) {
         organizrCatchError(e, data);
       }
@@ -3105,7 +3080,7 @@ function buildImageManagerView() {
 }
 function buildPluginsSettings() {
   organizrAPI2("GET", "api/v2/settings/plugin")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         $("#plugin-settings-form").html(buildFormGroup(response.data));
@@ -3119,7 +3094,7 @@ function buildPluginsSettings() {
 }
 function buildThemeSettings() {
   organizrAPI2("GET", "api/v2/settings/theme")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         $("#theme-settings-form").html(buildFormGroup(response.data));
@@ -3133,19 +3108,14 @@ function buildThemeSettings() {
 }
 function buildCustomizeAppearance() {
   organizrAPI2("GET", "api/v2/settings/appearance")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
         organizrCatchError(e, data);
       }
       $("#customize-appearance-form").html(buildFormGroup(response.data));
-      $("input.pick-a-color-custom-options").ColorPickerSliders({
-        placement: "bottom",
-        color: "#987654",
-        hsvpanel: true,
-        previewformat: "hex",
-      });
+      initColorPickers("input.pick-a-color-custom-options");
     })
     .fail(function (xhr) {
       OrganizrApiError(xhr);
@@ -3153,7 +3123,7 @@ function buildCustomizeAppearance() {
 }
 function buildSSO() {
   organizrAPI2("GET", "api/v2/settings/sso")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3167,7 +3137,7 @@ function buildSSO() {
 }
 function buildSettingsMain() {
   organizrAPI2("GET", "api/v2/settings/main")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3182,7 +3152,7 @@ function buildSettingsMain() {
 }
 function buildUserManagement() {
   organizrAPI2("GET", "api/v2/users?includeGroups")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3196,7 +3166,7 @@ function buildUserManagement() {
 }
 function buildGroupManagement() {
   organizrAPI2("GET", "api/v2/groups?includeUsers")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3210,7 +3180,7 @@ function buildGroupManagement() {
 }
 function buildTabEditor() {
   organizrAPI2("GET", "api/v2/tabs")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3421,7 +3391,7 @@ function addEditHomepageItem(id, type) {
 }
 function buildCategoryEditor() {
   organizrAPI2("GET", "api/v2/tabs")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -3464,7 +3434,7 @@ function buildLanguage(replace = false, newLang = null) {
   });
   var lang = `
 		<li class="dropdown" id="languageDropdown">
-			<a class="dropdown-toggle waves-effect waves-light" data-toggle="dropdown" href="#" aria-expanded="false"> <i class="fa fa-language"></i><span></span></a>
+			<a class="dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#" aria-expanded="false"> <i class="fa fa-language"></i><span></span></a>
 			<ul class="dropdown-menu mailbox animated bounceInDown language-box">
 				<li>
 					<div class="drop-title" lang="en">Choose Language</div>
@@ -3522,7 +3492,7 @@ function updateUserInformation() {
     }
     ajaxloader(".content-wrap", "in");
     organizrAPI2("PUT", "api/v2/users/" + activeInfo.user.userID, post)
-      .success(function (data) {
+      .done(function (data) {
         try {
           var response = data.response;
           $.magnificPopup.close();
@@ -3549,7 +3519,7 @@ function twoFA(action, type, secret = null) {
   switch (action) {
     case "activate":
       organizrAPI2("POST", "api/v2/2fa/" + type, {})
-        .success(function (data) {
+        .done(function (data) {
           try {
             var html = data.response;
           } catch (e) {
@@ -3557,12 +3527,12 @@ function twoFA(action, type, secret = null) {
           }
           let div =
             `
-				<div class="panel panel-default">
-                    <div class="panel-heading">Enable 2FA: ` +
+				<div class="card card-default">
+                    <div class="card-header">Enable 2FA: ` +
             html.data.type +
             `</div>
-                    <div class="panel-wrapper collapse in">
-                        <div class="panel-body">
+                    <div class="card-wrapper collapse show">
+                        <div class="card-body">
                             <p class="twofa-modal-image"><img class="center" src="` +
             html.data.url +
             `"></p>
@@ -3571,21 +3541,21 @@ function twoFA(action, type, secret = null) {
             `</h5>
 	                        <div class="form-group m-t-10">
 	                            <div class="input-group" style="width: 100%;">
-	                                <div class="input-group-addon hidden-xs"><i class="ti-lock"></i></div>
+	                                <div class="input-group-text hidden-xs"><i class="ti-lock"></i></div>
 	                                <input type="text" class="form-control tfa-input" id="twofa-verify" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="6" spellcheck="false" autofocus="" required="">
 	                            </div>
 	                            <br>
-	                            <button class="btn btn-block btn-info" onclick="twoFA('verify','google');">Verify</button>
+	                            <button class="btn w-100 btn-info" onclick="twoFA('verify','google');">Verify</button>
 	
 	                        </div>
                         </div>
                     </div>
                 </div>
                 `;
-          swal({
-            content: createElementFromHTML(div),
-            buttons: false,
-            className: "bg-org",
+          Swal.fire({
+            html: createElementFromHTML(div),
+            showConfirmButton: false,
+            customClass: { popup: "bg-org" },
           });
         })
         .fail(function (xhr) {
@@ -3594,7 +3564,7 @@ function twoFA(action, type, secret = null) {
       break;
     case "deactivate":
       organizrAPI2("DELETE", "api/v2/2fa")
-        .success(function (data) {
+        .done(function (data) {
           try {
             message(
               "2FA Removed",
@@ -3622,7 +3592,7 @@ function twoFA(action, type, secret = null) {
           secret: secret,
           code: code,
         })
-          .success(function (data) {
+          .done(function (data) {
             try {
               var html = data.response;
               message(
@@ -3633,7 +3603,7 @@ function twoFA(action, type, secret = null) {
                 "success",
                 "5000"
               );
-              swal.close();
+              Swal.close();
               twoFA("save", type, secret);
             } catch (e) {
               organizrCatchError(e, data);
@@ -3655,7 +3625,7 @@ function twoFA(action, type, secret = null) {
       break;
     case "save":
       organizrAPI2("PUT", "api/v2/2fa", { type: type, secret: secret })
-        .success(function (data) {
+        .done(function (data) {
           try {
             var html = data.response;
             message(
@@ -3681,7 +3651,7 @@ function buildTwoFA(current) {
   switch (current) {
     case "internal":
       var option = `
-                <div class="col-lg-3 col-sm-6 row-in-br">
+                <div class="col-xl-3 col-md-6 row-in-br">
                     <ul class="col-in">
                         <li>
                             <span class="circle circle-md bg-info"><i class="mdi mdi-webpack mdi-24px"></i></span>
@@ -3692,7 +3662,7 @@ function buildTwoFA(current) {
                         </li>
                     </ul>
                 </div>
-                <div class="col-lg-3 col-sm-6 row-in-br">
+                <div class="col-xl-3 col-md-6 row-in-br">
                     <ul class="col-in">
                         <li>
                             <span class="circle circle-md bg-info"><i class="fa fa-google"></i></span>
@@ -3707,7 +3677,7 @@ function buildTwoFA(current) {
       break;
     case "google":
       var option = `
-                <div class="col-lg-3 col-sm-6 row-in-br">
+                <div class="col-xl-3 col-md-6 row-in-br">
                     <ul class="col-in">
                         <li>
                             <span class="circle circle-md bg-info"><i class="fa fa-google"></i></span>
@@ -3759,7 +3729,7 @@ function scrapeAPI(url, callbacks = null, type = null) {
     return false;
   }
   organizrAPI2("POST", "api/v2/homepage/scrape", { url: url, type: type })
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (response) {
@@ -3777,7 +3747,7 @@ function scrapeAPI(url, callbacks = null, type = null) {
 }
 function revokeToken(id) {
   organizrAPI2("DELETE", "api/v2/token/" + id, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         $("#token-" + id).fadeOut();
         message(
@@ -3798,16 +3768,13 @@ function revokeToken(id) {
     });
 }
 function buildActiveTokens(array) {
-  var parser = new UAParser();
   var tokens = "";
   $.each(array, function (i, v) {
-    parser.setUA(v.browser);
-    var result = parser.getResult();
     var className =
       activeInfo.user.token === v.token ? "bg-success text-inverse" : "";
     var extraText =
       activeInfo.user.token === v.token
-        ? '<span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="Current Token">...' +
+        ? '<span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="Current Token">...' +
           v.token.substr(-10, 10) +
           "</span>"
         : v.token.substr(-10, 10);
@@ -3852,13 +3819,13 @@ function buildActiveTokens(array) {
   });
   return (
     `
-        <div class="col-lg-12">
-            <div class="panel panel-info">
-                <div class="panel-heading"> <span lang="en">Active Tokens</span>
-                    <div class="pull-right"><a href="#" data-perform="panel-collapse"><i class="ti-plus"></i></a> </div>
+        <div class="col-xl-12">
+            <div class="card card-info">
+                <div class="card-header"> <span lang="en">Active Tokens</span>
+                    <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-plus"></i></a> </div>
                 </div>
-                <div class="panel-wrapper collapse" aria-expanded="true">
-                    <div class="panel-body bg-org p-0">
+                <div class="card-wrapper collapse" aria-expanded="true">
+                    <div class="card-body bg-org p-0">
                         <div class="table-responsive">
                             <table class="table color-table info-table">
                                 <thead>
@@ -3890,13 +3857,13 @@ function accountManager(user) {
   switch (activeInfo.settings.misc.authBackend) {
     case "plex":
       passwordMessage = `
-                <div class="col-lg-12">
-                    <div class="panel panel-info">
-                        <div class="panel-heading"> <span lang="en">Password Notice</span>
-                            <div class="pull-right"><a href="#" data-perform="panel-collapse"><i class="ti-plus"></i></a> </div>
+                <div class="col-xl-12">
+                    <div class="card card-info">
+                        <div class="card-header"> <span lang="en">Password Notice</span>
+                            <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-plus"></i></a> </div>
                         </div>
-                        <div class="panel-wrapper collapse" aria-expanded="true">
-                            <div class="panel-body bg-org">
+                        <div class="card-wrapper collapse" aria-expanded="true">
+                            <div class="card-body bg-org">
                                 <p lang="en">If you signed in with a Plex Acct... Please use the following link to change your password there:</p><br>
                                 <p><a href="https://app.plex.tv/auth#?resetPassword" target="_blank" lang="en">Change Password on Plex Website</a></p>
                             </div>
@@ -3907,13 +3874,13 @@ function accountManager(user) {
       break;
     case "emby":
       passwordMessage = `
-                <div class="col-lg-12">
-                    <div class="panel panel-info">
-                        <div class="panel-heading"> <span lang="en">Password Notice</span>
-                            <div class="pull-right"><a href="#" data-perform="panel-collapse"><i class="ti-minus"></i></a> <a href="#" data-perform="panel-dismiss"><i class="ti-close"></i></a> </div>
+                <div class="col-xl-12">
+                    <div class="card card-info">
+                        <div class="card-header"> <span lang="en">Password Notice</span>
+                            <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-minus"></i></a> <a href="#" data-perform="card-dismiss"><i class="ti-close"></i></a> </div>
                         </div>
-                        <div class="panel-wrapper collapse in" aria-expanded="true">
-                            <div class="panel-body bg-org">
+                        <div class="card-wrapper collapse show" aria-expanded="true">
+                            <div class="card-body bg-org">
                                 <p lang="en">If you signed in with a Emby Acct... Please use the following link to change your password there:</p><br>
                                 <p><a href="https://emby.media/community/index.php?app=core&module=global&section=lostpass" target="_blank">Change Password on Emby Website</a></p>
                             </div>
@@ -3933,58 +3900,58 @@ function accountManager(user) {
     var accountDiv =
       `
 		<div id="account-area" class="white-popup mfp-with-anim mfp-hide">
-			<div class="col-md-10 col-md-offset-1">
+			<div class="col-lg-10 offset-lg-1">
 				<div class="row">
-					<div class="col-md-12">
-						<div class="panel panel-info m-0">
-							<div class="panel-heading">
+					<div class="col-lg-12">
+						<div class="card card-info m-0">
+							<div class="card-header">
 								<span lang="en">Account Information</span>
-								<div class="btn-group pull-right">
+								<div class="btn-group float-end">
 									<button class="btn btn-info waves-effect waves-light" type="button" onclick="updateUserInformation();">
 										<i class="fa fa-save"></i>
 									</button>
 								</div>
 							</div>
-							<div class="panel-wrapper collapse in main-email-panel" aria-expanded="true">
-								<div class="panel-body">
+							<div class="card-wrapper collapse show main-email-panel" aria-expanded="true">
+								<div class="card-body">
 									<div class="form-body">
 									    ` +
       buildTwoFA(user.data.user.authService) +
       `
 										<div class="row">
-                                            <div class="col-lg-12">
-                                                <div class="panel panel-info">
-                                                    <div class="panel-heading"> <span lang="en">User Information</span>
-                                                        <div class="pull-right"><a href="#" data-perform="panel-collapse"><i class="ti-plus"></i></a> </div>
+                                            <div class="col-xl-12">
+                                                <div class="card card-info">
+                                                    <div class="card-header"> <span lang="en">User Information</span>
+                                                        <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-plus"></i></a> </div>
                                                     </div>
-                                                    <div class="panel-wrapper collapse" aria-expanded="true">
-                                                        <div class="panel-body bg-org p-0 p-t-10">
-                                                            <div class="col-md-6">
+                                                    <div class="card-wrapper collapse" aria-expanded="true">
+                                                        <div class="card-body bg-org p-0 p-t-10">
+                                                            <div class="col-lg-6">
                                                                 <div class="form-group">
-                                                                    <label class="control-label" lang="en">Username</label>
+                                                                    <label class="form-label" lang="en">Username</label>
                                                                     <input ` +
       twoFADisable +
       ` type="text" id="accountUsername" class="form-control" value="` +
       activeInfo.user.username +
       `"></div>
                                                             </div>
-                                                            <div class="col-md-6">
+                                                            <div class="col-lg-6">
                                                                 <div class="form-group">
-                                                                    <label class="control-label" lang="en">Email</label>
+                                                                    <label class="form-label" lang="en">Email</label>
                                                                     <input ` +
       twoFADisable +
       ` type="text" id="accountEmail" class="form-control" value="` +
       activeInfo.user.email +
       `"></div>
                                                             </div>
-                                                            <div class="col-md-6 userManagementPassword">
+                                                            <div class="col-lg-6 userManagementPassword">
                                                                 <div class="form-group">
-                                                                    <label class="control-label" lang="en">Password</label>
+                                                                    <label class="form-label" lang="en">Password</label>
                                                                     <input type="password" id="accountPassword1" class="form-control"></div>
                                                             </div>
-                                                            <div class="col-md-6 userManagementPassword">
+                                                            <div class="col-lg-6 userManagementPassword">
                                                                 <div class="form-group">
-                                                                    <label class="control-label" lang="en">Verify Password</label>
+                                                                    <label class="form-label" lang="en">Verify Password</label>
                                                                     <input type="password" id="accountPassword2" class="form-control"></div>
                                                             </div>
                                                         </div>
@@ -4027,11 +3994,11 @@ function userMenu(user) {
     menuList +=
       `
 			<li class="dropdown">
-				<a class="dropdown-toggle profile-pic" data-toggle="dropdown" href="javascript:void(0)"><img alt="" class="img-circle profile-image" src="` +
+				<a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="javascript:void(0)"><img alt="" class="rounded-circle profile-image" src="` +
       user.data.user.image +
       `" width="36"><b class="hidden-xs">` +
       user.data.user.username +
-      `</b><span class="caret"></span></a>
+      `</b></a>
 				<ul class="dropdown-menu dropdown-user animated flipInY">
 					<li>
 						<div class="dw-user-box">
@@ -4047,9 +4014,9 @@ function userMenu(user) {
       `</p></div>
 						</div>
 					</li>
-					<li class="divider" role="separator"></li>
+					<li><hr class="dropdown-divider"></li>
 					<li class="append-menu"><a class="inline-popups" href="#account-area" data-effect="mfp-zoom-out"><i class="ti-settings fa-fw"></i> <span lang="en">Account Settings</span></a></li>
-					<li class="divider" role="separator"></li>
+					<li><hr class="dropdown-divider"></li>
 					<li><a href="javascript:void(0)" onclick="lock();"><i class="ti-lock fa-fw"></i> <span lang="en">Lock Screen</span></a></li>
 					${showDebug}
 					<li><a href="javascript:void(0)" onclick="logout();"><i class="fa fa-sign-out fa-fw"></i> <span lang="en">Logout</span></a></li>
@@ -4062,7 +4029,7 @@ function userMenu(user) {
 			<a href="#" class="waves-effect">
 				<img src="` +
       user.data.user.image +
-      `" alt="user-img" class="img-circle">
+      `" alt="user-img" class="rounded-circle">
 				<span class="hide-menu">` +
       user.data.user.username +
       `<span class="fa arrow"></span></span>
@@ -4079,11 +4046,11 @@ function userMenu(user) {
     menuList +=
       `
 			<li class="dropdown">
-					<a class="dropdown-toggle profile-pic" data-toggle="dropdown" href="javascript:void(0)"><img alt="" class="img-circle profile-image" src="` +
+					<a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="javascript:void(0)"><img alt="" class="rounded-circle profile-image" src="` +
       user.data.user.image +
       `" width="36"><b class="hidden-xs">` +
       user.data.user.username +
-      `</b><span class="caret"></span></a>
+      `</b></a>
 					<ul class="dropdown-menu dropdown-user animated flipInY">
 						<li>
 							<div class="dw-user-box">
@@ -4095,7 +4062,7 @@ function userMenu(user) {
       `</h4></div>
 							</div>
 						</li>
-						<li class="divider" role="separator"></li>
+						<li><hr class="dropdown-divider"></li>
 						<li class="append-menu"><a href="javascript:void(0)" class="show-login"><i class="fa fa-sign-in fa-fw"></i> <span lang="en">Login/Register</span></a></li>
 					</ul><!-- /.dropdown-user -->
 				</li><!-- /.dropdown -->
@@ -4106,7 +4073,7 @@ function userMenu(user) {
 			<a href="#" class="waves-effect">
 				<img src="` +
       user.data.user.image +
-      `" alt="user-img" class="img-circle">
+      `" alt="user-img" class="rounded-circle">
 				<span class="hide-menu">` +
       user.data.user.username +
       `<span class="fa arrow"></span></span>
@@ -4218,7 +4185,7 @@ function menuExtras(active) {
 function categoryProcess(arrayItems) {
   var menuList = "";
   let categoryIn = activeInfo.settings.misc.expandCategoriesByDefault
-    ? "in"
+    ? "show"
     : "";
   let categoryActive = activeInfo.settings.misc.expandCategoriesByDefault
     ? "active"
@@ -4243,7 +4210,7 @@ function categoryProcess(arrayItems) {
           iconPrefix(v.image) +
           `<span class="hide-menu">` +
           v.category +
-          ` <span class="fa arrow"></span> <span class="label label-rouded label-inverse pull-right">` +
+          ` <span class="fa arrow"></span> <span class="badge rounded-pill text-bg-dark float-end">` +
           v.count +
           `</span></span><div class="menu-category-ping" data-good="0" data-bad="0"></div></a>
 						<ul class="nav nav-second-level category-` +
@@ -4323,7 +4290,7 @@ function buildMenuList(id) {
     ping !== null && ping !== ""
       ? `<small class="menu-` +
         cleanClass(ping) +
-        `-ping-ms hidden-xs label label-rouded label-inverse pull-right pingTime hidden">
+        `-ping-ms hidden-xs badge rounded-pill text-bg-dark float-end pingTime hidden">
 </small><div class="menu-` +
         cleanClass(ping) +
         `-ping" data-tab-name="` +
@@ -4450,6 +4417,10 @@ function tabProcess(arrayItems) {
     });
     $("#side-menu").metisMenu({
       toggle: activeInfo.settings.misc.autoCollapseCategories,
+      activeClass: "active",
+      collapseClass: "collapse",
+      collapseInClass: "show",
+      collapsingClass: "collapsing",
     });
     getDefault(defaultTabId);
   } else {
@@ -4463,7 +4434,7 @@ function buildLogin() {
   removeMenuActive();
   $("#menu-login a").addClass("active");
   organizrAPI2("GET", "api/v2/page/login")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
         organizrConsole("Organizr Function", "Opening Login Page");
@@ -4482,7 +4453,7 @@ function buildLockscreen() {
   $("#preloader").fadeIn();
   closeSideMenu();
   organizrAPI2("GET", "api/v2/page/lockscreen")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
         organizrConsole("Organizr Function", "Adding Lockscreen");
@@ -4519,7 +4490,7 @@ function buildSplashScreenItem(arrayItems) {
             "</span>";
         }
         splashList += `
-                <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 col-xl-2 mouse hvr-grow m-b-20" id="menu-${cleanClass(
+                <div class="col-12 col-md-3 col-lg-3 col-xl-3 col-xl-2 mouse hvr-grow m-b-20" id="menu-${cleanClass(
                   v.name
                 )}" type="${v.type}" data-url="${
           v.access_url
@@ -4536,10 +4507,10 @@ function buildSplashScreenItem(arrayItems) {
   return splashList !== "" ? splashList : false;
 }
 function buildSplashScreen(json) {
-  let hiddenSplash = directToHash ? "hidden" : "in";
+  let hiddenSplash = directToHash ? "hidden" : "show";
   var items = buildSplashScreenItem(json);
   var menu =
-    '<li ><a href="javascript:void(0)" onclick="$(\'.splash-screen\').removeClass(\'hidden\').addClass(\'in\')"><i class="ti-layout-grid2 fa-fw"></i> <span lang="en">Splash Page</span></a></li>';
+    '<li ><a href="javascript:void(0)" onclick="$(\'.splash-screen\').removeClass(\'hidden\').addClass(\'show\')"><i class="ti-layout-grid2 fa-fw"></i> <span lang="en">Splash Page</span></a></li>';
   if (items) {
     closeSideMenu();
     organizrConsole("Organizr Function", "Adding Splash Screen");
@@ -4550,7 +4521,7 @@ function buildSplashScreen(json) {
       items +
       `</div>
             <div class="row p-20 p-t-0 flexbox">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 mouse hvr-wobble-bottom bottom-close-splash" onclick="$('.splash-screen').addClass('hidden').removeClass('in')">
+                <div class="col-12 col-md-12 col-lg-12 col-xl-12 col-xl-12 mouse hvr-wobble-bottom bottom-close-splash" onclick="$('.splash-screen').addClass('hidden').removeClass('show')">
                     <div class="homepage-drag fc-event bg-danger lazyload"  data-src="">
                         <span class="homepage-text">&nbsp; Close Splash</span>
                     </div>
@@ -4712,7 +4683,7 @@ function buildUserManagementItem(array) {
 			<td class="text-center el-element-overlay">
 				<div class="el-card-item p-0">
 					<div class="el-card-avatar el-overlay-1 m-0">
-						<img alt="user-img" class="img-circle" src="` +
+						<img alt="user-img" class="rounded-circle" src="` +
       v.image +
       `" width="45">
 						<div class="el-overlay">
@@ -4961,7 +4932,7 @@ function buildTabEditorItem(array) {
 				<i class="icon-options-vertical m-r-5"></i> 
 				<!-- May use later on
 				<div class="btn-group dropside visible-xs">
-					<button aria-expanded="false" data-toggle="dropdown" class="btn btn-default btn-outline dropdown-toggle waves-effect waves-light" type="button"> <i class="icon-options-vertical m-r-5"></i> <span class="caret"></span></button>
+					<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-secondary btn-outline dropdown-toggle waves-effect waves-light" type="button"> <i class="icon-options-vertical m-r-5"></i></button>
 					<ul role="menu" class="dropdown-menu">
 						<li><a href="#"><i class="fa fa-angle-double-up"></i></a></li>
 						<li><a href="#"><i class="fa fa-angle-up"></i></a></li>
@@ -4973,14 +4944,14 @@ function buildTabEditorItem(array) {
 			</td>
 			<td style="text-align:center" class="text-center el-element-overlay">
 				<div class="el-card-item p-0">
-					<div class="el-card-avatar el-overlay-1 m-0 tooltip-info" data-toggle="tooltip" data-placement="top" title="" data-original-title="${v.id}">
+					<div class="el-card-avatar el-overlay-1 m-0 tooltip-info" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="${v.id}">
 						<div class="tabEditorIcon">` +
       iconPrefix(v.image) +
       `</div>
 					</div>
 				</div>
 			</td>
-			<td><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+			<td><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
       v.url +
       `">` +
       v.name +
@@ -4992,7 +4963,7 @@ function buildTabEditorItem(array) {
       v.url_local +
       `" data-name="` +
       v.name +
-      `" class="checkTabHomepageItem mouse label label-rouded label-inverse pull-right"></span></td>
+      `" class="checkTabHomepageItem mouse badge rounded-pill text-bg-dark float-end"></span></td>
 			` +
       buildTabCategorySelect(array.categories, v.id, v.category_id) +
       `
@@ -5072,11 +5043,10 @@ function buildTabEditorItem(array) {
 }
 function editTabForm(id) {
   organizrAPI2("GET", "api/v2/tabs/" + id, true)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
-        $(".tabIconImageList").val(null).trigger("change");
-        $(".tabIconIconList").val(null).trigger("change");
+        clearSelect(".tabIconImageList, .tabIconIconList");
         $("#edit-tab-form [name=name]").val(response.data.name);
         $("#originalTabName").html(response.data.name);
         $("#edit-tab-form [name=url]").val(response.data.url);
@@ -5185,7 +5155,7 @@ function submitSettingsForm(form, homepageItem = false) {
   }
   if (size > 0) {
     organizrAPI2("PUT", "api/v2/config", submit, true)
-      .success(function (data) {
+      .done(function (data) {
         try {
           var response = data.response;
         } catch (e) {
@@ -5196,16 +5166,16 @@ function submitSettingsForm(form, homepageItem = false) {
         }
         if (homepageItem && !activeInfo.settings.misc.disableHomepageModals) {
           let html = `
-		        <div class="panel panel-default">
-                    <div class="panel-heading">${response.message}</div>
-                    <div class="panel-wrapper collapse in">
-                        <div class="panel-body">
+		        <div class="card card-default">
+                    <div class="card-header">${response.message}</div>
+                    <div class="card-wrapper collapse show">
+                        <div class="card-body">
                             <div class="overlay-box">
                                 <div class="user-content">
                                     <h4 lang="en">Close Homepage Settings?</h4>
                                     <div class="button-box">
-				                        <button class="btn btn-info waves-effect waves-light" type="button" onclick="swal.close();Custombox.modal.close()"><span class="btn-label"><i class="ti-check"></i></span>Yes</button>
-				                        <button class="btn btn-danger waves-effect waves-light" type="button" onclick="swal.close()"><span class="btn-label"><i class="ti-close"></i></span>No</button>                        
+				                        <button class="btn btn-info waves-effect waves-light" type="button" onclick="Swal.close();closeHomepageItemModal()"><span class="btn-label"><i class="ti-check"></i></span>Yes</button>
+				                        <button class="btn btn-danger waves-effect waves-light" type="button" onclick="Swal.close()"><span class="btn-label"><i class="ti-close"></i></span>No</button>                        
 				                    </div>
 				                    <p class="close-homepage-timer">Auto Closing in 5 seconds...</p>
                                 </div>
@@ -5214,10 +5184,10 @@ function submitSettingsForm(form, homepageItem = false) {
                     </div>
                 </div>
 		    `;
-          swal({
-            content: createElementFromHTML(html),
-            buttons: false,
-            className: "bg-org",
+          Swal.fire({
+            html: createElementFromHTML(html),
+            showConfirmButton: false,
+            customClass: { popup: "bg-org" },
             timer: 5000,
           });
           textTimer(
@@ -5281,7 +5251,7 @@ function submitHomepageOrder() {
   var callbacks = $.Callbacks();
   if (size > 0) {
     organizrAPI2("PUT", "api/v2/config", submit, true)
-      .success(function (data) {
+      .done(function (data) {
         try {
           var response = data.response;
           $("#submitHomepageOrder-save").addClass("hidden");
@@ -5337,7 +5307,7 @@ function submitTabOrder(newTabs) {
   var callbacks = $.Callbacks();
   callbacks.add(buildTabEditor);
   organizrAPI2("PUT", "api/v2/tabs", data, true)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -5377,7 +5347,7 @@ function submitCategoryOrder() {
     }
   });
   organizrAPI2("PUT", "api/v2/categories", data, true)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -5408,7 +5378,7 @@ function buildTR(array, type, badge) {
       listing +=
         `
 			<tr>
-				<td  width="70"><span class="label label-` +
+				<td  width="70"><span class="badge text-bg-` +
         badge +
         `"><span lang="en">` +
         type +
@@ -5426,7 +5396,7 @@ function buildTR(array, type, badge) {
 function buildVersion(array) {
   var x = 0;
   var versions =
-    '<div class="col-md-3 col-sm-4 col-xs-6 m-b-10 pull-right"><button onclick="manualUpdateCheck()" class="btn btn-sm btn-primary btn-rounded waves-effect waves-light pull-right row b-none buttonManualUpdateCheck" type="button"><span class="btn-label"><i class="fa fa-globe"></i></span><span lang="en">Check For Updates</span></button></div><div class="clearfix"></div>';
+    '<div class="col-lg-3 col-md-4 col-6 m-b-10 float-end"><button onclick="manualUpdateCheck()" class="btn btn-sm btn-primary btn-rounded waves-effect waves-light float-end row b-none buttonManualUpdateCheck" type="button"><span class="btn-label"><i class="fa fa-globe"></i></span><span lang="en">Check For Updates</span></button></div><div class="clearfix"></div>';
   var listing = "";
   var currentV = currentVersion;
   var installed = "";
@@ -5438,10 +5408,10 @@ function buildVersion(array) {
     listing += buildTR(v.notes, "NOTE", "warning");
     if (currentV === i) {
       button =
-        '<button class="btn btn-sm btn-success btn-rounded waves-effect waves-light disabled pull-right row b-none" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Installed</span></button>';
+        '<button class="btn btn-sm btn-success btn-rounded waves-effect waves-light disabled float-end row b-none" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Installed</span></button>';
     } else if (x === 0) {
       button =
-        '<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none" type="button" onclick="updateNow();"><span class="btn-label"><i class="fa fa-download"></i></span><span lang="en">Install Update</span></button>';
+        '<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none" type="button" onclick="updateNow();"><span class="btn-label"><i class="fa fa-download"></i></span><span lang="en">Install Update</span></button>';
     }
     let tableClass = x == 0 ? "" : "hidden";
     let divClassPadding = x == 0 ? "" : "p-b-0";
@@ -5452,16 +5422,16 @@ function buildVersion(array) {
     versions +=
       `
 		<div class="white-box bg-org ${divClassPadding} update-main-div-${x}" data-status="${divStatus}">
-			<div class="col-md-3 col-sm-4 col-xs-6 pull-right">` +
+			<div class="col-lg-3 col-md-4 col-6 float-end">` +
       button +
       `</div>
 			<h3 class="box-title ${divClassMargin} update-box-title-${x}">` +
       i +
       `</h3>
 			<div class="row sales-report">
-				<div class="col-md-12 col-sm-12 col-xs-12">
-					<div class="pull-left">
-						<span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+				<div class="col-lg-12 col-md-12 col-12">
+					<div class="float-start">
+						<span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
       moment(v.date).format("LL") +
       `">` +
       moment.utc(v.date, "YYYY-MM-DD hh:mm[Z]").local().fromNow() +
@@ -5470,7 +5440,7 @@ function buildVersion(array) {
       v.title +
       `</p>
 					</div>
-					<button class="btn btn-sm btn-primary btn-rounded waves-effect waves-light pull-right" onclick="toggleGithubVersion(${x})" type="button"><span class="btn-label"><i class="fa fa-long-arrow-${toggleButtonIcon} toggleButtonIcon-${x}"></i></span><span lang="en" class="toggleButton-${x}">${toggleButtonText}</span></button>
+					<button class="btn btn-sm btn-primary btn-rounded waves-effect waves-light float-end" onclick="toggleGithubVersion(${x})" type="button"><span class="btn-label"><i class="fa fa-long-arrow-${toggleButtonIcon} toggleButtonIcon-${x}"></i></span><span lang="en" class="toggleButton-${x}">${toggleButtonText}</span></button>
 				</div>
 			</div>
 			<div class="table-responsive ${tableClass} update-table-${x}">
@@ -5531,7 +5501,7 @@ function manualUpdateCheck() {
 }
 function updateCheck() {
   githubVersions()
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -5580,7 +5550,7 @@ function updateCheck() {
 }
 function ignoreNewsId(id) {
   organizrAPI2("POST", "api/v2/news/" + id, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         message(
@@ -5603,14 +5573,14 @@ function ignoreNewsId(id) {
 }
 function newsLoad() {
   newsJSON()
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
         var items = [];
         var limit = 5;
         var count = 0;
         organizrAPI2("get", "api/v2/news")
-          .success(function (data) {
+          .done(function (data) {
             try {
               let ignoredIds = data.response.data;
               ignoredIds = ignoredIds == null ? [] : ignoredIds;
@@ -5625,15 +5595,15 @@ function newsLoad() {
                     : "";
                 let heartBeat =
                   alertDefined && ignore == false
-                    ? `<div class="notify pull-left newsHeart-${v.id}"><span class="heartbit"></span><span class="point"></span></div>`
+                    ? `<div class="notify float-start newsHeart-${v.id}"><span class="heartbit"></span><span class="point"></span></div>`
                     : "";
                 let newBody =
                   `
-			                <h5 class="pull-left"><i class="ti-calendar"></i>&nbsp;` +
+			                <h5 class="float-start"><i class="ti-calendar"></i>&nbsp;` +
                   moment(v.date).format("LLL") +
                   alert +
                   `</h5>
-			                <h5 class="pull-right">` +
+			                <h5 class="float-end">` +
                   v.author +
                   `</h5>
 			                <div class="clearfix"></div>
@@ -5673,7 +5643,7 @@ function checkPluginUpdates() {
     return false;
   }
   organizrAPI2("get", "api/v2/plugins/marketplace")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let update = false;
         let pluginsNeedingUpdate = [];
@@ -5713,7 +5683,7 @@ function checkCommitLoad() {
     if (checkCommitLoadStatus == false) {
       checkCommitLoadStatus = true;
       getLatestCommitJSON()
-        .success(function (data) {
+        .done(function (data) {
           try {
             var latest = data.sha.toString().trim();
             var current = activeInfo.settings.misc.githubCommit
@@ -5755,7 +5725,7 @@ function checkCommitLoad() {
 }
 function sponsorLoad() {
   sponsorsJSON()
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -5763,14 +5733,7 @@ function sponsorLoad() {
       }
       $("#sponsorList").html(buildSponsor(response));
       $("#sponsorListModals").html(buildSponsorModal(response));
-      $(".sponsor-items").owlCarousel({
-        nav: false,
-        autoplay: true,
-        dots: false,
-        margin: 10,
-        autoWidth: true,
-        items: 4,
-      });
+      initCarousel(".sponsor-items", { autoplay: true });
     })
     .fail(function (xhr) {
       OrganizrApiError(xhr);
@@ -5778,18 +5741,11 @@ function sponsorLoad() {
 }
 function backersLoad() {
   organizrAPI2("GET", "api/v2/sponsors/all")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let json = data.response;
         $("#backersList").html(buildBackers(json.data));
-        $(".backers-items").owlCarousel({
-          nav: false,
-          autoplay: true,
-          dots: false,
-          margin: 10,
-          autoWidth: true,
-          items: 4,
-        });
+        initCarousel(".backers-items", { autoplay: true });
       } catch (e) {
         organizrCatchError(e, data);
       }
@@ -5824,7 +5780,7 @@ function buildBackers(array) {
 }
 function sponsorDetails(id) {
   sponsorsJSON()
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = JSON.parse(data);
         let coupon = response[id].coupon == null ? false : true;
@@ -5834,8 +5790,8 @@ function sponsorDetails(id) {
             ? `
 				<hr/>
 		        <h3>Coupon Code:</h3>
-		        <p><span class="label label-rouded label-info pull-right">${response[id].coupon}</span>
-		        <span class=" pull-left">${response[id].coupon_about}</span></p>
+		        <p><span class="badge rounded-pill text-bg-info float-end">${response[id].coupon}</span>
+		        <span class=" float-start">${response[id].coupon_about}</span></p>
 		    `
             : "";
         if (typeof response[id].logo_dark !== "undefined") {
@@ -5844,27 +5800,27 @@ function sponsorDetails(id) {
           }
         }
         let html = `
-		        <div class="panel panel-default">
-                    <div class="panel-heading">${response[id].company_name}</div>
-                    <div class="panel-wrapper collapse in">
-                        <div class="panel-body">
+		        <div class="card card-default">
+                    <div class="card-header">${response[id].company_name}</div>
+                    <div class="card-wrapper collapse show">
+                        <div class="card-body">
                             <div class="overlay-box">
                                 <div class="user-content">
-                                    <a href="javascript:void(0)"><img src="${response[id].logo}" class="thumb-lg img-circle" alt="img"></a>
+                                    <a href="javascript:void(0)"><img src="${response[id].logo}" class="thumb-lg rounded-circle" alt="img"></a>
                                     <h4 class="text-white">${response[id].company_name}</h4>
                                     <h5 class="text-white"><a href="${response[id].website}" target="_blank">Website</a></h5>
                                 </div>
                             </div>
                             <hr/>
-                            <div class="text-left">${response[id].about} ${extraInfo}</div>
+                            <div class="text-start">${response[id].about} ${extraInfo}</div>
                         </div>
                     </div>
                 </div>
 		    `;
-        swal({
-          content: createElementFromHTML(html),
-          buttons: false,
-          className: "bg-org",
+        Swal.fire({
+          html: createElementFromHTML(html),
+          showConfirmButton: false,
+          customClass: { popup: "bg-org" },
         });
       } catch (e) {
         organizrCatchError(e, data);
@@ -5881,10 +5837,10 @@ function sponsorAbout(id, array) {
     coupon && couponAbout
       ? `
         <h3>Coupon Code:</h3>
-        <p><span class="label label-rouded label-info pull-right">` +
+        <p><span class="badge rounded-pill text-bg-info float-end">` +
         array.coupon +
         `</span>
-        <span class=" pull-left">` +
+        <span class=" float-start">` +
         array.coupon_about +
         `</span></p>
     `
@@ -5905,7 +5861,7 @@ function sponsorAbout(id, array) {
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         <h4 class="modal-title" id="mySmallModalLabel-` +
     id +
     `">` +
@@ -5913,12 +5869,12 @@ function sponsorAbout(id, array) {
     `</h4> </div>
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-lg-12">
                                 <div class="comment-center p-t-10">
                                     <div class="comment-body b-none">
                                         <div class="user-img"> <img src="` +
     array.logo +
-    `" alt="user" class="img-circle"> </div>
+    `" alt="user" class="rounded-circle"> </div>
                                         <div class="mail-content">
                                             <h5><a href="` +
     array.website +
@@ -6015,7 +5971,7 @@ function sponsorAnalytics(sponsor_name) {
     async: true,
     complete: function (xhr, status) {
       if (xhr.status === 200) {
-        let result = $.parseJSON(xhr.responseText);
+        let result = JSON.parse(xhr.responseText);
       }
     },
   });
@@ -6034,14 +5990,14 @@ function themeAnalytics(theme_name) {
     async: true,
     complete: function (xhr, status) {
       if (xhr.status === 200) {
-        let result = $.parseJSON(xhr.responseText);
+        let result = JSON.parse(xhr.responseText);
       }
     },
   });
 }
 function getOrganizrBackups() {
   organizrAPI2("GET", "api/v2/backup")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let json = data.response;
         $("#backup-file-list").html(buildOrganizrBackups(json.data));
@@ -6064,7 +6020,7 @@ function createOrganizrBackup() {
     },
   });
   organizrAPI2("POST", "api/v2/backup", {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (response) {
@@ -6094,9 +6050,9 @@ function buildOrganizrBackups(array) {
 			<tr>
 				<td>${i}</td>
 				<td class="txt-oflo">${v.name}</td>
-				<td><span class="label label-primary label-rouded">${version}</span> </td>
+				<td><span class="badge text-bg-primary rounded-pill">${version}</span> </td>
 				<td class="txt-oflo">${v.size}</td>
-				<td><span class="text-info tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="${moment(
+				<td><span class="text-info tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="${moment(
           v.date
         ).format("LLL")}">${moment
         .utc(v.date, "YYYY-MM-DD hh:mm[Z]")
@@ -6124,11 +6080,11 @@ function updateBar() {
   return `
 	<div class="white-box m-0">
         <div class="row">
-            <div class="col-lg-12">
-                <h3 id="update-title" class="box-title pull-left"></h3><h3 id="update-time" class="box-title pull-right hidden"><span id="update-seconds"></span>&nbsp;<span lang="en">Seconds</span></h3>
+            <div class="col-xl-12">
+                <h3 id="update-title" class="box-title float-start"></h3><h3 id="update-time" class="box-title float-end hidden"><span id="update-seconds"></span>&nbsp;<span lang="en">Seconds</span></h3>
 				<div class="clearfix"></div>
                 <div class="progress progress-lg">
-                    <div id="update-bar" class="progress-bar progress-bar-primary progress-bar-striped active" style="width: 0%;" role="progressbar">0%</div>
+                    <div id="update-bar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 0%;" role="progressbar">0%</div>
                 </div>
             </div>
             <h6>If error occurs - Use Esc key to close modal</h6>
@@ -6137,11 +6093,11 @@ function updateBar() {
 	`;
 }
 function showUpdateBar() {
-  swal({
-    content: createElementFromHTML(updateBar()),
-    buttons: false,
-    className: "bg-org",
-    closeOnClickOutside: false,
+  Swal.fire({
+    html: createElementFromHTML(updateBar()),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
+    allowOutsideClick: false,
   });
 }
 function updateUpdateBar(title, percent, update = false) {
@@ -6176,7 +6132,7 @@ function dockerUpdate() {
       "60000"
     );
     organizrAPI2("GET", "api/v2/update/docker")
-      .success(function (data) {
+      .done(function (data) {
         updateUpdateBar("Restarting Organizr in", "100%", true);
         messageSingle(
           window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6205,7 +6161,7 @@ function windowsUpdate() {
       "60000"
     );
     organizrAPI2("GET", "api/v2/update/windows")
-      .success(function (data) {
+      .done(function (data) {
         updateUpdateBar("Restarting Organizr in", "100%", true);
         messageSingle(
           window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6234,7 +6190,7 @@ function linuxUpdate() {
       "60000"
     );
     organizrAPI2("GET", "api/v2/update/linux")
-      .success(function (data) {
+      .done(function (data) {
         updateUpdateBar("Restarting Organizr in", "100%", true);
         messageSingle(
           window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6276,7 +6232,7 @@ function updateNow() {
     "60000"
   );
   organizrAPI2("GET", "api/v2/update/download/" + activeInfo.branch)
-    .success(function (data) {
+    .done(function (data) {
       updateUpdateBar("Starting Unzip", "50%");
       messageSingle(
         window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6287,7 +6243,7 @@ function updateNow() {
         "60000"
       );
       organizrAPI2("GET", "api/v2/update/unzip/" + activeInfo.branch)
-        .success(function (data) {
+        .done(function (data) {
           updateUpdateBar("Starting Copy", "70%");
           messageSingle(
             window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6298,7 +6254,7 @@ function updateNow() {
             "60000"
           );
           organizrAPI2("GET", "api/v2/update/move/" + activeInfo.branch)
-            .success(function (data) {
+            .done(function (data) {
               updateUpdateBar("Starting Cleanup", "90%");
               messageSingle(
                 window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6309,7 +6265,7 @@ function updateNow() {
                 "60000"
               );
               organizrAPI2("GET", "api/v2/update/cleanup/" + activeInfo.branch)
-                .success(function (data) {
+                .done(function (data) {
                   updateUpdateBar("Restarting Organizr in", "100%", true);
                   messageSingle(
                     window.lang.translate("[DO NOT CLOSE WINDOW]"),
@@ -6338,7 +6294,7 @@ function updateNow() {
 }
 function settingsAPI2(post, callbacks = null, asyncValue = true) {
   organizrAPI2("POST", post.api, post.data, asyncValue)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -6465,10 +6421,10 @@ function organizrAPI2(type, path, data = null, asyncValue = true) {
 }
 function loadSettingsPage2(api, element, organizrFn) {
   $(element).html(
-    '<h2 class="col-lg-12 m-t-0 text-center well bg-org"><i class="fa fa-spin fa-refresh"></i><br> <span lang="en">Loading</span></h2><div class="clearfix"></div>'
+    '<h2 class="col-xl-12 m-t-0 text-center card card-body bg-org"><i class="fa fa-spin fa-refresh"></i><br> <span lang="en">Loading</span></h2><div class="clearfix"></div>'
   );
   organizrAPI2("get", api)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -6490,7 +6446,7 @@ function loadInternal(id, split = null) {
   }
   let url = tabInfo.access_url;
   organizrAPI2("get", url)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var html = data.response;
         $("#internal-" + extra + id).html(html.data);
@@ -6504,7 +6460,7 @@ function loadInternal(id, split = null) {
 }
 function loadInternalOriginal(url, tabName) {
   organizrAPI("get", url)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var html = JSON.parse(data);
       } catch (e) {
@@ -6518,7 +6474,7 @@ function loadInternalOriginal(url, tabName) {
 }
 function loadSettingsPage(api, element, organizrFn) {
   organizrAPI("get", api)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -6533,7 +6489,7 @@ function loadSettingsPage(api, element, organizrFn) {
 }
 function settingsAPI(post, callbacks = null, asyncValue = true) {
   organizrAPI("POST", post.api, post, asyncValue)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
@@ -6655,7 +6611,7 @@ function changeSettingsMenu(path) {
 }
 function buildWizard() {
   organizrAPI2("GET", "api/v2/page/wizard")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var json = data.response;
       } catch (e) {
@@ -6672,7 +6628,7 @@ function buildWizard() {
 }
 function buildDependencyCheck(orgdata) {
   organizrAPI2("GET", "api/v2/page/dependencies")
-    .success(function (data) {
+    .done(function (data) {
       try {
         var json = data.response;
       } catch (e) {
@@ -6720,8 +6676,8 @@ function buildDependencyInfo(arrayItems) {
       : "fa fa-check-circle"; //dependency-dependencies-check-listing-header
   let header =
     arrayItems.data.status.dependenciesInactive.length !== 0
-      ? "panel-danger"
-      : "panel-info";
+      ? "card-danger"
+      : "card-info";
   let listingIcon =
     arrayItems.data.status.dependenciesInactive.length !== 0
       ? "ti-alert"
@@ -6732,7 +6688,7 @@ function buildDependencyInfo(arrayItems) {
       : "Dependencies OK";
 
   $(".dependency-dependencies-check-listing-header")
-    .removeClass("panel-danger")
+    .removeClass("card-danger")
     .addClass(header);
   $(".dependency-dependencies-check-listing i")
     .first()
@@ -6925,7 +6881,7 @@ function logIcon(type, label = false) {
       info.icon = "mdi mdi-information";
       break;
     case "notice":
-      info.color = "inverse";
+      info.color = "dark";
       info.icon = "mdi mdi-information-variant";
       break;
     case "debug":
@@ -6958,7 +6914,7 @@ function logIcon(type, label = false) {
   }
   if (label) {
     return (
-      '<span class="label label-' +
+      '<span class="badge text-bg-' +
       info.color +
       ' log-label"> <i class="fa ' +
       info.icon +
@@ -6968,9 +6924,9 @@ function logIcon(type, label = false) {
     );
   } else {
     return (
-      '<button class="btn btn-xs btn-' +
+      '<button class="btn btn-sm btn-' +
       info.color +
-      ' log-label no-mouse" type="button"><span class="btn-label pull-left"><i class="' +
+      ' log-label no-mouse" type="button"><span class="btn-label float-start"><i class="' +
       info.icon +
       ' fa-fw"></i></span><span class="text-uppercase" lang="en">' +
       type +
@@ -7079,15 +7035,15 @@ function loadAppearance(appearance) {
       `
 			.bg-info,
 			.fc-toolbar,
-			.progress-bar-info,
-			.label-info,
+			.bg-info,
+			.text-bg-info,
 			.tabs-style-iconbox nav ul li.tab-current a,
 			.swapLog.active {
 			    background-color: ` +
       appearance.accentColor +
       ` !important;
 			}
-			.panel-blue .panel-heading, .panel-info .panel-heading {
+			.card-blue .card-header, .card-info .card-header {
 			    border-color: ` +
       appearance.accentColor +
       `;
@@ -7117,7 +7073,7 @@ function loadAppearance(appearance) {
       `
 			.bg-info,
 			.progress-bar,
-			.panel-default .panel-heading,
+			.card-default .card-header,
 			.mailbox-widget .customtab li.active a, .mailbox-widget .customtab li.active, .mailbox-widget .customtab li.active a:focus,
 			.mailbox-widget .customtab li a,
 			.tabs-style-iconbox nav ul li.tab-current a
@@ -7531,7 +7487,7 @@ function buildStreamItem(array, source) {
       bandwidthDetails[v.bandwidthType] + parseFloat(v.bandwidth);
     cards +=
       `
-		<div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12 nowPlayingItem">
+		<div class="col-xl-2 col-xl-3 col-lg-4 col-md-6 col-12 nowPlayingItem">
 			<div class="white-box">
 				<div class="el-card-item p-b-10">
 					<div class="el-card-avatar el-overlay-1 m-b-0">` +
@@ -7577,28 +7533,28 @@ function buildStreamItem(array, source) {
 					</div>
 					<div class="el-card-content">
 						<div class="progress">
-							<div class="progress-bar progress-bar-info" style="width: ` +
+							<div class="progress-bar bg-info" style="width: ` +
       v.watched +
       `%;" role="progressbar"><span class="hidden">` +
       v.watched +
       `%</span></div>
-							<div class="progress-bar progress-bar-inverse" style="width: ` +
+							<div class="progress-bar bg-dark" style="width: ` +
       v.transcoded +
       `%;" role="progressbar"></div>
 						</div>
-						<h3 class="box-title pull-left p-l-10 elip" style="width:90%">` +
+						<h3 class="box-title float-start p-l-10 elip" style="width:90%">` +
       v.nowPlayingTitle +
       `</h3>
-						<h3 class="box-title pull-right vertical-middle" style="width:10%"><i class="icon-control-` +
+						<h3 class="box-title float-end vertical-middle" style="width:10%"><i class="icon-control-` +
       v.state +
       ` fa-fw text-info" style=""></i></h3>
 						<div class="clearfix"></div>
-						<small class="pull-left p-l-10 w-50 elip"><span class="pull-left"><i class="` +
+						<small class="float-start p-l-10 w-50 elip"><span class="float-start"><i class="` +
       icon +
       ` fa-fw text-info"></i>` +
       v.nowPlayingBottom +
       `</span></small>
-						<small class="pull-right p-r-10 w-50"><span class="pull-right"><span class="">` +
+						<small class="float-end p-r-10 w-50"><span class="float-end"><span class="">` +
       v.user +
       ` <i class="icon-user"></i></span></span></small>
 						<br>
@@ -7609,18 +7565,18 @@ function buildStreamItem(array, source) {
 		<div id="` +
       v.session +
       `" class="white-popup mfp-with-anim mfp-hide">
-			<div class="col-md-6 col-md-offset-3">
+			<div class="col-lg-6 offset-lg-3">
 				<div class="white-box m-b-0 bg-info">
 					<h3 class="text-white box-title m-b-0">` +
       v.sessionType +
-      `<span class="pull-right"><i class="mdi mdi-network-upload"></i> ` +
+      `<span class="float-end"><i class="mdi mdi-upload-network"></i> ` +
       v.bandwidth +
       ` kbps <button type="button" class="btn bg-org btn-circle close-popup m-l-10"><i class="fa fa-times"></i> </button></span></h3>
 				</div>
 				<div class="white-box">
 					<div class="row">
 						<div class="p-l-20 p-r-20">
-							<div class="pull-left">
+							<div class="float-start">
 								<span class="text-uppercase"><i class="mdi mdi-` +
       v.bandwidthType +
       `"></i> ` +
@@ -7637,7 +7593,7 @@ function buildStreamItem(array, source) {
       `"></i> Product: ` +
       v.userStream.product +
       `</span></div>
-								<div class="text-muted m-t-20 text-uppercase"><span class="text-uppercase"><i class="mdi mdi-laptop-mac"></i> Device: ` +
+								<div class="text-muted m-t-20 text-uppercase"><span class="text-uppercase"><i class="mdi mdi-laptop"></i> Device: ` +
       v.userStream.device +
       `</span></div>
 							</div>
@@ -7645,7 +7601,7 @@ function buildStreamItem(array, source) {
       v.watched +
       `%" class="css-bar css-bar-` +
       Math.ceil(v.watched / 5) * 5 +
-      ` css-bar-lg m-b-0  css-bar-info pull-right">` +
+      ` css-bar-lg m-b-0  css-bar-info float-end">` +
       userThumb +
       `</div>
 						</div>
@@ -7656,7 +7612,7 @@ function buildStreamItem(array, source) {
 		<div id="` +
       v.uid +
       `-metadata-div" class="white-popup mfp-with-anim mfp-hide">
-	        <div class="col-md-8 col-md-offset-2 ` +
+	        <div class="col-lg-8 offset-lg-2 ` +
       v.uid +
       `-metadata-info"></div>
 	    </div>
@@ -7694,17 +7650,17 @@ function buildStreamTooltip(bandwidth, streams, type) {
     streamText += spacer + streams["transcode"] + " Transcode(s)";
   }
   html +=
-    '<span class="label label-info m-l-20 mouse" title="" data-toggle="tooltip" data-original-title="' +
+    '<span class="badge text-bg-info m-l-20 mouse" title="" data-bs-toggle="tooltip" data-bs-title="' +
     streamText +
     bandwidthText +
-    '" data-placement="bottom"><i class="fa fa-info"></i></span>';
+    '" data-bs-placement="bottom"><i class="fa fa-info"></i></span>';
   return (
     `
     <script>$('.streamDetails-` +
     type +
     `').html('` +
     html +
-    `');$('[data-toggle="tooltip"]').tooltip();</script>
+    `');$('[data-bs-toggle="tooltip"]').tooltip();</script>
     `
   );
 }
@@ -7766,7 +7722,7 @@ function buildRecentItem(array, type, extra = null) {
 				<div id="` +
         v.uid +
         `-metadata-div" class="white-popup mfp-with-anim mfp-hide">
-			        <div class="col-md-8 col-md-offset-2 ` +
+			        <div class="col-lg-8 offset-lg-2 ` +
         v.uid +
         `-metadata-info"></div>
 			    </div>
@@ -7814,7 +7770,7 @@ function buildPlaylistItem(array, type, extra = null) {
 					<div id="` +
           v.uid +
           `-metadata-div" class="white-popup mfp-with-anim mfp-hide">
-				        <div class="col-md-8 col-md-offset-2 ` +
+				        <div class="col-lg-8 offset-lg-2 ` +
           v.uid +
           `-metadata-info"></div>
 				    </div>
@@ -7917,10 +7873,10 @@ function buildRequestItem(array, extra = null) {
       //Is Admin?
       var adminFunctions =
         `<div class="btn-group m-r-10">
-                    <button aria-expanded="false" data-toggle="dropdown" class="btn btn-info btn-outline dropdown-toggle waves-effect waves-light" type="button"> <i class="fa fa-ellipsis-v m-r-5"></i> <span class="caret"></span></button>
+                    <button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-info btn-outline dropdown-toggle waves-effect waves-light" type="button"> <i class="fa fa-ellipsis-v m-r-5"></i></button>
                     <ul role="menu" class="dropdown-menu">
 						<li><h5 class="text-center" lang="en">Request Options</h5></li>
-						<li class="divider"></li>
+						<li><hr class="dropdown-divider"></li>
 						` +
         buildRequestAdminMenuItem(v.approved, "approved", approveID, v.type) +
         `
@@ -7975,16 +7931,16 @@ function buildRequestItem(array, extra = null) {
 					<div id="request-` +
         v.id +
         `" class="white-popup mfp-with-anim mfp-hide">
-						<div class="col-md-8 col-md-offset-2">
+						<div class="col-lg-8 offset-lg-2">
 							<div class="white-box m-b-0">
 								<div class="user-bg lazyload" data-src="` +
         bg +
         `">
-									<div class="col-xs-2 p-10">` +
+									<div class="col-2 p-10">` +
         adminFunctions +
         `</div>
-									<div class="col-xs-10">
-										<h2 class="m-b-0 font-medium pull-right text-right">
+									<div class="col-10">
+										<h2 class="m-b-0 font-medium float-end text-end">
 											` +
         v.title +
         `<button type="button" class="btn bg-org btn-circle close-popup m-l-10"><i class="fa fa-times"></i> </button><br>
@@ -8001,16 +7957,16 @@ function buildRequestItem(array, extra = null) {
         `</div>
 								</div>
 							</div>
-							<div class="panel panel-info p-b-0 p-t-0">
-								<div class="panel-body p-b-0 p-t-0 m-b-0">
+							<div class="card card-info p-b-0 p-t-0">
+								<div class="card-body p-b-0 p-t-0 m-b-0">
 									<div class="p-20 text-center">
 										<p class="">` +
         v.overview +
         `</p>
 									</div>
 									<div class="row">
-										<div class="col-lg-12">
-											<div class="owl-carousel owl-theme metadata-actors p-b-10"></div>
+										<div class="col-xl-12">
+											<div class="org-carouselmetadata-actors p-b-10"></div>
 										</div>
 									</div>
 								</div>
@@ -8045,10 +8001,10 @@ function buildStream(array, type) {
         type +
         `Streams">
 		<div class="el-element-overlay row">
-		    <div class="col-md-12">
-		        <h4 class="pull-left homepage-element-title"><span lang="en">Active</span> ` +
+		    <div class="col-lg-12">
+		        <h4 class="float-start homepage-element-title"><span lang="en">Active</span> ` +
         toUpper(type) +
-        ` <span lang="en">Streams</span> : </h4><h4 class="pull-left">&nbsp;<span class="label label-info m-l-20 checkbox-circle mouse" onclick="homepageStream('` +
+        ` <span lang="en">Streams</span> : </h4><h4 class="float-start">&nbsp;<span class="badge text-bg-info m-l-20 checkbox-circle mouse" onclick="homepageStream('` +
         originalType +
         `')">` +
         streams +
@@ -8123,21 +8079,21 @@ function buildRecent(array, type) {
       : "";
   var dropdownMenu =
     `
-	<div class="btn-group pull-right">
-		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="owlChange('` +
+	<div class="btn-group float-end">
+		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="carouselChange('` +
     type +
     `-recent','previous');"><i class="fa fa-chevron-left"></i></button>
-		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="owlChange('` +
+		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="carouselChange('` +
     type +
     `-recent','next');"><i class="fa fa-chevron-right"></i></button>
-		<button aria-expanded="false" data-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
-			<i class="fa fa-filter m-r-5"></i><span class="caret"></span>
+		<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
+			<i class="fa fa-filter m-r-5"></i>
 		</button>
 		<ul role="menu" class="dropdown-menu recent-filter">
 			<li><a data-filter="all" server-filter="` +
     type +
     `" href="javascript:void(0);">All</a></li>
-			<li class="divider"></li>
+			<li><hr class="dropdown-divider"></li>
 			` +
     dropdown +
     `
@@ -8146,10 +8102,10 @@ function buildRecent(array, type) {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var headerAlt =
       `
-		<div class="col-md-12">
-			<h4 class="pull-left homepage-element-title"><span class="mouse" onclick="homepageRecent('` +
+		<div class="col-lg-12">
+			<h4 class="float-start homepage-element-title"><span class="mouse" onclick="homepageRecent('` +
       type +
-      `')" lang="en">Recently Added</span> : </h4><h4 class="pull-left">&nbsp;</h4>
+      `')" lang="en">Recently Added</span> : </h4><h4 class="float-start">&nbsp;</h4>
 			` +
       dropdownMenu +
       `
@@ -8160,10 +8116,10 @@ function buildRecent(array, type) {
   } else {
     var header =
       `
-		<div class="panel-heading bg-info p-t-10 p-b-10">
+		<div class="card-header bg-info p-t-10 p-b-10">
 			<span onclick="homepageRecent('` +
       type +
-      `')" class="pull-left m-t-5 mouse"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/` +
+      `')" class="float-start m-t-5 mouse"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/` +
       type +
       `.png"> &nbsp; <span lang="en">Recently Added</span></span>
 			` +
@@ -8181,16 +8137,16 @@ function buildRecent(array, type) {
 		` +
         headerAlt +
         `
-        <div class="col-lg-12">
-            <div class="panel panel-default">
+        <div class="col-xl-12">
+            <div class="card card-default">
 				` +
         header +
         `
-                <div class="panel-wrapper p-b-0 collapse in">
+                <div class="card-wrapper p-b-0 collapse show">
 					<div class="` +
         type +
         `-recent-hidden hidden"></div>
-                    <div class="owl-carousel owl-theme recent-items ` +
+                    <div class="org-carouselrecent-items ` +
         type +
         `-recent">
 						` +
@@ -8207,17 +8163,17 @@ function buildRecent(array, type) {
 	`
     : "";
 }
-function owlChange(elm, action) {
-  switch (action) {
-    case "next":
-      $("." + elm).trigger("next.owl");
-      break;
-    case "previous":
-      $("." + elm).trigger("prev.owl");
-      break;
-    default:
-      return false;
-  }
+function carouselChange(elm, action) {
+  $("." + elm).each(function () {
+    if (!this.swiper) {
+      return;
+    }
+    if (action === "next") {
+      this.swiper.slideNext();
+    } else if (action === "previous") {
+      this.swiper.slidePrev();
+    }
+  });
   return false;
 }
 function cleanPlaylistTitle(string) {
@@ -8262,7 +8218,7 @@ function buildPlaylist(array, type) {
 
       items +=
         `
-			<div class="owl-carousel owl-theme playlist-items ` +
+			<div class="org-carouselplaylist-items ` +
         type +
         `-playlist ` +
         hidden +
@@ -8280,14 +8236,14 @@ function buildPlaylist(array, type) {
     });
     var builtDropdown =
       `
-		<button type="button" class="btn btn-info waves-effect hidden-xs playlist-previous" onclick="owlChange('` +
+		<button type="button" class="btn btn-info waves-effect hidden-xs playlist-previous" onclick="carouselChange('` +
       firstButton +
       `','previous');"><i class="fa fa-chevron-left"></i></button>
-		<button type="button" class="btn btn-info waves-effect hidden-xs playlist-next" onclick="owlChange('` +
+		<button type="button" class="btn btn-info waves-effect hidden-xs playlist-next" onclick="carouselChange('` +
       firstButton +
       `','next');"><i class="fa fa-chevron-right"></i></button>
-		<button aria-expanded="false" data-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
-			<i class="mdi mdi-playlist-play m-r-5 fa-lg"></i><span class="caret"></span>
+		<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
+			<i class="mdi mdi-playlist-play m-r-5 fa-lg"></i>
 		</button>
 		<ul role="menu" class="dropdown-menu playlist-filter">
 			` +
@@ -8299,15 +8255,15 @@ function buildPlaylist(array, type) {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var headerAlt =
       `
-		<div class="col-md-12">
-			<h4 class="pull-left homepage-element-title"><span onclick="homepagePlaylist('` +
+		<div class="col-lg-12">
+			<h4 class="float-start homepage-element-title"><span onclick="homepagePlaylist('` +
       type +
       `')" class="` +
       type +
       `-playlistTitle mouse">` +
       first +
-      `</span> : </h4><h4 class="pull-left">&nbsp;</h4>
-			<div class="btn-group pull-right">
+      `</span> : </h4><h4 class="float-start">&nbsp;</h4>
+			<div class="btn-group float-end">
 				` +
       builtDropdown +
       `
@@ -8319,8 +8275,8 @@ function buildPlaylist(array, type) {
   } else {
     var header =
       `
-		<div class="panel-heading bg-info p-t-10 p-b-10">
-			<span class="pull-left m-t-5 mouse homepage-element-title" onclick="homepagePlaylist('` +
+		<div class="card-header bg-info p-t-10 p-b-10">
+			<span class="float-start m-t-5 mouse homepage-element-title" onclick="homepagePlaylist('` +
       type +
       `')"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/` +
       type +
@@ -8329,7 +8285,7 @@ function buildPlaylist(array, type) {
       `-playlistTitle">` +
       first +
       `</span></span>
-			<div class="btn-group pull-right">
+			<div class="btn-group float-end">
 					` +
       builtDropdown +
       `
@@ -8346,12 +8302,12 @@ function buildPlaylist(array, type) {
 		` +
         headerAlt +
         `
-        <div class="col-lg-12">
-            <div class="panel panel-default">
+        <div class="col-xl-12">
+            <div class="card card-default">
                 ` +
         header +
         `
-                <div class="panel-wrapper p-b-0 collapse in">
+                <div class="card-wrapper p-b-0 collapse show">
                     ` +
         items +
         `
@@ -8374,10 +8330,10 @@ function buildRequest(service, div, array) {
   if (requests) {
     var builtDropdown =
       `
-		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="owlChange('request-items-${service}','previous');"><i class="fa fa-chevron-left"></i></button>
-		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="owlChange('request-items-${service}','next');"><i class="fa fa-chevron-right"></i></button>
-		<button aria-expanded="false" data-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
-			<i class="fa fa-filter m-r-5"></i><span class="caret"></span>
+		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="carouselChange('request-items-${service}','previous');"><i class="fa fa-chevron-left"></i></button>
+		<button type="button" class="btn btn-info waves-effect hidden-xs" onclick="carouselChange('request-items-${service}','next');"><i class="fa fa-chevron-right"></i></button>
+		<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-info dropdown-toggle waves-effect waves-light" type="button">
+			<i class="fa fa-filter m-r-5"></i>
 		</button>
 		` +
       requestButton +
@@ -8418,9 +8374,9 @@ function buildRequest(service, div, array) {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var headerAlt =
       `
-		<div class="col-md-12">
-			<h4 class="pull-left homepage-element-title"><span class="mouse" onclick="homepageRequests('${service}')" lang="en">Requests</span> : </h4><h4 class="pull-left">&nbsp;</h4>
-			<div class="btn-group pull-right">
+		<div class="col-lg-12">
+			<h4 class="float-start homepage-element-title"><span class="mouse" onclick="homepageRequests('${service}')" lang="en">Requests</span> : </h4><h4 class="float-start">&nbsp;</h4>
+			<div class="btn-group float-end">
 				` +
       builtDropdown +
       `
@@ -8432,11 +8388,11 @@ function buildRequest(service, div, array) {
   } else {
     var header =
       `
-		<div class="panel-heading bg-info p-t-10 p-b-10">
-			<span class="pull-left m-t-5 mouse homepage-element-title" onclick="homepageRequests('${service}')"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/` +
+		<div class="card-header bg-info p-t-10 p-b-10">
+			<span class="float-start m-t-5 mouse homepage-element-title" onclick="homepageRequests('${service}')"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/` +
       service +
       `.png"> &nbsp; <span lang="en">Requests</span></span>
-			<div class="btn-group pull-right">
+			<div class="btn-group float-end">
 					` +
       builtDropdown +
       `
@@ -8451,13 +8407,13 @@ function buildRequest(service, div, array) {
 		` +
         headerAlt +
         `
-        <div class="col-lg-12">
-            <div class="panel panel-default">
+        <div class="col-xl-12">
+            <div class="card card-default">
 				` +
         header +
         `
-                <div class="panel-wrapper p-b-0 collapse in">
-				<div class="owl-carousel owl-theme request-items-` +
+                <div class="card-wrapper p-b-0 collapse show">
+				<div class="org-carouselrequest-items-` +
         service +
         `">
 					` +
@@ -8472,15 +8428,15 @@ function buildRequest(service, div, array) {
         </div>
     </div>
 	<div id="new-request" class="white-popup mfp-with-anim mfp-hide">
-		<div class="col-md-8 col-md-offset-2">
+		<div class="col-lg-8 offset-lg-2">
 			<div class="white-box m-b-0 search-div resultBox-outside">
 				<div class="form-group m-b-0">
 					<div id="request-input-div" class="input-group">
 						<input id="request-input" lang="en" placeholder="Request a Show or Movie" type="text" class="form-control inline-focus">
                         <input id="request-page" type="hidden" class="form-control">
                         <div class="input-group-btn">
-                            <button type="button" class="btn waves-effect waves-light btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><span lang="en">Suggestions</span> <span class="caret"></span></button>
-                            <ul class="dropdown-menu dropdown-menu-right">
+                            <button type="button" class="btn waves-effect waves-light btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span lang="en">Suggestions</span></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
 								<li><a onclick="requestList('org-mod', 'movie');" href="javascript:void(0)" lang="en">Organizr Mod Picks</a></li>
 								<li><a onclick="requestList('theatre-movie', 'movie');" href="javascript:void(0)" lang="en">In Theatres</a></li>
 								<li><a onclick="requestList('top-movie', 'movie');" href="javascript:void(0)" lang="en">Top Movies</a></li>
@@ -8589,7 +8545,7 @@ function buildRequestResult(
       }
       results +=
         `
-			<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 m-t-20 request-result-item request-result-` +
+			<div class="col-xl-3 col-lg-4 col-md-6 col-12 m-t-20 request-result-item request-result-` +
         media_type +
         `">
 	            <div class="white-box m-b-10">
@@ -8754,10 +8710,10 @@ function buildRequestOverseerrSeasons(array) {
       }
     });
     let html = `
-			<div class="panel">
+			<div class="card">
 				<div class="bg-org2">
-					<div class="panel-heading">Choose Seasons</div>
-					<div class="panel-wrapper collapse in text-left">
+					<div class="card-header">Choose Seasons</div>
+					<div class="card-wrapper collapse show text-start">
 						<div class="table-responsive">
 							<table class="table color-bordered-table primary-bordered-table">
 								<thead>
@@ -8770,19 +8726,18 @@ function buildRequestOverseerrSeasons(array) {
 								<tbody>${SeasonItems}</tbody>
 							</table>
 						</div>
-						<div class="pull-right p-b-20">
-							<button class="fcbtn btn btn-info btn-outline btn-1c" lang="en" onclick="swal.close();">Cancel</button>
+						<div class="float-end p-b-20">
+							<button class="fcbtn btn btn-info btn-outline btn-1c" lang="en" onclick="Swal.close();">Cancel</button>
 							<button class="fcbtn btn btn-success btn-outline btn-1c submit-overseerr-seasons" lang="en" data-seasons="[]" data-id="${id}" disabled onclick="processOverseerrSeasons(this)">Request Seasons</button>
 						</div>
 					</div>
 				</div>
 			</div>
 			`;
-    swal({
-      content: createElementFromHTML(html),
-      button: null,
-      className: "bg-org",
-      dangerMode: false,
+    Swal.fire({
+      html: createElementFromHTML(html),
+      showConfirmButton: false,
+      customClass: { popup: "bg-org" },
     });
   }
 }
@@ -8807,7 +8762,7 @@ function processRequest(id, type) {
           "GET",
           "api/v2/homepage/overseerr/metadata/" + type + "/" + id
         )
-          .success(function (data) {
+          .done(function (data) {
             try {
               let response = data.response;
               buildRequestOverseerrSeasons(response);
@@ -8894,7 +8849,7 @@ function overseerrActions(id, action, type = null, extra = null) {
       return false;
   }
   organizrAPI2(method, apiUrl, data)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (action == "add") {
@@ -8968,7 +8923,7 @@ function ombiActions(id, action, type, extra = null) {
       return false;
   }
   organizrAPI2(method, apiUrl, data)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (action == "add") {
@@ -9007,17 +8962,19 @@ function addTempRequest() {
 		<span class="elip recent-title">Adding Request</span>
 	</div>
 	`;
-  $(".request-items-" + service)
-    .trigger("add.owl", [html, 0])
-    .trigger("refresh.owl");
+  $(".request-items-" + service).each(function () {
+    if (this.swiper) {
+      this.swiper.prependSlide('<div class="swiper-slide">' + html + "</div>");
+    }
+  });
   setTimeout(function () {
     ajaxloader(".request-adding", "in");
   }, 100);
 }
 function cleanCloseSwal() {
-  let state = swal.getState().isOpen;
+  let state = Swal.isVisible();
   if (state === true) {
-    swal.close();
+    Swal.close();
   }
 }
 function doneTyping() {
@@ -9035,17 +8992,12 @@ function doneTyping() {
   searchTerm = title;
   $("#request-page").val(page);
   requestSearch(title, page)
-    .success(function (data) {
+    .done(function (data) {
       $("#request-results").html(
         buildRequestResult(data, "", title, page, true)
       );
-      if (bowser.mobile !== true) {
-        $(".resultBox-inside").slimScroll({
-          height: "100%",
-          position: "right",
-          size: "5px",
-          color: "#dcdcdc",
-        });
+      if (browserInfo.mobile !== true) {
+        $(".resultBox-inside").css({ height: "100%", "overflow-y": "auto" });
       }
       $(".mfp-wrap").animate(
         {
@@ -9063,20 +9015,15 @@ function doneTyping() {
 function requestList(list, type, page = 1) {
   ajaxloader(".search-div", "in");
   requestSearchList(list, page)
-    .success(function (data) {
+    .done(function (data) {
       if (typeof data.results !== "undefined") {
         var results = data.results;
       } else if (typeof data.items !== "undefined") {
         var results = data.items;
       }
       $("#request-results").html(buildRequestResult(data, type, list, page));
-      if (bowser.mobile !== true) {
-        $(".resultBox-inside").slimScroll({
-          height: "100%",
-          position: "right",
-          size: "5px",
-          color: "#dcdcdc",
-        });
+      if (browserInfo.mobile !== true) {
+        $(".resultBox-inside").css({ height: "100%", "overflow-y": "auto" });
       }
       $(".mfp-wrap").animate(
         {
@@ -9163,9 +9110,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs">` +
           v.eta +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           v.percentage +
           `%;" role="progressbar">` +
           v.percentage +
@@ -9186,9 +9133,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td>Online</td>
                     <td class="hidden-xs"> -- </td>
                     <td class="hidden-xs"> -- </td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: 0%;" role="progressbar">0%</div>
+                            <div class="progress-bar bg-info" style="width: 0%;" role="progressbar">0%</div>
                         </div>
                     </td>
                 </tr>
@@ -9205,9 +9152,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td>Encrypted</td>
                     <td class="hidden-xs"> -- </td>
                     <td class="hidden-xs"> -- </td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: 0%;" role="progressbar">0%</div>
+                            <div class="progress-bar bg-info" style="width: 0%;" role="progressbar">0%</div>
                         </div>
                     </td>
                 </tr>
@@ -9224,9 +9171,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td>Offline</td>
                     <td class="hidden-xs"> -- </td>
                     <td class="hidden-xs"> -- </td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: 0%;" role="progressbar">0%</div>
+                            <div class="progress-bar bg-info" style="width: 0%;" role="progressbar">0%</div>
                         </div>
                     </td>
                 </tr>
@@ -9276,7 +9223,7 @@ function buildDownloaderItem(array, source, type = "none") {
           `"><i class="fa fa-` +
           actionIcon +
           `"></i></td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.cat +
           `</span></td>
                     <td class="hidden-xs">` +
@@ -9287,9 +9234,9 @@ function buildDownloaderItem(array, source, type = "none") {
           `">` +
           v.timeleft +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           v.percentage +
           `%;" role="progressbar">` +
           v.percentage +
@@ -9315,15 +9262,15 @@ function buildDownloaderItem(array, source, type = "none") {
           `">` +
           v.status +
           `</td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.category +
           `</span></td>
                     <td class="hidden-xs">` +
           v.size +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: 100%;" role="progressbar">100%</div>
+                            <div class="progress-bar bg-info" style="width: 100%;" role="progressbar">100%</div>
                         </div>
                     </td>
                 </tr>
@@ -9369,15 +9316,15 @@ function buildDownloaderItem(array, source, type = "none") {
           `"><i class="fa fa-` +
           actionIcon +
           `"></i></td>-->
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.Category +
           `</span></td>
                     <td class="hidden-xs">` +
           humanFileSize(size, true) +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9405,15 +9352,15 @@ function buildDownloaderItem(array, source, type = "none") {
           `">` +
           v.Status +
           `</td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.Category +
           `</span></td>
                     <td class="hidden-xs">` +
           humanFileSize(size, true) +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: 100%;" role="progressbar">100%</div>
+                            <div class="progress-bar bg-info" style="width: 100%;" role="progressbar">100%</div>
                         </div>
                     </td>
                 </tr>
@@ -9489,9 +9436,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs">` +
           humanFileSize(v.totalSize, true) +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9530,7 +9477,7 @@ function buildDownloaderItem(array, source, type = "none") {
         queue +=
           `
                 <tr>
-                    <td class="max-texts"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+                    <td class="max-texts"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
           date +
           `">` +
           v.name +
@@ -9540,12 +9487,12 @@ function buildDownloaderItem(array, source, type = "none") {
           `">` +
           v.status +
           `</td>
-                    <td class="hidden-xs"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+                    <td class="hidden-xs"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
           downTotal +
           `"><i class="fa fa-download"></i>&nbsp;` +
           download +
           `</span></td>
-                    <td class="hidden-xs"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+                    <td class="hidden-xs"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
           upTotal +
           `"><i class="fa fa-upload"></i>&nbsp;` +
           upload +
@@ -9553,12 +9500,12 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs">` +
           size +
           `</td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.label +
           `</span></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9590,7 +9537,7 @@ function buildDownloaderItem(array, source, type = "none") {
         queue +=
           `
                 <tr>
-                    <td class="max-texts"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="">` +
+                    <td class="max-texts"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="">` +
           v.Name +
           `</span></td>
 		    <td class="hidden-xs utorrent-` +
@@ -9598,15 +9545,15 @@ function buildDownloaderItem(array, source, type = "none") {
           `">` +
           v.Status +
           `</td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.Labels +
           `</span></td>
-		    <td class="hidden-xs"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+		    <td class="hidden-xs"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
           download +
           `"><i class="fa fa-download"></i>&nbsp;` +
           download +
           `</span></td>
-                    <td class="hidden-xs"><span class="tooltip-info" data-toggle="tooltip" data-placement="right" title="" data-original-title="` +
+                    <td class="hidden-xs"><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
           upload +
           `"><i class="fa fa-upload"></i>&nbsp;` +
           upload +
@@ -9614,9 +9561,9 @@ function buildDownloaderItem(array, source, type = "none") {
 		    <td class="hidden-xs">` +
           size +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           v.Percent +
           `;" role="progressbar">` +
           v.Percent +
@@ -9677,12 +9624,12 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs">` +
           size +
           `</td>
-                    <td class="hidden-xs"><span class="label label-info">` +
+                    <td class="hidden-xs"><span class="badge text-bg-info">` +
           v.protocol +
           `</span></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9728,12 +9675,12 @@ function buildDownloaderItem(array, source, type = "none") {
           v.status
         }</td>
                     <td class="hidden-xs">${size}</td>
-                    <td class="hidden-xs"><span class="label label-info">${
+                    <td class="hidden-xs"><span class="badge text-bg-info">${
                       v.protocol
                     }</span></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ${percent}%;" role="progressbar">${percent}%</div>
+                            <div class="progress-bar bg-info" style="width: ${percent}%;" role="progressbar">${percent}%</div>
                         </div>
                     </td>
                 </tr>
@@ -9809,9 +9756,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs">` +
           size +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9856,7 +9803,7 @@ function buildDownloaderItem(array, source, type = "none") {
           queue +=
             `<i class="fa fa-caret-down ml-2" style="cursor:pointer" onclick="$(this).toggleClass('fa-caret-down');$(this).toggleClass('fa-caret-up');$('#status-` +
             v.hash +
-            `').toggleClass('d-none');" aria-hidden="true"></i><br /><div class="well mb-0 mt-2 p-3 d-none" id="status-` +
+            `').toggleClass('d-none');" aria-hidden="true"></i><br /><div class="card card-body mb-0 mt-2 p-3 d-none" id="status-` +
             v.hash +
             `">` +
             v.tracker_status +
@@ -9877,9 +9824,9 @@ function buildDownloaderItem(array, source, type = "none") {
                     <td class="hidden-xs"><i class="fa fa-upload"></i>&nbsp;` +
           upload +
           `</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="progress progress-lg m-b-0">
-                            <div class="progress-bar progress-bar-info" style="width: ` +
+                            <div class="progress-bar bg-info" style="width: ` +
           percent +
           `%;" role="progressbar">` +
           percent +
@@ -9932,7 +9879,7 @@ function buildDownloader(source) {
       var queue = false;
       var history = false;
   }
-  var menu = `<ul class="nav customtab nav-tabs pull-right" role="tablist">`;
+  var menu = `<ul class="nav customtab nav-tabs float-end" role="tablist">`;
   var listing = "";
   var state = "";
   var active = "";
@@ -9949,13 +9896,13 @@ function buildDownloader(source) {
       source +
       `')"><a href="#` +
       source +
-      `-queue" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">` +
+      `-queue" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">` +
       queueButton +
       `</span></a></li>
 			`;
     listing +=
       `
-		<div role="tabpanel" class="tab-pane fade active in" id="` +
+		<div role="tabpanel" class="tab-pane fade active show" id="` +
       source +
       `-queue">
 			<div class="inbox-center table-responsive">
@@ -9974,7 +9921,7 @@ function buildDownloader(source) {
       `
 		<li role="presentation" class=""><a href="#` +
       source +
-      `-history" aria-controls="profile" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-time"></i></span> <span class="hidden-xs">` +
+      `-history" aria-controls="profile" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-time"></i></span> <span class="hidden-xs">` +
       historyButton +
       `</span></a></li>
 		`;
@@ -9998,8 +9945,8 @@ function buildDownloader(source) {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var headerAlt =
       `
-		<div class="col-md-12">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle ` +
+		<div class="col-lg-12">
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle ` +
       active +
       `" data-src="plugins/images/tabs/` +
       source +
@@ -10017,7 +9964,7 @@ function buildDownloader(source) {
     var header =
       `
 		<div class="white-box bg-info m-b-0 p-b-0 p-t-10 mailbox-widget">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle ` +
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle ` +
       active +
       `" data-src="plugins/images/tabs/` +
       source +
@@ -10037,7 +9984,7 @@ function buildDownloader(source) {
 		` +
     headerAlt +
     `
-		<div class="col-lg-12">
+		<div class="col-xl-12">
 	        ` +
     header +
     `
@@ -10092,7 +10039,7 @@ function buildDownloaderCombined(source) {
     source +
     `')" href="#combined-` +
     source +
-    `" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true"><span class=""><img src="./plugins/images/tabs/` +
+    `" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true"><span class=""><img src="./plugins/images/tabs/` +
     source +
     `.png" class="homepageImageTitle"><span class="badge bg-org downloaderCount" id="count-` +
     source +
@@ -10108,13 +10055,13 @@ function buildDownloaderCombined(source) {
       source +
       `')"><a href="#` +
       source +
-      `-queue" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">` +
+      `-queue" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">` +
       queueButton +
       `</span></a></li>
 			`;
     listing +=
       `
-		<div role="tabpanel" class="tab-pane fade active in" id="` +
+		<div role="tabpanel" class="tab-pane fade active show" id="` +
       source +
       `-queue">
 			<div class="inbox-center table-responsive">
@@ -10133,7 +10080,7 @@ function buildDownloaderCombined(source) {
       `
 		<li role="presentation" class=""><a href="#` +
       source +
-      `-history" aria-controls="profile" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-time"></i></span> <span class="hidden-xs">` +
+      `-history" aria-controls="profile" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-time"></i></span> <span class="hidden-xs">` +
       historyButton +
       `</span></a></li>
 		`;
@@ -10161,7 +10108,7 @@ function buildDownloaderCombined(source) {
   var listingMain =
     '<div role="tabpanel" class="tab-pane fade ' +
     active +
-    ' in" id="combined-' +
+    ' show" id="combined-' +
     source +
     '">' +
     menu +
@@ -10173,7 +10120,7 @@ function buildDownloaderCombined(source) {
     if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
       var headerAlt =
         `
-            <div class="col-md-12">
+            <div class="col-lg-12">
                 ` +
         mainMenu +
         `
@@ -10198,7 +10145,7 @@ function buildDownloaderCombined(source) {
             ` +
       headerAlt +
       `
-            <div class="col-lg-12">
+            <div class="col-xl-12">
                 ` +
       header +
       `
@@ -10220,7 +10167,7 @@ function buildMetadata(array, source) {
   var metadata = "";
   var genres = "";
   var actors = "";
-  var rating = '<div class="col-xs-2 p-10"></div>';
+  var rating = '<div class="col-2 p-10"></div>';
   var sourceIcon = source === "jellyfin" ? "fish" : source;
   $.each(array.content, function (i, v) {
     // Normalize per-item source when coming from JellyStat or unknown
@@ -10278,7 +10225,7 @@ function buildMetadata(array, source) {
     if (v.metadata.rating) {
       var ratingRound = Math.ceil(v.metadata.rating) * 10;
       rating =
-        `<div class="col-xs-2 p-10"><div data-label="` +
+        `<div class="col-2 p-10"><div data-label="` +
         v.metadata.rating * 10 +
         `%" class="css-bar css-bar-` +
         Math.ceil(ratingRound / 5) * 5 +
@@ -10299,7 +10246,7 @@ function buildMetadata(array, source) {
       sourceIconHtml =
         '<img src="plugins/images/tabs/emby.png" class="metadata-source-image" style="height:24px;width:24px;" />';
     } else {
-      sourceIconHtml = '<i class="fa mdi mdi-' + iconChoice + ' fa-2x"></i>';
+      sourceIconHtml = '<i class="mdi mdi-' + iconChoice + ' fa-2x"></i>';
     }
     metadata =
       `
@@ -10310,8 +10257,8 @@ function buildMetadata(array, source) {
 				` +
       rating +
       `
-				<div class="col-xs-10">
-	                <h2 class="m-b-0 font-medium pull-right text-right">
+				<div class="col-10">
+	                <h2 class="m-b-0 font-medium float-end text-end">
 						` +
       v.title +
       `<button type="button" class="btn bg-org btn-circle close-popup m-l-10"><i class="fa fa-times"></i> </button><br>
@@ -10341,16 +10288,16 @@ function buildMetadata(array, source) {
       `</div>
 			</div>
 		</div>
-		<div class="panel panel-info p-b-0 p-t-0">
-            <div class="panel-body p-b-0 p-t-0 m-b-0">
+		<div class="card card-info p-b-0 p-t-0">
+            <div class="card-body p-b-0 p-t-0 m-b-0">
 				<div class="p-20 text-center">
 					<p class="">` +
       v.metadata.summary +
       `</p>
 				</div>
 				<div class="row">
-					<div class="col-lg-12">
-						<div class="owl-carousel owl-theme metadata-actors p-b-10">` +
+					<div class="col-xl-12">
+						<div class="org-carouselmetadata-actors p-b-10">` +
       actors +
       `</div>
 					</div>
@@ -10401,7 +10348,7 @@ function buildCalendarMetadata(array) {
   var metadata = "";
   var genres = "";
   var actors = "";
-  var rating = '<div class="col-xs-2 p-10"></div>';
+  var rating = '<div class="col-2 p-10"></div>';
   var hasGenre = typeof array.genres !== "string" ? true : false;
   if (hasGenre) {
     $.each(array.genres, function (i, v) {
@@ -10411,7 +10358,7 @@ function buildCalendarMetadata(array) {
   if (array.ratings) {
     var ratingRound = Math.ceil(array.ratings) * 10;
     rating =
-      `<div class="col-xs-2 p-10"><div data-label="` +
+      `<div class="col-2 p-10"><div data-label="` +
       array.ratings * 10 +
       `%" class="css-bar css-bar-` +
       Math.ceil(ratingRound / 5) * 5 +
@@ -10434,8 +10381,8 @@ function buildCalendarMetadata(array) {
 				` +
     rating +
     `
-				<div class="col-xs-10">
-	                <h2 class="m-b-0 font-medium pull-right text-right">
+				<div class="col-10">
+	                <h2 class="m-b-0 font-medium float-end text-end">
 						` +
     array.topTitle +
     `<button type="button" class="btn bg-org btn-circle close-popup m-l-10"><i class="fa fa-times"></i> </button><br>
@@ -10453,8 +10400,8 @@ function buildCalendarMetadata(array) {
     `</div>
 			</div>
 		</div>
-		<div class="panel panel-info p-b-0 p-t-0">
-            <div class="panel-body p-b-0 p-t-0 m-b-0">
+		<div class="card card-info p-b-0 p-t-0">
+            <div class="card-body p-b-0 p-t-0 m-b-0">
 				<div class="p-20 text-center">
 					<p class="">` +
     array.overview +
@@ -10478,8 +10425,8 @@ function buildHealthChecks(array) {
     ? `
 	<div id="allHealthChecks" class="m-b-30">
 		<div class="el-element-overlay row">
-		    <div class="col-md-12">
-		        <h4 class="pull-left homepage-element-title"><span lang="en">Health Checks</span> : </h4><h4 class="pull-left">&nbsp;<span class="label label-info m-l-20 checkbox-circle good-health-checks mouse" onclick="homepageHealthChecks()">` +
+		    <div class="col-lg-12">
+		        <h4 class="float-start homepage-element-title"><span lang="en">Health Checks</span> : </h4><h4 class="float-start">&nbsp;<span class="badge text-bg-info m-l-20 checkbox-circle good-health-checks mouse" onclick="homepageHealthChecks()">` +
         checks +
         `</span></h4>
 		        <hr class="hidden-xs">
@@ -10507,8 +10454,8 @@ function buildPihole(array) {
         <div class="el-element-overlay row">`;
   if (array["options"]["title"]) {
     html += `
-            <div class="col-md-12">
-                <h4 class="pull-left homepage-element-title"><span lang="en">Pi-hole</span> : </h4><h4 class="pull-left">&nbsp;</h4>
+            <div class="col-lg-12">
+                <h4 class="float-start homepage-element-title"><span lang="en">Pi-hole</span> : </h4><h4 class="float-start">&nbsp;</h4>
                 <hr class="hidden-xs ml-2">
             </div>
             <div class="clearfix"></div>
@@ -10516,7 +10463,7 @@ function buildPihole(array) {
   }
   html +=
     `
-		    <div class="piholeCards col-sm-12 my-3">
+		    <div class="piholeCards col-md-12 my-3">
 			    ` +
     buildPiholeItem(array) +
     `
@@ -10535,8 +10482,8 @@ function buildAdGuard(array) {
         <div class="el-element-overlay row">`;
   if (array["options"]["title"]) {
     html += `
-            <div class="col-md-12">
-                <h4 class="pull-left homepage-element-title"><span lang="en">AdGuard Home</span> : </h4><h4 class="pull-left">&nbsp;</h4>
+            <div class="col-lg-12">
+                <h4 class="float-start homepage-element-title"><span lang="en">AdGuard Home</span> : </h4><h4 class="float-start">&nbsp;</h4>
                 <hr class="hidden-xs ml-2">
             </div>
             <div class="clearfix"></div>
@@ -10544,7 +10491,7 @@ function buildAdGuard(array) {
   }
   html +=
     `
-		    <div class="adguardCards col-sm-12 my-3">
+		    <div class="adguardCards col-md-12 my-3">
 			    ` +
     buildAdGuardItem(array) +
     `
@@ -10567,7 +10514,7 @@ function buildUnifi(array) {
 	<div id="allUnifi">
 	    
 	    <!-- <div class="row">
-            <div class="col-md-12">
+            <div class="col-lg-12">
                 <div class="white-box">
                     <h3 class="box-title">Unifi</h3>
                     ` +
@@ -10579,8 +10526,8 @@ function buildUnifi(array) {
          
                 
 		<div class="row">
-		    <div class="col-md-12">
-		        <h4 class="pull-left homepage-element-title"><span lang="en">UniFi</span> : </h4><h4 class="pull-left">&nbsp;</h4>
+		    <div class="col-lg-12">
+		        <h4 class="float-start homepage-element-title"><span lang="en">UniFi</span> : </h4><h4 class="float-start">&nbsp;</h4>
 		        <hr class="hidden-xs">
 		    </div>
 			<div class="clearfix"></div>
@@ -10646,7 +10593,7 @@ function buildUnifiItemNew(array) {
     }
     var statItems = "";
     if (proceed) {
-      navTabItems += `<li role="presentation" class="${active}"><a href="#unifi-${name}" aria-controls="unifi-${name}" role="tab" data-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="${icon}"></i></span><span class="hidden-xs text-uppercase"> ${name}</span></a></li>`;
+      navTabItems += `<li role="presentation" class="${active}"><a href="#unifi-${name}" aria-controls="unifi-${name}" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="${icon}"></i></span><span class="hidden-xs text-uppercase"> ${name}</span></a></li>`;
       $.each(stats, function (istat, vstat) {
         statItems += `
                     <div class="stat-item">
@@ -10657,7 +10604,7 @@ function buildUnifiItemNew(array) {
       });
       items += `
                 <div role="tabpanel" class="tab-pane fade ${active}" id="unifi-${name}">
-                    <div class="col-md-12">${statItems}</div>
+                    <div class="col-lg-12">${statItems}</div>
                     <div class="clearfix"></div>
                 </div>
             `;
@@ -10720,13 +10667,13 @@ function buildUnifiItem(array) {
                     `;
       });
       items += `
-                <div class="col-lg-4 col-md-6 col-center">
-                    <div class="panel panel-${panelColor}">
-                        <div class="panel-heading"> <span class="text-uppercase">${name}</span>
-                            <div class="pull-right"><a href="#" data-perform="panel-collapse"><i class="ti-minus"></i></a></div>
+                <div class="col-xl-4 col-lg-6 col-center">
+                    <div class="card card-${panelColor}">
+                        <div class="card-header"> <span class="text-uppercase">${name}</span>
+                            <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-minus"></i></a></div>
                         </div>
-                        <div class="panel-wrapper collapse in" aria-expanded="true">
-                            <div class="panel-body">
+                        <div class="card-wrapper collapse show" aria-expanded="true">
+                            <div class="card-body">
                                ${statItems}
                             </div>
                         </div>
@@ -10827,9 +10774,9 @@ function buildHealthChecksItem(array) {
         }
       });
       tagPrimaryElem =
-        '<span class="pull-right mt-3 mr-2"><span class="label text-uppercase bg-' +
+        '<span class="float-end mt-3 mr-2"><span class="label text-uppercase bg-' +
         statusColor.replace("animated-3 loop-animation flash", "") +
-        ' label-rounded font-12">' +
+        ' rounded-pill font-12">' +
         v.tags[0] +
         "</span></span>";
       tagSecondaryElem = "<h5>Tags: ";
@@ -10842,7 +10789,7 @@ function buildHealthChecksItem(array) {
     }
     checks +=
       `
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <div class="col-xl-2 col-xl-3 col-lg-4 col-md-6 col-12">
                 <div class="card bg-inverse text-white mb-3 showMoreHealth mouse" data-id="` +
       i +
       `">
@@ -10852,7 +10799,7 @@ function buildHealthChecksItem(array) {
       statusColor +
       `"></div>
                             <div class="ml-1 w-100">
-                                <span class="pull-right mt-3 mb-2"><i class="` +
+                                <span class="float-end mt-3 mb-2"><i class="` +
       statusIcon +
       ` font-20"></i></span>
 				` +
@@ -10943,7 +10890,7 @@ function buildAdGuardItem(array) {
   var combine = array["options"]["combine"];
   var totalQueries = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card text-white mb-3 adguard-stat bg-green">
                 <div class="card-body">
                     <div class="inline-block">
@@ -10954,7 +10901,7 @@ function buildAdGuardItem(array) {
         card += `<p class="d-inline text-muted">(` + key + `)</p>`;
       }
       card +=
-        `<h3 data-toggle="tooltip" data-placement="right" title="` +
+        `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="` +
         key +
         `">` +
         e["num_dns_queries"].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") +
@@ -10971,7 +10918,7 @@ function buildAdGuardItem(array) {
   };
   var totalBlocked = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 adguard-stat bg-aqua">
                 <div class="card-body">
                     <div class="inline-block">
@@ -10981,7 +10928,7 @@ function buildAdGuardItem(array) {
       if (length > 1 && !combine) {
         card += `<p class="d-inline text-muted">(${key})</p>`;
       }
-      card += `<h3 data-toggle="tooltip" data-placement="right" title="${key}">${e[
+      card += `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="${key}">${e[
         "num_blocked_filtering"
       ]
         .toString()
@@ -10998,7 +10945,7 @@ function buildAdGuardItem(array) {
   };
   var avgProcessingTime = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 adguard-stat bg-purple">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11009,7 +10956,7 @@ function buildAdGuardItem(array) {
         card += `<p class="d-inline text-muted">(${key})</p>`;
       }
       ms_time = parseFloat(e["avg_processing_time"]) * 1000;
-      card += `<h3 data-toggle="tooltip" data-placement="right" title="${key}">${ms_time.toFixed(
+      card += `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="${key}">${ms_time.toFixed(
         2
       )} ms</h3>`;
     }
@@ -11024,7 +10971,7 @@ function buildAdGuardItem(array) {
   };
   var domainsBlocked = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 adguard-stat bg-red">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11038,7 +10985,7 @@ function buildAdGuardItem(array) {
       for (var key in e["filters"]) {
         total_domains_blocked += parseFloat(e["filters"][key]["rules_count"]);
       }
-      card += `<h3 data-toggle="tooltip" data-placement="right" title="${key}">${total_domains_blocked
+      card += `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="${key}">${total_domains_blocked
         .toString()
         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</h3>`;
     }
@@ -11053,7 +11000,7 @@ function buildAdGuardItem(array) {
   };
   var domainsBlocked = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 adguard-stat bg-red">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11068,7 +11015,7 @@ function buildAdGuardItem(array) {
         total_domains_blocked += parseFloat(e["filters"][key]["rules_count"]);
       }
       total_domains_blocked += Object.keys(e["user_rules"]).length;
-      card += `<h3 data-toggle="tooltip" data-placement="right" title="${key}">${total_domains_blocked
+      card += `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="${key}">${total_domains_blocked
         .toString()
         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</h3>`;
     }
@@ -11083,7 +11030,7 @@ function buildAdGuardItem(array) {
   };
   var percentBlocked = function (data) {
     var card = `
-        <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 adguard-stat bg-yellow">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11098,7 +11045,7 @@ function buildAdGuardItem(array) {
           100 *
           (parseFloat(e["num_blocked_filtering"]) /
             parseFloat(e["num_dns_queries"]));
-        card += `<h3 data-toggle="tooltip" data-placement="right" title="${key}">${percent.toFixed(
+        card += `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="${key}">${percent.toFixed(
           2
         )}%</h3>`;
       }
@@ -11217,7 +11164,7 @@ function buildPiholeItem(array) {
   var combine = array["options"]["combine"];
   var totalQueries = function (data) {
     var card = `
-        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-4 col-lg-6 col-md-6 col-12">
             <div class="card text-white mb-3 pihole-stat bg-green">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11235,7 +11182,7 @@ function buildPiholeItem(array) {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
         card +=
-          `<h3 data-toggle="tooltip" data-placement="right" title="` +
+          `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="` +
           key +
           `">` +
           value +
@@ -11253,7 +11200,7 @@ function buildPiholeItem(array) {
   };
   var totalBlocked = function (data) {
     var card = `
-        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-4 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 pihole-stat bg-aqua">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11271,7 +11218,7 @@ function buildPiholeItem(array) {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
         card +=
-          `<h3 data-toggle="tooltip" data-placement="right" title="` +
+          `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="` +
           key +
           `">` +
           value +
@@ -11289,7 +11236,7 @@ function buildPiholeItem(array) {
   };
   var percentBlocked = function (data) {
     var card = `
-        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+        <div class="col-xl-4 col-lg-6 col-md-6 col-12">
             <div class="card bg-inverse text-white mb-3 pihole-stat bg-yellow">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11305,7 +11252,7 @@ function buildPiholeItem(array) {
           value = e["percent_blocked"].toFixed(1);
         }
         card +=
-          `<h3 data-toggle="tooltip" data-placement="right" title="` +
+          `<h3 data-bs-toggle="tooltip" data-bs-placement="right" title="` +
           key +
           `">` +
           value +
@@ -11323,7 +11270,7 @@ function buildPiholeItem(array) {
   };
   var domainsBlocked = function (data) {
     var card = `
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="col-xl-12 col-lg-12 col-md-12 col-12">
             <div class="card bg-inverse text-white mb-3 pihole-stat bg-red">
                 <div class="card-body">
                     <div class="inline-block">
@@ -11341,7 +11288,7 @@ function buildPiholeItem(array) {
           })
           .join("");
         card +=
-          `<ul class="multi-column" data-toggle="tooltip" title="` +
+          `<ul class="multi-column" data-bs-toggle="tooltip" title="` +
           key +
           `">` +
           value +
@@ -11386,7 +11333,7 @@ function homepagePihole(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePiholeRefresh;
   organizrAPI2("GET", "api/v2/homepage/pihole/stats")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderPihole").innerHTML = "";
@@ -11416,7 +11363,7 @@ function homepageAdGuard(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageAdGuardRefresh;
   organizrAPI2("GET", "api/v2/homepage/adguard/stats")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderAdGuard").innerHTML = "";
@@ -11455,7 +11402,7 @@ function homepageHealthChecks(tags, timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageHealthChecksRefresh;
   organizrAPI2("GET", apiUrl)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
         document.getElementById("homepageOrderhealthchecks").innerHTML = "";
@@ -11486,7 +11433,7 @@ function homepageUnifi(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageUnifiRefresh;
   organizrAPI2("GET", "api/v2/homepage/unifi/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderunifi").innerHTML = "";
@@ -11549,7 +11496,7 @@ function homepageDownloader(type, timeout) {
   }
   let lowerType = type.toLowerCase();
   organizrAPI2("GET", "api/v2/homepage/" + lowerType + "/queue")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (response.data !== null) {
@@ -11577,7 +11524,7 @@ function homepageStream(type, timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageStreamRefresh;
   organizrAPI2("GET", "api/v2/homepage/" + type + "/streams")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById(
@@ -11618,23 +11565,15 @@ function homepageRecent(type, timeout) {
     default:
   }
   organizrAPI2("GET", "api/v2/homepage/" + type + "/recent")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrder" + type + "recent").innerHTML =
           "";
-        $("." + type + "-recent").trigger("destroy.owl.carousel");
         $("#homepageOrder" + type + "recent").html(
           buildRecent(response.data, type)
         );
-        $(".recent-items").owlCarousel({
-          nav: false,
-          autoplay: false,
-          dots: false,
-          margin: 10,
-          autoWidth: true,
-          items: 4,
-        });
+        initCarousel(".recent-items");
       } catch (e) {
         organizrCatchError(e, data);
       }
@@ -11653,7 +11592,7 @@ function homepageRecent(type, timeout) {
 }
 function homepagePlaylist(type, timeout = 30000) {
   organizrAPI2("GET", "api/v2/homepage/" + type + "/playlists")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrder" + type + "playlist").innerHTML =
@@ -11661,14 +11600,7 @@ function homepagePlaylist(type, timeout = 30000) {
         $("#homepageOrder" + type + "playlist").html(
           buildPlaylist(response.data, type)
         );
-        $(".playlist-items").owlCarousel({
-          nav: false,
-          autoplay: false,
-          dots: false,
-          margin: 10,
-          autoWidth: true,
-          items: 4,
-        });
+        initCarousel(".playlist-items");
       } catch (e) {
         organizrCatchError(e, data);
       }
@@ -11742,21 +11674,14 @@ function homepageRequests(service, timeout) {
       return false;
   }
   organizrAPI2("GET", apiUrl)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById(div).innerHTML = "";
         if (response.data.content !== false) {
           $("#" + div).html(buildRequest(service, div, response.data));
         }
-        $(".request-items-" + service).owlCarousel({
-          nav: false,
-          autoplay: false,
-          dots: false,
-          margin: 10,
-          autoWidth: true,
-          items: 4,
-        });
+        initCarousel(".request-items-" + service);
         // Default Filter
         defaultRequestFilter(service);
       } catch (e) {
@@ -11784,7 +11709,7 @@ function testAPIConnection(service, data = "") {
     "60000"
   );
   organizrAPI2("POST", "api/v2/test/" + service, data)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         messageSingle(
@@ -11813,7 +11738,7 @@ function getUnifiSite() {
     "10000"
   );
   organizrAPI2("POST", "api/v2/test/unifi/site", {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
         if (response.data !== false) {
@@ -11821,7 +11746,7 @@ function getUnifiSite() {
           if (response.data.data) {
             $.each(response.data.data, function (i, v) {
               sites +=
-                '<div class="form-group row"><div class="col-sm-12"><h4 class="mouse" onclick="unifiSiteApply(\'' +
+                '<div class="form-group row"><div class="col-md-12"><h4 class="mouse" onclick="unifiSiteApply(\'' +
                 v.name +
                 "')\">" +
                 v.desc +
@@ -11847,10 +11772,10 @@ function getUnifiSite() {
                     </div>
                 </div>
             `;
-          swal({
-            content: createElementFromHTML(div),
-            buttons: false,
-            className: "bg-org",
+          Swal.fire({
+            html: createElementFromHTML(div),
+            showConfirmButton: false,
+            customClass: { popup: "bg-org" },
           });
         } else {
           messageSingle(
@@ -11873,7 +11798,7 @@ function getUnifiSite() {
 function unifiSiteApply(name) {
   $("#homepage-UniFi-form [name=unifiSiteName]").val(name);
   $("#homepage-UniFi-form [name=unifiSiteName]").change();
-  swal.close();
+  Swal.close();
   messageSingle(
     "",
     " Grabbed Site - Please Save Now",
@@ -11882,6 +11807,51 @@ function unifiSiteApply(name) {
     "success",
     "10000"
   );
+}
+// FullCalendar's Intl time format for the moment-style formats stored in Organizr's settings
+function calendarTimeFormat(format) {
+  let formats = {
+    "h(:mm)t": { hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "narrow" },
+    "h:mmt": { hour: "numeric", minute: "2-digit", meridiem: "narrow" },
+    "h(:mm)a": { hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "short" },
+    "h:mma": { hour: "numeric", minute: "2-digit", meridiem: "short" },
+    "h:mm": { hour: "numeric", minute: "2-digit", meridiem: false, hour12: true },
+    "H(:mm)": { hour: "numeric", minute: "2-digit", omitZeroMinute: true, hour12: false },
+    "H:mm": { hour: "2-digit", minute: "2-digit", hour12: false },
+  };
+  return formats[format] || formats["h(:mm)t"];
+}
+// Calendar items from the API use className; FullCalendar 7 expects classNames
+function prepareCalendarEvents(events) {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events.map(function (event) {
+    if (event.className && !event.classNames) {
+      event.classNames = String(event.className).split(" ");
+    }
+    return event;
+  });
+}
+// Show only the events matching the calendar's media type and download filters
+function calendarEventVisible(event) {
+  let type = typeof filter !== "undefined" ? filter : "all";
+  let download = typeof filterDownload !== "undefined" ? filterDownload : "all";
+  let props = event.extendedProps;
+  return (
+    (type === "all" || type === props.imagetypeFilter) &&
+    (download === "all" || download === props.downloadFilter)
+  );
+}
+function applyCalendarFilter() {
+  if (typeof organizrCalendar === "undefined") {
+    return;
+  }
+  organizrCalendar.batchRendering(function () {
+    organizrCalendar.getEvents().forEach(function (event) {
+      event.setProp("display", calendarEventVisible(event) ? "auto" : "none");
+    });
+  });
 }
 function homepageCalendar(timeout) {
   var timeout =
@@ -11892,13 +11862,24 @@ function homepageCalendar(timeout) {
     $(".fc-toolbar").addClass("fc-alternate");
   }
   organizrAPI2("GET", "api/v2/homepage/calendar")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
-        $("#calendar").fullCalendar("removeEvents");
-        $("#calendar").fullCalendar("addEventSource", response.data.events);
-        $("#calendar").fullCalendar("addEventSource", response.data.ical);
-        $("#calendar").fullCalendar("today");
+        if (typeof organizrCalendar !== "undefined") {
+          organizrCalendar.batchRendering(function () {
+            organizrCalendar.getEventSources().forEach(function (source) {
+              source.remove();
+            });
+            organizrCalendar.addEventSource(
+              prepareCalendarEvents(response.data.events)
+            );
+            organizrCalendar.addEventSource(
+              prepareCalendarEvents(response.data.ical)
+            );
+            organizrCalendar.today();
+          });
+          applyCalendarFilter();
+        }
       } catch (e) {
         organizrCatchError(e, data);
       }
@@ -11966,14 +11947,14 @@ function buildTautulliItem(array) {
         section_name = "Music Libraries";
       }
       var cardTitle =
-        '<th><span class="pull-left cardTitle">' +
+        '<th><span class="float-start cardTitle">' +
         section_name.toUpperCase() +
-        '</span><span class="pull-right cardCountType">' +
+        '</span><span class="float-end cardCountType">' +
         extraField.toUpperCase() +
         "</th>";
       var card =
         `
-            <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+            <div class="col-xl-4 col-lg-6 col-md-12 col-12">
                 <div class="card text-white mb-3 homepage-tautulli-card library-card">
                     <div class="card-body h-100 bg-org-alt">
                         <table class="h-100 w-100">
@@ -11998,8 +11979,8 @@ function buildTautulliItem(array) {
         var secondDivCol = "";
         if (type == "movie") {
           rowValue = data[i]["count"];
-          firstDivCol = "col-md-9";
-          secondDivCol = "col-md-2";
+          firstDivCol = "col-lg-9";
+          secondDivCol = "col-lg-2";
         } else {
           rowValue =
             data[i]["count"] +
@@ -12007,18 +11988,18 @@ function buildTautulliItem(array) {
             data[i]["parent_count"] +
             '<span class="tautulliSeparator"> / </span>' +
             data[i]["child_count"];
-          firstDivCol = "col-md-5";
-          secondDivCol = "col-md-6";
+          firstDivCol = "col-lg-5";
+          secondDivCol = "col-lg-6";
         }
         card += `
                                         <div class="cardListItem elip row w-100 p-r-0 m-0 ${rowType}">
-                                            <div class="tautulliRank col-md-1 p-0">${
+                                            <div class="tautulliRank col-lg-1 p-0">${
                                               i + 1
                                             }</div>
-                                            <div class="${firstDivCol} p-0 text-left elip"> ${
+                                            <div class="${firstDivCol} p-0 text-start elip"> ${
           data[i]["section_name"]
         }</div>
-                                            <div class="${secondDivCol} cardListCount text-right m-l-10 p-0">${rowValue}</div>
+                                            <div class="${secondDivCol} cardListCount text-end m-l-10 p-0">${rowValue}</div>
                                         </div>
                                         `;
       }
@@ -12049,7 +12030,7 @@ function buildTautulliItem(array) {
           classes = " bg-org-alt";
         }
         card += `
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
+                <div class="col-xl-3 col-xl-4 col-lg-6 col-md-12 col-12">
                     <div class="card text-white mb-3 homepage-tautulli-card">`;
         if (stat !== "top_users" && stat !== "top_platforms") {
           card +=
@@ -12094,9 +12075,9 @@ function buildTautulliItem(array) {
           extraField = "plays";
         }
         var cardTitle =
-          '<th><span class="pull-left cardTitle">' +
+          '<th><span class="float-start cardTitle">' +
           e["stat_title"].toUpperCase() +
-          '</span><span class="pull-right cardCountType">' +
+          '</span><span class="float-end cardCountType">' +
           extraField.toUpperCase() +
           "</th>";
         card +=
@@ -12134,11 +12115,11 @@ function buildTautulliItem(array) {
           }
           card += `
                                             <div class="cardListItem elip row w-100 p-r-0 m-0 ${rowType}">
-                                                <div class="tautulliRank col-md-1 p-0">${
+                                                <div class="tautulliRank col-lg-1 p-0">${
                                                   i + 1
                                                 }</div>
-                                                <div class="col-md-9 p-0 text-left elip">${rowNameValue}</div>
-                                                <div class="col-md-2 cardListCount text-right m-l-10 p-0">${rowValue}</div>
+                                                <div class="col-lg-9 p-0 text-start elip">${rowNameValue}</div>
+                                                <div class="col-lg-2 cardListCount text-end m-l-10 p-0">${rowValue}</div>
                                             </div>`;
         }
         card += `
@@ -12183,10 +12164,10 @@ function buildTautulli(array) {
   if (array["options"]["title"]) {
     html +=
       `
-            <div class="col-md-12">
-                <h4 class="pull-left homepage-element-title"><span class="mouse" onclick="homepageTautulli()">` +
+            <div class="col-lg-12">
+                <h4 class="float-start homepage-element-title"><span class="mouse" onclick="homepageTautulli()">` +
       activeInfo.settings.homepage.options.titles.tautulli +
-      `</span> : </h4><h4 class="pull-left">&nbsp;</h4>
+      `</span> : </h4><h4 class="float-start">&nbsp;</h4>
                 <hr class="hidden-xs ml-2">
             </div>
             <div class="clearfix"></div>
@@ -12194,7 +12175,7 @@ function buildTautulli(array) {
   }
   html +=
     `
-            <div class="tautulliCards col-sm-12 my-3">
+            <div class="tautulliCards col-md-12 my-3">
                 ` +
     buildTautulliItem(array) +
     `
@@ -12210,7 +12191,7 @@ function homepageTautulli(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageTautulliRefresh;
   organizrAPI2("GET", "api/v2/homepage/tautulli/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrdertautulli").innerHTML = "";
@@ -12322,9 +12303,9 @@ function buildWeatherAndAir(array) {
         if (weatherItemsCount === 0) {
           weatherItems +=
             `
-                    <div class="col-lg-4 col-sm-12 col-xs-12">
+                    <div class="col-xl-4 col-md-12 col-12">
                         <div class="white-box">
-                            <h3 class="box-title"><small class="pull-right m-t-10">Feels Like ` +
+                            <h3 class="box-title"><small class="float-end m-t-10">Feels Like ` +
             Math.round(v.feels_like_temperature.value) +
             `°</small>` +
             moment(v.datetime).format("dddd") +
@@ -12335,28 +12316,28 @@ function buildWeatherAndAir(array) {
                                 <li><i class="wi ` +
             weatherIcon(v.icon_code, v.is_day_time) +
             ` text-info"></i></li>
-                                <li class="text-right"><span class="counter">` +
+                                <li class="text-end"><span class="counter">` +
             Math.round(v.temperature.value) +
             `<small><sup>°` +
             v.temperature.units +
             `</sup></small></span></li>
                             </ul>
                             <ul class="list-inline m-b-0">
-                                <li class="pull-left w-50 hidden-xs"></li>
-                                <li class="pull-right" style="width:75px"><small><i class="wi wi-strong-wind m-r-5 text-primary tooltip-primary" data-toggle="tooltip" data-placement="top" title="" data-original-title="Wind"></i>` +
+                                <li class="float-start w-50 hidden-xs"></li>
+                                <li class="float-end" style="width:75px"><small><i class="wi wi-strong-wind m-r-5 text-primary tooltip-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="Wind"></i>` +
             Math.round(v.wind.speed.value) +
             ` ` +
             v.wind.speed.units +
             `</small></li>
-                                <li class="pull-right" style="width:75px"><small><i class="wi wi-barometer m-r-5 text-primary tooltip-primary" data-toggle="tooltip" data-placement="top" title="" data-original-title="Pressure"></i>` +
+                                <li class="float-end" style="width:75px"><small><i class="wi wi-barometer m-r-5 text-primary tooltip-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="Pressure"></i>` +
             Math.round(v.pressure.value) +
             ` ` +
             v.pressure.units +
             `</small></li>
-                                <li class="pull-right" style="width:45px"><small><i class="wi wi-humidity m-r-5 text-primary tooltip-primary" data-toggle="tooltip" data-placement="top" title="" data-original-title="Humidity"></i>` +
+                                <li class="float-end" style="width:45px"><small><i class="wi wi-humidity m-r-5 text-primary tooltip-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="Humidity"></i>` +
             Math.round(v.relative_humidity) +
             `</small></li>
-                                <li class="pull-right" style="width:45px"><small><i class="wi wi-raindrop m-r-5 text-primary tooltip-primary" data-toggle="tooltip" data-placement="top" title="" data-original-title="Dew Point"></i>` +
+                                <li class="float-end" style="width:45px"><small><i class="wi wi-raindrop m-r-5 text-primary tooltip-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="Dew Point"></i>` +
             Math.round(v.dew_point.value) +
             `°</small></li>
                                 <div class="clearfix"></div>
@@ -12367,7 +12348,7 @@ function buildWeatherAndAir(array) {
         } else if (weatherItemsCount !== 5) {
           weatherItems +=
             `
-                    <div class="col-lg-2 col-sm-3 col-xs-12">
+                    <div class="col-xl-2 col-md-3 col-12">
                         <div class="white-box">
                             <h3 class="box-title">` +
             moment(v.datetime).format("dddd") +
@@ -12376,14 +12357,14 @@ function buildWeatherAndAir(array) {
                                 <li><i class="wi ` +
             weatherIcon(v.icon_code, v.is_day_time) +
             ` text-info"></i></li>
-                                <li class="text-right"><span class="counter">` +
+                                <li class="text-end"><span class="counter">` +
             Math.round(v.temps.high) +
             `<small><sup>°` +
             v.temperature.units +
             `</sup></small></span></li>
                             </ul>
                             <ul class="list-inline m-b-0">
-                                <li class="pull-left w-100"><small class="text-uppercase elip">` +
+                                <li class="float-start w-100"><small class="text-uppercase elip">` +
             v.weather_text +
             `</small></li>
                                 <div class="clearfix"></div>
@@ -12426,7 +12407,7 @@ function buildWeatherAndAir(array) {
         activeClasses["text"] = "text-excellent-gradient";
       }
       airItems += `
-            <div class="col-lg-4 col-sm-12 col-xs-12">
+            <div class="col-xl-4 col-md-12 col-12">
                 <div class="white-box text-white">
                     <div class="aqi-scale-component-wrapper">
                         <div class="aqi__header">
@@ -12545,7 +12526,7 @@ function buildHealthRecommendation(array) {
         `;
   });
   var html = `
-    <div class="col-lg-4 hidden-xs hidden-sm">
+    <div class="col-xl-4 hidden-xs hidden-sm">
         <div class="white-box text-white p-0">
             <!-- Tabstyle start -->
             <section class="">
@@ -12596,7 +12577,7 @@ function buildPollutant(array) {
         `;
   });
   var html = `
-    <div class="col-lg-4 hidden-xs hidden-sm">
+    <div class="col-xl-4 hidden-xs hidden-sm">
         <div class="white-box text-white p-0">
             <!-- Tabstyle start -->
             <section class="">
@@ -12627,7 +12608,7 @@ function homepageWeatherAndAir(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageWeatherAndAirRefresh;
   organizrAPI2("GET", "api/v2/homepage/weather/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (response.data !== null) {
@@ -12683,7 +12664,7 @@ function buildMonitorrItem(array) {
     if (options["compact"]) {
       var card =
         `
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <div class="col-xl-2 col-xl-3 col-lg-4 col-md-6 col-12">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt pt-1 pb-1">
                         <div class="d-flex no-block align-items-center">
@@ -12693,7 +12674,7 @@ function buildMonitorrItem(array) {
                             <div class="ml-1 w-100">
                                 <i class="` +
         imageText +
-        ` font-20 pull-right mt-3 mb-2"></i>
+        ` font-20 float-end mt-3 mb-2"></i>
                                 `;
       if (typeof data.link !== "undefined") {
         card += monitorrLink;
@@ -12716,7 +12697,7 @@ function buildMonitorrItem(array) {
             </div>`;
     } else {
       var card = `
-            <div class="col-lg-2 col-md-3 col-sm-4 col-xs-6">
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt text-center">
                         `;
@@ -12778,10 +12759,10 @@ function buildMonitorr(array) {
     if (array["options"]["titleToggle"]) {
       html +=
         `
-                <div class="col-md-12">
-                    <h4 class="pull-left homepage-element-title"><span lang="en">` +
+                <div class="col-lg-12">
+                    <h4 class="float-start homepage-element-title"><span lang="en">` +
         array["options"]["title"] +
-        `</span> : </h4><h4 class="pull-left">&nbsp;<span class="label label-info m-l-20 checkbox-circle good-monitorr-services mouse" onclick="homepageMonitorr()">` +
+        `</span> : </h4><h4 class="float-start">&nbsp;<span class="badge text-bg-info m-l-20 checkbox-circle good-monitorr-services mouse" onclick="homepageMonitorr()">` +
         services +
         `</span></h4></h4>
                     <hr class="hidden-xs ml-2">
@@ -12809,7 +12790,7 @@ function homepageMonitorr(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePiholeRefresh;
   organizrAPI2("GET", "api/v2/homepage/monitorr/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderMonitorr").innerHTML = "";
@@ -12855,7 +12836,7 @@ function buildUptimeKumaItem(array) {
     if (options["compact"]) {
       var card =
         `
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <div class="col-xl-2 col-xl-3 col-lg-4 col-md-6 col-12">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt pt-1 pb-1">
                         <div class="d-flex no-block align-items-center">
@@ -12865,7 +12846,7 @@ function buildUptimeKumaItem(array) {
                             <div class="ml-1 w-100">
                                 <i class="` +
         imageText +
-        ` font-20 pull-right mt-3 mb-2"></i>
+        ` font-20 float-end mt-3 mb-2"></i>
                                 `;
       if (typeof data.url !== "undefined") {
         card += kumaLink;
@@ -12891,7 +12872,7 @@ function buildUptimeKumaItem(array) {
             </div>`;
     } else {
       var card = `
-            <div class="col-lg-2 col-md-3 col-sm-4 col-xs-6">
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt text-center">
                         `;
@@ -12950,8 +12931,8 @@ function buildUptimeKuma(array) {
     if (array["options"]["titleToggle"]) {
       html +=
         `
-                <div class="col-md-12">
-                    <h4 class="pull-left homepage-element-title"><span lang="en">` +
+                <div class="col-lg-12">
+                    <h4 class="float-start homepage-element-title"><span lang="en">` +
         array["options"]["title"] +
         `</span> : </h4>
                     <hr class="hidden-xs ml-2">
@@ -12979,7 +12960,7 @@ function homepageUptimeKuma(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageUptimeKumaRefresh;
   organizrAPI2("GET", "api/v2/homepage/kuma/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderUptimeKuma").innerHTML = "";
@@ -13023,7 +13004,7 @@ function buildPromPageItem(array) {
     if (options["compact"]) {
       var card =
         `
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <div class="col-xl-2 col-xl-3 col-lg-4 col-md-6 col-12">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt pt-1 pb-1">
                         <div class="d-flex no-block align-items-center">
@@ -13033,7 +13014,7 @@ function buildPromPageItem(array) {
                             <div class="ml-1 w-100">
                                 <i class="` +
         imageText +
-        ` font-20 pull-right mt-3 mb-2"></i>
+        ` font-20 float-end mt-3 mb-2"></i>
                                 `;
       card +=
         `<h3 class="d-flex no-block align-items-center mt-2 mb-2"><img class="lazyload loginTitle">&nbsp;` +
@@ -13053,7 +13034,7 @@ function buildPromPageItem(array) {
             </div>`;
     } else {
       var card = `
-            <div class="col-lg-2 col-md-3 col-sm-4 col-xs-6">
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="card bg-inverse text-white mb-3 monitorr-card">
                     <div class="card-body bg-org-alt text-center">
                         `;
@@ -13109,8 +13090,8 @@ function buildPromPage(array) {
     if (array["options"]["titleToggle"]) {
       html +=
         `
-                <div class="col-md-12">
-                    <h4 class="pull-left homepage-element-title"><span lang="en">` +
+                <div class="col-lg-12">
+                    <h4 class="float-start homepage-element-title"><span lang="en">` +
         array["options"]["title"] +
         `</span> : </h4>
                     <hr class="hidden-xs ml-2">
@@ -13138,7 +13119,7 @@ function homepagePromPage(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePromPageRefresh;
   organizrAPI2("GET", "api/v2/homepage/prompage/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderPromPage").innerHTML = "";
@@ -13169,7 +13150,7 @@ function homepageSpeedtest(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageSpeedtestRefresh;
   organizrAPI2("GET", "api/v2/homepage/speedtest/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderSpeedtest").innerHTML = "";
@@ -13245,8 +13226,8 @@ function buildSpeedtest(array) {
     html +=
       `
         <div class="row">
-            <div class="col-sm-12">
-                <h4 class="pull-left homepage-element-title"><span lang="en">` +
+            <div class="col-md-12">
+                <h4 class="float-start homepage-element-title"><span lang="en">` +
       array["options"]["title"] +
       ` : </h4>
             </div>
@@ -13256,7 +13237,7 @@ function buildSpeedtest(array) {
   html +=
     `
         <div class="row">
-            <div class="my-2 col-lg-4 col-md-4 col-sm-12">
+            <div class="my-2 col-xl-4 col-lg-4 col-md-12">
                 <div class="card speedtest-card shadow-sm mb-3">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between">
@@ -13306,7 +13287,7 @@ function buildSpeedtest(array) {
     `       </div>
                 </div>
             </div>
-            <div class="my-2 col-lg-4 col-md-4 col-sm-12">
+            <div class="my-2 col-xl-4 col-lg-4 col-md-12">
                 <div class="card speedtest-card shadow-sm mb-3">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between">
@@ -13356,7 +13337,7 @@ function buildSpeedtest(array) {
     `       </div>
                 </div>
             </div>
-            <div class="my-2 col-lg-4 col-md-4 col-sm-12">
+            <div class="my-2 col-xl-4 col-lg-4 col-md-12">
                 <div class="card speedtest-card shadow-sm mb-3">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between">
@@ -13930,7 +13911,7 @@ function homepageNetdata(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageNetdataRefresh;
   organizrAPI2("GET", "api/v2/homepage/netdata/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         if (!tryUpdateNetdata(response.data.data)) {
@@ -13988,17 +13969,17 @@ function tryUpdateNetdata(array) {
 function homepageJackett() {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var header = `
-		<div class="col-md-12">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/jackett.png"> &nbsp; <span lang="en">Jackett</span>&nbsp;</h2>
+		<div class="col-lg-12">
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/jackett.png"> &nbsp; <span lang="en">Jackett</span>&nbsp;</h2>
 			<hr class="hidden-xs"><div class="clearfix"></div>
 		</div>
 		<div class="clearfix"></div>
-		<script>$('.jackett-panel').removeClass('panel panel-default');</script>
+		<script>$('.jackett-panel').removeClass('card card-default');</script>
 		`;
   } else {
     var header = `
-		<div class="panel-heading bg-info p-t-10 p-b-10">
-			<span class="pull-left m-t-5 text-white"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/jackett.png" > &nbsp; <span lang="en">Jackett</span></span>
+		<div class="card-header bg-info p-t-10 p-b-10">
+			<span class="float-start m-t-5 text-white"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/jackett.png" > &nbsp; <span lang="en">Jackett</span></span>
 			<div class="clearfix"></div>
 		</div>
 		`;
@@ -14006,12 +13987,12 @@ function homepageJackett() {
   let html =
     `
 	<div id="jackettSearch" class="row">
-		<div class="col-lg-12">
-			<div class="jackett-panel panel panel-default">
+		<div class="col-xl-12">
+			<div class="jackett-panel card card-default">
 				` +
     header +
     `
-				<div class="panel-wrapper p-b-0 collapse in">
+				<div class="card-wrapper p-b-0 collapse show">
 					<div class="white-box">
 	                    <h3 class="box-title m-b-0" lang="en">Search</h3>
 	                    
@@ -14021,9 +14002,7 @@ function homepageJackett() {
 									<button type="button" class="btn waves-effect waves-light btn-primary clearJackett" onclick="clearJackett();"><i class="fa fa-eraser"></i></button>
 								</span>
 	                            <input id="jackett-search-query" class="form-control" placeholder="Search for..." lang="en">
-	                            <span class="input-group-btn">
-									<button type="submit" class="btn waves-effect waves-light btn-info"><i class="fa fa-search"></i></button>
-								</span>
+	                            <button type="submit" class="btn waves-effect waves-light btn-info"><i class="fa fa-search"></i></button>
 	                        </div>
 	
 	                    </form>
@@ -14068,7 +14047,7 @@ function searchJackett() {
   let query = $("#jackett-search-query").val();
   if (query !== "") {
     $(".jackettDataTable").removeClass("hidden");
-    //ajaxloader('#jackettSearch .panel-wrapper', 'in');
+    //ajaxloader('#jackettSearch .card-wrapper', 'in');
     ajaxblocker(".jackett-panel .white-box", "in", "Searching...");
   } else {
     return false;
@@ -14195,7 +14174,7 @@ function jackettDownload(url) {
     url: blackholeLink,
   };
   organizrAPI2("POST", "api/v2/homepage/jackett/download/", post, true)
-    .success(function () {
+    .done(function () {
       message(
         "Torrent downloaded",
         "",
@@ -14212,17 +14191,17 @@ function jackettDownload(url) {
 function homepageProwlarr() {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var header = `
-		<div class="col-md-12">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/prowlarr.png"> &nbsp; <span lang="en">Prowlarr</span>&nbsp;</h2>
+		<div class="col-lg-12">
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/prowlarr.png"> &nbsp; <span lang="en">Prowlarr</span>&nbsp;</h2>
 			<hr class="hidden-xs"><div class="clearfix"></div>
 		</div>
 		<div class="clearfix"></div>
-		<script>$('.prowlarr-panel').removeClass('panel panel-default');</script>
+		<script>$('.prowlarr-panel').removeClass('card card-default');</script>
 		`;
   } else {
     var header = `
-		<div class="panel-heading bg-info p-t-10 p-b-10">
-			<span class="pull-left m-t-5 text-white"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/prowlarr.png" > &nbsp; <span lang="en">Prowlarr</span></span>
+		<div class="card-header bg-info p-t-10 p-b-10">
+			<span class="float-start m-t-5 text-white"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/prowlarr.png" > &nbsp; <span lang="en">Prowlarr</span></span>
 			<div class="clearfix"></div>
 		</div>
 		`;
@@ -14230,12 +14209,12 @@ function homepageProwlarr() {
   let html =
     `
 	<div id="prowlarrSearch" class="row">
-		<div class="col-lg-12">
-			<div class="prowlarr-panel panel panel-default">
+		<div class="col-xl-12">
+			<div class="prowlarr-panel card card-default">
 				` +
     header +
     `
-				<div class="panel-wrapper p-b-0 collapse in">
+				<div class="card-wrapper p-b-0 collapse show">
 					<div class="white-box">
 	                    <h3 class="box-title m-b-0" lang="en">Search</h3>
 	                    
@@ -14245,9 +14224,7 @@ function homepageProwlarr() {
 									<button type="button" class="btn waves-effect waves-light btn-primary clearProwlarr" onclick="clearProwlarr();"><i class="fa fa-eraser"></i></button>
 								</span>
 	                            <input id="prowlarr-search-query" class="form-control" placeholder="Search for..." lang="en">
-	                            <span class="input-group-btn">
-									<button type="submit" class="btn waves-effect waves-light btn-info"><i class="fa fa-search"></i></button>
-								</span>
+	                            <button type="submit" class="btn waves-effect waves-light btn-info"><i class="fa fa-search"></i></button>
 	                        </div>
 	
 	                    </form>
@@ -14291,7 +14268,7 @@ function searchProwlarr() {
   let query = $("#prowlarr-search-query").val();
   if (query !== "") {
     $(".prowlarrDataTable").removeClass("hidden");
-    ajaxloader("#prowlarrSearch .panel-wrapper", "in");
+    ajaxloader("#prowlarrSearch .card-wrapper", "in");
   } else {
     return false;
   }
@@ -14390,7 +14367,7 @@ function prowlarrDownload(url) {
     indexerId: args[1],
   };
   organizrAPI2("POST", "api/v2/homepage/prowlarr/download/", post, true)
-    .success(function () {
+    .done(function () {
       message(
         "Torrent downloaded",
         "",
@@ -14410,7 +14387,7 @@ function homepageOctoprint(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageOctoprintRefresh;
   organizrAPI2("GET", "api/v2/homepage/octoprint/data")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderOctoprint").innerHTML = "";
@@ -14434,7 +14411,7 @@ function homepageOctoprint(timeout) {
   delete timeout;
 }
 function buildOctoprint(array) {
-  var menu = `<ul class="nav customtab nav-tabs pull-right" role="tablist">`;
+  var menu = `<ul class="nav customtab nav-tabs float-end" role="tablist">`;
   var headerAlt = "";
   var header = "";
   var content = "";
@@ -14457,14 +14434,14 @@ function buildOctoprint(array) {
 	</style>
 	`;
   menu += `
-		<li role="presentation" class="active" ><a href="" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true" onclick="homepageOctoprint();"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">REFRESH</span></a></li>
+		<li role="presentation" class="active" ><a href="" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true" onclick="homepageOctoprint();"><span class="visible-xs"><i class="ti-download"></i></span><span class="hidden-xs">REFRESH</span></a></li>
 		`;
   menu += "</ul>";
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     var headerAlt =
       `
-		<div class="col-md-12">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/octoprint.png">  &nbsp; </h2>
+		<div class="col-lg-12">
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/octoprint.png">  &nbsp; </h2>
 			` +
       menu +
       `
@@ -14476,7 +14453,7 @@ function buildOctoprint(array) {
     var header =
       `
 		<div class="white-box bg-info m-b-0 p-b-0 p-t-10 mailbox-widget">
-			<h2 class="text-white m-0 pull-left text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/octoprint.png">  &nbsp; </h2>
+			<h2 class="text-white m-0 float-start text-uppercase"><img class="lazyload homepageImageTitle" data-src="plugins/images/tabs/octoprint.png">  &nbsp; </h2>
 			` +
       menu +
       `
@@ -14508,7 +14485,7 @@ function buildOctoprint(array) {
   }
   if (webcamUrl) {
     var webcamHtml =
-      `<div class="col-lg-4"><img class="octoprint-webcam" src="` +
+      `<div class="col-xl-4"><img class="octoprint-webcam" src="` +
       webcamUrl +
       `"></div>`;
   }
@@ -14519,12 +14496,12 @@ function buildOctoprint(array) {
 		` +
     headerAlt +
     `
-		<div class="col-lg-12">
+		<div class="col-xl-12">
 			` +
     header +
     `
 			<div class="row octoprint-block white-box">
-				<div class="col-lg-8 text-white">
+				<div class="col-xl-8 text-white">
 						<div class="tab-content m-t-0">` +
     content +
     `</div>
@@ -14853,7 +14830,7 @@ function testOIDCConnection(provider) {
     "api/v2/oidc/" + encodeURIComponent(provider) + "/test",
     ""
   )
-    .success(function (data) {
+    .done(function (data) {
       if (data.response.result === "success") {
         messageSingle(
           "OIDC Test",
@@ -14947,24 +14924,19 @@ function youtubeSearch(searchQuery) {
 }
 function youtubeCheck(title, link) {
   youtubeSearch(title)
-    .success(function (data) {
+    .done(function (data) {
       var response = data.response;
       if (response.data) {
         inlineLoad();
         var id = response.data.items["0"].id.videoId;
-        var div =
-          `
-		<div id="player-` +
-          link +
-          `" data-plyr-provider="youtube" data-plyr-embed-id="` +
-          id +
-          `"
-		></div>
+        var div = `
+		<div class="ratio ratio-16x9" id="player-${link}">
+			<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+		</div>
 		<div class="clearfix"></div>
 		`;
         $(".youtube-div").html(div);
         $("." + link).trigger("click");
-        player = new Plyr("#player-" + link);
       }
     })
     .fail(function (xhr) {
@@ -15087,9 +15059,8 @@ function inlineLoad() {
         this.st.focus = "#request-input";
       },
       close: function () {
-        if (typeof player !== "undefined") {
-          player.destroy();
-        }
+        // Removing the embed stops the trailer
+        $(".youtube-div").html("");
       },
     },
     midClick: true, // allow opening popup on middle mouse click. Always set it to true if you don't provide alternative source.
@@ -15107,7 +15078,7 @@ function importUsers(type) {
     "5000"
   );
   organizrAPI2("POST", "api/v2/users/import/" + type, { type: type })
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
         message(
@@ -15179,7 +15150,7 @@ function organizrSpecialSettings(array) {
     var searchBoxResults =
       `
 		<div id="mediaSearch-area" class="white-popup mfp-with-anim mfp-hide">
-			<div class="col-md-8 col-md-offset-2">
+			<div class="col-lg-8 offset-lg-2">
 				<div class="white-box m-b-0 resultBox-outside">
 					<div class="form-group m-b-0">
 
@@ -15282,7 +15253,7 @@ function buildMediaResults(array, source, term) {
       activeInfo.settings.homepage.overseerr.enabled == true
         ? `<button onclick="forceSearch('` +
           term +
-          `')" class="btn btn-block btn-info" lang="en">Would you like to Request it?</button>`
+          `')" class="btn w-100 btn-info" lang="en">Would you like to Request it?</button>`
         : "";
     return none;
   }
@@ -15304,7 +15275,7 @@ function buildMediaResults(array, source, term) {
         <div id="` +
       v.uid +
       `-metadata-div" class="white-popup mfp-with-anim mfp-hide">
-            <div class="col-md-8 col-md-offset-2 ` +
+            <div class="col-lg-8 offset-lg-2 ` +
       v.uid +
       `-metadata-info"></div>
         </div>
@@ -15314,7 +15285,7 @@ function buildMediaResults(array, source, term) {
       v.uid +
       `-metadata-div" data-effect="mfp-zoom-out"></a>
 
-        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 m-t-20 request-result-item request-result-` +
+        <div class="col-xl-3 col-lg-4 col-md-6 col-12 m-t-20 request-result-item request-result-` +
       v.type +
       ` metadata-get mouse" data-source="` +
       source +
@@ -15348,7 +15319,7 @@ function buildMediaResults(array, source, term) {
   ) {
     results +=
       `
-		<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 m-t-20 request-result-item request-result-movie mouse"  onclick="forceSearch('` +
+		<div class="col-xl-3 col-lg-4 col-md-6 col-12 m-t-20 request-result-item request-result-movie mouse"  onclick="forceSearch('` +
       term +
       `')">
 			<div class="white-box m-b-10">
@@ -15414,7 +15385,7 @@ function pingUpdateItem(ping) {
     return false;
   }
   organizrAPI2("GET", "api/v2/ping/" + ping)
-    .success(function (data) {
+    .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
@@ -15566,85 +15537,39 @@ function include(filename) {
   }
   return false;
 }
-function defineNotification() {
-  var bb =
+// Notifications are shown as Bootstrap toasts, or with AlertifyJS when that style is selected.
+// Older settings (izi, toastr, noty) fall back to Bootstrap toasts.
+function notificationBackbone() {
+  let backbone =
     typeof activeInfo !== "undefined"
       ? activeInfo.settings.notifications.backbone
-      : "izi";
-  switch (bb) {
-    case "toastr":
-      include("plugins/bower_components/toast-master/css/jquery.toast.css");
-      include("plugins/bower_components/toast-master/js/jquery.toast.js");
-      window.notificationFunction = "$.toast";
-      break;
-    case "izi":
-      include("plugins/bower_components/iziToast/css/iziToast.min.css");
-      include("plugins/bower_components/iziToast/js/iziToast.min.js");
-      window.notificationFunction = "iziToast";
-      break;
-    case "alertify":
-      include("plugins/bower_components/alertify/alertify.min.css");
-      include("plugins/bower_components/alertify/default.min.css");
-      include("plugins/bower_components/alertify/alertify.min.js");
-      window.notificationFunction = "alertify";
-      break;
-    case "noty":
-      include("plugins/bower_components/noty/noty.min.js");
-      include("plugins/bower_components/noty/mo.min.js");
-      include("plugins/bower_components/noty/noty.css");
-      include("plugins/bower_components/noty/mint.css");
-      window.notificationFunction = "Noty";
-      break;
-    default:
-      return false;
-  }
+      : "bootstrap";
+  return backbone === "alertify" ? "alertify" : "bootstrap";
+}
+function defineNotification() {
   window.notificationsReady = true;
 }
 function messagePositions() {
   return {
-    br: {
-      toastr: "bottom-right",
-      alertify: "bottom-right",
-      izi: "bottomRight",
-      noty: "bottomRight",
-    },
-    bl: {
-      toastr: "bottom-left",
-      alertify: "bottom-left",
-      izi: "bottomLeft",
-      noty: "bottomLeft",
-    },
-    bc: {
-      toastr: "bottom-center",
-      alertify: "bottom-center",
-      izi: "bottomCenter",
-      noty: "bottomCenter",
-    },
-    tr: {
-      toastr: "top-right",
-      alertify: "top-right",
-      izi: "topRight",
-      noty: "topRight",
-    },
-    tl: {
-      toastr: "top-left",
-      alertify: "top-left",
-      izi: "topLeft",
-      noty: "topLeft",
-    },
-    tc: {
-      toastr: "top-center",
-      alertify: "top-center",
-      izi: "topCenter",
-      noty: "topCenter",
-    },
-    c: {
-      toastr: "center",
-      alertify: "bottom-center",
-      izi: "center",
-      noty: "center",
-    },
+    br: { bootstrap: "bottom-0 end-0", alertify: "bottom-right" },
+    bl: { bootstrap: "bottom-0 start-0", alertify: "bottom-left" },
+    bc: { bootstrap: "bottom-0 start-50 translate-middle-x", alertify: "bottom-center" },
+    tr: { bootstrap: "top-0 end-0", alertify: "top-right" },
+    tl: { bootstrap: "top-0 start-0", alertify: "top-left" },
+    tc: { bootstrap: "top-0 start-50 translate-middle-x", alertify: "top-center" },
+    c: { bootstrap: "top-50 start-50 translate-middle", alertify: "bottom-center" },
   };
+}
+function messageIcon(icon) {
+  return (
+    {
+      success: "mdi mdi-check-circle-outline",
+      info: "mdi mdi-information-outline",
+      error: "mdi mdi-close-circle-outline",
+      warning: "mdi mdi-alert-circle-outline",
+      update: "mdi mdi-webpack",
+    }[icon] || "mdi mdi-alert-circle-outline"
+  );
 }
 function message(
   heading,
@@ -15655,238 +15580,57 @@ function message(
   timeout,
   single = false
 ) {
-  let bb =
-    typeof activeInfo !== "undefined"
-      ? activeInfo.settings.notifications.backbone
-      : "izi";
   let activePosition =
     typeof activeInfo !== "undefined"
       ? activeInfo.settings.notifications.position
       : "bc";
   position = typeof position !== "undefined" ? position : activePosition;
   text = typeof text !== "undefined" ? text : "";
-  color = typeof color !== "undefined" ? color : "#FFF";
   icon = typeof icon !== "undefined" ? icon : "info";
-  timeout = typeof timeout !== "undefined" ? timeout : 10000;
-  switch (bb) {
-    case "toastr":
-      var ready = eval(notificationFunction) !== undefined ? true : false;
-      break;
-    case "izi":
-    case "alertify":
-    case "noty":
-      try {
-        var ready =
-          typeof eval(notificationFunction) !== undefined ? true : false;
-      } catch (e) {
-        if (e instanceof SyntaxError) {
-          setTimeout(function () {
-            message(heading, text, position, color, icon, timeout, single);
-          }, 100);
-        }
-      }
-      break;
-    default:
-      var ready = false;
-  }
-  if (notificationsReady && ready) {
-    oldPosition = position;
-    position = messagePositions()[position][bb];
-    if (typeof activeInfo === "undefined") {
-      setTimeout(function () {
-        message(heading, text, oldPosition, color, icon, timeout, single);
-      }, 100);
-      return false;
-    }
+  timeout = typeof timeout !== "undefined" ? parseInt(timeout, 10) : 10000;
+  let backbone = notificationBackbone();
+  let positions = messagePositions();
+  let placement = (positions[position] || positions.bc)[backbone];
+  if (backbone === "alertify") {
     if (single) {
-      switch (bb) {
-        case "toastr":
-          $.toast().reset("all");
-          break;
-        case "izi":
-          iziToast.destroy();
-          break;
-        case "alertify":
-          alertify.dismissAll();
-          break;
-        case "noty":
-          Noty.closeAll();
-          break;
-        default:
-          return false;
-      }
+      alertify.dismissAll();
     }
-    switch (bb) {
-      case "toastr":
-        $.toast({
-          heading: heading,
-          text: text,
-          position: position,
-          loaderBg: color,
-          icon: icon,
-          hideAfter: timeout,
-          stack: 6,
-          showHideTransition: "slide",
-        });
-        break;
-      case "izi":
-        switch (icon) {
-          case "success":
-            var msg = {
-              icon: "mdi mdi-check-circle-outline",
-            };
-            break;
-          case "info":
-            var msg = {
-              icon: "mdi mdi-information-outline",
-            };
-            break;
-          case "error":
-            var msg = {
-              icon: "mdi mdi-close-circle-outline",
-            };
-            break;
-          case "warning":
-            var msg = {
-              icon: "mdi mdi-alert-circle-outline",
-            };
-            break;
-          case "update":
-            var msg = {
-              icon: "mdi mdi-webpack",
-            };
-            break;
-          default:
-            var msg = {
-              icon: "mdi mdi-alert-circle-outline",
-            };
-        }
-        iziToast.show({
-          close: true,
-          progressBar: true,
-          progressBarEasing: "ease",
-          class: icon + "-notify",
-          title: heading,
-          message: text,
-          position: position,
-          timeout: timeout,
-          layout: 2,
-          transitionIn: "flipInX",
-          transitionOut: "flipOutX",
-          balloon: false,
-          icon: msg["icon"],
-        });
-        break;
-      case "alertify":
-        var msgFull = heading !== "" ? heading + "<br/>" + text : text;
-        timeout = timeout / 1000;
-        alertify.set("notifier", "position", position);
-        alertify.notify(msgFull, icon + "-alertify", timeout);
-        break;
-      case "noty":
-        if (typeof mojs == "undefined") {
-          setTimeout(function () {
-            message(heading, text, oldPosition, color, icon, timeout);
-          }, 100);
-          return false;
-        }
-        var msgFull = heading !== "" ? heading + "<br/>" + text : text;
-        new Noty({
-          type: icon + "-noty",
-          layout: position,
-          text: msgFull,
-          progressBar: true,
-          timeout: timeout,
-          animation: {
-            open: function (promise) {
-              var n = this;
-              var Timeline = new mojs.Timeline();
-              var body = new mojs.Html({
-                el: n.barDom,
-                x: { 500: 0, delay: 0, duration: 500, easing: "elastic.out" },
-                isForce3d: true,
-                onComplete: function () {
-                  promise(function (resolve) {
-                    resolve();
-                  });
-                },
-              });
-
-              var parent = new mojs.Shape({
-                parent: n.barDom,
-                width: 200,
-                height: n.barDom.getBoundingClientRect().height,
-                radius: 0,
-                x: { [150]: -150 },
-                duration: 1.2 * 500,
-                isShowStart: true,
-              });
-
-              n.barDom.style["overflow"] = "visible";
-              parent.el.style["overflow"] = "hidden";
-
-              var burst = new mojs.Burst({
-                parent: parent.el,
-                count: 10,
-                top: n.barDom.getBoundingClientRect().height + 75,
-                degree: 90,
-                radius: 75,
-                angle: { [-90]: 40 },
-                children: {
-                  fill: "#EBD761",
-                  delay: "stagger(500, -50)",
-                  radius: "rand(8, 25)",
-                  direction: -1,
-                  isSwirl: true,
-                },
-              });
-
-              var fadeBurst = new mojs.Burst({
-                parent: parent.el,
-                count: 2,
-                degree: 0,
-                angle: 75,
-                radius: { 0: 100 },
-                top: "90%",
-                children: {
-                  fill: "#EBD761",
-                  pathScale: [0.65, 1],
-                  radius: "rand(12, 15)",
-                  direction: [-1, 1],
-                  delay: 0.8 * 500,
-                  isSwirl: true,
-                },
-              });
-
-              Timeline.add(body, burst, fadeBurst, parent);
-              Timeline.play();
-            },
-            close: function (promise) {
-              var n = this;
-              new mojs.Html({
-                el: n.barDom,
-                x: { 0: 500, delay: 10, duration: 500, easing: "cubic.out" },
-                skewY: { 0: 10, delay: 10, duration: 500, easing: "cubic.out" },
-                isForce3d: true,
-                onComplete: function () {
-                  promise(function (resolve) {
-                    resolve();
-                  });
-                },
-              }).play();
-            },
-          },
-        }).show();
-        break;
-      default:
-        organizrConsole("Organizr Function", "Message case not setup");
-    }
-  } else {
-    setTimeout(function () {
-      message(heading, text, position, color, icon, timeout, single);
-    }, 100);
+    let msgFull = heading !== "" ? heading + "<br/>" + text : text;
+    alertify.set("notifier", "position", placement);
+    alertify.notify(msgFull, icon + "-alertify", timeout / 1000);
+    return true;
   }
+  let containerId = "org-toasts-" + (positions[position] ? position : "bc");
+  let container = $("#" + containerId);
+  if (!container.length) {
+    container = $(
+      `<div id="${containerId}" class="toast-container position-fixed p-3 ${placement}"></div>`
+    ).appendTo("body");
+  }
+  if (single) {
+    container.find(".toast").remove();
+  }
+  let toast = $(`
+    <div class="toast org-toast ${icon}-notify" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex">
+          <i class="${messageIcon(icon)} org-toast-icon m-r-10"></i>
+          <div><strong class="org-toast-title"></strong><div class="org-toast-text"></div></div>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="org-toast-progress" style="animation-duration: ${timeout}ms"></div>
+    </div>`);
+  toast.find(".org-toast-title").text(heading);
+  toast.find(".org-toast-text").html(text);
+  toast.appendTo(container);
+  toast.on("hidden.bs.toast", function () {
+    toast.remove();
+  });
+  bootstrap.Toast.getOrCreateInstance(toast[0], { delay: timeout }).show();
+  return true;
 }
+
 function messageSingle(heading, text, position, color, icon, timeout) {
   let activePosition =
     typeof activeInfo !== "undefined"
@@ -15931,7 +15675,7 @@ function lock() {
     return false;
   }
   organizrAPI2("POST", "api/v2/users/lock", "")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let html = data.response;
         location.reload();
@@ -16056,28 +15800,27 @@ function getBlackberryTheme(theme) {
 }
 function showBlackberryThemes(target) {
   getLatestBlackberryThemes()
-    .success(function (data) {
+    .done(function (data) {
       try {
         let themes = "";
         $.each(data, function (i, v) {
           if (v.name !== "Beta") {
-            themes += `<a href="javascript:selectBlackberryTheme('${v.name}','${target}');" class="list-group-item"><span><img class="themeIcon pull-right" src="https://raw.githubusercontent.com/Archmonger/Blackberry-Themes/master/Themes/${v.name}/Icons/preview.png"></span>${v.name}</a>`;
+            themes += `<a href="javascript:selectBlackberryTheme('${v.name}','${target}');" class="list-group-item"><span><img class="themeIcon float-end" src="https://raw.githubusercontent.com/Archmonger/Blackberry-Themes/master/Themes/${v.name}/Icons/preview.png"></span>${v.name}</a>`;
           }
         });
         themes = `<div class="list-group">${themes}</div>`;
         let html = `
-			<div class="panel">
+			<div class="card">
 				<div class="bg-org2">
-					<div class="panel-heading">Choose a Theme</div>
-					<div class="panel-body text-left">${themes}</div>
+					<div class="card-header">Choose a Theme</div>
+					<div class="card-body text-start">${themes}</div>
 				</div>
 			</div>
 			`;
-        swal({
-          content: createElementFromHTML(html),
+        Swal.fire({
+          html: createElementFromHTML(html),
           button: "Close",
-          className: "orgErrorAlert",
-          dangerMode: true,
+          customClass: { popup: "orgErrorAlert" },
         });
       } catch (e) {
         organizrCatchError(e, data);
@@ -16089,40 +15832,30 @@ function showBlackberryThemes(target) {
 }
 function selectBlackberryTheme(theme, target) {
   getBlackberryTheme(theme)
-    .success(function (data) {
+    .done(function (data) {
       try {
         let icons = "";
         $.each(data, function (i, v) {
           v.name = v.name.split(".")[0];
           v.name = cleanClass(v.name);
-          icons += `<a href="#" onclick="javascript:swal.close();$('#${target}').val('${v.download_url}')"><img alt="${v.name}" data-toggle="tooltip" data-placement="top" title="" data-original-title="${v.name}"src="${v.download_url}" ></a>`;
+          icons += `<a href="#" onclick="javascript:Swal.close();$('#${target}').val('${v.download_url}')"><img alt="${v.name}" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="${v.name}"src="${v.download_url}" ></a>`;
         });
         icons = `<div id="gallery-content-center">${icons}</div>`;
         let html = `
-			<div class="panel">
+			<div class="card">
 				<div class="bg-org2">
-					<div class="panel-heading">Choose an Icon</div>
-					<div class="panel-body text-left">${icons}</div>
+					<div class="card-header">Choose an Icon</div>
+					<div class="card-body text-start">${icons}</div>
 				</div>
 			</div>
 			`;
-        swal({
-          content: createElementFromHTML(html),
-          buttons: {
-            back: {
-              text: "Back To Themes",
-              value: "back",
-              dangerMode: true,
-              className: "bg-org-alt",
-            },
-          },
-          className: "orgErrorAlert",
-          dangerMode: true,
-        }).then((value) => {
-          switch (value) {
-            case "back":
-              showBlackberryThemes();
-              break;
+        Swal.fire({
+          html: createElementFromHTML(html),
+          confirmButtonText: "Back To Themes",
+          customClass: { popup: "orgErrorAlert", confirmButton: "bg-org-alt" },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showBlackberryThemes();
           }
         });
       } catch (e) {
@@ -16144,18 +15877,17 @@ function orgErrorAlert(error) {
   }
   if (showError) {
     let div = `
-	    <div class="panel">
+	    <div class="card">
             <div class="bg-org2">
-                <div class="panel-heading">ERROR</div>
-                <div class="panel-body text-left">${error}</div>
+                <div class="card-header">ERROR</div>
+                <div class="card-body text-start">${error}</div>
             </div>
         </div>
 	    `;
-    swal({
-      content: createElementFromHTML(div),
+    Swal.fire({
+      html: createElementFromHTML(div),
       button: "OK",
-      className: "orgErrorAlert",
-      dangerMode: true,
+      customClass: { popup: "orgErrorAlert" },
     });
   }
 }
@@ -16173,9 +15905,8 @@ function toggleDebug() {
 	                        <div class="input-group-btn">
 	                            <button type="button"
 	                                    class="btn waves-effect waves-light btn-info dropdown-toggle"
-	                                    data-toggle="dropdown" aria-expanded="false"><span lang="en">Commands</span>
-	                                <span class="caret"></span></button>
-	                            <ul class="dropdown-menu dropdown-menu-right">
+	                                    data-bs-toggle="dropdown" aria-expanded="false"><span lang="en">Commands</span></button>
+	                            <ul class="dropdown-menu dropdown-menu-end">
 	                                <li><a onclick="orgDebugList('activeInfo.settings.sso');"
 	                                       href="javascript:void(0)"
 	                                       lang="en">SSO</a></li>
@@ -16213,7 +15944,7 @@ function toggleDebug() {
 	                </div>
 	            </div>
 	        </div>
-	        <div id="debugPreInfoBox" class="sl-item text-left">
+	        <div id="debugPreInfoBox" class="sl-item text-start">
 	            <div class="sl-left bg-info"><i class="mdi mdi-package-variant-closed"></i></div>
 	            <div class="sl-right">
 	                <div>
@@ -16222,7 +15953,7 @@ function toggleDebug() {
 	                <div id="debugPreInfo" class="desc"></div>
 	            </div>
 	        </div>
-	        <div id="debugResultsBox" class="sl-item hidden text-left">
+	        <div id="debugResultsBox" class="sl-item hidden text-start">
 	            <div class="sl-left bg-info"><i class="mdi mdi-receipt"></i></div>
 	            <div class="sl-right">
 	                <div><span lang="en">Results For cmd:</span>&nbsp;<span class="cmdName"></span>
@@ -16233,22 +15964,22 @@ function toggleDebug() {
 	    </div>
 	</div>
 	`;
-  swal({
-    content: createElementFromHTML(div),
+  Swal.fire({
+    html: createElementFromHTML(div),
     button: "OK",
-    className: "orgErrorAlert",
+    customClass: { popup: "orgErrorAlert" },
   });
   getDebugPreInfo();
 }
 function toggleCalendarFilter() {
   var div = `
-	<div id="calendar-filter-modal" class="panel panel-inverse">
-        <div class="panel-heading"><span class="text-uppercase" lang="en">Filter Calendar</span></div>
-        <div class="panel-wrapper collapse in" aria-expanded="true">
-            <div class="panel-body">
+	<div id="calendar-filter-modal" class="card card-inverse">
+        <div class="card-header"><span class="text-uppercase" lang="en">Filter Calendar</span></div>
+        <div class="card-wrapper collapse show" aria-expanded="true">
+            <div class="card-body">
 	            <div class="row">
-                    <div class="col-md-12">
-                        <label class="control-label" lang="en">Choose Media Type</label>
+                    <div class="col-lg-12">
+                        <label class="form-label" lang="en">Choose Media Type</label>
                         <select class="form-control form-white" data-placeholder="Choose media type" id="choose-calender-filter">
                             <option value="all" lang="en">All</option>
                             <option value="tv" lang="en">TV</option>
@@ -16256,8 +15987,8 @@ function toggleCalendarFilter() {
                             <option value="music" lang="en">Music</option>
                         </select>
                     </div>
-                    <div class="col-md-12">
-                        <label class="control-label" lang="en">Choose Media Status</label>
+                    <div class="col-lg-12">
+                        <label class="form-label" lang="en">Choose Media Status</label>
                         <select class="form-control form-white" data-placeholder="Choose media status" id="choose-calender-filter-status">
                             <option value="all" lang="en">All</option>
                             <option value="text-success" lang="en">Downloaded</option>
@@ -16271,10 +16002,10 @@ function toggleCalendarFilter() {
         </div>
 	</div>
 	`;
-  swal({
-    content: createElementFromHTML(div),
-    className: "bg-org",
-    button: false,
+  Swal.fire({
+    html: createElementFromHTML(div),
+    customClass: { popup: "bg-org" },
+    showConfirmButton: false,
   });
 }
 function closeOrgError() {
@@ -16304,7 +16035,7 @@ function addCoordinatesToInput(latitude, longitude) {
   $("#homepage-Weather-Air-form [name=homepageWeatherAndAirLongitude]")
     .val(longitude)
     .change();
-  swal.close();
+  Swal.close();
   message(
     "Coordinates Added",
     "Please Save",
@@ -16324,14 +16055,14 @@ function searchCoordinatesAPI(query) {
     "5000"
   );
   organizrAPI2("POST", "api/v2/homepage/weather/coordinates", { query: query })
-    .success(function (data) {
+    .done(function (data) {
       try {
         let html = data.response;
         if (html.data.type == "FeatureCollection") {
           var entries = "";
           $.each(html.data.features, function (i, v) {
             entries +=
-              '<li class="text-left"><i class="fa fa-caret-right text-info"></i><span class="mouse" onclick="addCoordinatesToInput(\'' +
+              '<li class="text-start"><i class="fa fa-caret-right text-info"></i><span class="mouse" onclick="addCoordinatesToInput(\'' +
               v.center[1] +
               "','" +
               v.center[0] +
@@ -16348,7 +16079,7 @@ function searchCoordinatesAPI(query) {
 		                        <div class="card-body">
 		                            <h4 class="card-title" lang="en">Select Place</h4>
 		                            <div class="form-group row">
-		                                <div class="col-sm-12">
+		                                <div class="col-md-12">
 		                                    <ul class="list-icons">
 		                                        ` +
             entries +
@@ -16363,11 +16094,11 @@ function searchCoordinatesAPI(query) {
 		        </div>
 		        `;
           if (entries !== "") {
-            swal.close();
-            swal({
-              content: createElementFromHTML(div),
-              buttons: false,
-              className: "bg-org",
+            Swal.close();
+            Swal.fire({
+              html: createElementFromHTML(div),
+              showConfirmButton: false,
+              customClass: { popup: "bg-org" },
             });
           } else {
             message(
@@ -16407,11 +16138,11 @@ function showLookupCoordinatesModal() {
                     <div class="card-body">
                         <h4 class="card-title" lang="en">Enter City or Address</h4>
                         <div class="form-group row">
-                            <div class="col-sm-12">
+                            <div class="col-md-12">
                                 <input type="text" class="form-control" id="coordinatesModalCityInput" placeholder="Enter City or Address...">
                             </div>
                         </div>
-                        <div class="form-group mb-0 p-r-10 text-right">
+                        <div class="form-group mb-0 p-r-10 text-end">
                             <button type="submit" onclick="searchCoordinatesAPI($('#coordinatesModalCityInput').val())" class="btn btn-info waves-effect waves-light">Submit</button>
                         </div>
                     </div>
@@ -16420,10 +16151,10 @@ function showLookupCoordinatesModal() {
         </div>
     </div>
     `;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "bg-org",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
   });
 }
 function showLDAPLoginTest() {
@@ -16435,16 +16166,16 @@ function showLDAPLoginTest() {
                         <div class="card-body">
                             <h4 class="card-title" lang="en">LDAP User Info</h4>
                             <div class="form-group row">
-                                <div class="col-sm-12">
+                                <div class="col-md-12">
                                     <input type="text" class="form-control" id="ldapUsernameTest" placeholder="Username">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <div class="col-sm-12">
+                                <div class="col-md-12">
                                     <input type="password" class="form-control" id="ldapPasswordTest" placeholder="Password">
                                 </div>
                             </div>
-                            <div class="form-group mb-0 p-r-10 text-right">
+                            <div class="form-group mb-0 p-r-10 text-end">
                                 <button type="submit" onclick="testAPIConnection('ldap/login', {'username':$('#ldapUsernameTest').val(),'password':$('#ldapPasswordTest').val()})" class="btn btn-info waves-effect waves-light">Test Login</button>
                             </div>
                         </div>
@@ -16453,10 +16184,10 @@ function showLDAPLoginTest() {
             </div>
         </div>
     `;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "bg-org",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
   });
 }
 
@@ -16465,41 +16196,41 @@ function showPlexTokenForm(selector = null) {
     `
 		<form id="get-plex-token-form">
 		    <h1 lang="en">Get Plex Token</h1>
-		    <div class="panel plexTokenHeader">
-		        <div class="panel-heading plexTokenMessage" lang="en">Enter Plex Details</div>
+		    <div class="card plexTokenHeader">
+		        <div class="card-header plexTokenMessage" lang="en">Enter Plex Details</div>
 		    </div>
 		    <fieldset style="border:0;">
 		        <div class="form-group">
-		            <label class="control-label" for="plex-token-form-username" lang="en">Plex Username</label>
+		            <label class="form-label" for="plex-token-form-username" lang="en">Plex Username</label>
 		            <input type="text" class="form-control" id="plex-token-form-username" name="username" required="" autofocus>
 		        </div>
 		        <div class="form-group">
-		            <label class="control-label" for="plex-token-form-password" lang="en">Plex Password</label>
+		            <label class="form-label" for="plex-token-form-password" lang="en">Plex Password</label>
 		            <input type="password" class="form-control" id="plex-token-form-password" name="password"  required="">
 		        </div>
 		        <div class="form-group">
-		            <label class="control-label" for="plex-token-form-tfa" lang="en">Plex 2FA (if applicable)</label>
+		            <label class="form-label" for="plex-token-form-tfa" lang="en">Plex 2FA (if applicable)</label>
 		            <input type="text" class="form-control" id="plex-token-form-tfa" name="tfa" >
 		        </div>
 		    </fieldset>
-		    <button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none" onclick="getPlexToken('` +
+		    <button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none" onclick="getPlexToken('` +
     selector +
     `')" type="button"><span class="btn-label"><i class="fa fa-ticket"></i></span><span lang="en">Grab It</span></button>
 		    <div class="clearfix"></div>
 		</form>
 	`;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "bg-org",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
   });
 }
 function getPlexToken(selector) {
   $(".plexTokenMessage").text("Grabbing Token");
   $(".plexTokenHeader")
-    .addClass("panel-info")
-    .removeClass("panel-warning")
-    .removeClass("panel-danger");
+    .addClass("card-info")
+    .removeClass("card-warning")
+    .removeClass("card-danger");
   var plex_username = $("#get-plex-token-form [name=username]").val().trim();
   var plex_password = $("#get-plex-token-form [name=password]").val().trim();
   var plex_tfa = $("#get-plex-token-form [name=tfa]").val().trim();
@@ -16520,14 +16251,14 @@ function getPlexToken(selector) {
       cache: false,
       async: true,
       complete: function (xhr, status) {
-        var result = $.parseJSON(xhr.responseText);
+        var result = JSON.parse(xhr.responseText);
         if (xhr.status === 201) {
           $(".plexTokenMessage").text(xhr.statusText);
           $(".plexTokenHeader")
-            .addClass("panel-success")
-            .removeClass("panel-info")
-            .removeClass("panel-warning")
-            .removeClass("panel-danger");
+            .addClass("card-success")
+            .removeClass("card-info")
+            .removeClass("card-warning")
+            .removeClass("card-danger");
           $(selector).val(result.user.authToken);
           $(selector).change();
           messageSingle(
@@ -16541,50 +16272,50 @@ function getPlexToken(selector) {
         } else {
           $(".plexTokenMessage").text(xhr.statusText);
           $(".plexTokenHeader")
-            .addClass("panel-danger")
-            .removeClass("panel-info")
-            .removeClass("panel-warning");
+            .addClass("card-danger")
+            .removeClass("card-info")
+            .removeClass("card-warning");
         }
       },
     });
   } else {
     $(".plexTokenMessage").text("Enter Username and Password");
     $(".plexTokenHeader")
-      .addClass("panel-warning")
-      .removeClass("panel-info")
-      .removeClass("panel-danger");
+      .addClass("card-warning")
+      .removeClass("card-info")
+      .removeClass("card-danger");
   }
 }
 function showPlexMachineForm(selector = null) {
   var div = `
 		<form id="get-plex-machine-form">
 		    <h1 lang="en">Get Plex Machine</h1>
-		    <div class="panel plexMachineHeader">
-		        <div class="panel-heading plexMachineMessage" lang="en">Contacting server...</div>
+		    <div class="card plexMachineHeader">
+		        <div class="card-header plexMachineMessage" lang="en">Contacting server...</div>
 		    </div>
 		    <fieldset style="border:0;">
 		        <div class="form-group">
-		            <label class="control-label" for="plex-machine-form-machine" lang="en">Plex Machine</label>
+		            <label class="form-label" for="plex-machine-form-machine" lang="en">Plex Machine</label>
 		            <div class="plexMachineListing"></div>
 		        </div>
 		    </fieldset>
 		    <div class="clearfix"></div>
 		</form>
 	`;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "bg-org",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "bg-org" },
   }).then(
     organizrAPI2("GET", "api/v2/plex/servers?owned")
-      .success(function (data) {
+      .done(function (data) {
         try {
           let response = data.response;
           $(".plexMachineMessage").text("Choose Plex Server");
           $(".plexMachineHeader")
-            .addClass("panel-success")
-            .removeClass("panel-info")
-            .removeClass("panel-warning");
+            .addClass("card-success")
+            .removeClass("card-info")
+            .removeClass("card-warning");
           let machines = '<option lang="en">Choose Plex Machine</option>';
           $.each(response.data, function (i, v) {
             let name = v.name;
@@ -16607,9 +16338,9 @@ function showPlexMachineForm(selector = null) {
         OrganizrApiError(xhr, "API Error");
         $(".plexMachineMessage").text("Plex Token Needed First");
         $(".plexMachineHeader")
-          .addClass("panel-warning")
-          .removeClass("panel-info")
-          .removeClass("panel-danger");
+          .addClass("card-warning")
+          .removeClass("card-info")
+          .removeClass("card-danger");
       })
   );
 }
@@ -16648,7 +16379,7 @@ function oAuthLoginNeededCheck(type = "OAuth") {
     "10000"
   );
   organizrAPI2("POST", "api/v2/login", data)
-    .success(function (data) {
+    .done(function (data) {
       local("set", "message", "Welcome|Login Successful|success");
       local("r", "loggingIn");
       location.reload();
@@ -16744,13 +16475,13 @@ function logContext(row) {
   let buttons = "";
   buttons +=
     Object.keys(row).length > 0
-      ? '<button data-toggle="tooltip" title="" data-original-title="View Details" class="btn btn-xs btn-primary waves-effect waves-light log-details m-r-5" data-trace="' +
+      ? '<button data-bs-toggle="tooltip" title="" data-bs-title="View Details" class="btn btn-sm btn-primary waves-effect waves-light log-details m-r-5" data-trace="' +
         row.trace_id +
         '"><i class="mdi mdi-file-find"></i></button>'
       : "";
   buttons +=
     Object.keys(row).length > 0
-      ? '<button data-toggle="tooltip" title="" data-original-title="Copy Log" class="btn btn-xs btn-info waves-effect waves-light log-details m-r-5" data-trace="' +
+      ? '<button data-bs-toggle="tooltip" title="" data-bs-title="Copy Log" class="btn btn-sm btn-info waves-effect waves-light log-details m-r-5" data-trace="' +
         row.trace_id +
         '" data-clipboard="true"><i class="mdi mdi-content-copy"></i></button>'
       : "";
@@ -16771,7 +16502,7 @@ function formatLogDetails(details) {
   let items2 = "";
   items2 +=
     Object.keys(details.context).length > 0
-      ? `<div class="sl-item"><div class="sl-left bg-inverse"> <i class="mdi mdi-json"></i></div><div class="sl-right"><div class="p-t-10 desc" lang="en">Context</div></div><pre class="m-5 fc-scroller">${JSON.stringify(
+      ? `<div class="sl-item"><div class="sl-left bg-inverse"> <i class="mdi mdi-code-json"></i></div><div class="sl-right"><div class="p-t-10 desc" lang="en">Context</div></div><pre class="m-5 fc-scroller">${JSON.stringify(
           details.context,
           null,
           5
@@ -16786,14 +16517,14 @@ function formatLogDetails(details) {
         )}</pre></div>`
       : "";
   var div = `
-		<div class="col-lg-12">
-			<div class="panel panel-default text-left">
-				<div class="panel-heading"><i class="mdi mdi-file-find fa-lg fa-2x"></i> <span lang="en">Log Details</span> <span class="pull-right">${logIcon(
+		<div class="col-xl-12">
+			<div class="card card-default text-start">
+				<div class="card-header"><i class="mdi mdi-file-find fa-lg fa-2x"></i> <span lang="en">Log Details</span> <span class="float-end">${logIcon(
           details.log_level,
           true
         )}</span></div>
-				<div class="panel-wrapper collapse in">
-					<div class="panel-body bg-org">
+				<div class="card-wrapper collapse show">
+					<div class="card-body bg-org">
 						<h3>${details.message}</h3>
 						<div class="white-box">
 							<ul class="feeds">
@@ -16807,10 +16538,10 @@ function formatLogDetails(details) {
 				</div>
 			</div>
 		</div>`;
-  swal({
-    content: createElementFromHTML(div),
-    buttons: false,
-    className: "orgAlertTransparent",
+  Swal.fire({
+    html: createElementFromHTML(div),
+    showConfirmButton: false,
+    customClass: { popup: "orgAlertTransparent" },
   });
   pageLoad();
 }
@@ -17113,7 +16844,7 @@ function shortcut(selectors = "") {
 }
 function getJournalMode() {
   organizrAPI2("GET", "api/v2/database/journal")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         $(".journal-mode").html(response.data.journal_mode);
@@ -17135,7 +16866,7 @@ function setJournalMode(mode) {
     "1500"
   );
   organizrAPI2("PUT", "api/v2/database/journal/" + mode, {})
-    .success(function (data) {
+    .done(function (data) {
       try {
         getJournalMode();
         let response = data.response;
@@ -17228,7 +16959,7 @@ function launch() {
     "error"
   );
   organizrConnect("api/v2/launch")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let json = data.response;
         if (json.data.user == false) {
@@ -17241,12 +16972,12 @@ function launch() {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           offest: new Date().getTimezoneOffset(),
           language: language(moment.locale(navigator.languages[0])),
-          browserVersion: bowser.name,
-          browserName: bowser.version,
-          mobile: bowser.mobile,
-          tablet: bowser.tablet,
-          osName: bowser.osname,
-          osVersion: bowser.osversion,
+          browserVersion: browserInfo.version,
+          browserName: browserInfo.name,
+          mobile: browserInfo.mobile,
+          tablet: browserInfo.tablet,
+          osName: browserInfo.osname,
+          osVersion: browserInfo.osversion,
           serverOS: json.data.status.os,
           phpVersion: json.data.status.php,
           token: json.data.user.token,
@@ -17370,7 +17101,7 @@ function homepageBookmarks(timeout) {
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageBookmarksRefresh;
   organizrAPI2("GET", "api/v2/plugins/bookmark/page")
-    .success(function (data) {
+    .done(function (data) {
       try {
         let response = data.response;
         document.getElementById("homepageOrderBookmarks").innerHTML = "";

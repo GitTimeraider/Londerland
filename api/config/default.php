@@ -486,7 +486,7 @@ return [
 	'pingOnlineSound' => 'plugins/sounds/default/awareness.mp3',
 	'pingMs' => false,
 	'pingAuthMs' => '1',
-	'notificationBackbone' => 'izi',
+	'notificationBackbone' => 'bootstrap',
 	'notificationPosition' => 'br',
 	'lockoutSystem' => false,
 	'lockoutTimeout' => '60',

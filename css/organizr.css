@@ -1,59 +1,59 @@
-.panel .notify {
+/* Organizr palette for Bootstrap 5 components (they read these variables instead of fixed colours) */
+:root,
+[data-bs-theme=dark] {
+  --bs-primary: #707cd2;
+  --bs-primary-rgb: 112, 124, 210;
+  --bs-info: #2cabe3;
+  --bs-info-rgb: 44, 171, 227;
+  --bs-success: #53e69d;
+  --bs-success-rgb: 83, 230, 157;
+  --bs-warning: #ffc36d;
+  --bs-warning-rgb: 255, 195, 109;
+  --bs-danger: #ff7676;
+  --bs-danger-rgb: 255, 118, 118;
+  --bs-dark: #4c5667;
+  --bs-dark-rgb: 76, 86, 103;
+  --bs-body-font-family: Rubik, sans-serif;
+  --bs-body-font-weight: 300;
+  --bs-body-font-size: 14px;
+  --bs-body-line-height: 1.42857;
+  --bs-body-color: #96a2b4;
+  --bs-body-color-rgb: 150, 162, 180;
+  --bs-body-bg: #2f323e;
+  --bs-body-bg-rgb: 47, 50, 62;
+  --bs-link-color: #01c0c8;
+  --bs-link-color-rgb: 1, 192, 200;
+  --bs-link-hover-color: #01c0c8;
+  --bs-link-hover-color-rgb: 1, 192, 200;
+  --bs-border-color: rgba(120, 130, 140, 0.13);
+}
+/* the theme uses white text on every coloured button */
+.btn-primary,
+.btn-info,
+.btn-success,
+.btn-warning,
+.btn-danger,
+.btn-dark,
+.btn-secondary {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-color: #fff;
+  --bs-btn-disabled-color: #fff;
+}
+.card .notify {
   margin-top: 18px !important;
   margin-left: -11px;
-}
-.editHomepageItemDiv-on {
-  z-index: 9999 !important;
-  opacity: 1 !important;
-  background: #000000eb !important;
-}
-.editHomepageItemDiv-off {
-  z-index: -9999 !important;
-  opacity: 0 !important;
-  display: none;
-  animation-duration: 0.6s;
 }
 #editHomepageItem {
   margin-top: 40px;
 }
-/*JSGrid*/
-.jsgrid-grid-body {
-  overflow-x: auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.jsgrid-table {
-  width: 100% !important;
-  table-layout: fixed;
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-.jsgrid-grid-header {
-  overflow-y: auto;
-}
-.jsgrid-grid-header {
-  background: transparent;
-}
-
-.jsgrid-grid-body td {
-  border: transparent;
-}
-
-.jsgrid-pager a {
-  color: white;
-}
 .item-pager-panel {
   margin-top: -26px;
 }
-span.jsgrid-pager-page.jsgrid-pager-current-page.btn.btn-primary {
-  padding: 6px 11px;
-  margin-left: 9px;
-  margin-right: 9px !important;
-}
-.bg-org .swal-title {
+.bg-org .swal2-title {
   color: white;
 }
-.swal-content {
+.swal2-html-container {
   padding: 0;
   margin: 0 !important;
 }
@@ -678,7 +678,7 @@ img.lazyload.tabImages {
   background-repeat: no-repeat;
 }
 
-h2.m-b-0.font-medium.pull-right {
+h2.m-b-0.font-medium.float-end {
   -webkit-filter: drop-shadow(1px 1px 0px #1f1f1f);
   filter: drop-shadow(1px 1px 0px #1f1f1f);
   color: white;
@@ -723,7 +723,7 @@ table.dataTable thead tr th:last-child {
 table.dataTable thead tr th:first-child {
   border-radius: 10px 0 0 0;
 }
-.open > .dropdown-menu.pull-right.log-filter-dropdown {
+.open > .dropdown-menu.float-end.log-filter-dropdown {
   top: 160px;
   right: 75px;
 }
@@ -787,7 +787,7 @@ img.imageSourceBottom {
   border-color: #53e69d;
 }
 
-.nav-tabs.pull-right > li > a:hover {
+.nav-tabs.float-end > li > a:hover {
   background: transparent;
   border-radius: 0px;
 }
@@ -1009,9 +1009,9 @@ img.imageSourceBottom {
   filter: grayscale(100%);
 }
 
-td span.label.label-info,
-td span.label.label-success,
-td span.label.label-warning {
+td span.label.text-bg-info,
+td span.label.text-bg-success,
+td span.label.text-bg-warning {
   min-width: 80px !important;
   display: inline-block !important;
 }
@@ -1575,7 +1575,7 @@ input.has-success {
   max-height: 225px;
   width: 100%;
 }
-.recent-items .owl-item {
+.recent-items .swiper-slide {
   height: 225px;
 }
 .tooltip-content5 {
@@ -2102,16 +2102,16 @@ span.fc-title {
 }
 /* Fix for bootstrap screen width bug */
 @media (min-width: 992px) and (max-width: 1200px) {
-  .col-lg-12 {
+  .col-xl-12 {
     float: left;
     width: 100%;
   }
-  .col-md-12 {
+  .col-lg-12 {
     float: none;
   }
 }
-.col-lg-12,
-.col-md-12 {
+.col-xl-12,
+.col-lg-12 {
   float: left;
   width: 100%;
 }
@@ -4555,11 +4555,11 @@ html {
   white-space: nowrap;
 }
 
-.text-left {
+.text-start {
   text-align: left !important;
 }
 
-.text-right {
+.text-end {
   text-align: right !important;
 }
 
@@ -6137,4 +6137,502 @@ td.mouse-grab.sort-tabs-handle {
   background: url("../../plugins/images/organizr/logo-purple-square.png")
     no-repeat center center;
   background-size: auto 100%;
+}
+
+/* ===== Bootstrap 3 helpers still used by Organizr markup (same breakpoints as before) ===== */
+.hidden {
+  display: none !important;
+}
+@media (max-width: 767.98px) {
+  .hidden-xs {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .hidden-sm {
+    display: none !important;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .hidden-md {
+    display: none !important;
+  }
+}
+@media (min-width: 1200px) {
+  .hidden-lg {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) {
+  .visible-xs {
+    display: none !important;
+  }
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.input-group > .input-group-btn {
+  display: flex;
+}
+.dropdown-menu > li > a {
+  display: block;
+  padding: 0.25rem 1rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* ===== Loading overlay (helpers.js $.fn.block) ===== */
+.org-block-relative {
+  position: relative;
+}
+.org-block-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: wait;
+}
+.org-block-overlay.org-block-page {
+  position: fixed;
+  z-index: 10000;
+}
+.org-block-message {
+  color: #fff;
+  text-align: center;
+}
+
+/* ===== Switches (helpers.js initSwitches) ===== */
+.org-switch {
+  display: inline-block;
+  min-height: 0;
+  margin: 0;
+  padding-left: 0;
+}
+.org-switch .form-check-input {
+  float: none;
+  margin-left: 0;
+  width: 50px;
+  height: 30px;
+  margin-top: 0;
+  cursor: pointer;
+  background-color: var(--org-switch-off, #dfdfdf);
+  border-color: var(--org-switch-off, #dfdfdf);
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+.org-switch .form-check-input:checked {
+  background-color: var(--org-switch-on, #2cabe3);
+  border-color: var(--org-switch-on, #2cabe3);
+}
+.org-switch.org-switch-sm .form-check-input {
+  width: 34px;
+  height: 20px;
+}
+
+/* ===== Toast notifications (functions.js message) ===== */
+.toast-container {
+  z-index: 10050;
+}
+.org-toast {
+  position: relative;
+  overflow: hidden;
+  width: 350px;
+  max-width: calc(100vw - 2rem);
+  color: #fff;
+  background: #1f1f1f;
+  border: 0;
+  pointer-events: auto;
+}
+.org-toast .toast-body {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.org-toast-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.org-toast-title {
+  font-weight: 500;
+}
+.org-toast-text {
+  word-break: break-word;
+}
+.org-toast .btn-close {
+  margin-left: auto;
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+.org-toast.success-notify {
+  background: #53e69d;
+}
+.org-toast.info-notify {
+  background: #2cabe3;
+}
+.org-toast.warning-notify {
+  background: #ffc36d;
+}
+.org-toast.error-notify {
+  background: #ff7676;
+}
+.org-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  transform-origin: left;
+  animation-name: org-toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes org-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ===== Colour pickers (helpers.js initColorPickers) ===== */
+.org-color-swatch {
+  display: none;
+}
+.input-group .pcr-app,
+.form-group .pcr-app.visible {
+  position: static;
+  margin-top: 0.5rem;
+}
+
+/* ===== Image gallery (replaces the Isotope masonry layout) ===== */
+#gallery-content-center {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+#gallery-content-center img {
+  width: 65px;
+  height: auto;
+}
+
+/* ===== File tree (functions.js buildFileTree) ===== */
+.file-tree {
+  padding-left: 0;
+  list-style: none;
+}
+.file-tree ul {
+  padding-left: 1.25rem;
+  list-style: none;
+}
+.file-tree summary {
+  cursor: pointer;
+}
+.file-tree li {
+  padding: 2px 0;
+}
+
+/* ===== Users table (Tabulator) ===== */
+#manage-users-table.tabulator,
+#manage-users-table .tabulator-header,
+#manage-users-table .tabulator-header .tabulator-col,
+#manage-users-table .tabulator-tableholder,
+#manage-users-table .tabulator-row,
+#manage-users-table .tabulator-cell,
+#manage-users-table .tabulator-tableholder .tabulator-table,
+#manage-users-table .tabulator-footer {
+  color: inherit;
+  background-color: transparent;
+  border-color: rgba(120, 130, 140, 0.13);
+}
+#manage-users-table .tabulator-row:hover,
+#manage-users-table .tabulator-row.tabulator-row-even {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+#manage-users-table .tabulator-page {
+  color: inherit;
+  background: transparent;
+  border-color: rgba(120, 130, 140, 0.13);
+}
+#manage-users-table .tabulator-page.active {
+  color: #fff;
+  background: #2cabe3;
+}
+#manage-users-table .tabulator-cell input,
+#manage-users-table .tabulator-cell select {
+  color: #fff;
+  background: #2f323e;
+}
+
+/* ===== Calendar (FullCalendar 7, classic theme) ===== */
+#calendar {
+  --fc-classic-button: #2f323e;
+  --fc-classic-button-border: rgba(120, 130, 140, 0.13);
+  --fc-classic-button-strong: #2cabe3;
+  --fc-classic-button-strong-border: #2cabe3;
+  --fc-classic-button-foreground: #fff;
+  --fc-classic-primary: #2cabe3;
+  --fc-classic-highlight: rgba(44, 171, 227, 0.2);
+  --fc-classic-today: rgba(44, 171, 227, 0.15);
+  --fc-classic-background: transparent;
+  --fc-classic-faint: rgba(255, 255, 255, 0.03);
+  --fc-classic-muted: rgba(255, 255, 255, 0.06);
+  --fc-classic-strong: rgba(255, 255, 255, 0.12);
+  --fc-classic-foreground: #96a2b4;
+  --fc-classic-faint-foreground: #5f6b7d;
+  --fc-classic-muted-foreground: #7b8698;
+  --fc-classic-border: rgba(120, 130, 140, 0.2);
+}
+
+/* ===== Animations formerly from animate.css ===== */
+.animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+.animated.loop-animation {
+  animation-iteration-count: infinite;
+}
+.rubberBand {
+  animation-name: rubberBand;
+}
+.tada {
+  animation-name: tada;
+}
+.swing {
+  transform-origin: top center;
+  animation-name: swing;
+}
+.flash {
+  animation-name: flash;
+}
+.pulse {
+  animation-name: pulse;
+}
+.wobble {
+  animation-name: wobble;
+}
+.heartBeat {
+  animation-name: heartBeat;
+  animation-duration: 1.3s;
+  animation-timing-function: ease-in-out;
+}
+.flipInY {
+  backface-visibility: visible;
+  animation-name: flipInY;
+}
+.bounceInDown {
+  animation-name: bounceInDown;
+}
+.slideInRight {
+  animation-name: slideInRight;
+}
+.slideInDown {
+  animation-name: slideInDown;
+}
+.fadeIn {
+  animation-name: fadeIn;
+}
+.fadeOut {
+  animation-name: fadeOut;
+}
+@keyframes rubberBand {
+  from, to { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.25, 0.75, 1); }
+  40% { transform: scale3d(0.75, 1.25, 1); }
+  50% { transform: scale3d(1.15, 0.85, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.05, 0.95, 1); }
+}
+@keyframes tada {
+  from, to { transform: scale3d(1, 1, 1); }
+  10%, 20% { transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg); }
+  30%, 50%, 70%, 90% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg); }
+  40%, 60%, 80% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg); }
+}
+@keyframes swing {
+  20% { transform: rotate3d(0, 0, 1, 15deg); }
+  40% { transform: rotate3d(0, 0, 1, -10deg); }
+  60% { transform: rotate3d(0, 0, 1, 5deg); }
+  80% { transform: rotate3d(0, 0, 1, -5deg); }
+  to { transform: rotate3d(0, 0, 1, 0deg); }
+}
+@keyframes flash {
+  from, 50%, to { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+@keyframes pulse {
+  from, to { transform: scale3d(1, 1, 1); }
+  50% { transform: scale3d(1.05, 1.05, 1.05); }
+}
+@keyframes wobble {
+  from, to { transform: translate3d(0, 0, 0); }
+  15% { transform: translate3d(-25%, 0, 0) rotate3d(0, 0, 1, -5deg); }
+  30% { transform: translate3d(20%, 0, 0) rotate3d(0, 0, 1, 3deg); }
+  45% { transform: translate3d(-15%, 0, 0) rotate3d(0, 0, 1, -3deg); }
+  60% { transform: translate3d(10%, 0, 0) rotate3d(0, 0, 1, 2deg); }
+  75% { transform: translate3d(-5%, 0, 0) rotate3d(0, 0, 1, -1deg); }
+}
+@keyframes heartBeat {
+  0%, 28%, 70% { transform: scale(1); }
+  14%, 42% { transform: scale(1.3); }
+}
+@keyframes flipInY {
+  from { transform: perspective(400px) rotate3d(0, 1, 0, 90deg); opacity: 0; animation-timing-function: ease-in; }
+  40% { transform: perspective(400px) rotate3d(0, 1, 0, -20deg); animation-timing-function: ease-in; }
+  60% { transform: perspective(400px) rotate3d(0, 1, 0, 10deg); opacity: 1; }
+  80% { transform: perspective(400px) rotate3d(0, 1, 0, -5deg); }
+  to { transform: perspective(400px); }
+}
+@keyframes bounceInDown {
+  from, 60%, 75%, 90%, to { animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
+  0% { opacity: 0; transform: translate3d(0, -3000px, 0); }
+  60% { opacity: 1; transform: translate3d(0, 25px, 0); }
+  75% { transform: translate3d(0, -10px, 0); }
+  90% { transform: translate3d(0, 5px, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideInRight {
+  from { transform: translate3d(100%, 0, 0); visibility: visible; }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideInDown {
+  from { transform: translate3d(0, -100%, 0); visibility: visible; }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ===== Hover effects formerly from hover.css ===== */
+.hvr-grow {
+  transform: perspective(1px) translateZ(0);
+  transition: transform 0.3s;
+}
+.hvr-grow:hover,
+.hvr-grow:focus,
+.hvr-grow:active {
+  transform: scale(1.1);
+}
+.hvr-wobble-bottom {
+  transform: perspective(1px) translateZ(0);
+  transform-origin: 100% 0;
+}
+.hvr-wobble-bottom:hover,
+.hvr-wobble-bottom:focus,
+.hvr-wobble-bottom:active {
+  animation: hvr-wobble-bottom 1s ease-in-out 1;
+}
+@keyframes hvr-wobble-bottom {
+  16.65% { transform: skew(-12deg); }
+  33.3% { transform: skew(10deg); }
+  49.95% { transform: skew(-6deg); }
+  66.6% { transform: skew(4deg); }
+  83.25% { transform: skew(-2deg); }
+  100% { transform: skew(0); }
+}
+
+/* ===== Wizard (api/pages/wizard.php) ===== */
+.wizard-steps {
+  padding: 0;
+}
+.wizard-pane {
+  display: none;
+}
+.wizard-pane.active {
+  display: block;
+}
+
+/* ===== Top bar and sidebar keep their float layout (Bootstrap 5 turns .navbar and .nav into flex rows) ===== */
+.navbar.navbar-static-top {
+  display: block;
+  --bs-navbar-padding-x: 0;
+  --bs-navbar-padding-y: 0;
+}
+.navbar-header::after,
+.navbar.navbar-static-top::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.navbar-top-links.nav,
+#side-menu.nav {
+  display: block;
+}
+.navbar-top-links.navbar-left {
+  float: left;
+}
+.navbar-top-links > li {
+  position: relative;
+}
+.navbar-top-links > li > a {
+  display: block;
+}
+.dropdown-toggle:not([data-bs-toggle])::after {
+  display: none;
+}
+
+/* ===== Bootstrap 3 nav markup (li > a without .nav-link) ===== */
+.nav > li {
+  position: relative;
+  display: block;
+}
+.nav > li > a {
+  position: relative;
+  display: block;
+  padding: 10px 15px;
+}
+.nav-tabs > li > a {
+  margin-right: 2px;
+  border: 1px solid transparent;
+  border-radius: 4px 4px 0 0;
+}
+
+/* tables keep the theme background instead of Bootstrap 5's opaque cell colour */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: inherit;
+  --bs-table-striped-color: inherit;
+  --bs-table-hover-color: inherit;
+  --bs-table-active-color: inherit;
+}
+/* coloured cards draw a line under their header (Bootstrap 3 panel-heading border) */
+.card > .card-header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+/* Bootstrap 3 sized controls at 14px; Bootstrap 5 uses 1rem (16px) */
+.form-control:not(.form-control-lg):not(.form-control-sm),
+.form-select:not(.form-select-lg):not(.form-select-sm),
+.input-group-text {
+  font-size: 14px;
+}
+.btn:not(.btn-lg):not(.btn-sm) {
+  --bs-btn-font-size: 14px;
+}
+.dropdown-menu {
+  --bs-dropdown-font-size: 14px;
+}
+/* selects rendered with .form-control keep the native arrow (Bootstrap 5 removes it) */
+select.form-control:not([multiple]):not([size]) {
+  appearance: auto;
+}
+
+/* ===== Tom Select dropdowns follow the theme text colour ===== */
+.ts-dropdown {
+  color: var(--bs-body-color);
+}
+.ts-dropdown .option,
+.ts-dropdown .optgroup-header {
+  color: inherit;
+}
+.ts-dropdown .active {
+  color: #fff;
 }

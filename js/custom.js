@@ -8,16 +8,12 @@ $(document).ajaxComplete(function () {
 });
 $(document).ready(function () {
     pageLoad();
-    var clipboard = new Clipboard('.clipboard');
-    var internalClipboard = new Clipboard('#internal-clipboard');
-    clipboard.on('success', function(e) {
-        message('Clipboard',e.text,activeInfo.settings.notifications.position,'#FFF','info','5000');
-        e.clearSelection();
+    $(document).on('click', '.clipboard, #internal-clipboard', function() {
+        let text = $(this).attr('data-clipboard-text') || '';
+        copyToClipboard(text).then(function() {
+            message('Clipboard',text,activeInfo.settings.notifications.position,'#FFF','info','5000');
+        });
     });
-	internalClipboard.on('success', function(e) {
-		message('Clipboard',e.text,activeInfo.settings.notifications.position,'#FFF','info','5000');
-		e.clearSelection();
-	});
     "use strict";
     var body = $("body");
 
@@ -50,7 +46,7 @@ $(document).ready(function () {
 
             if (width < 768) {
                 body.addClass('content-wrapper');
-                $(".sidebar-nav, .slimScrollDiv").css("overflow-x", "visible").parent().css("overflow", "visible");
+                $(".sidebar-nav").css("overflow-x", "visible").parent().css("overflow", "visible");
             } else {
                 body.removeClass('content-wrapper');
             }
@@ -91,17 +87,17 @@ $(document).ready(function () {
     });
     /* ===== Collapsible Panels JS ===== */
     (function ($, window, document) {
-        var panelSelector = '[data-perform="panel-collapse"]',
-            panelRemover = '[data-perform="panel-dismiss"]';
+        var panelSelector = '[data-perform="card-collapse"]',
+            panelRemover = '[data-perform="card-dismiss"]';
         $(panelSelector).each(function () {
             var collapseOpts = {
                     toggle: false
                 },
-                parent = $(this).closest('.panel'),
-                wrapper = parent.find('.panel-wrapper'),
+                parent = $(this).closest('.card'),
+                wrapper = parent.find('.card-wrapper'),
                 child = $(this).children('i');
             if (!wrapper.length) {
-                wrapper = parent.children('.panel-heading').nextAll().wrapAll('<div/>').parent().addClass('panel-wrapper');
+                wrapper = parent.children('.card-header').nextAll().wrapAll('<div/>').parent().addClass('card-wrapper');
                 collapseOpts = {};
             }
             wrapper.collapse(collapseOpts).on('hide.bs.collapse', function () {
@@ -115,8 +111,8 @@ $(document).ready(function () {
 
         $(document).on('click', panelSelector, function (e) {
             e.preventDefault();
-            var parent = $(this).closest('.panel'),
-                wrapper = parent.find('.panel-wrapper');
+            var parent = $(this).closest('.card'),
+                wrapper = parent.find('.card-wrapper');
                 $(this).children('i').toggleClass('ti-plus').toggleClass('ti-minus');
             wrapper.collapse('toggle');
         });
@@ -125,7 +121,7 @@ $(document).ready(function () {
 
         $(document).on('click', panelRemover, function (e) {
             e.preventDefault();
-            var removeParent = $(this).closest('.panel');
+            var removeParent = $(this).closest('.card');
 
             function removeElement() {
                 var col = removeParent.parent();
@@ -147,37 +143,30 @@ function pageLoad(){
         }
         myLazyLoad.update();
     });
-	$('#page-wrapper').overlayScrollbars({ scrollbars : { autoHide: "move"}});
-	$('.default-scroller').overlayScrollbars({ scrollbars : { autoHide: "scroll"}});
-	$('.nav-bar-rtl').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
-	$('.inbox-center').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
-	$('.mailbox').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
-	$('.fc-scroller').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
+	customScrollbars('#page-wrapper', 'move');
+	customScrollbars('.default-scroller', 'scroll');
+	customScrollbars('.nav-bar-rtl', 'leave');
+	customScrollbars('.inbox-center', 'leave');
+	customScrollbars('.mailbox', 'leave');
     /* ===== Tooltip Initialization ===== */
 
     $(function () {
-        if(bowser.mobile !== true) {
-            $('[data-toggle="tooltip"]').tooltip();
+        if(browserInfo.mobile !== true) {
+            $('[data-bs-toggle="tooltip"]').tooltip();
         }
         /*$('body').tooltip({
-            selector: '[data-toggle="tooltip"]'
+            selector: '[data-bs-toggle="tooltip"]'
         });*/
     });
 
     /* ===== Popover Initialization ===== */
 
     $(function () {
-        $('[data-toggle="popover"]').popover({trigger: "hover",});
+        $('[data-bs-toggle="popover"]').popover({trigger: "hover",});
     });
 
     $(function () {
-        // Switchery
-        var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
-        $('.js-switch').each(function() {
-            if ($(this).attr('data-switchery') !== 'true'){
-                new Switchery($(this)[0], $(this).data());
-            }
-        });
+        initSwitches();
     });
 
     /* ===== Collepsible Toggle ===== */
@@ -248,10 +237,8 @@ function pageLoad(){
            this.st.focus = '.inline-focus';
        },
        close: function() {
-          if(typeof player !== 'undefined'){
-              console.log('STOP STOP STOP');
-              player.destroy();
-          }
+          // Removing the embed stops the trailer
+          $('.youtube-div').html('');
         }
       },
       midClick: true // allow opening popup on middle mouse click. Always set it to true if you don't provide alternative source.
@@ -260,18 +247,8 @@ function pageLoad(){
 }
 /* ===== Sidebar ===== */
 
-$('.slimscrollright').slimScroll({
-    height: '100%',
-    position: 'right',
-    size: "5px",
-    color: '#dcdcdc'
-});
-$('.slimscrollsidebar').slimScroll({
-    height: '100%',
-    position: 'left',
-    size: "6px",
-    color: 'rgba(0,0,0,0.5)'
-});
+$('.slimscrollright').css({ height: '100%', 'overflow-y': 'auto' });
+$('.slimscrollsidebar').css({ height: '100%', 'overflow-y': 'auto' });
 $(".navbar-toggle").on("click", function () {
     $(".navbar-toggle i").toggleClass("ti-menu").addClass("ti-close");
 });
@@ -320,18 +297,12 @@ function doneTypingMediaSearch () {
             break;
         default:
     }
-    organizrAPI2('GET','api/v2/homepage/'+server+'/search/' + query).success(function(data) {
+    organizrAPI2('GET','api/v2/homepage/'+server+'/search/' + query).done(function(data) {
 	    try {
 		    let response = data.response;
 		    $('.mediaSearch-div').html(buildMediaResults(response.data,server,query));
-		    if(bowser.mobile !== true){
-			    $('.resultBox-inside').slimScroll({
-				    height: '100%',
-				    position: 'right',
-				    size: "5px",
-				    color: '#dcdcdc'
-			    });
-			    //$('.resultBox-inside').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
+		    if(browserInfo.mobile !== true){
+			    $('.resultBox-inside').css({ height: '100%', 'overflow-y': 'auto' });
 		    }
 	    }catch(e) {
 		    organizrCatchError(e,data);
@@ -363,7 +334,7 @@ $(document).on("click", ".login-button", function(e) {
             }
         });
         var post = $('#loginform').serializeToJSON();
-        organizrAPI2('POST', 'api/v2/login', post).success(function (data) {
+        organizrAPI2('POST', 'api/v2/login', post).done(function (data) {
             local('set','message','Welcome|Login Successful|success');
 	        local('r','loggingIn');
 	        location.reload();
@@ -412,7 +383,7 @@ $(document).on("click", ".unlockButton", function(e) {
 	    message('Password cannot be blank', '', activeInfo.settings.notifications.position, '#FFF', 'error', '5000');
     	return false;
     }
-    organizrAPI2('POST','api/v2/users/unlock',post).success(function(data) {
+    organizrAPI2('POST','api/v2/users/unlock',post).done(function(data) {
         let html = data.response;
         location.reload();
     }).fail(function(xhr) {
@@ -423,7 +394,7 @@ $(document).on("click", ".register-button", function(e) {
     e.preventDefault;
     var post = $( '#registerForm' ).serializeToJSON();
     console.log(post)
-    organizrAPI2('POST','api/v2/users/register',post).success(function(data) {
+    organizrAPI2('POST','api/v2/users/register',post).done(function(data) {
         let html = data.response;
 		location.reload();
     }).fail(function(xhr) {
@@ -438,7 +409,7 @@ $(document).on("click", ".reset-button", function(e) {
 	        email:email
         };
 	    message('Submitting request...','',activeInfo.settings.notifications.position,'#FFF','info','10000');
-        organizrAPI2('POST','api/v2/users/recover',post).success(function(data) {
+        organizrAPI2('POST','api/v2/users/recover',post).done(function(data) {
             var html = data.response;
             message('Recover Password',html.message,activeInfo.settings.notifications.position,'#FFF','success','10000');
             $('#leave-recover').trigger('click');
@@ -475,11 +446,10 @@ $(document).on("click", ".editGroup", function () {
 		return false;
 	}
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('PUT','api/v2/groups/' + info.id,info,true).success(function(data) {
+	organizrAPI2('PUT','api/v2/groups/' + info.id,info,true).done(function(data) {
 		try {
 			var response = data.response;
-			$('.groupIconImageList').val(null).trigger('change');
-			$('.groupIconIconList').val(null).trigger('change');
+			clearSelect('.groupIconImageList, .groupIconIconList');
 		}catch(e) {
 			organizrCatchError(e,data);
 		}
@@ -496,7 +466,7 @@ $(document).on("click", ".changeDefaultGroup", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('PUT','api/v2/groups/' + id, {"default":1},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/groups/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 			message(response.message,'',activeInfo.settings.notifications.position,"#FFF","success","5000");
@@ -511,21 +481,20 @@ $(document).on("click", ".changeDefaultGroup", function () {
 //DELETE GROUP
 $(document).on("click", ".deleteUserGroup", function () {
 	var el = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Delete ')+el.parent().parent().attr("data-group")+'?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
 	        var id = el.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildGroupManagement );
-	        organizrAPI2('DELETE','api/v2/groups/' + id, null,true).success(function(data) {
+	        organizrAPI2('DELETE','api/v2/groups/' + id, null,true).done(function(data) {
 		        try {
 			        message('Group Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			        if(callbacks){ callbacks.fire(); }
@@ -553,11 +522,10 @@ $(document).on("click", ".addNewGroup", function () {
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('POST','api/v2/groups',info,true).success(function(data) {
+	organizrAPI2('POST','api/v2/groups',info,true).done(function(data) {
 		try {
 			var response = data.response;
-			$('.groupIconImageList').val(null).trigger('change');
-			$('.groupIconIconList').val(null).trigger('change');
+			clearSelect('.groupIconImageList, .groupIconIconList');
 			message(response.message,'',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#new-group-form');
@@ -580,7 +548,7 @@ $(document).on("click", ".addNewUser", function () {
 	console.log(userInfo)
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('POST','api/v2/users', userInfo,true).success(function(data) {
+	organizrAPI2('POST','api/v2/users', userInfo,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -589,7 +557,7 @@ $(document).on("click", ".addNewUser", function () {
 		message('User Created',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 		clearForm('#new-user-form');
-		$('#jsGrid-Users').jsGrid('render');
+		window.refreshManageUsers();
 		$.magnificPopup.close();
 	}).fail(function(xhr) {
 		OrganizrApiError(xhr, 'API Error');
@@ -619,7 +587,7 @@ $(document).on("click", ".editUserAdmin", function () {
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('PUT','api/v2/users/' + userInfo.id, userInfo,true).success(function(data) {
+	organizrAPI2('PUT','api/v2/users/' + userInfo.id, userInfo,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -640,7 +608,7 @@ $(document).on("change", ".userGroupSelect", function () {
 	var groupId = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('PUT','api/v2/users/' + id, {"group_id":groupId},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/users/' + id, {"group_id":groupId},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -656,21 +624,20 @@ $(document).on("change", ".userGroupSelect", function () {
 //DELETE GROUP
 $(document).on("click", ".deleteUser", function () {
     var user = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Delete ')+user.parent().parent().attr("data-username")+'?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
 	        var id = user.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildUserManagement );
-	        organizrAPI2('DELETE','api/v2/users/' + id, null,true).success(function(data) {
+	        organizrAPI2('DELETE','api/v2/users/' + id, null,true).done(function(data) {
 		        message('User Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
@@ -684,7 +651,7 @@ $(document).on("change", ".tabGroupSelectMax", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id_max":groupID},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id_max":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -701,7 +668,7 @@ $(document).on("change", ".tabGroupSelectMin", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id":groupID},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -718,7 +685,7 @@ $(document).on("change", ".tabCategorySelect", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var categoryID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"category_id":categoryID},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -735,7 +702,7 @@ $(document).on("change", ".tabTypeSelect", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var type = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"type":type},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"type":type},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -752,7 +719,7 @@ $(document).on("change", ".enabledSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"enabled":enabled},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"enabled":enabled},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -769,7 +736,7 @@ $(document).on("change", ".splashSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var splash = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"splash":splash},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"splash":splash},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -786,7 +753,7 @@ $(document).on("change", ".pingSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var ping = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"ping":ping},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"ping":ping},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -803,7 +770,7 @@ $(document).on("change", ".preloadSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var preload = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"preload":preload},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"preload":preload},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -820,7 +787,7 @@ $(document).on("change", ".addToAdminSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var data = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"add_to_admin":data},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"add_to_admin":data},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -836,7 +803,7 @@ $(document).on("change", ".addToAdminSwitch", function () {
 $(document).on("change", ".defaultSwitch", function () {
 	var id = $(this).parent().parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"default":1},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/tabs/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -851,21 +818,20 @@ $(document).on("change", ".defaultSwitch", function () {
 //DELETE TAB
 $(document).on("click", ".deleteTab", function () {
     var tab = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Delete ') + tab.parent().parent().attr("data-name") + '?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
 	        var id = tab.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildTabEditor );
-	        organizrAPI2('DELETE','api/v2/tabs/' + id, null,true).success(function(data) {
+	        organizrAPI2('DELETE','api/v2/tabs/' + id, null,true).done(function(data) {
 		        message('Tab Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
@@ -920,7 +886,7 @@ $(document).on("click", ".editTab", function () {
     if(tabInfo.id !== '' && tabInfo.tabName !== '' && tabInfo.tabImage !== ''){
 	    var callbacks = $.Callbacks();
 	    callbacks.add( buildTabEditor );
-	    organizrAPI2('PUT','api/v2/tabs/' + tabInfo.id,tabInfo,true).success(function(data) {
+	    organizrAPI2('PUT','api/v2/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
 		    try {
 			    var response = data.response;
 		    }catch(e) {
@@ -962,11 +928,10 @@ $(document).on("click", ".addNewTab", function () {
     if(tabInfo.order !== '' && tabInfo.name !== '' && (tabInfo.url !== '' || tabInfo.url_local !== '') && tabInfo.image !== '' ){
 	    var callbacks = $.Callbacks();
 	    callbacks.add( buildTabEditor );
-	    organizrAPI2('POST','api/v2/tabs',tabInfo,true).success(function(data) {
+	    organizrAPI2('POST','api/v2/tabs',tabInfo,true).done(function(data) {
 		    try {
 			    var response = data.response;
-			    $('.tabIconImageList').val(null).trigger('change');
-			    $('.tabIconIconList').val(null).trigger('change');
+			    clearSelect('.tabIconImageList, .tabIconIconList');
 		    }catch(e) {
 			    organizrCatchError(e,data);
 		    }
@@ -995,7 +960,7 @@ $(document).on("click", ".addNewCategory", function () {
 	if(categoryInfo.category !== '' && categoryInfo.image !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildCategoryEditor );
-		organizrAPI2('POST','api/v2/categories',categoryInfo,true).success(function(data) {
+		organizrAPI2('POST','api/v2/categories',categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
@@ -1014,21 +979,20 @@ $(document).on("click", ".addNewCategory", function () {
 //DELETE CATEGORY
 $(document).on("click", ".deleteCategory", function () {
     var category = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Delete ')+category.parent().parent().attr("data-name")+'?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
 	        var id = category.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildCategoryEditor );
-	        organizrAPI2('DELETE','api/v2/categories/' + id, null,true).success(function(data) {
+	        organizrAPI2('DELETE','api/v2/categories/' + id, null,true).done(function(data) {
 		        message('Category Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
@@ -1061,7 +1025,7 @@ $(document).on("click", ".editCategory", function () {
 	if(categoryInfo.id !== '' && categoryInfo.category !== '' && categoryInfo.image !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildCategoryEditor );
-		organizrAPI2('PUT','api/v2/categories/' + categoryInfo.id,categoryInfo,true).success(function(data) {
+		organizrAPI2('PUT','api/v2/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
@@ -1082,7 +1046,7 @@ $(document).on("click", ".changeDefaultCategory", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildCategoryEditor );
-	organizrAPI2('PUT','api/v2/categories/' + id, {"default":1},true).success(function(data) {
+	organizrAPI2('PUT','api/v2/categories/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
@@ -1108,16 +1072,6 @@ $(document).on("click", ".saveThemeJava", function () {
     $('.javaThemeTextarea').val(javaThemeEditor.getValue()).trigger('change');
 });
 
-$(document).on('focusout', 'input.pick-a-color-custom-options', function(e) {
-    var original = $(this).attr('data-original');
-    var newValue = $(this).val();
-    if((original !== newValue) && (newValue !== '#987654') && newValue !== ''){
-        $(this).change();
-        $(this).attr('data-original', newValue);
-    }else if(newValue == ''){
-        $(this).attr('style','');
-    }
-});
 $(document).on('change keydown', '.addFormTick :input', function(e) {
     $(this).attr('data-changed', true);
     $(this).closest('.form-group').addClass('has-success');
@@ -1133,7 +1087,7 @@ $(document).on('change keydown', '.addFormTick :input', function(e) {
             var value = $(this).val();
     }
     if($(this).hasClass('themeChanger')){
-        organizrAPI2('GET','api/v2/themes').success(function(data) {
+        organizrAPI2('GET','api/v2/themes').done(function(data) {
             try {
                 let response = data.response;
                 let path = response.data[value]['path'];
@@ -1161,10 +1115,9 @@ $(document).on('change keydown', '.addFormTick :input', function(e) {
     }
 });
 
-// Additional handler for Switchery switches that don't trigger standard change events
+// Mark the form as changed when a switch is toggled
 $(document).on('click', '.addFormTick .js-switch', function(e) {
     var checkbox = this;
-    // Wait for Switchery to update the checkbox state
     setTimeout(function() {
         $(checkbox).attr('data-changed', true);
         $(checkbox).closest('.form-group').addClass('has-success');
@@ -1176,16 +1129,15 @@ $(document).on('click', '.addFormTick .js-switch', function(e) {
 //DELETE IMAGE
 $(document).on("click", ".deleteImage", function () {
     var image = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Delete ')+image.attr("data-image-name")+'?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
             var post = {
                 api:'api/v2/image/' + image.attr("data-image-name-ext"),
@@ -1195,7 +1147,7 @@ $(document).on("click", ".deleteImage", function () {
             };
             var callbacks = $.Callbacks();
             callbacks.add( buildImageManagerView );
-	        organizrAPI2('DELETE',post.api,'',true).success(function(data) {
+	        organizrAPI2('DELETE',post.api,'',true).done(function(data) {
 		        try {
 			        var response = data.response;
 		        }catch(e) {
@@ -1221,7 +1173,7 @@ $(document).on('click', '.enablePlugin', function() {
 	callbacks.add( ajaxloader );
 	let data = {};
 	data[pluginConfigValue] = 'true';
-	organizrAPI2('PUT','api/v2/config', data,true).success(function(data) {
+	organizrAPI2('PUT','api/v2/config', data,true).done(function(data) {
 		try {
 			message('Plugin Enabled','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
@@ -1238,16 +1190,15 @@ $(document).on('click', '.enablePlugin', function() {
 // DISABLE PLUGIN
 $(document).on('click', '.disablePlugin', function() {
     var plugin = $(this);
-    swal({
+    Swal.fire({
         title: window.lang.translate('Disable')+' '+plugin.attr("data-plugin-name")+'?',
         icon: "warning",
-        buttons: {
-            cancel: window.lang.translate('No'),
-            confirm: window.lang.translate('Yes'),
-        },
-        dangerMode: true,
+        showCancelButton: true,
+        cancelButtonText: window.lang.translate('No'),
+        confirmButtonText: window.lang.translate('Yes'),
         confirmButtonColor: "#DD6B55"
-    }).then(function(willDelete) {
+    }).then(function(result) {
+        let willDelete = result.isConfirmed;
         if (willDelete) {
 	        ajaxloader(".content-wrap","in");
 			let pluginConfigValue = plugin.attr('data-config-name');
@@ -1255,7 +1206,7 @@ $(document).on('click', '.disablePlugin', function() {
 	        callbacks.add( ajaxloader );
 	        var data = {};
 	        data[pluginConfigValue] = 'false';
-	        organizrAPI2('PUT','api/v2/config', data,true).success(function(data) {
+	        organizrAPI2('PUT','api/v2/config', data,true).done(function(data) {
 		        try {
 			        message('Plugin Disabled','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			        if(callbacks){ callbacks.fire(); }
@@ -1290,7 +1241,7 @@ $(document).on("click", ".testPath", function () {
     if (typeof path == 'undefined' || path == '') {
         message('Path Error',' Please enter a path for DB',activeInfo.settings.notifications.position,'#FFF','warning','10000');
     }else{
-        organizrAPI2('POST','api/v2/test/path',{path:path}).success(function(data) {
+        organizrAPI2('POST','api/v2/test/path',{path:path}).done(function(data) {
             var html = data.response;
             message('Path',' Path is good to go',activeInfo.settings.notifications.position,'#FFF','success','10000');
         }).fail(function(xhr) {
@@ -1321,10 +1272,7 @@ $(document).on("click", ".recent-filter li>a", function () {
         $('.'+type+'-recent').find('.recent-item').parent().removeClass('hidden');
         $('.'+type+'-recent').find('.recent-item:not(.'+ filter + ')').parent().addClass('hidden');
     }
-    var owl = $('.'+type+'-recent');
-    owl.owlCarousel();
-    owl.trigger('refresh.owl.carousel');
-    owl.trigger('to.owl.carousel',0);
+    refreshCarousel('.'+type+'-recent');
 });
 // request search filter
 $(document).on("click", ".filter-request-result", function () {
@@ -1345,8 +1293,8 @@ $(document).on("click", ".playlist-filter li>a", function () {
     $('.'+type+'-playlistTitle').html(title);
     $('.'+type+'-playlist').addClass('hidden');
     $('.'+filter+'-playlist').removeClass('hidden');
-    $('.playlist-next').attr('onclick','owlChange(\''+button+'\',\'next\');');
-    $('.playlist-previous').attr('onclick','owlChange(\''+button+'\',\'previous\');');
+    $('.playlist-next').attr('onclick','carouselChange(\''+button+'\',\'next\');');
+    $('.playlist-previous').attr('onclick','carouselChange(\''+button+'\',\'previous\');');
 
 });
 // refresh cache image
@@ -1419,7 +1367,7 @@ $(document).on("click", ".metadata-get", function(e) {
 
     }
     ajaxloader(".content-wrap","in");
-    organizrAPI2('POST','api/v2/homepage/'+source+'/metadata',{key:key}).success(function(data) {
+    organizrAPI2('POST','api/v2/homepage/'+source+'/metadata',{key:key}).done(function(data) {
         let response = data.response;
         // Determine effective source for icon/button (e.g., emby/jellyfin) when coming from jellystat
         let effectiveSource = source;
@@ -1448,16 +1396,7 @@ $(document).on("click", ".metadata-get", function(e) {
         $('.'+uid+'-metadata-info').html('');
         $('.'+uid+'-metadata-info').html(buildMetadata(response.data, effectiveSource));
         $('.'+uid).trigger('click');
-        $(".metadata-actors").owlCarousel({
-            autoplay: true,
-            slideSpeed : 300,
-            paginationSpeed : 400,
-            nav:false,
-			dots:false,
-			margin:10,
-			autoWidth:true,
-			items:4
-        });
+        initCarousel(".metadata-actors", { autoplay: true });
 	    ajaxloader();
 	    $("#preloader").fadeOut();
     }).fail(function(xhr) {
@@ -1483,7 +1422,7 @@ $(document).on("click", ".downloader", function(e) {
 			return false;
 	}
 	messageSingle('Sending command to downloader', '', activeInfo.settings.notifications.position, '#FFF', 'info', '2500');
-    organizrAPI2('POST',api,{target:target}).success(function(data) {
+    organizrAPI2('POST',api,{target:target}).done(function(data) {
         homepageDownloader(source);
 	    messageSingle('Successful', '', activeInfo.settings.notifications.position, '#FFF', 'success', '2500');
     }).fail(function(xhr) {
@@ -1500,7 +1439,7 @@ $(document).on("click", ".testTab", function () {
         var post = {
             url:input.val()
         };
-        organizrAPI2('POST','api/v2/test/iframe',post).success(function(data) {
+        organizrAPI2('POST','api/v2/test/iframe',post).done(function(data) {
             let html = data.response;
             $('.tabTestMessage.alert-success').removeClass('hidden');
             $('.tabTestMessage.alert-danger').addClass('hidden');
@@ -1528,7 +1467,7 @@ $(document).on("click", ".testEditTab", function () {
             url:input.val()
         };
 	    message('Checking URL now...','',activeInfo.settings.notifications.position,'#FFF','info','5000');
-        organizrAPI2('POST','api/v2/test/iframe',post).success(function(data) {
+        organizrAPI2('POST','api/v2/test/iframe',post).done(function(data) {
             let html = data.response;
             $('.tabEditTestMessage.alert-success').removeClass('hidden');
             $('.tabEditTestMessage.alert-danger').addClass('hidden');
@@ -1560,7 +1499,7 @@ $(document).on("click", ".purgeLog", function () {
 		    messageBody:window.lang.translate('Deleted Log'),
 		    error:'Organizr Function: User API Connection Failed'
 	    };
-	    organizrAPI2('DELETE',post.api,'',true).success(function(data) {
+	    organizrAPI2('DELETE',post.api,'',true).done(function(data) {
 		    loadSettingsPage2('api/v2/page/settings_settings_logs','#settings-settings-logs','Log Viewer');
 		    try {
 			    let response = data.response;
@@ -1592,7 +1531,7 @@ $(document).on("click", ".delete-backup", function () {
 			messageBody:window.lang.translate('Deleted Backup')+': '+filename,
 			error:'Organizr Function: Backup API Connection Failed'
 		};
-		organizrAPI2('DELETE',post.api,'',true).success(function(data) {
+		organizrAPI2('DELETE',post.api,'',true).done(function(data) {
 			message(post.messageTitle,post.messageBody,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			getOrganizrBackups();
 			$('#settings-settings-backup').unblock();
@@ -1649,10 +1588,7 @@ $(document).on("change", ".filter-request-input", function () {
             element.parent().addClass('hidden');
         }
     });
-    var owl = $('.request-items');
-    owl.owlCarousel();
-    owl.trigger('refresh.owl.carousel');
-    owl.trigger('to.owl.carousel',0);
+    refreshCarousel('.request-items');
 });
 //search ombi
 var typingTimer;
@@ -1695,63 +1631,43 @@ $(document).on("click", ".right-side-toggle", function () {
         fxhdr.attr('checked', false);
     }
 });
-$(document).on('mousewheel', '.recent-items .owl-stage', function (e) {
-    if (e.shiftKey) {
-        if (e.deltaY>0) {
-            $('.recent-items').trigger('next.owl');
-        } else {
-            $('.recent-items').trigger('prev.owl');
+// Keyboard shortcuts (ignored while typing in a form field)
+function shortcut(handler) {
+    return function(event) {
+        if ($(event.target).is('input, textarea, select, [contenteditable="true"]')) {
+            return;
         }
-        e.preventDefault();
-    }
-});
-$(document).on('mousewheel', '.playlist-items .owl-stage', function (e) {
-    if (e.shiftKey) {
-        if (e.deltaY>0) {
-            $('.playlist-items').trigger('next.owl');
-        } else {
-            $('.playlist-items').trigger('prev.owl');
-        }
-        e.preventDefault();
-    }
-});
-$(document).on('mousewheel', '.request-items .owl-stage', function (e) {
-    if (e.shiftKey) {
-        if (e.deltaY>0) {
-            $('.request-items').trigger('next.owl');
-        } else {
-            $('.request-items').trigger('prev.owl');
-        }
-    e.preventDefault();
-    }
-});
-Mousetrap.bind('r r', function() { reloadCurrentTab() });
-Mousetrap.bind("c c", function() { closeCurrentTab(event) });
-Mousetrap.bind("s s", function() { openSettings() });
-Mousetrap.bind("h h", function() { openHomepage() });
-Mousetrap.bind("f f", function() { toggleFullScreen() });
-Mousetrap.bind("d d", function() { toggleDebug() });
-Mousetrap.bind("esc", function () {
-    $('.splash-screen').removeClass('in').addClass('hidden')
-});
-Mousetrap.bind('ctrl+shift+up', function(e) {
-    var getCurrentTab = $('.allTabsList a.active').parent();
-    var previousTab = getCurrentTab.prev().children();
-    previousTab.trigger("click");
-    parent.focus();
-    return false;
-});
-Mousetrap.bind('ctrl+shift+down', function(e) {
-    var getCurrentTab = $('.allTabsList a.active').parent();
-    var nextTab = getCurrentTab.next().children();
-    nextTab.trigger("click");
-    return false;
+        handler(event);
+    };
+}
+tinykeys.tinykeys(window, {
+    'r r': shortcut(function() { reloadCurrentTab() }),
+    'c c': shortcut(function(event) { closeCurrentTab(event) }),
+    's s': shortcut(function() { openSettings() }),
+    'h h': shortcut(function() { openHomepage() }),
+    'f f': shortcut(function() { toggleFullScreen() }),
+    'd d': shortcut(function() { toggleDebug() }),
+    'Escape': shortcut(function() {
+        $('.splash-screen').removeClass('show').addClass('hidden')
+    }),
+    'Control+Shift+ArrowUp': shortcut(function(event) {
+        event.preventDefault();
+        var getCurrentTab = $('.allTabsList a.active').parent();
+        var previousTab = getCurrentTab.prev().children();
+        previousTab.trigger("click");
+        parent.focus();
+    }),
+    'Control+Shift+ArrowDown': shortcut(function(event) {
+        event.preventDefault();
+        var getCurrentTab = $('.allTabsList a.active').parent();
+        var nextTab = getCurrentTab.next().children();
+        nextTab.trigger("click");
+    }),
 });
 $(document).on('change', "#choose-calender-filter, #choose-calender-filter-status", function (e) {
     filter = $('#choose-calender-filter').val();
     filterDownload = $('#choose-calender-filter-status').val();
-    $('#calendar').fullCalendar('rerenderEvents');
-	$('.fc-scroller').overlayScrollbars({ scrollbars : { autoHide: "leave"}});
+    applyCalendarFilter();
 });
 $(document).on('keyup', "#debug-input", function(e  ){
 	console.log(this);
@@ -1832,7 +1748,7 @@ $(document).on('click', ".showMoreHealth", function(){
 });
 //IP INFO
 $(document).on('click', ".ipInfo", function(){
-	organizrAPI2('GET','api/v2/ip/'+$(this).text()).success(function(data) {
+	organizrAPI2('GET','api/v2/ip/'+$(this).text()).done(function(data) {
 		try {
 			let response = data.response.data;
 			var region = (typeof response.region == 'undefined') ? ' N/A' : response.region;
@@ -1844,29 +1760,29 @@ $(document).on('click', ".ipInfo", function(){
 			var country = (typeof response.country == 'undefined') ? ' N/A' : response.country;
 			var phone = (typeof response.phone == 'undefined') ? ' N/A' : response.phone;
 			var div = '<div class="row">' +
-				'<div class="col-lg-12">' +
+				'<div class="col-xl-12">' +
 				'<div class="white-box">' +
 				'<h3 class="box-title">'+ip+'</h3>' +
 				'<div class="table-responsive inbox-center">' +
 				'<table class="table">' +
 				'<tbody>' +
-				'<tr><td class="text-left">Hostname</td><td class="txt-oflo text-right">'+hostname+'</td></tr>' +
-				'<tr><td class="text-left">Location</td><td class="txt-oflo text-right">'+loc+'</td></tr>' +
-				'<tr><td class="text-left">Org</td><td class="txt-oflo text-right">'+org+'</td></tr>' +
-				'<tr><td class="text-left">City</td><td class="txt-oflo text-right">'+city+'</td></tr>' +
-				'<tr><td class="text-left">Country</td><td class="txt-oflo text-right">'+country+'</td></tr>' +
-				'<tr><td class="text-left">Phone</td><td class="txt-oflo text-right">'+phone+'</td></tr>' +
-				'<tr><td class="text-left">Region</td><td class="txt-oflo text-right">'+region+'</td></tr>' +
+				'<tr><td class="text-start">Hostname</td><td class="txt-oflo text-end">'+hostname+'</td></tr>' +
+				'<tr><td class="text-start">Location</td><td class="txt-oflo text-end">'+loc+'</td></tr>' +
+				'<tr><td class="text-start">Org</td><td class="txt-oflo text-end">'+org+'</td></tr>' +
+				'<tr><td class="text-start">City</td><td class="txt-oflo text-end">'+city+'</td></tr>' +
+				'<tr><td class="text-start">Country</td><td class="txt-oflo text-end">'+country+'</td></tr>' +
+				'<tr><td class="text-start">Phone</td><td class="txt-oflo text-end">'+phone+'</td></tr>' +
+				'<tr><td class="text-start">Region</td><td class="txt-oflo text-end">'+region+'</td></tr>' +
 				'</tbody>' +
 				'</table>' +
 				'</div>' +
 				'</div>' +
 				'</div>' +
 				'</div>';
-			swal({
-				content: createElementFromHTML(div),
-				buttons: false,
-				className: 'bg-org'
+			Swal.fire({
+				html: createElementFromHTML(div),
+				showConfirmButton: false,
+				customClass: { popup: 'bg-org' }
 			});
 		}catch(e) {
 			organizrCatchError(e,data);
@@ -1889,8 +1805,7 @@ $(document).on('click', 'li a[aria-controls="Custom data"]', function() {
     }
 
     jsonEditor = ace.edit("netdataCustomTextAce");
-    var JsonMode = ace.require("ace/mode/javascript").Mode;
-    jsonEditor.session.setMode(new JsonMode());
+    jsonEditor.session.setMode("ace/mode/javascript");
     jsonEditor.setTheme("ace/theme/idle_fingers");
     jsonEditor.setShowPrintMargin(false);
     jsonEditor.session.on('change', function(delta) {
@@ -1905,7 +1820,7 @@ $(document).on('click', '.imageManagerItem', function() {
 $(document).on('click', '.close-editHomepageItemDiv',function () {
 	//$('body').removeAttr('style');
 	//$('html').removeAttr('style');
-	Custombox.modal.closeAll()
+	closeHomepageItemModal()
 })
 
 // Trakt image fix
@@ -1921,7 +1836,7 @@ function checkMetadataDiv(target,type,classList){
 	$(classArray).each(function (i,v) {
 		if(v.includes('--')){
 			let getId = v.split('--');
-			getTmdbImages(getId[1], type).success(function(data) {
+			getTmdbImages(getId[1], type).done(function(data) {
 				try {
 					let response = data;
 					let bg = 'https://image.tmdb.org/t/p/w1280';
@@ -1950,7 +1865,7 @@ $(document).on('click', '[id$=-settings-button]', function() {
 	let prefix = $(el).attr('data-config-prefix');
 	if(bind == 'true' && api !== 'false' && prefix !== 'false'){
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('GET',api).success(function(data) {
+		organizrAPI2('GET',api).done(function(data) {
 			var response = data.response;
 			$('#'+prefix+'-settings-items').html(buildFormGroup(response.data));
 		}).fail(function(xhr) {
@@ -2022,7 +1937,7 @@ $(document).on('click', '.log-details', function() {
 	let activateClipboard = $(this).attr('data-clipboard');
 	let el = $(this);
 	el.find('i').toggleClass('fa fa-lg fa-spin mdi-reload');
-	organizrAPI2('GET','api/v2/log/all/'+trace).success(function(data) {
+	organizrAPI2('GET','api/v2/log/all/'+trace).done(function(data) {
 		try {
 			let response = data.response;
 			if(activateClipboard){
@@ -2066,7 +1981,7 @@ $(document).on('click', '.toggle-donation-history', function() {
         let info = '';
         let el = $(this);
         el.find('i').toggleClass('fa-lg fa-spin ti-reload');
-        organizrAPI2('GET','api/v2/homepage/donate').success(function(data) {
+        organizrAPI2('GET','api/v2/homepage/donate').done(function(data) {
             try {
                 let response = data.response;
                 if(response.data){

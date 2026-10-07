@@ -19,7 +19,7 @@ function get_page_error($Organizr)
 	$GLOBALS['responseCode'] = 200;
 	return '
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
 	<meta charset="utf-8">
 	<meta content="IE=edge" http-equiv="X-UA-Compatible">
@@ -30,27 +30,18 @@ function get_page_error($Organizr)
 	<title>Error ' . $Organizr->config['title'] . '</title>
 	' . $Organizr->loadResources(
 			[
-				'bootstrap/dist/css/bootstrap.min.css',
-				'css/animate.css',
-				'plugins/bower_components/overlayScrollbars/OverlayScrollbars.min.css',
+				'assets/vendor/bootstrap/bootstrap.min.css',
+				'assets/vendor/fontawesome/css/all.min.css',
 				'css/dark.min.css',
 				'css/organizr.min.css',
-				'js/jquery-2.2.4.min.js',
-				'js/jquery-lang.min.js'
+				'assets/vendor/jquery/jquery.min.js',
+				'js/i18n.js'
 			], $nonRootPath
 		) . '
 	' . $Organizr->setTheme(null, $nonRootPath) . '
 	<style id="user-appearance"></style>
 	<style id="custom-theme-css"></style>
 	<style id="custom-css"></style>
-	<!--[if lt IE 9]>
-	<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"
-			integrity="sha384-0s5Pv64cNZJieYFkXYOTId2HMA2Lfb6q2nAcx2n0RTLUnCAoTTsS0nKEO27XyKcY"
-			crossorigin="anonymous"></script>
-	<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"
-			integrity="sha384-ZoaMbDF+4LeFxg6WdScQ9nnR1QC2MIRxA1O9KWEXQwns1G8UNyIEZIQidzb0T1fo"
-			crossorigin="anonymous"></script>
-	<![endif]-->
 </head>
 <body class="fix-header">
 <!-- ============================================================== -->
@@ -70,8 +61,8 @@ function get_page_error($Organizr)
 			<h1 class="text-danger">' . $error . '</h1>
 			<h2 class="text-uppercase" lang="en">' . $errorDetails['type'] . '</h2>
 			<h3 class="text-uppercase" lang="en">' . $errorDetails['description'] . '</h3>
-			<p class="text-muted m-t-30 m-b-30">Hey there, ' . $Organizr->user['username'] . ', ' . $Organizr->config['customErrorMessage'] . ' . </p>
-			<a href="' . $nonRootPath . '" class="btn btn-danger btn-rounded waves-effect waves-light m-b-40">Back Home</a>
+			<p class="text-muted my-4">Hey there, ' . $Organizr->user['username'] . ', ' . $Organizr->config['customErrorMessage'] . ' . </p>
+			<a href="' . $nonRootPath . '" class="btn btn-danger rounded-pill mb-5">Back Home</a>
 		</div>
 	</div>
 </section>

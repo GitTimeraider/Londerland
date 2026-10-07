@@ -81,8 +81,8 @@ trait CalendarHomepageItem
 	
 	public function loadCalendarJS()
 	{
-		$locale = ($this->config['calendarLocale'] !== 'en') ?? false;
-		return ($locale) ? '<script src="plugins/bower_components/calendar/dist/lang-all.js"></script>' : '';
+		// Calendar locales are bundled with FullCalendar (assets/vendor/fullcalendar/locales-all.global.js)
+		return '';
 	}
 	
 	public function getCalendar()

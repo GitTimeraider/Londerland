@@ -119,7 +119,7 @@ class Bookmark extends Organizr
 		return array(
 			'custom' => '
 				<div class="row">
-					<div class="col-lg-6 col-sm-12 col-md-6">
+					<div class="col-xl-6 col-md-12 col-lg-6">
 						<div class="white-box">
 							<h3 class="box-title" lang="en">Automatic Setup Tasks</h3>
 							<ul class="feeds">
@@ -140,13 +140,13 @@ class Bookmark extends Organizr
 							</ul>
 						</div>
 					</div>
-					<div class="col-lg-6 col-sm-12 col-md-6">
-						<div class="panel panel-info">
-							<div class="panel-heading">
+					<div class="col-xl-6 col-md-12 col-lg-6">
+						<div class="card card-info">
+							<div class="card-header">
 								<span lang="en">Notice</span>
 							</div>
-							<div class="panel-wrapper collapse in" aria-expanded="true">
-								<div class="panel-body">
+							<div class="card-wrapper collapse show" aria-expanded="true">
+								<div class="card-body">
 									<ul class="list-icons">
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Add tab that points to <i>api/v2/plugins/bookmark/page</i> and set it\'s type to <i>Organizr</i>.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Create Bookmark categories in the new area in <i>Tab Editor</i>.</span></li>
@@ -194,6 +194,7 @@ class Bookmark extends Organizr
 		$icons = array(
 			"materialize" => "mdi mdi-",
 			"fontawesome" => "fa fa-",
+			"fontawesome-brands" => "fa-brands fa-",
 			"themify" => "ti-",
 			"simpleline" => "icon-",
 			"weathericon" => "wi wi-",
@@ -264,64 +265,15 @@ class Bookmark extends Organizr
 	public function _getSettingsTabEditorBookmarkTabsPage()
 	{
 		$iconSelectors = '
-			$(".bookmarkTabIconIconList").select2({
-				ajax: {
-					url: \'api/v2/icon\',
-					data: function (params) {
-						var query = {
-							search: params.term,
-							page: params.page || 1
-						}
-						return query;
-					},
-					processResults: function (data, params) {
-						params.page = params.page || 1;
-						return {
-							results: data.response.data.results,
-							pagination: {
-								more: (params.page * 20) < data.response.data.total
-							}
-						};
-					},
-					//cache: true
-				},
-				placeholder: \'Search for an icon\',
-				templateResult: formatIcon,
-				templateSelection: formatIcon
-			});
-
-			$(".bookmarkTabIconImageList").select2({
-				 ajax: {
-					url: \'api/v2/image/select\',
-					data: function (params) {
-						var query = {
-							search: params.term,
-							page: params.page || 1
-						}
-						return query;
-					},
-					processResults: function (data, params) {
-						params.page = params.page || 1;
-						return {
-							results: data.response.data.results,
-							pagination: {
-								more: (params.page * 20) < data.response.data.total
-							}
-						};
-					},
-					//cache: true
-				},
-				placeholder: \'Search for an image\',
-				templateResult: formatImage,
-				templateSelection: formatImage
-			});
+			initRemoteChooser(".bookmarkTabIconIconList", "api/v2/icon", formatIcon, "Search for an icon");
+			initRemoteChooser(".bookmarkTabIconImageList", "api/v2/image/select", formatImage, "Search for an image");
 		';
 		return '
 		<script>
 		buildBookmarkTabEditor();
-		!function(a){function f(a,b){if(!(a.originalEvent.touches.length>1)){a.preventDefault();var c=a.originalEvent.changedTouches[0],d=document.createEvent("MouseEvents");d.initMouseEvent(b,!0,!0,window,1,c.screenX,c.screenY,c.clientX,c.clientY,!1,!1,!1,!1,0,null),a.target.dispatchEvent(d)}}if(a.support.touch="ontouchend"in document,a.support.touch){var e,b=a.ui.mouse.prototype,c=b._mouseInit,d=b._mouseDestroy;b._touchStart=function(a){var b=this;!e&&b._mouseCapture(a.originalEvent.changedTouches[0])&&(e=!0,b._touchMoved=!1,f(a,"mouseover"),f(a,"mousemove"),f(a,"mousedown"))},b._touchMove=function(a){e&&(this._touchMoved=!0,f(a,"mousemove"))},b._touchEnd=function(a){e&&(f(a,"mouseup"),f(a,"mouseout"),this._touchMoved||f(a,"click"),e=!1)},b._mouseInit=function(){var b=this;b.element.bind({touchstart:a.proxy(b,"_touchStart"),touchmove:a.proxy(b,"_touchMove"),touchend:a.proxy(b,"_touchEnd")}),c.call(b)},b._mouseDestroy=function(){var b=this;b.element.unbind({touchstart:a.proxy(b,"_touchStart"),touchmove:a.proxy(b,"_touchMove"),touchend:a.proxy(b,"_touchEnd")}),d.call(b)}}}(jQuery);
-		$( \'#bookmarkTabEditorTable\' ).sortable({
-			stop: function () {
+		new Sortable(document.getElementById("bookmarkTabEditorTable"), {
+			animation: 150,
+			onEnd: function () {
 				$(\'input.order\').each(function(idx) {
 					$(this).val(idx + 1);
 				});
@@ -331,14 +283,13 @@ class Bookmark extends Organizr
 				//submitTabOrder(newTabs);
 			}
 		});
-		$( \'#bookmarkTabEditorTable\' ).disableSelection();
 		' . $iconSelectors . '
 		</script>
-		<div class="panel bg-org panel-info">
-			<div class="panel-heading">
+		<div class="card bg-org card-info">
+			<div class="card-header">
 				<span lang="en">Bookmark Tab Editor</span>
-				<button type="button" class="btn btn-info btn-circle pull-right popup-with-form m-r-5" href="#new-bookmark-tab-form" onclick="newBookmarkTabForm()" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
-				<button onclick="submitBookmarkTabOrder(newBookmarkTabsGlobal)" class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right animated loop-animation rubberBand m-r-20 saveBookmarkTabOrderButton hidden" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save Tab Order</span></button>
+				<button type="button" class="btn btn-info btn-circle float-end popup-with-form m-r-5" href="#new-bookmark-tab-form" onclick="newBookmarkTabForm()" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
+				<button onclick="submitBookmarkTabOrder(newBookmarkTabsGlobal)" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end animated loop-animation rubberBand m-r-20 saveBookmarkTabOrderButton hidden" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save Tab Order</span></button>
 			</div>
 			<div class="table-responsive">
 				<form id="submit-bookmark-tabs-form" onsubmit="return false;">
@@ -365,49 +316,49 @@ class Bookmark extends Organizr
 			<h1 lang="en">Add New Tab</h1>
 			<fieldset style="border:0;">
 				<div class="form-group">
-					<label class="control-label" for="new-bookmark-tab-form-inputName" lang="en">Tab Name</label>
+					<label class="form-label" for="new-bookmark-tab-form-inputName" lang="en">Tab Name</label>
 					<input type="text" class="form-control" id="new-bookmark-tab-form-inputName" name="name" required="" autofocus>
 				</div>
 				<div class="form-group">
-					<label class="control-label" for="new-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
+					<label class="form-label" for="new-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
 					<input type="text" class="form-control" id="new-bookmark-tab-form-inputURL" name="url"  required="">
 				</div>
 				<div class="row">
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
 						<select class="form-control bookmarkTabIconImageList" id="new-bookmark-tab-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
 						<select class="form-control bookmarkTabIconIconList" id="new-bookmark-tab-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
-						<button id="new-bookmark-tab-form-chooseBlackberry" class="btn btn-xs btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'new-bookmark-tab-form-inputImageNew\');" type="button">
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
+						<button id="new-bookmark-tab-form-chooseBlackberry" class="btn btn-sm btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'new-bookmark-tab-form-inputImageNew\');" type="button">
 							<i class="fa fa-search"></i>&nbsp; <span lang="en">Choose</span>
 						</button>
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="control-label" for="new-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
+					<label class="form-label" for="new-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
 					<input type="text" class="form-control" id="new-bookmark-tab-form-inputImage" name="image" required="">
 				</div>
 				<div class="row">
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
 						<input type="text" class="form-control bookmark-pick-a-color" id="new-bookmark-tab-form-inputBackgroundColor" name="background_color" required="" value="#fff">
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
 						<input type="text" class="form-control bookmark-pick-a-color" id="new-bookmark-tab-form-inputTextColor" name="text_color" required="" value="#000">
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="new-bookmark-preview" lang="en">Preview</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="new-bookmark-preview" lang="en">Preview</label>
 						<div id="new-bookmark-preview"></div>
 					</div>
 				</div>
 			</fieldset>
-			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none addNewBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Tab</span></button>
+			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none addNewBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Tab</span></button>
 			<div class="clearfix"></div>
 		</form>
 		<form id="edit-bookmark-tab-form" class="mfp-hide white-popup-block mfp-with-anim">
@@ -416,49 +367,49 @@ class Bookmark extends Organizr
 			<h1 lang="en">Edit Tab</h1>
 			<fieldset style="border:0;">
 				<div class="form-group">
-					<label class="control-label" for="edit-bookmark-tab-form-inputName" lang="en">Tab Name</label>
+					<label class="form-label" for="edit-bookmark-tab-form-inputName" lang="en">Tab Name</label>
 					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputName" name="name" required="" autofocus>
 				</div>
 				<div class="form-group">
-					<label class="control-label" for="edit-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
+					<label class="form-label" for="edit-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
 					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputURL" name="url"  required="">
 				</div>
 				<div class="row">
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
 						<select class="form-control bookmarkTabIconImageList" id="edit-bookmark-tab-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
 						<select class="form-control bookmarkTabIconIconList" id="edit-bookmark-tab-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
-						<button id="edit-bookmark-tab-form-chooseBlackberry" class="btn btn-xs btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'edit-bookmark-tab-form-inputImage\');" type="button">
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
+						<button id="edit-bookmark-tab-form-chooseBlackberry" class="btn btn-sm btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'edit-bookmark-tab-form-inputImage\');" type="button">
 							<i class="fa fa-search"></i>&nbsp; <span lang="en">Choose</span>
 						</button>
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="control-label" for="edit-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
+					<label class="form-label" for="edit-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
 					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputImage" name="image"  required="">
 				</div>
 				<div class="row">
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
 						<input type="text" class="form-control bookmark-pick-a-color" id="edit-bookmark-tab-form-inputBackgroundColor" name="background_color" required="">
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
 						<input type="text" class="form-control bookmark-pick-a-color" id="edit-bookmark-tab-form-inputTextColor" name="text_color" required="">
 					</div>
-					<div class="form-group col-lg-4">
-						<label class="control-label" for="edit-bookmark-preview" lang="en">Preview</label>
+					<div class="form-group col-xl-4">
+						<label class="form-label" for="edit-bookmark-preview" lang="en">Preview</label>
 						<div id="edit-bookmark-preview"></div>
 					</div>
 				</div>
 			</fieldset>
-			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none editBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Edit Tab</span></button>
+			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none editBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Edit Tab</span></button>
 			<div class="clearfix"></div>
 		</form>
 		';
@@ -721,8 +672,9 @@ class Bookmark extends Organizr
 		return '
 	<script>
 	buildBookmarkCategoryEditor();
-	$( \'#bookmarkCategoryEditorTable\' ).sortable({
-		stop: function () {
+	new Sortable(document.getElementById("bookmarkCategoryEditorTable"), {
+		animation: 150,
+		onEnd: function () {
 			var inputs = $(\'input.order\');
 			var nbElems = inputs.length;
 			inputs.each(function(idx) {
@@ -732,10 +684,10 @@ class Bookmark extends Organizr
 		}
 	});
 	</script>
-	<div class="panel bg-org panel-info">
-		<div class="panel-heading">
+	<div class="card bg-org card-info">
+		<div class="card-header">
 			<span lang="en">Bookmark Category Editor</span>
-			<button type="button" class="btn btn-info btn-circle pull-right popup-with-form m-r-5" href="#new-bookmark-category-form" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
+			<button type="button" class="btn btn-info btn-circle float-end popup-with-form m-r-5" href="#new-bookmark-category-form" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
 		</div>
 		<div class="table-responsive">
 			<form id="submit-bookmark-categories-form" onsubmit="return false;">
@@ -758,11 +710,11 @@ class Bookmark extends Organizr
 		<h1 lang="en">Add New Bookmark Category</h1>
 		<fieldset style="border:0;">
 			<div class="form-group">
-				<label class="control-label" for="new-bookmark-category-form-inputName" lang="en">Category Name</label>
+				<label class="form-label" for="new-bookmark-category-form-inputName" lang="en">Category Name</label>
 				<input type="text" class="form-control" id="new-bookmark-category-form-inputName" name="category" required="" autofocus>
 			</div>
 		</fieldset>
-		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none addNewBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Category</span></button>
+		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none addNewBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Category</span></button>
 		<div class="clearfix"></div>
 	</form>
 	<form id="edit-bookmark-category-form" class="mfp-hide white-popup-block mfp-with-anim">
@@ -770,11 +722,11 @@ class Bookmark extends Organizr
 		<h1 lang="en">Edit Category</h1>
 		<fieldset style="border:0;">
 			<div class="form-group">
-				<label class="control-label" for="edit-bookmark-category-form-inputName" lang="en">Category Name</label>
+				<label class="form-label" for="edit-bookmark-category-form-inputName" lang="en">Category Name</label>
 				<input type="text" class="form-control" id="edit-bookmark-category-form-inputName" name="category" required="" autofocus>
 			</div>
 		</fieldset>
-		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none editBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Edit Category</span></button>
+		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none editBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Edit Category</span></button>
 		<div class="clearfix"></div>
 	</form>
 	';

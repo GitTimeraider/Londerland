@@ -64,7 +64,7 @@ trait OptionsFunction
 					'type' => 'button',
 					'label' => 'Test Connection',
 					'icon' => 'fa fa-flask',
-					'class' => 'pull-right',
+					'class' => 'float-end',
 					'text' => 'Test Connection',
 					'attr' => 'onclick="testAPIConnection(\'' . $name . '\')"',
 					'help' => 'Remember! Please save before using the test button!'
@@ -139,18 +139,18 @@ trait OptionsFunction
 					'label' => '',
 					'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-info">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-info">
+									<div class="card-header">
 										<span lang="en">Organizr Enable Cron Instructions</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<h3 lang="en">Instructions for your install type</h3>
 											<span>' . $installInstruction . '</span>
-											<button type="button" onclick="checkCronFile();" class="btn btn-outline btn-info btn-lg btn-block" lang="en">Check Cron Status</button>
+											<button type="button" onclick="checkCronFile();" class="btn btn-outline btn-info btn-lg w-100" lang="en">Check Cron Status</button>
 											<div class="m-t-15 hidden cron-results-container">
-												<div class="well">
+												<div class="card card-body">
 													<pre class="cron-results"></pre>
 												</div>
 											</div>
@@ -211,13 +211,13 @@ trait OptionsFunction
 					'label' => '',
 					'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-' . ($extras['notice'] ?? 'info') . '">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-' . ($extras['notice'] ?? 'info') . '">
+									<div class="card-header">
 										<span lang="en">' . ($extras['title'] ?? 'Attention') . '</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<span lang="en">' . ($extras['body'] ?? '') . '</span>
 											<span>' . ($extras['bodyHTML'] ?? '') . '</span>
 										</div>
@@ -234,9 +234,9 @@ trait OptionsFunction
 					'override' => 12,
 					'label' => '',
 					'html' => '
-						<div class="panel panel-default">
-							<div class="panel-wrapper collapse in">
-								<div class="panel-body">' . $this->socksHeadingHTML($name) . '</div>
+						<div class="card card-default">
+							<div class="card-wrapper collapse show">
+								<div class="card-body">' . $this->socksHeadingHTML($name) . '</div>
 							</div>
 						</div>'
 				];
@@ -247,9 +247,9 @@ trait OptionsFunction
 					'override' => 12,
 					'label' => '',
 					'html' => '
-						<div class="panel panel-default">
-							<div class="panel-wrapper collapse in">
-								<div class="panel-body">
+						<div class="card card-default">
+							<div class="card-wrapper collapse show">
+								<div class="card-body">
 									<h3 lang="en">' . ucwords($name) . ' Homepage Item</h3>
 									<p lang="en">' . $extras["about"] . '</p>
 								</div>
@@ -393,9 +393,8 @@ trait OptionsFunction
 					<textarea data-changed="false" class="form-control hidden ' . $name . 'Textarea" name="' . $name . '" data-type="textbox" autocomplete="new-password">' . $this->config[$name] . '</textarea>
 					<div id="' . $name . 'Editor" style="height:300px">' . htmlentities($this->config[$name]) . '</div>
 					<script>
-						let mode = ace.require("' . $mode . '").Mode;
 						' . str_replace('-', '', $name) . ' = ace.edit("' . $name . 'Editor");
-						' . str_replace('-', '', $name) . '.session.setMode(new mode());
+						' . str_replace('-', '', $name) . '.session.setMode("' . $mode . '");
 						' . str_replace('-', '', $name) . '.setTheme("ace/theme/idle_fingers");
 						' . str_replace('-', '', $name) . '.setShowPrintMargin(false);
 						' . str_replace('-', '', $name) . '.session.on("change", function(delta) { 
@@ -1091,20 +1090,12 @@ trait OptionsFunction
 	{
 		return array(
 			array(
-				'name' => 'Toastr',
-				'value' => 'toastr'
-			),
-			array(
-				'name' => 'Izi',
-				'value' => 'izi'
+				'name' => 'Bootstrap',
+				'value' => 'bootstrap'
 			),
 			array(
 				'name' => 'Alertify',
 				'value' => 'alertify'
-			),
-			array(
-				'name' => 'Noty',
-				'value' => 'noty'
 			),
 		);
 	}

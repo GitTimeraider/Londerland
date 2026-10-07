@@ -10,7 +10,7 @@ function phpmLaunch(){
 			var menuList = `<li><a class="inline-popups emailModal" href="#email-area" data-effect="mfp-zoom-out"><i class="fa fa-envelope fa-fw"></i> <span lang="en">E-Mail Center</span></a></li>`;
 			var htmlDOM = `
 			<div id="email-area" class="white-popup mfp-with-anim mfp-hide">
-				<div class="col-md-10 col-md-offset-1">
+				<div class="col-lg-10 offset-lg-1">
 					<div class="email-div"></div>
 				</div>
 			</div>
@@ -42,7 +42,7 @@ function sendMail(){
 			body:body
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/php-mailer/email/send',post).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/php-mailer/email/send',post).done(function(data) {
 			var response = data.response;
 			if(response.result == 'success'){
 				$.magnificPopup.close();
@@ -74,11 +74,11 @@ function buildUserList(array){
 function buildEmailModal(){
 	var htmlDOM = `
 	<div class="row">
-		<div class="col-md-12">
-			<div class="panel panel-info m-0">
-				<div class="panel-heading">
+		<div class="col-lg-12">
+			<div class="card card-info m-0">
+				<div class="card-header">
 					<span lang="en">Email Users</span>
-					<div class="btn-group pull-right">
+					<div class="btn-group float-end">
 						<button class="btn btn-info waves-effect waves-light loadUserList" type="button">
 							<i class="fa fa-user"></i>
 						</button>
@@ -91,21 +91,21 @@ function buildEmailModal(){
 						<button class="btn btn-info waves-effect waves-light" onclick="sendMail();"><i class="fa fa-paper-plane"></i></button>
 					</div>
 				</div>
-				<div class="panel-wrapper collapse in main-email-panel" aria-expanded="true">
-					<div class="panel-body">
+				<div class="card-wrapper collapse show main-email-panel" aria-expanded="true">
+					<div class="card-body">
 						<div class="form-body">
 							<div class="row">
-								<div class="col-md-6">
+								<div class="col-lg-6">
 									<div class="form-group">
-										<label class="control-label" lang="en">To:</label>
+										<label class="form-label" lang="en">To:</label>
 										<input type="text" id="sendEmailToInput" class="form-control"></div>
 								</div>
-								<div class="col-md-6">
+								<div class="col-lg-6">
 									<div class="form-group">
-										<label class="control-label" lang="en">Subject</label>
+										<label class="form-label" lang="en">Subject</label>
 										<input type="text" id="sendEmailSubjectInput" class="form-control"></div>
 								</div>
-								<div class="col-md-12" id="user-list-div"></div>
+								<div class="col-lg-12" id="user-list-div"></div>
 							</div>
 							<!--/row-->
 						</div>
@@ -157,24 +157,33 @@ function buildEmailModal(){
 		}
 		tinymce.init({
 			selector: "textarea#sendEmail",
-			theme: "modern",
+			license_key: "gpl",
+			base_url: "assets/vendor/tinymce",
+			suffix: ".min",
+			promotion: false,
+			skin: "oxide-dark",
+			content_css: "dark",
 			height: 300,
-			plugins: [
-				"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker", "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking", "save table contextmenu directionality emoticons template paste textcolor"
-			],
-			toolbar: "insertfile template undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor",
-			templates: templates,
-			init_instance_callback: function (editor) {
-				editor.on('BeforeSetContent', function (e) {
-					//tinyMCE.get('sendEmail').execCommand('selectAll');
-					//tinyMCE.get('sendEmail').execCommand('delete');
-					$.each(e.target.settings.templates, function(i,v) {
-						if($.trim(v.content) == $.trim(e.content)){
-							$('#sendEmailSubjectInput').val(v.description);
-						}
-					});
+			plugins: "advlist autolink link image lists charmap preview anchor pagebreak searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking save table directionality emoticons",
+			toolbar: "emailtemplates undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | preview media | forecolor backcolor",
+			setup: function (editor) {
+				// email templates (the template plugin is no longer part of TinyMCE)
+				editor.ui.registry.addMenuButton("emailtemplates", {
+					text: window.lang.translate("Templates"),
+					fetch: function (callback) {
+						callback(templates.map(function (template) {
+							return {
+								type: "menuitem",
+								text: template.title,
+								onAction: function () {
+									editor.setContent(template.content);
+									$('#sendEmailSubjectInput').val(template.description);
+								}
+							};
+						}));
+					}
 				});
-			  }
+			}
 		});
 	}
 
@@ -185,10 +194,10 @@ $(document).on("change", "#email-user-list", function () {
 });
 $(document).on('click', '.loadUserList', function() {
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/php-mailer/email/list').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/php-mailer/email/list').done(function(data) {
 		var response = data.response;
 		$('#user-list-div').html(buildUserList(response.data));
-		$('#email-user-list').multiSelect();
+		initMultiSelect('#email-user-list', { closeOnSelect: false });
 	}).fail(function(xhr) {
 		OrganizrApiError(xhr);
 	});
@@ -201,11 +210,12 @@ $(document).on("click", ".show-login", function(e) {
 	setTimeout(addForgotPassword, 1000);
 });
 $(document).on("click", "#select-all-users-list", function(e) {
-	$('#email-user-list').multiSelect('select_all');
+	const users = document.getElementById('email-user-list').tomselect;
+	users.setValue(Object.keys(users.options));
 	return false;
 });
 $(document).on("click", "#deselect-all-users-list", function(e) {
-	$('#email-user-list').multiSelect('deselect_all');
+	document.getElementById('email-user-list').tomselect.clear();
 	return false;
 });
 $(document).on("click", "#minimize-users-list, .unhide-user-list", function(e) {
@@ -218,7 +228,7 @@ function addForgotPassword(){
 	var item = '';
 	if(activeInfo.plugins["PHPMAILER-enabled"] == true){
 		if (activeInfo.user.loggedin === false) {
-			item = `<a href="javascript:void(0)" id="to-recover" class="text-dark pull-right"><i class="fa fa-lock m-r-5"></i> <span lang="en">Forgot pwd?</span></a>`;
+			item = `<a href="javascript:void(0)" id="to-recover" class="text-dark float-end"><i class="fa fa-lock m-r-5"></i> <span lang="en">Forgot pwd?</span></a>`;
 			$('.remember-me').after(item);
 		}
 	}
@@ -227,7 +237,7 @@ function addForgotPassword(){
 $(document).on('click', '.phpmSendTestEmail', function() {
 	messageSingle('',window.lang.translate('Sending Test E-Mail'),activeInfo.settings.notifications.position,'#FFF','info','5000');
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/php-mailer/email/test').success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/php-mailer/email/test').done(function(data) {
 		var response = data.response;
 		if(response.message !== null && response.message.indexOf('|||DEBUG|||') == 0){
 			messageSingle('',window.lang.translate('Press F12 to check Console for output'),activeInfo.settings.notifications.position,'#FFF','warning','5000');

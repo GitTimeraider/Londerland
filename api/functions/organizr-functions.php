@@ -32,29 +32,6 @@ trait OrganizrFunctions
 		return ($file !== '') ? '<link href="' . $rootPath . $file . '?v=' . trim($this->fileHash) . '" rel="stylesheet">' . "\n" : '';
 	}
 
-	public function loadDefaultJavascriptFiles()
-	{
-		$javaFiles = [
-			'js/jquery-2.2.4.min.js',
-			'bootstrap/dist/js/bootstrap.min.js',
-			'plugins/bower_components/sidebar-nav/dist/sidebar-nav.min.js',
-			'js/jquery.slimscroll.js',
-			'plugins/bower_components/styleswitcher/jQuery.style.switcher.js',
-			'plugins/bower_components/moment/moment.js',
-			'plugins/bower_components/moment/moment-timezone.js',
-			'plugins/bower_components/jquery-wizard-master/dist/jquery-wizard.min.js',
-			'plugins/bower_components/jquery-wizard-master/libs/formvalidation/formValidation.min.js',
-			'plugins/bower_components/jquery-wizard-master/libs/formvalidation/bootstrap.min.js',
-			'js/bowser.min.js',
-			'js/jasny-bootstrap.js'
-		];
-		$scripts = '';
-		foreach ($javaFiles as $file) {
-			$scripts .= '<script src="' . $file . '?v=' . trim($this->fileHash) . '"></script>' . "\n";
-		}
-		return $scripts;
-	}
-
 	public function loadJavascriptFile($file)
 	{
 		return '<script>loadJavascript("' . $file . '?v=' . trim($this->fileHash) . '");' . "</script>\n";
@@ -442,7 +419,7 @@ trait OrganizrFunctions
 	public function importUserButtons()
 	{
 		$emptyButtons = '
-		<div class="col-md-12">
+		<div class="col-lg-12">
             <div class="white-box bg-org">
                 <h3 class="box-title m-0" lang="en">Currently User import is available for Plex only.</h3> </div>
         </div>
@@ -672,20 +649,20 @@ trait OrganizrFunctions
 	{
 		$buttons = '';
 		if ($this->config['plexoAuth'] && $this->config['authBackend'] == 'plex' && $this->config['authType'] !== 'internal') {
-			$buttons .= '<a href="javascript:void(0)" onclick="oAuthStart(\'plex\')" class="btn btn-lg btn-block text-uppercase waves-effect waves-light bg-plex text-muted" data-toggle="tooltip" title="" data-original-title="Login with Plex"> <span>Login</span><i aria-hidden="true" class="mdi mdi-plex m-l-5"></i> </a>';
+			$buttons .= '<a href="javascript:void(0)" onclick="oAuthStart(\'plex\')" class="btn btn-lg w-100 text-uppercase waves-effect waves-light bg-plex text-muted" data-bs-toggle="tooltip" title="" data-bs-title="Login with Plex"> <span>Login</span><i aria-hidden="true" class="mdi mdi-plex m-l-5"></i> </a>';
 		}
 		return ($buttons) ? '
-		<div class="panel">
-            <div class="panel-heading bg-org" id="plex-login-heading" role="tab">
-            	<a class="panel-title" data-toggle="collapse" href="#plex-login-collapse" data-parent="#login-panels" aria-expanded="false" aria-controls="organizr-login-collapse">
+		<div class="card">
+            <div class="card-header bg-org" id="plex-login-heading" role="tab">
+            	<a class="card-title" data-bs-toggle="collapse" href="#plex-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="organizr-login-collapse">
 	                <img class="lazyload loginTitle" data-src="plugins/images/tabs/plex.png"> &nbsp;
                     <span class="text-uppercase fw300" lang="en">Login with Plex</span>
             	</a>
             </div>
-            <div class="panel-collapse collapse in" id="plex-login-collapse" aria-labelledby="plex-login-heading" role="tabpanel">
-                <div class="panel-body">
+            <div class="card-collapse collapse show" id="plex-login-collapse" aria-labelledby="plex-login-heading" role="tabpanel">
+                <div class="card-body">
                		<div class="row">
-			            <div class="col-xs-12 col-sm-12 col-md-12 text-center">
+			            <div class="col-12 col-md-12 col-lg-12 text-center">
 			                <div class="social m-b-0">' . $buttons . '</div>
 			            </div>
 			        </div>
@@ -712,23 +689,23 @@ trait OrganizrFunctions
 		$providers = $this->getEnabledOIDCProviders();
 		foreach ($providers as $provider => $config) {
 			$name = htmlspecialchars($this->config[$config['configPrefix'] . 'Name'] ?? ucfirst($provider));
-			$buttons .= '<a href="javascript:void(0)" onclick="oidcStart(\'' . htmlspecialchars($provider) . '\')" class="btn btn-lg btn-block text-uppercase waves-effect waves-light bg-oidc-' . htmlspecialchars($provider) . ' text-muted"> <span>Login with ' . $name . '</span><i aria-hidden="true" class="mdi mdi-shield-key m-l-5"></i> </a>';
+			$buttons .= '<a href="javascript:void(0)" onclick="oidcStart(\'' . htmlspecialchars($provider) . '\')" class="btn btn-lg w-100 text-uppercase waves-effect waves-light bg-oidc-' . htmlspecialchars($provider) . ' text-muted"> <span>Login with ' . $name . '</span><i aria-hidden="true" class="mdi mdi-shield-key m-l-5"></i> </a>';
 		}
 		if (!$buttons) {
 			return '';
 		}
 		return '
-		<div class="panel">
-			<div class="panel-heading bg-org" id="oidc-login-heading" role="tab">
-				<a class="panel-title" data-toggle="collapse" href="#oidc-login-collapse" data-parent="#login-panels" aria-expanded="false" aria-controls="oidc-login-collapse">
+		<div class="card">
+			<div class="card-header bg-org" id="oidc-login-heading" role="tab">
+				<a class="card-title" data-bs-toggle="collapse" href="#oidc-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="oidc-login-collapse">
 					<i class="mdi mdi-shield-account"></i> &nbsp;
 					<span class="text-uppercase fw300" lang="en">Single Sign-On</span>
 				</a>
 			</div>
-			<div class="panel-collapse collapse in" id="oidc-login-collapse" aria-labelledby="oidc-login-heading" role="tabpanel">
-				<div class="panel-body">
+			<div class="card-collapse collapse show" id="oidc-login-collapse" aria-labelledby="oidc-login-heading" role="tabpanel">
+				<div class="card-body">
 					<div class="row">
-						<div class="col-xs-12 col-sm-12 col-md-12 text-center">
+						<div class="col-12 col-md-12 col-lg-12 text-center">
 							<div class="social m-b-0">' . $buttons . '</div>
 						</div>
 					</div>
@@ -751,7 +728,7 @@ trait OrganizrFunctions
 		$type = (array_search(false, $paths)) ? 'Not Writable' : 'Writable';
 		$result = '<li class="mouse" onclick="toggleWritableFolders();"><div class="bg-info"><i class="mdi mdi-folder mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Organizr Paths</span> ' . $type . '</li>';
 		foreach ($paths as $k => $v) {
-			$items .= '<li class="folders-writable hidden"><div class="bg-primary"><i class="mdi mdi-folder mdi-24px text-white"></i></div><a tabindex="0" type="button" class="btn btn-default btn-outline popover-info pull-right clipboard" lang="en" data-container="body" title="" data-toggle="popover" data-placement="left" data-content="' . $v['path'] . '" data-original-title="File Path" data-clipboard-text="' . $v['path'] . '">' . $k . '</a> ' . (($v['writable']) ? 'Writable' : 'Not Writable') . '</li>';
+			$items .= '<li class="folders-writable hidden"><div class="bg-primary"><i class="mdi mdi-folder mdi-24px text-white"></i></div><a tabindex="0" type="button" class="btn btn-secondary btn-outline popover-info float-end clipboard" lang="en" data-bs-container="body" title="" data-bs-toggle="popover" data-bs-placement="left" data-content="' . $v['path'] . '" data-bs-title="File Path" data-clipboard-text="' . $v['path'] . '">' . $k . '</a> ' . (($v['writable']) ? 'Writable' : 'Not Writable') . '</li>';
 		}
 		return $result . $items;
 	}
@@ -915,7 +892,7 @@ trait OrganizrFunctions
 			$selectMenuItems .= '<option value="#' . $menuItem['anchor'] . '" lang="en">' . $menuItem['name'] . '</option>';
 			$unorderedListMenuItems .= '
 				<li onclick="changeSettingsMenu(\'Settings::' . $menuName . '::' . $menuItem['name'] . '\'); ' . $apiPage . $onClick . '" role="presentation" class="' . $active . '">
-					<a id="' . $menuItem['anchor'] . '" href="#' . $anchorShort . '" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true">
+					<a id="' . $menuItem['anchor'] . '" href="#' . $anchorShort . '" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="true">
 						<span lang="en">' . $menuItem['name'] . '</span>
 					</a>
 			</li>';
