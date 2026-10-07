@@ -150,7 +150,7 @@ Organizr has a built-in AI chat for logged in users. It works with any server th
    - **Uploads:** whether users may add images and files, and the size limit.
 3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
 
-**Using it:** logged in users get an **AI** chat bubble at the left of the top bar on every Organizr page. The chat offers:
+**Using it:** logged in users get a large **AI** chat bubble in the bottom right corner of every Organizr page. The chat offers:
 
 - Answers that appear while they are written, with a stop button.
 - Markdown with highlighted code blocks.

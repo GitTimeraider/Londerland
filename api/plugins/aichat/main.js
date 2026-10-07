@@ -232,15 +232,10 @@
 
 	function buildDom() {
 		const uploads = activeInfo.plugins.includes['AICHAT-uploads-include'] !== false;
-		// Chat bubble button in the left part of the top bar, after Organizr's own icons so the sidebar
-		// (which widens on hover) never covers it; floating top left if there is no top bar
-		const launcher = `<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label">${escapeHtml(t('AI'))}</span></button>`;
-		const $topbar = $('.navbar-top-links.navbar-left').first();
-		if ($topbar.length) {
-			$topbar.append(`<li class="aichat-topbar-item">${launcher}</li>`);
-		} else {
-			$('body').append($(launcher).addClass('aichat-launcher-floating'));
-		}
+		// Big chat bubble fixed in the bottom right corner of every page
+		$('body')
+			.addClass('aichat-enabled')
+			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label">${escapeHtml(t('AI'))}</span></button>`);
 		$('body').append(`
 			<section class="aichat-panel" role="dialog" aria-label="${escapeHtml(t('AI Chat'))}">
 				<aside class="aichat-sidebar">
@@ -326,7 +321,7 @@
 
 	async function openChat() {
 		$('body').addClass('aichat-open');
-		$('.aichat-launcher').attr('aria-expanded', 'true');
+		$('.aichat-launcher').attr({ 'aria-expanded': 'true', 'aria-label': t('Close AI Chat') }).find('i').attr('class', 'fa fa-times');
 		if (window.innerWidth < 768) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
@@ -355,7 +350,7 @@
 
 	function closeChat() {
 		$('body').removeClass('aichat-open');
-		$('.aichat-launcher').attr('aria-expanded', 'false');
+		$('.aichat-launcher').attr({ 'aria-expanded': 'false', 'aria-label': t('Open AI Chat') }).find('i').attr('class', 'fa fa-comment-dots');
 		$('.aichat-launcher').trigger('focus');
 	}
 
