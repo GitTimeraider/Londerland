@@ -2401,7 +2401,7 @@ class Organizr
 			],
 			'Github' => [
 				$this->settingsOption('select', 'branch', ['label' => 'Branch', 'value' => $this->config['branch'], 'options' => $this->getBranches(), 'disabled' => $this->docker, 'help' => ($this->docker) ? 'Since you are using the Official Docker image, Change the image to change the branch' : 'Choose which branch to download from']),
-				$this->settingsOption('button', 'force-install-branch', ['label' => 'Force Install Branch', 'class' => 'updateNow', 'icon' => 'fa fa-download', 'text' => 'Retrieve', 'attr' => ($this->docker) ? 'title="You can just restart your docker to update"' : '', 'help' => ($this->docker) ? 'Since you are using the official Docker image, you can just restart your Docker container to update Organizr' : 'This will re-download all of the source files for Organizr']),
+				$this->settingsOption('button', 'force-install-branch', ['label' => 'Force Install Branch', 'class' => 'updateNow', 'icon' => 'fa fa-download', 'text' => 'Retrieve', 'attr' => ($this->docker) ? 'title="Pull the latest image and recreate your container to update"' : '', 'help' => ($this->docker) ? 'Since you are using a Docker image, pull the latest image and recreate your container to update Organizr' : 'This will re-download all of the source files for Organizr']),
 			],
 			'API' => [
 				$this->settingsOption('password-alt-copy', 'organizrAPI', ['label' => 'Organizr API']),
@@ -6277,12 +6277,11 @@ class Organizr
 		$response = Requests::get($url, array(), $options);
 		if ($response->success) {
 			$sponsors = [];
-			$dom = new PHPHtmlParser\Dom;
 			try {
-				$dom->loadStr($response->body);
-				$contents = $dom->find('div#sponsors a');
+				$dom = \Dom\HTMLDocument::createFromString($response->body, LIBXML_NOERROR);
+				$contents = $dom->querySelectorAll('div#sponsors a');
 				foreach ($contents as $content) {
-					$html = $content->innerHtml;
+					$html = $content->innerHTML;
 					preg_match('/(@[a-zA-Z])\w+/', $html, $username);
 					preg_match('/(?i)\b((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'\".,<>?«»""\'\']))/', $html, $image);
 					if (isset($image[0]) && isset($username[0])) {
@@ -6298,7 +6297,7 @@ class Organizr
 				}
 				$this->setAPIResponse('success', '', 200, $sponsors);
 				return $sponsors;
-			} catch (\PHPHtmlParser\Exceptions\ChildNotFoundException|\PHPHtmlParser\Exceptions\CircularException|\PHPHtmlParser\Exceptions\LogicalException|\PHPHtmlParser\Exceptions\StrictException|\PHPHtmlParser\Exceptions\ContentLengthException|\PHPHtmlParser\Exceptions\NotLoadedException $e) {
+			} catch (\Throwable $e) {
 				$this->setAPIResponse('error', 'Error connecting to Github', 409);
 				return false;
 			}

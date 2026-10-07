@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+server.log
+api/vendor
+data
+Docker.txt
+Github.txt
+Dev.txt

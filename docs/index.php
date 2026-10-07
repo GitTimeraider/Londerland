@@ -5,7 +5,9 @@ $dirs = [
 	'../api/plugins',
 	'../api/v2',
 ];
-$openapi = \OpenApi\scan($dirs);
+$openapi = (new \OpenApi\Generator())
+	->setAnalyser(new \OpenApi\Analysers\TokenAnalyser())
+	->generate(\OpenApi\Util::finder($dirs), null, false);
 ob_start();
 header('Content-Type: application/json');
 $json = $openapi->toJson();

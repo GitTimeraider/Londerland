@@ -116,9 +116,8 @@ trait uTorrentHomepageItem
 				$options = array_merge($options, $credentials);
 			}
 			$response = Requests::post($url, [], $data, $options);
-			$dom = new PHPHtmlParser\Dom;
-			$dom->loadStr($response->body);
-			$id = $dom->getElementById('token')->text;
+			$dom = \Dom\HTMLDocument::createFromString($response->body, LIBXML_NOERROR);
+			$id = $dom->getElementById('token')?->textContent;
 			$uTorrentConfig = array(
 				"uTorrentToken" => $id,
 				"uTorrentCookie" => "",

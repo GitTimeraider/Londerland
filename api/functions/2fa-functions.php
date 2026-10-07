@@ -9,14 +9,21 @@ trait TwoFAFunctions
 			case 'google':
 				try {
 					$google2fa = new PragmaRX\Google2FA\Google2FA();
-					$google2fa->setAllowInsecureCallToGoogleApis(true);
 					$result['secret'] = $google2fa->generateSecretKey();
-					$result['url'] = $google2fa->getQRCodeGoogleUrl(
+					$otpauthUrl = $google2fa->getQRCodeUrl(
 						$this->config['title'],
 						$this->user['username'],
 						$result['secret']
 					);
-				} catch (PragmaRX\Google2FA\Exceptions\InsecureCallException $e) {
+					// Render the QR code locally instead of calling an external QR service
+					$writer = new BaconQrCode\Writer(
+						new BaconQrCode\Renderer\ImageRenderer(
+							new BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+							new BaconQrCode\Renderer\Image\SvgImageBackEnd()
+						)
+					);
+					$result['url'] = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($otpauthUrl));
+				} catch (\Throwable $e) {
 					$this->setResponse(500, $e->getMessage());
 					return null;
 				}
