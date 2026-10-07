@@ -19,7 +19,8 @@
     "lcobucci/clock": "^3.6",
     "monolog/monolog": "^3.12",
     "directorytree/ldaprecord": "^4.1",
-    "dragonmantank/cron-expression": "^3.6"
+    "dragonmantank/cron-expression": "^3.6",
+    "smalot/pdfparser": "^2"
   },
   "config": {
     "platform": {
