@@ -68,7 +68,13 @@ This repository builds its own image with `.github/workflows/docker.yml` and pub
 Everything (PHP extensions, Composer dependencies, fonts, cron) is baked into the image at build time, so the container does not download anything when it starts.
 Frontend libraries (Bootstrap 5, jQuery 4, Font Awesome 7 and the rest) are installed from `package.json` with npm during the image build and served from `assets/vendor`.
 Running from a git checkout without Docker? Run `npm ci && npm run build` in the repository folder first; it creates `assets/vendor` and the minified CSS/JS.
-To update, pull a newer image and recreate the container.
+
+Two ready-to-use examples are in the repository root:
+
+- [`docker-compose.yml`](docker-compose.yml) for Docker Compose
+- [`docker-run.sh`](docker-run.sh) for plain `docker run`
+
+**Docker Compose** (save as `docker-compose.yml` in an empty folder, then run `docker compose up -d` in that folder):
 
 ```yaml
 services:
@@ -76,13 +82,27 @@ services:
     image: ghcr.io/gittimeraider/organizr:latest
     container_name: organizr
     ports:
-      - 80:80
+      - "80:80"
     environment:
       - TZ=Etc/UTC
     volumes:
       - ./organizr-data:/var/www/html/data
     restart: unless-stopped
 ```
+
+**docker run** (run in the folder where the `organizr-data` folder should be created):
+
+```bash
+docker run -d \
+  --name organizr \
+  -p 80:80 \
+  -e TZ=Etc/UTC \
+  -v "$(pwd)/organizr-data:/var/www/html/data" \
+  --restart unless-stopped \
+  ghcr.io/gittimeraider/organizr:latest
+```
+
+Then open `http://<your-server-ip>` in a browser to start the setup wizard.
 
 In the setup wizard, set the database location to a folder inside the volume, for example `/var/www/html/data/db/`.
 
@@ -92,29 +112,20 @@ In the setup wizard, set the database location to a folder inside the volume, fo
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/organizr/docker-organizr/Build%20Container?color=402885&style=for-the-badge&logo=github&logoColor=41add3)](https://github.com/organizr/docker-organizr/actions?query=workflow%3A%22Build+Container%22)
 [![Docker Pulls](https://img.shields.io/docker/pulls/organizr/organizr?color=402885&style=for-the-badge&logo=docker&logoColor=41add3)](https://hub.docker.com/r/organizr/organizr/)
 
-##### Usage
+##### Settings
 
-```bash
-docker create \
-  --name=organizr \
-  -v <path to data>:/config \
-  -e PGID=<gid> -e PUID=<uid>  \
-  -p 80:80 \
-  -e fpm="false" `#optional` \
-  -e branch="v2-master" `#optional` \
-  organizr/organizr
-```
+| Setting | Example | What it does |
+|---|---|---|
+| `-p` / `ports` | `80:80` | `<port on your machine>:<port in the container>`. Use `8080:80` to reach Organizr on port 8080 instead. |
+| `-e TZ` / `environment` | `TZ=Europe/Amsterdam` | Timezone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
+| `-v` / `volumes` | `./organizr-data:/var/www/html/data` | Where your settings, database, logs and uploaded images are kept. Keep this folder to keep your setup across updates. |
 
-##### Parameters
+The image also has a built-in health check, so `docker ps` shows whether Organizr is `healthy`.
 
-The parameters are split into two halves, separated by a colon, the left hand side representing the host and the right the container side. For example with a port -p external:internal - what this shows is the port mapping from internal to external of the container. So `-p 8080:80` would expose port 80 from inside the container to be accessible from the host's IP on port 8080 and `http://192.168.x.x:8080` would show you what's running INSIDE the container on port 80.
+##### Updating
 
-- `-p 80` - The port(s)
-- `-v /config` - Mapping the config files for Organizr
-- `-e PGID` Used for GroupID - see below for link
-- `-e PUID` Used for UserID - see below for link
-
-The optional parameters and GID and UID are described in the [readme](https://github.com/Organizr/docker-organizr#parameters) for the container.
+- Docker Compose: `docker compose pull && docker compose up -d`
+- docker run: `docker pull ghcr.io/gittimeraider/organizr:latest`, then `docker rm -f organizr`, then run the `docker run` command again. Your data stays in the `organizr-data` folder.
 
 ##### Info
 
