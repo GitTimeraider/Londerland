@@ -132,6 +132,7 @@ api/v2/routes/custom/*
 # Plugin files
 # =========================
 api/plugins/*
+!api/plugins/aichat/
 !api/plugins/invites.php
 !api/plugins/api/invites.php
 !api/plugins/config/invites.php

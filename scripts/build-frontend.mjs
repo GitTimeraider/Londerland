@@ -68,6 +68,9 @@ const assets = [
 	['swagger-ui-dist/swagger-ui-standalone-preset.js', 'swagger-ui/swagger-ui-standalone-preset.js'],
 	['swagger-ui-dist/swagger-ui.css', 'swagger-ui/swagger-ui.css'],
 	['@highlightjs/cdn-assets/highlight.min.js', 'highlightjs/highlight.min.js'],
+	['@highlightjs/cdn-assets/styles/github-dark.min.css', 'highlightjs/github-dark.min.css'],
+	['marked/lib/marked.umd.js', 'marked/marked.umd.js'],
+	['dompurify/dist/purify.min.js', 'dompurify/purify.min.js'],
 	['@highlightjs/cdn-assets/styles/default.min.css', 'highlightjs/default.min.css'],
 ];
 

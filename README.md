@@ -134,6 +134,34 @@ The image also has a built-in health check, so `docker ps` shows whether Organiz
 
 ![OrganizrSponsor](https://user-images.githubusercontent.com/16184466/53614287-a9b73480-3b96-11e9-9c8e-e32b4ae20c0d.png)
 
+### AI Chat
+
+Organizr has a built-in AI chat for logged in users. It works with any server that speaks the OpenAI API (`/v1/chat/completions`): OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, OpenRouter, vLLM, LocalAI and others.
+
+**Setting it up (as admin):**
+
+1. In Organizr, open **Settings > Plugins > Inactive** and enable **AI Chat**.
+2. Open **Settings > Plugins > Active**, click the settings icon of **AI Chat** and fill in:
+   - **Connection:** the API Base URL up to and including `/v1` (for example `https://api.openai.com/v1`, `https://api.anthropic.com/v1/` or `http://ollama:11434/v1`) and the API key (leave it empty for servers without one).
+   - **Models:** the default model, and optionally which models users may pick (`*` works as a wildcard) or extra model IDs the server does not list.
+   - **Chat:** the minimum group that gets the chat (guests never do), a system prompt, temperature, answer length and how many earlier messages are sent along.
+   - **Uploads:** whether users may add images and files, and the size limit.
+3. Click **Save**, then **Test (save first)** to check the connection and see the available models.
+
+**Using it:** logged in users get a chat button in the bottom left corner of every Organizr page. The chat offers:
+
+- Answers that appear while they are written, with a stop button.
+- Markdown with highlighted code blocks.
+- A model picker per chat, and a star to make the current model your default.
+- Image uploads for vision models, plus text, code and PDF files, which are sent as text. You can attach files with the paperclip button, by dragging them into the chat, or by pasting.
+- Chat history with search, pin, rename, export (Markdown or JSON), delete and delete all.
+- Editing a question, answering again, and copying.
+- Personal instructions sent with every chat.
+- A "Thinking" section for reasoning models.
+- A full-screen layout on phones.
+
+The API key stays on the Organizr server and is never sent to browsers. Chats and uploads are stored per user (uploads in `data/aichat`, readable only through Organizr's API).
+
 ### Seedboxes.cc 
 
 [![Seedboxes.cc](https://user-images.githubusercontent.com/16184466/154811062-201be154-6868-4a24-ade6-a26278935415.png)](https://www.seedboxes.cc)
