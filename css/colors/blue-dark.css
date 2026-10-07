@@ -112,7 +112,7 @@ body {
 .dropdown-menu {
   background: #1b1a1a;
 }
-.label-inverse {
+.text-bg-dark {
   background-color: #131313;
 }
 /*themecolor*/
@@ -180,30 +180,30 @@ body {
 .manage-users .tabs-style-iconbox nav li.tab-current a:after {
   border-top-color: #1f1f1f;
 }
-.panel-themecolor,
-.panel-theme {
+.card-themecolor,
+.card-theme {
   border-color: #1f1f1f;
 }
-.panel-themecolor .panel-heading,
-.panel-theme .panel-heading {
+.card-themecolor .card-header,
+.card-theme .card-header {
   border-color: #1f1f1f;
   color: white;
   background-color: #1f1f1f;
 }
-.panel-themecolor .panel-heading a,
-.panel-theme .panel-heading a {
+.card-themecolor .card-header a,
+.card-theme .card-header a {
   color: #ffffff;
 }
-.panel-themecolor .panel-heading a:hover,
-.panel-theme .panel-heading a:hover {
+.card-themecolor .card-header a:hover,
+.card-theme .card-header a:hover {
   color: rgba(255, 255, 255, 0.5);
 }
-.panel-themecolor a,
-.panel-theme a {
+.card-themecolor a,
+.card-theme a {
   color: #1f1f1f;
 }
-.panel-themecolor a:hover,
-.panel-theme a:hover {
+.card-themecolor a:hover,
+.card-theme a:hover {
   color: #177eac;
 }
 .login-box,
@@ -213,16 +213,16 @@ body {
 .bg-title{
   background: #1b1a1a;
 }
-.panel{
+.card{
   background: #1b1a1a;
 }
 .form-control,
 input,
-.input-group-addon,
-.no-bg-addon .input-group-addon {
+.input-group-text,
+.no-bg-addon .input-group-text {
   background-color: #1f1f1f;
 }
-.panel-blue .panel-heading, .panel-info .panel-heading {
+.card-blue .card-header, .card-info .card-header {
   border-color: #2cabe3;
   color: #fff;
   background-color: #232323;
@@ -278,7 +278,7 @@ input,
 .wizard-steps>li.done {
   background: #2b8b2d;
 }
-.panel-body {
+.card-body {
   background: #333;
 }
 .jq-toast-single {
@@ -431,7 +431,7 @@ body.stop-scrolling {
 .table-hover>tbody>tr:hover, .table-striped>tbody>tr:nth-of-type(odd), .table>tbody>tr.active>td, .table>tbody>tr.active>th, .table>tbody>tr>td.active, .table>tbody>tr>th.active, .table>tfoot>tr.active>td, .table>tfoot>tr.active>th, .table>tfoot>tr>td.active, .table>tfoot>tr>th.active, .table>thead>tr.active>td, .table>thead>tr.active>th, .table>thead>tr>td.active, .table>thead>tr>th.active {
   background-color: #1f1f1f!important;
 }
-.asColorPicker-dropdown, .checkbox label::before, .clockpicker-popover .popover-content, .clockpicker-popover .popover-title, .customvtab .tabs-vertical li.active a, .customvtab .tabs-vertical li.active a:focus, .customvtab .tabs-vertical li.active a:hover, .dropdown-menu, .fc-day, .footable-row-detail, .img-thumbnail, .input-group-addon, .jsgrid-filter-row>td, .jsgrid-header-sortable:hover, .nav-tabs>li>a:focus, .nav-tabs>li>a:hover, .pager .disabled>a, .pager .disabled>a:focus, .pager .disabled>a:hover, .pager .disabled>span, .pager li>a:focus, .pager li>a:hover, .pagination>.disabled>a, .pagination>.disabled>a:focus, .pagination>.disabled>a:hover, .pagination>.disabled>span, .pagination>.disabled>span:focus, .pagination>.disabled>span:hover, .popover, .popover-title, .right-sidebar, code, table.dataTable tbody tr {
+.asColorPicker-dropdown, .checkbox label::before, .clockpicker-popover .popover-content, .clockpicker-popover .popover-title, .customvtab .tabs-vertical li.active a, .customvtab .tabs-vertical li.active a:focus, .customvtab .tabs-vertical li.active a:hover, .dropdown-menu, .fc-day, .footable-row-detail, .img-thumbnail, .input-group-text, .jsgrid-filter-row>td, .jsgrid-header-sortable:hover, .nav-tabs>li>a:focus, .nav-tabs>li>a:hover, .pager .disabled>a, .pager .disabled>a:focus, .pager .disabled>a:hover, .pager .disabled>span, .pager li>a:focus, .pager li>a:hover, .pagination>.disabled>a, .pagination>.disabled>a:focus, .pagination>.disabled>a:hover, .pagination>.disabled>span, .pagination>.disabled>span:focus, .pagination>.disabled>span:hover, .popover, .popover-title, .right-sidebar, code, table.dataTable tbody tr {
   background: #1b1b1b;
 }
 .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {

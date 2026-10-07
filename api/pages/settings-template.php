@@ -21,12 +21,12 @@ function get_page_settings_template($Organizr)
 <script>
 	// Custom JS here
 </script>
-<div class="panel bg-org panel-info">
-    <div class="panel-heading">
+<div class="card bg-org card-info">
+    <div class="card-header">
 		<span lang="en">Template</span>
 	</div>
-    <div class="panel-wrapper collapse in" aria-expanded="true">
-        <div class="panel-body bg-org">
+    <div class="card-wrapper collapse show" aria-expanded="true">
+        <div class="card-body bg-org">
         </div>
     </div>
 </div>

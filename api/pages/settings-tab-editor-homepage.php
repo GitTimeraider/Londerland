@@ -15,12 +15,12 @@ function get_page_settings_tab_editor_homepage($Organizr)
 <script>
 	buildHomepage();
 </script>
-<div class="panel bg-org panel-info">
-    <div class="panel-heading">
+<div class="card bg-org card-info">
+    <div class="card-header">
 		<span lang="en">Homepage Items</span>
 	</div>
-    <div class="panel-wrapper collapse in" aria-expanded="true">
-        <div class="panel-body bg-org" >
+    <div class="card-wrapper collapse show" aria-expanded="true">
+        <div class="card-body bg-org" >
         	<div class="row el-element-overlay m-b-40" id="settings-homepage-list">
         		<div class="text-center"><i class="fa fa-spin fa-spinner fa-3x"></i></div>
 			</div>

@@ -135,17 +135,17 @@ trait EmbyLiveTVTrackerHomepageItem
             $daysShown = $this->config['homepageEmbyLiveTVTrackerDaysShown'] ?? 7;
             $maxCompletedItems = $this->config['homepageEmbyLiveTVTrackerMaxCompletedItems'] ?? 5;
 
-            $panelClass = ($compactView === 'true') ? 'panel-compact' : '';
-            $statsClass = ($compactView === 'true') ? 'col-sm-6' : 'col-sm-3';
+            $panelClass = ($compactView === 'true') ? 'card-compact' : '';
+            $statsClass = ($compactView === 'true') ? 'col-md-6' : 'col-md-3';
 
             return '
             <div id="' . __FUNCTION__ . '">
                 <div class="white-box ' . $panelClass . '">
                     <div class="white-box-header">
                         <i class="fa fa-tv"></i> Emby LiveTV Tracker
-                        <span class="pull-right">
+                        <span class="float-end">
                             <small id="embylivetv-last-update" class="text-muted"></small>
-                            <button class="btn btn-xs btn-primary" onclick="refreshEmbyLiveTVData()" title="Refresh Data">
+                            <button class="btn btn-sm btn-primary" onclick="refreshEmbyLiveTVData()" title="Refresh Data">
                                 <i class="fa fa-refresh" id="embylivetv-refresh-icon"></i>
                             </button>
                         </span>
@@ -182,13 +182,13 @@ trait EmbyLiveTVTrackerHomepageItem
 
                         <!-- Scheduled Recordings Table -->
                         <div class="row" style="margin-top: 20px;">
-                            <div class="col-lg-12">
+                            <div class="col-xl-12">
                                 <h4>
                                     Scheduled Recordings
                                     <small class="text-muted">Upcoming and active timers</small>
                                 </h4>
                                 <div class="table-responsive">
-                                    <table class="table table-hover table-striped table-condensed">
+                                    <table class="table table-hover table-striped table-sm">
                                         <thead>
                                             <tr>
                                                 <th width="120">Date</th>
@@ -215,13 +215,13 @@ trait EmbyLiveTVTrackerHomepageItem
                         <!-- Completed Recordings Table (only if enabled) -->
                         ' . (($showCompleted === 'true') ? '
                         <div class="row" style="margin-top: 20px;">
-                            <div class="col-lg-12">
+                            <div class="col-xl-12">
                                 <h4>
                                     Completed Recordings
                                     <small class="text-muted">Recent recordings</small>
                                 </h4>
                                 <div class="table-responsive">
-                                    <table class="table table-hover table-striped table-condensed">
+                                    <table class="table table-hover table-striped table-sm">
                                         <thead>
                                             <tr>
                                                 <th width="120">Date</th>
@@ -248,10 +248,10 @@ trait EmbyLiveTVTrackerHomepageItem
             </div>
 
             <style>
-            .panel-compact .white-box-content { padding: 10px; }
-            .panel-compact h3 { margin: 5px 0; font-size: 1.8em; }
-            .panel-compact small { font-size: 0.85em; }
-            #' . __FUNCTION__ . ' .table-condensed td { padding: 4px 8px; font-size: 0.9em; }
+            .card-compact .white-box-content { padding: 10px; }
+            .card-compact h3 { margin: 5px 0; font-size: 1.8em; }
+            .card-compact small { font-size: 0.85em; }
+            #' . __FUNCTION__ . ' .table-sm td { padding: 4px 8px; font-size: 0.9em; }
             #' . __FUNCTION__ . ' .status-success { color: #5cb85c; }
             #' . __FUNCTION__ . ' .status-recording { color: #d9534f; }
             #' . __FUNCTION__ . ' .status-scheduled { color: #f0ad4e; }

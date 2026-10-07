@@ -7,3 +7,7 @@ data
 Docker.txt
 Github.txt
 Dev.txt
+node_modules
+assets/vendor
+docker-compose.yml
+docker-run.sh

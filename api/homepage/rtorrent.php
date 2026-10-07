@@ -22,13 +22,13 @@ trait RTorrentHomepageItem
 					$this->settingsOption('html', null, ['label' => '', 'override' => 12,
 						'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-info">
-									<div class="panel-heading">
+							<div class="col-xl-12">
+								<div class="card card-info">
+									<div class="card-header">
 										<span lang="en">ATTENTION</span>
 									</div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<h4 lang="en">This module requires XMLRPC</h4>
 											<span lang="en">Status: [ <b>' . $xmlStatus . '</b> ]</span>
 											<br/></br>

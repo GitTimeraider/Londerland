@@ -146,29 +146,29 @@ body {
 .manage-users .tabs-style-iconbox nav li.tab-current a:after {
   border-top-color: #707cd2;
 }
-.panel-themecolor,
-.panel-theme {
+.card-themecolor,
+.card-theme {
   border-color: #707cd2;
 }
-.panel-themecolor .panel-heading,
-.panel-theme .panel-heading {
+.card-themecolor .card-header,
+.card-theme .card-header {
   border-color: #707cd2;
   color: white;
   background-color: #707cd2;
 }
-.panel-themecolor .panel-heading a,
-.panel-theme .panel-heading a {
+.card-themecolor .card-header a,
+.card-theme .card-header a {
   color: #ffffff;
 }
-.panel-themecolor .panel-heading a:hover,
-.panel-theme .panel-heading a:hover {
+.card-themecolor .card-header a:hover,
+.card-theme .card-header a:hover {
   color: rgba(255, 255, 255, 0.5);
 }
-.panel-themecolor a,
-.panel-theme a {
+.card-themecolor a,
+.card-theme a {
   color: #707cd2;
 }
-.panel-themecolor a:hover,
-.panel-theme a:hover {
+.card-themecolor a:hover,
+.card-theme a:hover {
   color: #3b4abb;
 }

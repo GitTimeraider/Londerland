@@ -17,17 +17,17 @@ function get_page_settings_settings_backup($Organizr)
     </script>
  
     <div class="white-box bg-org">
-		<div class="col-md-3 col-sm-4 col-xs-6 pull-right">
-			<button onclick="createOrganizrBackup()" class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right" type="button"><span class="btn-label"><i class="fa ti-export"></i></span><span lang="en">Create Backup</span></button>
+		<div class="col-lg-3 col-md-4 col-6 float-end">
+			<button onclick="createOrganizrBackup()" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end" type="button"><span class="btn-label"><i class="fa ti-export"></i></span><span lang="en">Create Backup</span></button>
 		</div>
 		<h3 class="box-title" lang="en">Backup Organizr</h3>
 		<div class="row sales-report">
-			<div class="col-md-6 col-sm-6 col-xs-6">
+			<div class="col-lg-6 col-md-6 col-6">
 				<h2 id="backup-total-files"><i class="fa fa-spin fa-spinner"></i></h2>
 				<p lang="en">Files</p>
 			</div>
-			<div class="col-md-6 col-sm-6 col-xs-6 ">
-				<h1 class="text-right text-info m-t-20" id="backup-total-size"><i class="fa fa-spin fa-spinner"></i></h1>
+			<div class="col-lg-6 col-md-6 col-6 ">
+				<h1 class="text-end text-info m-t-20" id="backup-total-size"><i class="fa fa-spin fa-spinner"></i></h1>
 			</div>
 		</div>
 		<div class="table-responsive">

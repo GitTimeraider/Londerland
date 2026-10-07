@@ -22,9 +22,9 @@ trait TraktHomepageItem
 					$this->settingsOption('html', null, [
 						'override' => 12,
 						'html' => '
-							<div class="panel panel-default">
-								<div class="panel-wrapper collapse in">
-									<div class="panel-body">
+							<div class="card card-default">
+								<div class="card-wrapper collapse show">
+									<div class="card-body">
 										<h3 lang="en">Trakt Homepage Item</h3>
 										<p lang="en">This homepage item enables the calendar on the homepage and displays your movies and/or tv shows from Trakt\'s API.</p>
 										<p lang="en">In order for this item to be setup, you need to goto the following URL to create a new API app.</p>
@@ -44,7 +44,7 @@ trait TraktHomepageItem
 					$this->settingsOption('input', 'traktClientId', ['label' => 'Client Id']),
 					$this->settingsOption('password-alt', 'traktClientSecret', ['label' => 'Client Secret']),
 					$this->settingsOption('blank'),
-					$this->settingsOption('button', '', ['label' => 'Please Save before clicking button', 'icon' => 'fa fa-user', 'class' => 'pull-right', 'text' => 'Connect Account', 'attr' => 'onclick="openOAuth(\'trakt\')"']),
+					$this->settingsOption('button', '', ['label' => 'Please Save before clicking button', 'icon' => 'fa fa-user', 'class' => 'float-end', 'text' => 'Connect Account', 'attr' => 'onclick="openOAuth(\'trakt\')"']),
 				],
 				'Calendar' => [
 					$this->settingsOption('calendar-start', 'calendarStartTrakt', ['help' => 'Total Days (Adding start and end days) has a maximum of 33 Days from Trakt API']),

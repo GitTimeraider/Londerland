@@ -2260,7 +2260,7 @@ class Organizr
 				$this->settingsOption('select', 'notificationPosition', ['label' => 'Position', 'class' => 'notifyPositionChanger', 'options' => $this->notificationPositionsOptions()]),
 				$this->settingsOption('html', null, ['label' => 'Test Message', 'html' => '
 					<div class="btn-group m-r-10 dropup">
-						<button aria-expanded="false" data-toggle="dropdown" class="btn btn-info btn-outline dropdown-toggle waves-effect waves-light" type="button">
+						<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-info btn-outline dropdown-toggle waves-effect waves-light" type="button">
 							<i class="fa fa-comment m-r-5"></i>
 							<span>Test </span>
 						</button>
@@ -2276,12 +2276,12 @@ class Organizr
 			],
 			'FavIcon' => [
 				$this->settingsOption('html', null, ['label' => 'Instructions', 'override' => 12, 'html' => '
-					<div class="panel panel-default">
-						<div class="panel-heading">
-							<a href="https://realfavicongenerator.net/" target="_blank"><span class="label label-info m-l-5">Visit FavIcon Site</span></a>
+					<div class="card card-default">
+						<div class="card-header">
+							<a href="https://realfavicongenerator.net/" target="_blank"><span class="badge text-bg-info m-l-5">Visit FavIcon Site</span></a>
 						</div>
-						<div class="panel-wrapper collapse in">
-							<div class="panel-body">
+						<div class="card-wrapper collapse show">
+							<div class="card-body">
 								<ul class="list-icons">
 									<li lang="en"><i class="fa fa-caret-right text-info"></i> Click [Select your Favicon picture]</li>
 									<li lang="en"><i class="fa fa-caret-right text-info"></i> Choose your image to use</li>
@@ -2406,7 +2406,7 @@ class Organizr
 			'API' => [
 				$this->settingsOption('password-alt-copy', 'organizrAPI', ['label' => 'Organizr API']),
 				$this->settingsOption('button', null, ['label' => 'Generate New API Key', 'class' => 'newAPIKey', 'icon' => 'fa fa-refresh', 'text' => 'Generate']),
-				$this->settingsOption('notice', null, ['title' => 'API Documentation', 'body' => 'The documentation for Organizr\'s API is included with this installation.  To access the docs, use the button below.', 'bodyHTML' => '<br/><br/><div class="row"><div class="col-lg-2 col-sm-4 col-xs-12"><a href="' . $this->getServerPath() . 'docs/" target="_blank" class="btn btn-block btn-primary text-white" lang="en">Organizr Docs</a></div></div>'])
+				$this->settingsOption('notice', null, ['title' => 'API Documentation', 'body' => 'The documentation for Organizr\'s API is included with this installation.  To access the docs, use the button below.', 'bodyHTML' => '<br/><br/><div class="row"><div class="col-xl-2 col-md-4 col-12"><a href="' . $this->getServerPath() . 'docs/" target="_blank" class="btn w-100 btn-primary text-white" lang="en">Organizr Docs</a></div></div>'])
 			],
 			'Authentication' => [
 				$this->settingsOption('select', 'authType', ['id' => 'authSelect', 'label' => 'Authentication Type', 'value' => $this->config['authType'], 'options' => $this->getAuthTypes()]),
@@ -2518,7 +2518,7 @@ class Organizr
 				$this->settingsOption('html', '', ['override' => 12,
 						'html' => '
 					<script>
-						let myDropzone = new Dropzone("#upload-custom-certificate", {
+						new Dropzone("#upload-custom-certificate", {
 							url: "api/v2/certificate/custom",
 							headers:{ "formKey": local("g","formKey") },
 							init: function() {
@@ -2533,11 +2533,11 @@ class Organizr
 						});
 					</script>
 					<div class="row">
-						<div class="col-lg-12">
-							<div class="panel panel-info">
-								<div class="panel-heading"><span lang="en">Notice</span></div>
-								<div class="panel-wrapper collapse in" aria-expanded="true">
-									<div class="panel-body">
+						<div class="col-xl-12">
+							<div class="card card-info">
+								<div class="card-header"><span lang="en">Notice</span></div>
+								<div class="card-wrapper collapse show" aria-expanded="true">
+									<div class="card-body">
 										<span lang="en">By default, Organizr uses certificates from https://curl.se/docs/caextract.html<br/>If you would like to use your own certificate, please upload it below.  You will then need to enable each homepage item to use it.</span>
 									</div>
 								</div>
@@ -2545,7 +2545,7 @@ class Organizr
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col-lg-12">
 							<div class="white-box">
 								<h3 class="box-title m-b-0" lang="en">Custom Certificate Status</h3>
 								<p class="text-muted m-b-30 custom-certificate-status">' . $certificateStatus . '</p>
@@ -2581,16 +2581,16 @@ class Organizr
 				$this->settingsOption('html', '', ['override' => 12,
 						'html' => '
 						<div class="row">
-							<div class="col-lg-12">
-								<div class="panel panel-primary">
-									<div class="panel-heading"><span lang="en">Please Read First</span></div>
-									<div class="panel-wrapper collapse in" aria-expanded="true">
-										<div class="panel-body">
+							<div class="col-xl-12">
+								<div class="card card-primary">
+									<div class="card-header"><span lang="en">Please Read First</span></div>
+									<div class="card-wrapper collapse show" aria-expanded="true">
+										<div class="card-body">
 											<span lang="en">Using multiple SSO application will cause your Cookie Header item to increase.  If you haven\'t increased it by now, please follow this guide</span>
 											<br/><br/>
 											<div class="row">
-												<div class="col-lg-2 col-sm-4 col-xs-12">
-													<a href="https://docs.organizr.app/help/faq/organizr-login-error" target="_blank" class="btn btn-block btn-primary text-white" lang="en">Cookie Header Guide</a>
+												<div class="col-xl-2 col-md-4 col-12">
+													<a href="https://docs.organizr.app/help/faq/organizr-login-error" target="_blank" class="btn w-100 btn-primary text-white" lang="en">Cookie Header Guide</a>
 												</div>
 											</div>
 											<br/>
@@ -4651,7 +4651,7 @@ class Organizr
 	public function buildHomepageSettings()
 	{
 		$homepageOrder = $this->homepageOrderList();
-		$homepageList = '<div class="col-lg-12"><h4 lang="en">Drag Homepage Items to Order Them</h4></div><div id="homepage-items-sort" class="external-events">';
+		$homepageList = '<div class="col-xl-12"><h4 lang="en">Drag Homepage Items to Order Them</h4></div><div id="homepage-items-sort" class="row external-events">';
 		$inputList = '<form id="homepage-values" class="row">';
 		foreach ($homepageOrder as $key => $val) {
 			switch ($key) {
@@ -4925,7 +4925,7 @@ class Organizr
 					break;
 			}
 			$homepageList .= '
-		<div class="col-md-3 col-xs-12 sort-homepage m-t-10 hvr-grow clearfix">
+		<div class="col-lg-3 col-12 sort-homepage m-t-10 hvr-grow clearfix">
 			<div class="homepage-drag fc-event ' . $class . ' lazyload"  data-src="' . $image . '">
 				<span class="ordinal-position text-uppercase badge bg-org homepage-number" data-link="' . $key . '" style="float:left;width: 30px;">' . $val . '</span>
 				<span class="homepage-text">&nbsp; ' . strtoupper(substr($key, 13)) . '</span>
@@ -7963,7 +7963,7 @@ public function youtubeSearch($query)
 		$goodIcons['limit'] = $limit;
 		$goodIcons['page'] = $page;
 		$goodIcons['term'] = $term;
-		$allIcons = file_get_contents($this->root . '/js/icons.json');
+		$allIcons = file_get_contents($this->root . '/assets/vendor/icons.json');
 		$iconListing = json_decode($allIcons, true);
 		foreach ($iconListing as $setKey => $set) {
 			foreach ($set['children'] as $k => $v) {

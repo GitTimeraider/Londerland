@@ -4,10 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
     <title>RapiDoc</title>
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/styles/default.min.css">
-    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.1/build/highlight.min.js"></script>
+    <link rel="stylesheet" href="../../assets/vendor/highlightjs/default.min.css">
+    <script src="../../assets/vendor/highlightjs/highlight.min.js"></script>
     <style>
         .btn {
             width: 90px;
@@ -68,7 +66,6 @@
         id="thedoc"
         heading-text=""
         goto-path="Overview"
-        spec-url="../api.json"
         allow-server-selection="true"
         show-header="true"
         theme="dark"
@@ -78,7 +75,7 @@
         nav-bg-color="#1b1a1a"
         allow-try="true"
         allow-api-list-style-selection="true"
-        regular-font="Nunito"
+        regular-font="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
         schema-style="tree"
         render-style="view"
         default-schema-tab="example"
@@ -99,7 +96,10 @@
         </div>
     </div>
 </rapi-doc>
-<script src="rapidoc-min.js">
+<script>
+    // RapiDoc resolves relative spec URLs from the site root, so pass the absolute address of docs/api.json
+    getRapiDoc().setAttribute("spec-url", new URL("../api.json", location.href).href);
 </script>
+<script type="module" src="../../assets/vendor/rapidoc/rapidoc-min.js"></script>
 </body>
 </html>

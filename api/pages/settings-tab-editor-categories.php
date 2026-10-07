@@ -12,57 +12,8 @@ function get_page_settings_tab_editor_categories($Organizr)
 		return false;
 	}
 	$iconSelectors = '
-		$(".categoryIconIconList").select2({
-			ajax: {
-				url: \'api/v2/icon\',
-				data: function (params) {
-					var query = {
-						search: params.term,
-						page: params.page || 1
-					}
-					return query;
-				},
-				processResults: function (data, params) {
-					params.page = params.page || 1;
-					return {
-						results: data.response.data.results,
-						pagination: {
-							more: (params.page * 20) < data.response.data.total
-						}
-					};
-				},
-				//cache: true
-			},
-			placeholder: \'Search for an icon\',
-			templateResult: formatIcon,
-			templateSelection: formatIcon
-		});
-		
-		$(".categoryIconImageList").select2({
-			 ajax: {
-				url: \'api/v2/image/select\',
-				data: function (params) {
-					var query = {
-						search: params.term,
-						page: params.page || 1
-					}
-					return query;
-				},
-				processResults: function (data, params) {
-					params.page = params.page || 1;
-					return {
-						results: data.response.data.results,
-						pagination: {
-							more: (params.page * 20) < data.response.data.total
-						}
-					};
-				},
-				//cache: true
-			},
-			placeholder: \'Search for an image\',
-			templateResult: formatImage,
-			templateSelection: formatImage
-		});
+		initRemoteChooser(".categoryIconIconList", "api/v2/icon", formatIcon, "Search for an icon");
+		initRemoteChooser(".categoryIconImageList", "api/v2/image/select", formatImage, "Search for an image");
 	';
 	return '
 <script>
@@ -79,10 +30,10 @@ let sortable = new Sortable(el, {
 });
 ' . $iconSelectors . '
 </script>
-<div class="panel bg-org panel-info">
-	<div class="panel-heading">
+<div class="card bg-org card-info">
+	<div class="card-header">
 		<span lang="en">Category Editor</span>
-		<button type="button" class="btn btn-info btn-circle pull-right popup-with-form m-r-5" href="#new-category-form" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
+		<button type="button" class="btn btn-info btn-circle float-end popup-with-form m-r-5" href="#new-category-form" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
 	</div>
 	<div class="table-responsive">
 		<form id="submit-categories-form" onsubmit="return false;">
@@ -106,25 +57,25 @@ let sortable = new Sortable(el, {
 	<h1 lang="en">Add New Category</h1>
 	<fieldset style="border:0;">
 		<div class="form-group">
-			<label class="control-label" for="new-category-form-inputNameNew" lang="en">Category Name</label>
+			<label class="form-label" for="new-category-form-inputNameNew" lang="en">Category Name</label>
 			<input type="text" class="form-control" id="new-category-form-inputNameNew" name="category" required="" autofocus>
 		</div>
 		<div class="row">
-			<div class="form-group col-lg-6">
-				<label class="control-label" for="new-category-form-chooseImage" lang="en">Choose Image</label>
+			<div class="form-group col-xl-6">
+				<label class="form-label" for="new-category-form-chooseImage" lang="en">Choose Image</label>
 				<select class="form-control categoryIconImageList" id="new-category-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
 			</div>
-			<div class="form-group col-lg-6">
-				<label class="control-label" for="new-category-form-chooseIcon" lang="en">Choose Icon</label>
+			<div class="form-group col-xl-6">
+				<label class="form-label" for="new-category-form-chooseIcon" lang="en">Choose Icon</label>
 				<select class="form-control categoryIconIconList" id="new-category-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="control-label" for="new-category-form-inputImageNew" lang="en">Category Image</label>
+			<label class="form-label" for="new-category-form-inputImageNew" lang="en">Category Image</label>
 			<input type="text" class="form-control" id="new-category-form-inputImageNew" name="image"  required="">
 		</div>
 	</fieldset>
-	<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none addNewCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Category</span></button>
+	<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none addNewCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Category</span></button>
 	<div class="clearfix"></div>
 </form>
 <form id="edit-category-form" class="mfp-hide white-popup-block mfp-with-anim">
@@ -132,25 +83,25 @@ let sortable = new Sortable(el, {
 	<h1 lang="en">Edit Category</h1>
 	<fieldset style="border:0;">
 		<div class="form-group">
-			<label class="control-label" for="edit-category-form-inputName" lang="en">Category Name</label>
+			<label class="form-label" for="edit-category-form-inputName" lang="en">Category Name</label>
 			<input type="text" class="form-control" id="edit-category-form-inputName" name="category" required="" autofocus>
 		</div>
 		<div class="row">
-			<div class="form-group col-lg-6">
-				<label class="control-label" for="edit-category-form-chooseImage" lang="en">Choose Image</label>
+			<div class="form-group col-xl-6">
+				<label class="form-label" for="edit-category-form-chooseImage" lang="en">Choose Image</label>
 				<select class="form-control categoryIconImageList" id="edit-category-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
 			</div>
-			<div class="form-group col-lg-6">
-				<label class="control-label" for="edit-category-form-chooseIcon" lang="en">Choose Icon</label>
+			<div class="form-group col-xl-6">
+				<label class="form-label" for="edit-category-form-chooseIcon" lang="en">Choose Icon</label>
 				<select class="form-control categoryIconIconList" id="edit-category-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="control-label" for="edit-category-form-inputImage" lang="en">Category Image</label>
+			<label class="form-label" for="edit-category-form-inputImage" lang="en">Category Image</label>
 			<input type="text" class="form-control" id="edit-category-form-inputImage" name="image"  required="">
 		</div>
 	</fieldset>
-	<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none editCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Edit Category</span></button>
+	<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none editCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Edit Category</span></button>
 	<div class="clearfix"></div>
 </form>
 ';

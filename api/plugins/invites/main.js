@@ -7,7 +7,7 @@ function inviteLaunch(){
 	var menuList = '';
 	var htmlDOM = `
 	<div id="invite-area" class="white-popup mfp-with-anim mfp-hide">
-		<div class="col-md-10 col-md-offset-1">
+		<div class="col-lg-10 offset-lg-1">
 			<div class="invite-div"></div>
 		</div>
 	</div>
@@ -17,24 +17,24 @@ function inviteLaunch(){
 			menuList = `<li><a class="inline-popups inviteModal" href="#invite-area" data-effect="mfp-zoom-out"><i class="fa fa-ticket fa-fw"></i> <span lang="en">Manage Invites</span></a></li>`;
 			htmlDOM += `
 			<div id="new-invite-area" class="white-popup mfp-with-anim mfp-hide">
-				<div class="col-md-10 col-md-offset-1">
-					<div class="col-md-12">
-						<div class="panel panel-info m-b-0">
-							<div class="panel-heading" lang="en">New Invite</div>
-							<div class="panel-wrapper collapse in" aria-expanded="true">
-								<div class="panel-body">
+				<div class="col-lg-10 offset-lg-1">
+					<div class="col-lg-12">
+						<div class="card card-info m-b-0">
+							<div class="card-header" lang="en">New Invite</div>
+							<div class="card-wrapper collapse show" aria-expanded="true">
+								<div class="card-body">
 									<form id="new-invite-form">
 										<fieldset style="border:0;">
 										<div class="form-group">
-											<label class="control-label" for="new-invite-form-inputUsername" lang="en">Name or Username</label>
+											<label class="form-label" for="new-invite-form-inputUsername" lang="en">Name or Username</label>
 											<input type="text" class="form-control" id="new-invite-form-inputUsername" name="username" required="" autofocus="">
 										</div>
 										<div class="form-group">
-											<label class="control-label" for="new-invite-form-inputEmail" lang="en">Email</label>
+											<label class="form-label" for="new-invite-form-inputEmail" lang="en">Email</label>
 											<input type="text" class="form-control" id="new-invite-form-inputEmail" name="email" required="" autofocus="">
 										</div>
 										</fieldset>
-										<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light pull-right row b-none" onclick="createNewInvite();" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Create/Send Invite</span></button>
+										<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none" onclick="createNewInvite();" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Create/Send Invite</span></button>
 										<div class="clearfix"></div>
 									</form>
 								</div>
@@ -68,7 +68,7 @@ function joinPlex(){
 		message('Invite Error',' Please Enter Password',activeInfo.settings.notifications.position,'#FFF','warning','5000');
 	}
 	if(email.val() !== '' && username.val() !== '' && password.val() !== ''){
-		organizrAPI2('POST','api/v2/plex/register',{username:username.val(), email:email.val(), password:password.val()}).success(function(data) {
+		organizrAPI2('POST','api/v2/plex/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-plex-no').toggleClass('hidden');
@@ -100,7 +100,7 @@ function joinEmby(){
 		message('Invite Error',' Please Enter Password',activeInfo.settings.notifications.position,'#FFF','warning','5000');
 	}
 	if(email.val() !== '' && username.val() !== '' && password.val() !== ''){
-		organizrAPI2('POST','api/v2/emby/register',{username:username.val(), email:email.val(), password:password.val()}).success(function(data) {
+		organizrAPI2('POST','api/v2/emby/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-emby-no').toggleClass('hidden');
@@ -152,7 +152,7 @@ function hasPlexUsername(){
 			usedby:username.val()
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-plex-yes').toggleClass('hidden');
@@ -181,7 +181,7 @@ function hasEmbyUsername(){
 			usedby:username.val()
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-emby-yes').toggleClass('hidden');
@@ -202,7 +202,7 @@ function hasEmbyUsername(){
 function verifyInvite(){
 	var code = $('#inviteCodeInput').val().toUpperCase();
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/invites/'+code).success(function(data) {
+	organizrAPI2('GET','api/v2/plugins/invites/'+code).done(function(data) {
 		var response = data.response;
 		if(response.result === 'success'){
 			$('.invite-step-1').toggleClass('hidden');
@@ -253,7 +253,7 @@ function createNewInvite(){
 			username:username.val(),
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites',post).success(function(data) {
+		organizrAPI2('POST','api/v2/plugins/invites',post).done(function(data) {
 			var response = data.response;
 			$.magnificPopup.close();
 			ajaxloader();
@@ -268,7 +268,7 @@ function createNewInvite(){
 }
 function deleteInvite(code, id){
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('DELETE','api/v2/plugins/invites/' + code).success(function(data) {
+	organizrAPI2('DELETE','api/v2/plugins/invites/' + code).done(function(data) {
 		var response = data.response;
 		$('#inviteItem-'+id).remove();
 		//$.magnificPopup.close();
@@ -316,15 +316,15 @@ $(document).on('click', '.inviteModal', function() {
 	var htmlDOM = '';
 	if (activeInfo.user.loggedin === true && activeInfo.user.groupID <= activeInfo.plugins.includes["INVITES-Auth-include"]) {
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('GET','api/v2/plugins/invites').success(function(data) {
+		organizrAPI2('GET','api/v2/plugins/invites').done(function(data) {
 			var response = data.response;
 			var htmlDOM = '';
 			htmlDOM = `
-			<div class="col-md-12">
-				<div class="panel bg-org panel-info">
-					<div class="panel-heading">
+			<div class="col-lg-12">
+				<div class="card bg-org card-info">
+					<div class="card-header">
 						<span lang="en">Manage Invites</span>
-						<button type="button" class="btn btn-info btn-circle pull-right popup-with-form" href="#new-invite-area" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
+						<button type="button" class="btn btn-info btn-circle float-end popup-with-form" href="#new-invite-area" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
 					</div>
 					<div class="table-responsive">
 						<table class="table table-hover manage-u-table">
@@ -362,53 +362,53 @@ $(document).on('click', '.inviteModal', function() {
 		ajaxloader();
 	}else if (activeInfo.user.loggedin === false){
 		htmlDOM = `
-		<div class="col-md-12">
-			<div class="panel panel-info m-b-0">
-				<div class="panel-heading" lang="en">Use Invite Code</div>
-				<div class="panel-wrapper collapse in" aria-expanded="true">
-					<div class="panel-body">
+		<div class="col-lg-12">
+			<div class="card card-info m-b-0">
+				<div class="card-header" lang="en">Use Invite Code</div>
+				<div class="card-wrapper collapse show" aria-expanded="true">
+					<div class="card-body">
 						<div class="form-group invite-step-1">
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-lock"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-lock"></i></div>
 								<input type="text" class="form-control text-uppercase" id="inviteCodeInput" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="6" spellcheck="false" autofocus="" required="">
 							</div>
 							<br />
-							<button class="btn btn-block btn-info" onclick="verifyInvite();">Verify</button>
+							<button class="btn w-100 btn-info" onclick="verifyInvite();">Verify</button>
 						</div>
 						<div class="form-group invite-step-2 hidden">
 							<div class="row">
 								<h2 class="text-center" lang="en">Do you have a `+activeInfo.plugins.includes["INVITES-type-include"].toUpperCase()+` account?</h2>
-								<div class="col-lg-6">
-									<button class="btn btn-block btn-info m-b-10" onclick="inviteHasAccount('`+activeInfo.plugins.includes["INVITES-type-include"]+`',true);" lang="en">Yes</button>
+								<div class="col-xl-6">
+									<button class="btn w-100 btn-info m-b-10" onclick="inviteHasAccount('`+activeInfo.plugins.includes["INVITES-type-include"]+`',true);" lang="en">Yes</button>
 								</div>
-								<div class="col-lg-6">
-									<button class="btn btn-block btn-primary m-b-10" onclick="inviteHasAccount('`+activeInfo.plugins.includes["INVITES-type-include"]+`',false);" lang="en">No</button>
+								<div class="col-xl-6">
+									<button class="btn w-100 btn-primary m-b-10" onclick="inviteHasAccount('`+activeInfo.plugins.includes["INVITES-type-include"]+`',false);" lang="en">No</button>
 								</div>
 							</div>
 						</div>
 						<div class="form-group invite-step-3-plex-yes hidden">
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="text" class="form-control" id="inviteUsernameInvite" placeholder="Plex Username or Email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus="" required="">
 							</div>
 							<br />
-							<button class="btn btn-block btn-info" onclick="hasPlexUsername();">Submit</button>
+							<button class="btn w-100 btn-info" onclick="hasPlexUsername();">Submit</button>
 						</div>
 						<div class="form-group invite-step-3-plex-no hidden">
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="text" class="form-control" id="invitePlexJoinUsername" lang="en" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus="" required="">
 							</div>
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-email"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-email"></i></div>
 								<input type="text" class="form-control" id="invitePlexJoinEmail" lang="en" placeholder="E-Mail" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required="">
 							</div>
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="password" class="form-control" id="invitePlexJoinPassword" lang="en" placeholder="Password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"  required="">
 							</div>
 							<br />
-							<button class="btn btn-block btn-info" onclick="joinPlex();">Submit</button>
+							<button class="btn w-100 btn-info" onclick="joinPlex();">Submit</button>
 						</div>
 						<div class="form-group invite-step-4-plex-accept hidden">
 							<h4 class="" lang="en">You have been invited.  Please check your email or goto <a href="https://plex.tv" target="_blank">PLEX.TV</a> and login to accept the invite.  Once you have done that, you may head back here and login with your credentials.</h4>
@@ -416,27 +416,27 @@ $(document).on('click', '.inviteModal', function() {
 						<!-- Begin Emby Invites -->
 						<div class="form-group invite-step-3-emby-yes hidden">
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="text" class="form-control" id="inviteUsernameInviteEmby" placeholder="Emby Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus="" required="">
 							</div>
 							<br />
-							<button class="btn btn-block btn-info" onclick="hasEmbyUsername();">Submit</button>
+							<button class="btn w-100 btn-info" onclick="hasEmbyUsername();">Submit</button>
 						</div>
 						<div class="form-group invite-step-3-emby-no hidden">
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="text" class="form-control" id="inviteEmbyJoinUsername" lang="en" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus="" required="">
 							</div>
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-email"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-email"></i></div>
 								<input type="text" class="form-control" id="inviteEmbyJoinEmail" lang="en" placeholder="E-Mail" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required="">
 							</div>
 							<div class="input-group" style="width: 100%;">
-								<div class="input-group-addon hidden-xs"><i class="ti-user"></i></div>
+								<div class="input-group-text hidden-xs"><i class="ti-user"></i></div>
 								<input type="password" class="form-control" id="inviteEmbyJoinPassword" lang="en" placeholder="Password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"  required="">
 							</div>
 							<br />
-							<button class="btn btn-block btn-info" onclick="joinEmby();">Submit</button>
+							<button class="btn w-100 btn-info" onclick="joinEmby();">Submit</button>
 						</div>
 						<div class="form-group invite-step-4-emby-accept hidden">
 							<h4 class="" lang="en">You Have been added to emby!</h4>

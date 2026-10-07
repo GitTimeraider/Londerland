@@ -25,7 +25,7 @@ trait WeatherHomepageItem
 					$this->settingsOption('input', 'homepageWeatherAndAirLatitude', ['label' => 'Latitude', 'help' => 'Please enter full latitude including minus if needed']),
 					$this->settingsOption('input', 'homepageWeatherAndAirLongitude', ['label' => 'Longitude', 'help' => 'Please enter full longitude including minus if needed']),
 					$this->settingsOption('blank'),
-					$this->settingsOption('button', null, ['type' => 'button', 'label' => '', 'icon' => 'fa fa-search', 'class' => 'pull-right', 'text' => 'Need Help With Coordinates?', 'attr' => 'onclick="showLookupCoordinatesModal()"']),
+					$this->settingsOption('button', null, ['type' => 'button', 'label' => '', 'icon' => 'fa fa-search', 'class' => 'float-end', 'text' => 'Need Help With Coordinates?', 'attr' => 'onclick="showLookupCoordinatesModal()"']),
 				],
 				'Options' => [
 					$this->settingsOption('title', 'homepageWeatherAndAirWeatherHeader'),

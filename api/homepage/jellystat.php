@@ -713,16 +713,16 @@ trait JellyStatHomepageItem
             <div class="js-card">
                 <div class="js-header">
                     <h3><i class="fa fa-bar-chart"></i> JellyStat Analytics</h3>
-                    <span class="pull-right">
+                    <span class="float-end">
                         <small id="jellystat-last-update" style="color: rgba(255,255,255,0.7);"></small>
-                        <button class="btn btn-xs btn-primary" onclick="refreshJellyStatData()" title="Refresh Data" style="margin-left: 10px;">
+                        <button class="btn btn-sm btn-primary" onclick="refreshJellyStatData()" title="Refresh Data" style="margin-left: 10px;">
                             <i class="fa fa-refresh" id="jellystat-refresh-icon"></i>
                         </button>
                     </span>
                 </div>
                 <div>
                     <div class="row" id="jellystat-content">
-                        <div class="col-lg-12 text-center">
+                        <div class="col-xl-12 text-center">
                             <i class="fa fa-spinner fa-spin" style="color: white;"></i> <span style="color: white;">Loading JellyStat data...</span>
                         </div>
                     </div>
@@ -739,7 +739,7 @@ trait JellyStatHomepageItem
             refreshIcon.addClass("fa-spin");
 
             // Show loading state
-            $("#jellystat-content").html("<div class=\"col-lg-12 text-center\"><i class=\"fa fa-spinner fa-spin\"></i> Loading JellyStat data...</div>");
+            $("#jellystat-content").html("<div class=\"col-xl-12 text-center\"><i class=\"fa fa-spinner fa-spin\"></i> Loading JellyStat data...</div>");
 
             // Load JellyStat data
             getJellyStatData()
@@ -857,12 +857,12 @@ trait JellyStatHomepageItem
                     if (data && data.response && data.response.message) {
                         errorMsg += ": " + data.response.message;
                     }
-                    $("#jellystat-content").html("<div class=\"col-lg-12 text-center text-danger\">" + errorMsg + "</div>");
+                    $("#jellystat-content").html("<div class=\"col-xl-12 text-center text-danger\">" + errorMsg + "</div>");
                 }
             })
             .fail(function(xhr, status, error) {
                 console.error("JellyStat API Request Failed:", xhr, status, error);
-                $("#jellystat-content").html("<div class=\"col-lg-12 text-center text-danger\">Error loading JellyStat data: " + error + "</div>");
+                $("#jellystat-content").html("<div class=\"col-xl-12 text-center text-danger\">Error loading JellyStat data: " + error + "</div>");
             });
         }
         
@@ -873,11 +873,11 @@ trait JellyStatHomepageItem
             // Server Overview - Summary Stats
             if (stats.library_totals) {
                 console.log("Library totals found:", stats.library_totals);
-                html += "<div class=\"col-lg-12\" style=\"margin-bottom: 20px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-bottom: 20px;\">";
                 html += "<div class=\"row\">";
                 
                 // Total Libraries
-                html += "<div class=\"col-sm-3\">";
+                html += "<div class=\"col-md-3\">";
                 html += "<div class=\"small-box bg-blue\">";
                 html += "<div class=\"inner\">";
                 html += "<h3>" + (stats.library_totals.total_libraries || 0) + "</h3>";
@@ -887,7 +887,7 @@ trait JellyStatHomepageItem
                 html += "</div></div>";
                 
                 // Total Items
-                html += "<div class=\"col-sm-3\">";
+                html += "<div class=\"col-md-3\">";
                 html += "<div class=\"small-box bg-green\">";
                 html += "<div class=\"inner\">";
                 html += "<h3>" + (stats.library_totals.total_items || 0).toLocaleString() + "</h3>";
@@ -898,7 +898,7 @@ trait JellyStatHomepageItem
                 
                 // Total Episodes (if any)
                 if (stats.library_totals.total_episodes > 0) {
-                    html += "<div class=\"col-sm-3\">";
+                    html += "<div class=\"col-md-3\">";
                     html += "<div class=\"small-box bg-yellow\">";
                     html += "<div class=\"inner\">";
                     html += "<h3>" + (stats.library_totals.total_episodes || 0).toLocaleString() + "</h3>";
@@ -909,7 +909,7 @@ trait JellyStatHomepageItem
                 }
                 
                 // Total Play Time
-                html += "<div class=\"col-sm-3\">";
+                html += "<div class=\"col-md-3\">";
                 html += "<div class=\"small-box bg-red\">";
                 html += "<div class=\"inner\">";
                 html += "<h3 style=\"font-size: 18px;\">" + (stats.library_totals.total_play_time || "0 min") + "</h3>";
@@ -923,10 +923,10 @@ trait JellyStatHomepageItem
             
             // Content Type Breakdown
             if (stats.library_totals && stats.library_totals.type_breakdown) {
-                html += "<div class=\"col-lg-6\">";
+                html += "<div class=\"col-xl-6\">";
                 html += "<h5><i class=\"fa fa-pie-chart text-primary\"></i> Content Breakdown</h5>";
                 html += "<div class=\"table-responsive\">";
-                html += "<table class=\"table table-striped table-condensed\">";
+                html += "<table class=\"table table-striped table-sm\">";
                 html += "<thead><tr><th>Type</th><th>Libraries</th><th>Items</th><th>Watch Time</th></tr></thead>";
                 html += "<tbody>";
                 
@@ -947,10 +947,10 @@ trait JellyStatHomepageItem
             
             // Detailed Library Statistics
             if (' . $showLibraries . ' && stats.libraries && stats.libraries.length > 0) {
-                html += "<div class=\"col-lg-6\">";
+                html += "<div class=\"col-xl-6\">";
                 html += "<h5><i class=\"fa fa-folder text-info\"></i> Library Details</h5>";
                 html += "<div class=\"table-responsive\">";
-                html += "<table class=\"table table-striped table-condensed\">";
+                html += "<table class=\"table table-striped table-sm\">";
                 html += "<thead><tr><th>Library</th><th>Type</th><th>Items</th><th>Watch Time</th></tr></thead>";
                 html += "<tbody>";
                 
@@ -979,7 +979,7 @@ trait JellyStatHomepageItem
             
             // User Statistics  
             if (' . $showUsers . ' && stats.users && stats.users.length > 0) {
-                html += "<div class=\"col-lg-12\">";
+                html += "<div class=\"col-xl-12\">";
                 html += "<h5><i class=\"fa fa-users\"></i> Active Users (" + stats.users.length + " total)</h5>";
                 html += "<div class=\"row\">";
                 
@@ -991,7 +991,7 @@ trait JellyStatHomepageItem
                     }
                     var playCount = user.play_count || 0;
                     
-                    html += "<div class=\"col-lg-3 col-md-4 col-sm-6\" style=\"margin-bottom: 15px;\">";
+                    html += "<div class=\"col-xl-3 col-lg-4 col-md-6\" style=\"margin-bottom: 15px;\">";
                     html += "<div class=\"media\">";
                     html += "<div class=\"media-left\"><i class=\"fa fa-user fa-2x text-muted\"></i></div>";
                     html += "<div class=\"media-body\">";
@@ -1005,10 +1005,10 @@ trait JellyStatHomepageItem
             
             // Most Watched Content
             if (' . $showMostWatched . ' && stats.most_watched && stats.most_watched.length > 0) {
-                html += "<div class=\"col-lg-12\" style=\"margin-top: 20px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-top: 20px;\">";
                 html += "<h5><i class=\"fa fa-star text-warning\"></i> Most Watched Content</h5>";
                 html += "<div class=\"table-responsive\">";
-                html += "<table class=\"table table-striped table-condensed\">";
+                html += "<table class=\"table table-striped table-sm\">";
                 html += "<thead><tr><th>Title</th><th>Type</th><th>Plays</th><th>Runtime</th><th>Year</th></tr></thead>";
                 html += "<tbody>";
                 
@@ -1027,10 +1027,10 @@ trait JellyStatHomepageItem
             
             // Recent Activity
             if (' . $showRecentActivity . ' && stats.recent_activity && stats.recent_activity.length > 0) {
-                html += "<div class=\"col-lg-12\" style=\"margin-top: 20px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-top: 20px;\">";
                 html += "<h5><i class=\"fa fa-clock-o text-success\"></i> Recent Activity</h5>";
                 html += "<div class=\"table-responsive\">";
-                html += "<table class=\"table table-striped table-condensed\">";
+                html += "<table class=\"table table-striped table-sm\">";
                 html += "<thead><tr><th>Date</th><th>User</th><th>Title</th><th>Type</th></tr></thead>";
                 html += "<tbody>";
                 
@@ -1059,7 +1059,7 @@ trait JellyStatHomepageItem
             // Most Watched Movies with Posters
             if (' . $showMostWatchedMovies . ' && stats.most_watched_movies && stats.most_watched_movies.length > 0) {
                 console.log("Rendering most watched movies:", stats.most_watched_movies);
-                html += "<div class=\"col-lg-12\" style=\"margin-top: 30px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-top: 30px;\">";
                 html += "<h5><i class=\"fa fa-film text-primary\"></i> Most Watched Movies</h5>";
                 html += "<div style=\"margin-top: 15px; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;\">";
                 html += "<style>div::-webkit-scrollbar { height: 8px; } div::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 4px; } div::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; } div::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }</style>";
@@ -1119,7 +1119,7 @@ trait JellyStatHomepageItem
                     // Include a hidden anchor to trigger Magnific Popup, matching Emby/Jellyfin implementation
                     html += "\u003ca class=\\"inline-popups " + sanitizedId + " hidden\\" href=\\"#" + sanitizedId + "-metadata-div\\" data-effect=\\"mfp-zoom-out\\"\u003e\u003c/a\u003e";
                     html += "\u003cdiv id=\\"" + sanitizedId + "-metadata-div\\" class=\\"white-popup mfp-with-anim mfp-hide\\"\u003e";
-                    html += "\u003cdiv class=\\"col-md-8 col-md-offset-2 " + sanitizedId + "-metadata-info\\"\u003e\u003c/div\u003e";
+                    html += "\u003cdiv class=\\"col-lg-8 offset-lg-2 " + sanitizedId + "-metadata-info\\"\u003e\u003c/div\u003e";
                     html += "\u003c/div\u003e";
                     
                     html += "\u003c/div\u003e";
@@ -1135,7 +1135,7 @@ trait JellyStatHomepageItem
             
             // Most Watched TV Shows with Posters
             if (' . $showMostWatchedShows . ' && stats.most_watched_shows && stats.most_watched_shows.length > 0) {
-                html += "<div class=\"col-lg-12\" style=\"margin-top: 30px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-top: 30px;\">";
                 html += "<h5><i class=\"fa fa-television text-info\"></i> Most Watched TV Shows</h5>";
                 html += "<div style=\"margin-top: 15px; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;\">";
                 html += "<style>div::-webkit-scrollbar { height: 8px; } div::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 4px; } div::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; } div::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }</style>";
@@ -1190,7 +1190,7 @@ trait JellyStatHomepageItem
                     // Include a hidden anchor to trigger Magnific Popup, matching Emby/Jellyfin implementation
                     html += "\u003ca class=\\"inline-popups " + sanitizedId + " hidden\\" href=\\"#" + sanitizedId + "-metadata-div\\" data-effect=\\"mfp-zoom-out\\"\u003e\u003c/a\u003e";
                     html += "\u003cdiv id=\\"" + sanitizedId + "-metadata-div\\" class=\\"white-popup mfp-with-anim mfp-hide\\"\u003e";
-                    html += "\u003cdiv class=\\"col-md-8 col-md-offset-2 " + sanitizedId + "-metadata-info\\"\u003e\u003c/div\u003e";
+                    html += "\u003cdiv class=\\"col-lg-8 offset-lg-2 " + sanitizedId + "-metadata-info\\"\u003e\u003c/div\u003e";
                     html += "\u003c/div\u003e";
                     
                     html += "\u003c/div\u003e";
@@ -1201,7 +1201,7 @@ trait JellyStatHomepageItem
             
             // Most Listened Music with Cover Art
             if (' . $showMostListenedMusic . ' && stats.most_listened_music && stats.most_listened_music.length > 0) {
-                html += "<div class=\"col-lg-12\" style=\"margin-top: 30px;\">";
+                html += "<div class=\"col-xl-12\" style=\"margin-top: 30px;\">";
                 html += "<h5><i class=\"fa fa-music text-success\"></i> Most Listened Music</h5>";
                 html += "<div class=\"row\" style=\"margin-top: 15px;\">";
                 
@@ -1211,7 +1211,7 @@ trait JellyStatHomepageItem
                     var artist = music.artist || "Unknown Artist";
                     var title = music.title || music.album || "Unknown";
                     
-                    html += "<div class=\"col-lg-2 col-md-3 col-sm-4 col-xs-6\" style=\"margin-bottom: 20px;\">";
+                    html += "<div class=\"col-xl-2 col-lg-3 col-md-4 col-6\" style=\"margin-bottom: 20px;\">";
                     html += "<div class=\"poster-card\" style=\"position: relative; transition: transform 0.2s ease;\">";
                     
                     // Cover art
@@ -1242,7 +1242,7 @@ trait JellyStatHomepageItem
             }
             
             if (!html) {
-                html = "<div class=\"col-lg-12 text-center text-muted\">";
+                html = "<div class=\"col-xl-12 text-center text-muted\">";
                 html += "<i class=\"fa fa-exclamation-circle fa-3x\" style=\"margin-bottom: 10px;\"></i>";
                 html += "<h4>No JellyStat data available</h4>";
                 html += "<p>Check your JellyStat connection and API configuration.</p>";

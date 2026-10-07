@@ -1,0 +1,23 @@
+# Organizr with Docker Compose
+#
+# Start:   docker compose up -d
+# Update:  docker compose pull && docker compose up -d
+# Logs:    docker compose logs -f organizr
+# Stop:    docker compose down
+#
+# Everything Organizr needs is inside the image; the container downloads nothing when it starts.
+
+services:
+  organizr:
+    image: ghcr.io/gittimeraider/organizr:latest
+    container_name: organizr
+    ports:
+      # <port on your machine>:<port in the container>. Change the left number if 80 is already in use, e.g. "8080:80"
+      - "80:80"
+    environment:
+      # Your timezone (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+      - TZ=Etc/UTC
+    volumes:
+      # Settings, database, logs and uploaded images. Keep this folder to keep your setup across updates.
+      - ./organizr-data:/var/www/html/data
+    restart: unless-stopped

@@ -458,8 +458,8 @@ trait LogFunctions
 		$dropdownItems .= '<li><a href="javascript:toggleLogFilter(\'CRITICAL\')"><span lang="en">Critical</span></a></li>';
 		$dropdownItems .= '<li><a href="javascript:toggleLogFilter(\'ALERT\')"><span lang="en">Alert</span></a></li>';
 		$dropdownItems .= '<li><a href="javascript:toggleLogFilter(\'EMERGENCY\')"><span lang="en">Emergency</span></a></li>';
-		$dropdownItems .= '<li class="divider"></li><li><a href="javascript:toggleLogFilter(\'NONE\')"><span lang="en">None</span></a></li>';
-		return '<button aria-expanded="false" data-toggle="dropdown" class="btn btn-inverse dropdown-toggle waves-effect waves-light pull-right m-r-5 hidden-xs" type="button"> <span class="log-filter-text m-r-5" lang="en">NONE</span><i class="fa fa-filter m-r-5"></i></button><ul role="menu" class="dropdown-menu log-filter-dropdown pull-right">' . $dropdownItems . '</ul>';
+		$dropdownItems .= '<li><hr class="dropdown-divider"></li><li><a href="javascript:toggleLogFilter(\'NONE\')"><span lang="en">None</span></a></li>';
+		return '<button aria-expanded="false" data-bs-toggle="dropdown" class="btn btn-inverse dropdown-toggle waves-effect waves-light float-end m-r-5 hidden-xs" type="button"> <span class="log-filter-text m-r-5" lang="en">NONE</span><i class="fa fa-filter m-r-5"></i></button><ul role="menu" class="dropdown-menu log-filter-dropdown float-end">' . $dropdownItems . '</ul>';
 	}
 
 	public function testConnectionSlackLogs()

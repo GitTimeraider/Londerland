@@ -1,7 +1,6 @@
 # PhpStorm Files
 .idea/*
 node_modules/*
-package-lock.json
 
 # Windows image file caches
 Thumbs.db
@@ -195,3 +194,11 @@ api/pages/custom/*.php
 
 # Composer dependencies are installed from api/composer.lock (the Docker image does this at build time)
 api/vendor/
+
+# Frontend build output (npm ci && npm run build)
+node_modules/
+assets/vendor/
+# generated from the matching non-minified file by scripts/build-frontend.mjs
+css/dark.min.css
+css/organizr.min.css
+js/custom.min.js
