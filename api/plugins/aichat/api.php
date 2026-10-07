@@ -29,6 +29,22 @@ $app->get('/plugins/aichat/test', function ($request, $response, $args) {
 	}
 	return aiChatJsonResponse($response);
 });
+$app->get('/plugins/aichat/test/search', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAdminAccess($request)) {
+		if (!$AiChat->_aiChatSearchEnabled()) {
+			$AiChat->setAPIResponse('error', 'Choose and save a search provider first', 409);
+		} else {
+			[$results, $error] = $AiChat->_aiChatWebSearch($request->getQueryParams()['q'] ?? 'Organizr homelab dashboard');
+			if ($error) {
+				$AiChat->setAPIResponse('error', $error, 502);
+			} else {
+				$AiChat->setAPIResponse('success', 'Search works. Results: ' . count($results), 200, $results);
+			}
+		}
+	}
+	return aiChatJsonResponse($response);
+});
 $app->get('/plugins/aichat/models', function ($request, $response, $args) {
 	$AiChat = new AiChat();
 	if ($AiChat->_aiChatAccess($request)) {

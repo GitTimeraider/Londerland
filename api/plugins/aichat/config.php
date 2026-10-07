@@ -16,5 +16,18 @@ return array(
 	'AICHAT-contextMessages' => '40',
 	'AICHAT-autoTitle' => true,
 	'AICHAT-requestTimeout' => '300',
-	'AICHAT-verifySSL' => true
+	'AICHAT-verifySSL' => true,
+	// Web search: none, searxng, brave, tavily or duckduckgo
+	'AICHAT-searchProvider-include' => 'none',
+	'AICHAT-searchUrl' => '',
+	'AICHAT-searchApiKey' => '',
+	'AICHAT-searchResults' => '5',
+	'AICHAT-searchAuto' => false,
+	// Image generation through an OpenAI-compatible /images/generations endpoint
+	'AICHAT-images-include' => false,
+	'AICHAT-imageBaseUrl' => '',
+	'AICHAT-imageApiKey' => '',
+	'AICHAT-imageModel' => 'gpt-image-1',
+	'AICHAT-imageSize' => '1024x1024',
+	'AICHAT-imageAuto' => false
 );

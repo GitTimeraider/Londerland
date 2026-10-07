@@ -19,6 +19,8 @@
 		librariesLoaded: null,
 		modelSelect: null,
 		initialized: false,
+		searchOn: false, // globe toggle: search the web before answering
+		imageOn: false, // image toggle: the message is an image prompt
 	};
 	let $panel;
 
@@ -219,10 +221,27 @@
 
 	/* ===================== DOM ===================== */
 
+	function searchAvailable() {
+		const provider = activeInfo.plugins.includes['AICHAT-searchProvider-include'];
+		return !!provider && provider !== 'none';
+	}
+
+	function imagesAvailable() {
+		return activeInfo.plugins.includes['AICHAT-images-include'] === true;
+	}
+
 	function buildDom() {
 		const uploads = activeInfo.plugins.includes['AICHAT-uploads-include'] !== false;
+		// Chat bubble button in the left part of the top bar, after Organizr's own icons so the sidebar
+		// (which widens on hover) never covers it; floating top left if there is no top bar
+		const launcher = `<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label">${escapeHtml(t('AI'))}</span></button>`;
+		const $topbar = $('.navbar-top-links.navbar-left').first();
+		if ($topbar.length) {
+			$topbar.append(`<li class="aichat-topbar-item">${launcher}</li>`);
+		} else {
+			$('body').append($(launcher).addClass('aichat-launcher-floating'));
+		}
 		$('body').append(`
-			<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}"><i class="fa fa-comments"></i></button>
 			<section class="aichat-panel" role="dialog" aria-label="${escapeHtml(t('AI Chat'))}">
 				<aside class="aichat-sidebar">
 					<div class="aichat-sidebar-head">
@@ -266,6 +285,8 @@
 								<div>
 									${uploads ? `<button type="button" class="aichat-icon-btn aichat-attach" title="${escapeHtml(t('Add images or files'))}"><i class="fa fa-paperclip"></i></button>
 									<input type="file" class="aichat-file" multiple hidden>` : ''}
+									${searchAvailable() ? `<button type="button" class="aichat-tool-toggle aichat-toggle-search" aria-pressed="false" title="${escapeHtml(t('Search the web before answering'))}"><i class="fa fa-globe"></i><span>${escapeHtml(t('Search'))}</span></button>` : ''}
+									${imagesAvailable() ? `<button type="button" class="aichat-tool-toggle aichat-toggle-image" aria-pressed="false" title="${escapeHtml(t('Create an image from your message'))}"><i class="fa fa-image"></i><span>${escapeHtml(t('Image'))}</span></button>` : ''}
 									<span class="aichat-hint"></span>
 								</div>
 								<button type="button" class="aichat-send" title="${escapeHtml(t('Send'))}" disabled><i class="fa fa-arrow-up"></i></button>
@@ -305,6 +326,7 @@
 
 	async function openChat() {
 		$('body').addClass('aichat-open');
+		$('.aichat-launcher').attr('aria-expanded', 'true');
 		if (window.innerWidth < 768) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
@@ -333,6 +355,7 @@
 
 	function closeChat() {
 		$('body').removeClass('aichat-open');
+		$('.aichat-launcher').attr('aria-expanded', 'false');
 		$('.aichat-launcher').trigger('focus');
 	}
 
@@ -544,20 +567,85 @@
 		return `<a class="aichat-attachment${uploading}"${open} title="${name}">${spinner}<span>${name}</span>${attachment.size ? `<small class="text-muted">${formatSize(attachment.size)}</small>` : ''}${remove}</a>`;
 	}
 
+	function generatedImageHtml(image) {
+		const url = fileUrl(image.id);
+		return `<figure class="aichat-generated">
+			<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="${escapeHtml(image.prompt || image.name)}" loading="lazy"></a>
+			<figcaption><span>${escapeHtml(image.prompt || '')}</span><a href="${url}" download="${escapeHtml(image.name)}" class="aichat-icon-btn" title="${escapeHtml(t('Download'))}"><i class="fa fa-download"></i></a></figcaption>
+		</figure>`;
+	}
+
+	function hostName(url) {
+		try {
+			return new URL(url).hostname.replace(/^www\./, '');
+		} catch (e) {
+			return url;
+		}
+	}
+
+	function sourcesHtml(sources, searches) {
+		if (!sources || !sources.length) {
+			return '';
+		}
+		const searched = searches && searches.length ? `<span class="aichat-searched">${escapeHtml(t('Searched'))}: ${searches.map((q) => '"' + escapeHtml(q) + '"').join(', ')}</span>` : '';
+		const items = sources
+			.map((source, index) => `<li><a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(source.snippet || '')}"><span class="aichat-source-number">${index + 1}</span><span class="aichat-source-title">${escapeHtml(source.title)}</span><span class="aichat-source-host">${escapeHtml(hostName(source.url))}</span></a></li>`)
+			.join('');
+		return `<details class="aichat-sources"><summary><i class="fa fa-globe me-1"></i>${escapeHtml(t('Sources'))} (${sources.length}) ${searched}</summary><ol>${items}</ol></details>`;
+	}
+
+	// Turns [1], [2] in an answer into links to the matching source
+	function linkCitations(html, sources) {
+		if (!sources || !sources.length) {
+			return html;
+		}
+		const $html = $('<div>').html(html);
+		const walker = document.createTreeWalker($html[0], NodeFilter.SHOW_TEXT);
+		const nodes = [];
+		while (walker.nextNode()) {
+			if (/\[\d+\]/.test(walker.currentNode.nodeValue) && !$(walker.currentNode).closest('code, pre, a').length) {
+				nodes.push(walker.currentNode);
+			}
+		}
+		nodes.forEach(function (node) {
+			const fragment = document.createDocumentFragment();
+			node.nodeValue.split(/(\[\d+\])/).forEach(function (part) {
+				const match = part.match(/^\[(\d+)\]$/);
+				const source = match ? sources[parseInt(match[1], 10) - 1] : null;
+				if (source) {
+					const link = $('<a class="aichat-cite" target="_blank" rel="noopener noreferrer"></a>').attr({ href: source.url, title: source.title }).text(match[1]);
+					fragment.appendChild(link[0]);
+				} else {
+					fragment.appendChild(document.createTextNode(part));
+				}
+			});
+			node.parentNode.replaceChild(fragment, node);
+		});
+		return $html.html();
+	}
+
 	function messageHtml(msg, isLast) {
 		const classes = ['aichat-message', msg.role];
 		if (isLast) {
 			classes.push('last');
 		}
+		const meta = msg.meta || {};
 		let body = '';
-		if (msg.attachments && msg.attachments.length) {
+		if (msg.role === 'user' && msg.attachments && msg.attachments.length) {
 			body += `<div class="aichat-attachments">${msg.attachments.map((a) => attachmentHtml(a, false)).join('')}</div>`;
 		}
 		if (msg.role === 'assistant') {
 			if (msg.reasoning) {
 				body += `<details class="aichat-reasoning"><summary>${escapeHtml(t('Thinking'))}</summary><div class="aichat-reasoning-body">${escapeHtml(msg.reasoning)}</div></details>`;
 			}
-			body += `<div class="aichat-bubble aichat-markdown">${msg.content ? renderMarkdown(msg.content) : `<em class="text-muted">${escapeHtml(t('(empty answer)'))}</em>`}</div>`;
+			const images = msg.attachments || [];
+			if (msg.content || !images.length) {
+				body += `<div class="aichat-bubble aichat-markdown">${msg.content ? linkCitations(renderMarkdown(msg.content), meta.sources) : `<em class="text-muted">${escapeHtml(t('(empty answer)'))}</em>`}</div>`;
+			}
+			if (images.length) {
+				body += `<div class="aichat-generated-list">${images.map(generatedImageHtml).join('')}</div>`;
+			}
+			body += sourcesHtml(meta.sources, meta.searches);
 		} else if (msg.role === 'error') {
 			body += `<div class="aichat-bubble"><i class="fa fa-exclamation-triangle me-2"></i>${escapeHtml(msg.content)}</div>`;
 		} else if (msg.content) {
@@ -606,7 +694,8 @@
 		}
 		const hasText = trim($panel.find('.aichat-input').val()) !== '';
 		const uploading = state.pending.some((file) => file.uploading);
-		const ready = (hasText || state.pending.length) && !uploading && state.models.length;
+		// image mode needs a description but no chat model
+		const ready = state.imageOn ? hasText && !uploading : (hasText || state.pending.length) && !uploading && state.models.length;
 		$send.prop('disabled', !ready).removeClass('stop').attr('title', t('Send')).html('<i class="fa fa-arrow-up"></i>');
 	}
 
@@ -646,9 +735,13 @@
 			notify(error.message);
 			return;
 		}
-		const body = { model: currentModel(), content: content, files: files };
+		const body = { model: currentModel(), content: content, files: files, search: state.searchOn, image: state.imageOn };
 		if (options.regenerate) {
 			body.regenerate = true;
+			const previous = chat.messages.slice().reverse().find((m) => m.role === 'assistant');
+			const previousMeta = (previous && previous.meta) || {};
+			body.image = !!previousMeta.image;
+			body.search = !body.image && (state.searchOn || !!(previousMeta.searches && previousMeta.searches.length));
 			// remove the old answer (and a failed attempt) from the view
 			while (chat.messages.length && chat.messages[chat.messages.length - 1].role !== 'user') {
 				chat.messages.pop();
@@ -678,14 +771,18 @@
 		}
 		$messages.find('.aichat-message').removeClass('last');
 		$messages.find('.aichat-regenerate').remove();
-		const $answer = $(`<div class="aichat-message assistant last"><div class="aichat-reasoning-slot"></div><div class="aichat-bubble aichat-markdown"><span class="aichat-typing"><span></span><span></span><span></span></span></div></div>`);
+		const $answer = $(`<div class="aichat-message assistant last"><div class="aichat-status"></div><div class="aichat-reasoning-slot"></div><div class="aichat-bubble aichat-markdown"><span class="aichat-typing"><span></span><span></span><span></span></span></div><div class="aichat-generated-list"></div><div class="aichat-sources-slot"></div></div>`);
 		$messages.append($answer);
 		scrollToBottom(true);
 		state.controller = new AbortController();
 		updateSendState();
 		let answer = '';
 		let reasoning = '';
+		let sources = [];
 		let renderQueued = false;
+		const setStatus = function (text) {
+			$answer.find('.aichat-status').html(text ? `<i class="fa fa-spinner fa-spin me-2"></i>${escapeHtml(t(text))}` : '');
+		};
 		const render = function () {
 			renderQueued = false;
 			if (reasoning) {
@@ -698,7 +795,8 @@
 			}
 			if (answer) {
 				$answer.find('.aichat-reasoning').prop('open', false);
-				$answer.find('.aichat-bubble').html(renderMarkdown(answer)).addClass('aichat-cursor');
+				$answer.find('.aichat-bubble').html(linkCitations(renderMarkdown(answer), sources)).addClass('aichat-cursor');
+				setStatus('');
 			}
 			scrollToBottom();
 		};
@@ -748,6 +846,21 @@
 						case 'user':
 							chat.messages.push(event.message);
 							$answer.before(messageHtml(event.message, false));
+							scrollToBottom(true);
+							break;
+						case 'status':
+							setStatus(event.text);
+							break;
+						case 'sources':
+							sources = event.sources;
+							$answer.find('.aichat-sources-slot').html(sourcesHtml(sources, []));
+							break;
+						case 'image':
+							setStatus('');
+							if (!answer) {
+								$answer.find('.aichat-bubble').remove();
+							}
+							$answer.find('.aichat-generated-list').append(generatedImageHtml(event.image));
 							scrollToBottom(true);
 							break;
 						case 'reasoning':
@@ -1039,7 +1152,13 @@
 	/* ===================== events ===================== */
 
 	function bindEvents() {
-		$('body').on('click', '.aichat-launcher', openChat);
+		$('body').on('click', '.aichat-launcher', function () {
+			if ($('body').hasClass('aichat-open')) {
+				closeChat();
+			} else {
+				openChat();
+			}
+		});
 		$panel.on('click', '.aichat-close', closeChat);
 		$panel.on('click', '.aichat-expand', function () {
 			$panel.toggleClass('aichat-expanded');
@@ -1140,6 +1259,27 @@
 			} else {
 				send();
 			}
+		});
+		$panel.on('click', '.aichat-toggle-search, .aichat-toggle-image', function () {
+			const isSearch = $(this).hasClass('aichat-toggle-search');
+			if (isSearch) {
+				state.searchOn = !state.searchOn;
+				if (state.searchOn) {
+					state.imageOn = false;
+				}
+			} else {
+				state.imageOn = !state.imageOn;
+				if (state.imageOn) {
+					state.searchOn = false;
+				}
+			}
+			$panel.find('.aichat-toggle-search').toggleClass('active', state.searchOn).attr('aria-pressed', String(state.searchOn));
+			$panel.find('.aichat-toggle-image').toggleClass('active', state.imageOn).attr('aria-pressed', String(state.imageOn));
+			$panel
+				.find('.aichat-composer .aichat-input')
+				.attr('placeholder', state.imageOn ? t('Describe the image to create') : state.searchOn ? t('Ask anything, the web is searched first') : t('Send a message'))
+				.trigger('focus');
+			updateSendState();
 		});
 		$panel.on('click', '.aichat-attach', function () {
 			$panel.find('.aichat-file').trigger('click');

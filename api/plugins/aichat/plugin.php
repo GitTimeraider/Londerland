@@ -102,6 +102,7 @@ class AiChat extends Organizr
 				`content`	LONGTEXT,
 				`reasoning`	LONGTEXT,
 				`attachments`	TEXT,
+				`meta`	LONGTEXT,
 				`model`	TEXT,
 				`created`	DATETIME
 			);',
@@ -126,6 +127,27 @@ class AiChat extends Organizr
 				$this->processQueries([['function' => 'query', 'query' => $create]]);
 			}
 		}
+		// Tables from the first version of the plugin have no meta column yet
+		if (!$this->_aiChatColumnExists('AICHAT-messages', 'meta')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-messages` ADD `meta` LONGTEXT']]);
+		}
+	}
+
+	private function _aiChatColumnExists($table, $column)
+	{
+		if ($this->config['driver'] == 'sqlite3') {
+			$columns = $this->processQueries([['function' => 'fetchAll', 'query' => ['PRAGMA table_info(%n)', $table]]]) ?: [];
+			foreach ($columns as $info) {
+				if ($info['name'] === $column) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return (bool)$this->processQueries([[
+			'function' => 'fetchSingle',
+			'query' => ['SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s', (string)$this->config['dbName'], $table, $column]
+		]]);
 	}
 
 	private function _aiChatNow()
@@ -162,6 +184,7 @@ class AiChat extends Organizr
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen group (or higher) get a chat button in the bottom left corner. Guests never see it.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">The API key stays on the Organizr server; browsers never receive it.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Save the settings, then use Test Connection to check the server and load its models.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Optional: set up Web Search and Images to give users a globe button (search the web first) and an image button (create a picture).</span></li>
 									</ul>
 								</div>
 							</div>
@@ -277,6 +300,103 @@ class AiChat extends Organizr
 					'label' => 'Name Chats Automatically',
 					'help' => 'Asks the model for a short title after the first answer.',
 					'value' => $this->config['AICHAT-autoTitle']
+				),
+			),
+			'Web Search' => array(
+				array(
+					'type' => 'select',
+					'name' => 'AICHAT-searchProvider-include',
+					'label' => 'Search Provider',
+					'value' => $this->config['AICHAT-searchProvider-include'],
+					'options' => [
+						['name' => 'Off', 'value' => 'none'],
+						['name' => 'SearXNG (self-hosted, no key)', 'value' => 'searxng'],
+						['name' => 'Brave Search API (key)', 'value' => 'brave'],
+						['name' => 'Tavily (key)', 'value' => 'tavily'],
+						['name' => 'DuckDuckGo (no key, best effort)', 'value' => 'duckduckgo'],
+					],
+					'help' => 'Users get a globe button to search the web before the answer.'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-searchUrl',
+					'label' => 'SearXNG URL',
+					'value' => $this->config['AICHAT-searchUrl'],
+					'placeholder' => 'http://searxng:8080',
+					'help' => 'Only for SearXNG. Its settings.yml must allow the json format (search: formats: [html, json]).'
+				),
+				array(
+					'type' => 'password-alt',
+					'name' => 'AICHAT-searchApiKey',
+					'label' => 'Search API Key',
+					'value' => $this->config['AICHAT-searchApiKey'],
+					'help' => 'For Brave or Tavily.'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-searchResults',
+					'label' => 'Results per Search',
+					'value' => $this->config['AICHAT-searchResults'],
+					'placeholder' => '5'
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-searchAuto',
+					'label' => 'Model May Search by Itself',
+					'help' => 'Offers a web_search tool, so models with tool calling can search whenever they need to, also without the globe button.',
+					'value' => $this->config['AICHAT-searchAuto']
+				),
+				array(
+					'type' => 'button',
+					'label' => 'Test Search',
+					'class' => ' aichatTestSearch',
+					'icon' => 'fa fa-search',
+					'text' => 'Test (save first)'
+				),
+			),
+			'Images' => array(
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-images-include',
+					'label' => 'Allow Image Generation',
+					'help' => 'Users get an image button that turns their message into a picture.',
+					'value' => $this->config['AICHAT-images-include']
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-imageBaseUrl',
+					'label' => 'Image API Base URL',
+					'value' => $this->config['AICHAT-imageBaseUrl'],
+					'placeholder' => 'Empty = same as the chat server',
+					'help' => 'An OpenAI-compatible server with /images/generations, for example https://api.openai.com/v1 or a LocalAI server. Claude cannot create images, so use another server here when chatting with Claude.'
+				),
+				array(
+					'type' => 'password-alt',
+					'name' => 'AICHAT-imageApiKey',
+					'label' => 'Image API Key',
+					'value' => $this->config['AICHAT-imageApiKey'],
+					'help' => 'Empty = same key as the chat server.'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-imageModel',
+					'label' => 'Image Model',
+					'value' => $this->config['AICHAT-imageModel'],
+					'placeholder' => 'gpt-image-1'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-imageSize',
+					'label' => 'Image Size',
+					'value' => $this->config['AICHAT-imageSize'],
+					'placeholder' => '1024x1024'
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-imageAuto',
+					'label' => 'Model May Create Images by Itself',
+					'help' => 'Offers a generate_image tool, so models with tool calling can make a picture when asked in normal chat.',
+					'value' => $this->config['AICHAT-imageAuto']
 				),
 			),
 			'Uploads' => array(
@@ -538,6 +658,7 @@ class AiChat extends Organizr
 			'content' => $message['content'],
 			'reasoning' => $message['reasoning'] ?: null,
 			'attachments' => json_decode($message['attachments'] ?: '[]', true) ?: [],
+			'meta' => json_decode($message['meta'] ?? '', true) ?: new stdClass(),
 			'model' => $message['model'],
 			'created' => $this->_aiChatIsoDate($message['created']),
 		];
@@ -860,13 +981,19 @@ class AiChat extends Organizr
 				array_unshift($parts, ['type' => 'text', 'text' => $text]);
 				$messages[] = ['role' => 'user', 'content' => $parts];
 			} else {
-				$messages[] = ['role' => $message['role'], 'content' => (string)$message['content']];
+				$content = (string)$message['content'];
+				if ($message['role'] === 'assistant') {
+					foreach ($attachments as $attachment) {
+						$content .= "\n\n[Image created for the user: " . ($attachment['prompt'] ?? $attachment['name']) . ']';
+					}
+				}
+				$messages[] = ['role' => $message['role'], 'content' => trim($content)];
 			}
 		}
 		return $messages;
 	}
 
-	private function _aiChatInsertMessage($chatId, $role, $content, $attachments = [], $model = null, $reasoning = null)
+	private function _aiChatInsertMessage($chatId, $role, $content, $attachments = [], $model = null, $reasoning = null, $meta = null)
 	{
 		$this->processQueries([[
 			'function' => 'query',
@@ -876,6 +1003,7 @@ class AiChat extends Organizr
 				'content' => $content,
 				'reasoning' => $reasoning,
 				'attachments' => json_encode(array_values($attachments)),
+				'meta' => $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
 				'model' => $model,
 				'created' => $this->_aiChatNow(),
 			]]
@@ -941,9 +1069,375 @@ class AiChat extends Organizr
 		flush();
 	}
 
+	/* ===================== web search ===================== */
+
+	public function _aiChatSearchEnabled()
+	{
+		return in_array($this->config['AICHAT-searchProvider-include'], ['searxng', 'brave', 'tavily', 'duckduckgo'], true);
+	}
+
 	/**
-	 * Streams an answer to the browser as server-sent events while forwarding the question to the AI server.
-	 * Events: user (stored question), delta / reasoning (text pieces), done (stored answer), title, error.
+	 * Generic HTTP call for search and image servers: [httpCode, rawBody, errorText]
+	 */
+	private function _aiChatHttp($method, $url, $headers = [], $body = null, $timeout = 30)
+	{
+		$curl = curl_init($url);
+		curl_setopt_array($curl, [
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HTTPHEADER => $headers,
+			CURLOPT_CONNECTTIMEOUT => 15,
+			CURLOPT_TIMEOUT => (int)$timeout,
+			CURLOPT_SSL_VERIFYPEER => (bool)$this->config['AICHAT-verifySSL'],
+			CURLOPT_SSL_VERIFYHOST => $this->config['AICHAT-verifySSL'] ? 2 : 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Organizr AI Chat)',
+		]);
+		if ($method === 'POST') {
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+		}
+		$raw = curl_exec($curl);
+		$code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+		if ($raw === false) {
+			return [0, null, curl_error($curl) ?: 'Could not reach ' . parse_url($url, PHP_URL_HOST)];
+		}
+		if ($code < 200 || $code >= 300) {
+			return [$code, $raw, $this->_aiChatUpstreamError(json_decode($raw, true), $raw, $code)];
+		}
+		return [$code, $raw, null];
+	}
+
+	/**
+	 * Searches the web with the configured provider: [results, errorText], results are [title, url, snippet]
+	 */
+	public function _aiChatWebSearch($query)
+	{
+		$provider = $this->config['AICHAT-searchProvider-include'];
+		$count = min(10, max(1, (int)$this->config['AICHAT-searchResults'] ?: 5));
+		$key = trim($this->config['AICHAT-searchApiKey']);
+		switch ($provider) {
+			case 'searxng':
+				$base = rtrim(trim($this->config['AICHAT-searchUrl']), '/');
+				if ($base === '') {
+					return [[], 'No SearXNG address is configured'];
+				}
+				[$code, $raw, $error] = $this->_aiChatHttp('GET', $base . '/search?' . http_build_query(['q' => $query, 'format' => 'json', 'safesearch' => 1]), ['Accept: application/json']);
+				break;
+			case 'brave':
+				[$code, $raw, $error] = $this->_aiChatHttp('GET', 'https://api.search.brave.com/res/v1/web/search?' . http_build_query(['q' => $query, 'count' => $count]), ['Accept: application/json', 'X-Subscription-Token: ' . $key]);
+				break;
+			case 'tavily':
+				[$code, $raw, $error] = $this->_aiChatHttp('POST', 'https://api.tavily.com/search', ['Content-Type: application/json', 'Authorization: Bearer ' . $key], json_encode(['query' => $query, 'max_results' => $count]));
+				break;
+			case 'duckduckgo':
+				[$code, $raw, $error] = $this->_aiChatHttp('POST', 'https://html.duckduckgo.com/html/', ['Content-Type: application/x-www-form-urlencoded'], http_build_query(['q' => $query]));
+				break;
+			default:
+				return [[], 'Web search is not configured'];
+		}
+		if ($error) {
+			return [[], 'Web search failed: ' . $error];
+		}
+		return [array_slice($this->_aiChatParseSearchResults($provider, $raw), 0, $count), null];
+	}
+
+	public function _aiChatParseSearchResults($provider, $raw)
+	{
+		$results = [];
+		$add = function ($title, $url, $snippet) use (&$results) {
+			$url = trim((string)$url);
+			if (!preg_match('#^https?://#i', $url)) {
+				return;
+			}
+			$results[] = [
+				'title' => mb_substr(trim(html_entity_decode(strip_tags((string)$title))) ?: $url, 0, 200),
+				'url' => $url,
+				'snippet' => mb_substr(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags((string)$snippet)))), 0, 600),
+			];
+		};
+		if ($provider === 'duckduckgo') {
+			$dom = new DOMDocument();
+			libxml_use_internal_errors(true);
+			$dom->loadHTML('<?xml encoding="UTF-8">' . $raw);
+			libxml_clear_errors();
+			$xpath = new DOMXPath($dom);
+			foreach ($xpath->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' result ')]") as $node) {
+				$link = $xpath->query(".//a[contains(@class, 'result__a')]", $node)->item(0);
+				if (!$link) {
+					continue;
+				}
+				$href = $link->getAttribute('href');
+				// Result links go through a DuckDuckGo redirect that carries the real address in "uddg"
+				parse_str((string)parse_url($href, PHP_URL_QUERY), $params);
+				$url = $params['uddg'] ?? (strpos($href, '//') === 0 ? 'https:' . $href : $href);
+				if (strpos($url, 'duckduckgo.com/y.js') !== false) {
+					continue; // advertisement
+				}
+				$snippet = $xpath->query(".//*[contains(@class, 'result__snippet')]", $node)->item(0);
+				$add($link->textContent, $url, $snippet ? $snippet->textContent : '');
+			}
+			return $results;
+		}
+		$json = json_decode((string)$raw, true) ?: [];
+		$items = $provider === 'brave' ? ($json['web']['results'] ?? []) : ($json['results'] ?? []);
+		foreach ($items as $item) {
+			$add($item['title'] ?? '', $item['url'] ?? '', $item['content'] ?? ($item['description'] ?? ($item['snippet'] ?? '')));
+		}
+		return $results;
+	}
+
+	/**
+	 * Asks the chat model for a good search query for the latest question; falls back to the question itself
+	 */
+	private function _aiChatSearchQuery($chatId, $model)
+	{
+		$history = array_slice($this->_aiChatMessages($chatId), -5);
+		$question = '';
+		$context = '';
+		foreach ($history as $message) {
+			$context .= strtoupper($message['role']) . ': ' . mb_substr((string)$message['content'], 0, 800) . "\n";
+			if ($message['role'] === 'user') {
+				$question = (string)$message['content'];
+			}
+		}
+		[$code, $body, $error] = $this->_aiChatRequest('POST', 'chat/completions', [
+			'model' => $model,
+			'messages' => [
+				['role' => 'system', 'content' => 'You write web search queries. Today is ' . gmdate('Y-m-d') . '. Read the conversation and write one short search engine query (at most 12 words) that finds what the last USER message needs. Answer with the query only.'],
+				['role' => 'user', 'content' => $context],
+			],
+			'max_tokens' => 40,
+		], 30);
+		$query = is_string($body['choices'][0]['message']['content'] ?? null) ? $body['choices'][0]['message']['content'] : '';
+		$query = trim(preg_replace('/<think>.*?<\/think>/s', '', $query));
+		$query = trim(strtok($query, "\n"), " \t\"'`");
+		if ($error || $query === '') {
+			$query = mb_substr(trim(preg_replace('/\s+/', ' ', $question)), 0, 200);
+		}
+		return mb_substr($query, 0, 200);
+	}
+
+	// Numbered results for the model; numbering continues across searches so [n] stays unique in one answer
+	private function _aiChatFormatResults($results, $offset)
+	{
+		if (!$results) {
+			return 'No results found.';
+		}
+		$lines = [];
+		foreach ($results as $index => $result) {
+			$lines[] = '[' . ($offset + $index + 1) . '] ' . $result['title'] . "\nURL: " . $result['url'] . "\n" . $result['snippet'];
+		}
+		return implode("\n\n", $lines);
+	}
+
+	/* ===================== image generation ===================== */
+
+	public function _aiChatImagesEnabled()
+	{
+		return (bool)$this->config['AICHAT-images-include'];
+	}
+
+	/**
+	 * Creates an image with the OpenAI-compatible /images/generations endpoint and stores it as a file of this user
+	 */
+	private function _aiChatGenerateImage($prompt)
+	{
+		$base = trim($this->config['AICHAT-imageBaseUrl']) ?: trim($this->config['AICHAT-baseUrl']);
+		$key = trim($this->config['AICHAT-imageApiKey']) ?: trim($this->config['AICHAT-apiKey']);
+		$headers = ['Content-Type: application/json', 'Accept: application/json'];
+		if ($key !== '') {
+			$headers[] = 'Authorization: Bearer ' . $key;
+		}
+		$request = ['prompt' => mb_substr($prompt, 0, 4000), 'n' => 1];
+		if (trim($this->config['AICHAT-imageModel']) !== '') {
+			$request['model'] = trim($this->config['AICHAT-imageModel']);
+		}
+		if (trim($this->config['AICHAT-imageSize']) !== '') {
+			$request['size'] = trim($this->config['AICHAT-imageSize']);
+		}
+		[$code, $raw, $error] = $this->_aiChatHttp('POST', rtrim($base, '/') . '/images/generations', $headers, json_encode($request), max(60, (int)$this->config['AICHAT-requestTimeout']));
+		if ($error) {
+			throw new RuntimeException('Image generation failed: ' . $error);
+		}
+		$data = json_decode($raw, true)['data'][0] ?? [];
+		if (!empty($data['b64_json'])) {
+			$bytes = base64_decode($data['b64_json'], true);
+		} elseif (!empty($data['url'])) {
+			// Some servers (dall-e-*) answer with a temporary link: keep a copy, the link expires
+			[$code, $bytes, $error] = $this->_aiChatHttp('GET', $data['url'], [], null, 60);
+			if ($error) {
+				throw new RuntimeException('Could not download the created image: ' . $error);
+			}
+		} else {
+			throw new RuntimeException('The image server returned no image');
+		}
+		$stored = bin2hex(random_bytes(16));
+		$path = $this->_aiChatFileDir() . DIRECTORY_SEPARATOR . $stored;
+		file_put_contents($path, $bytes);
+		$mime = (new finfo(FILEINFO_MIME_TYPE))->file($path) ?: 'application/octet-stream';
+		if (!isset(self::IMAGE_TYPES[$mime])) {
+			unlink($path);
+			throw new RuntimeException('The image server returned something that is not an image');
+		}
+		$name = 'image-' . gmdate('Ymd-His') . '.' . self::IMAGE_TYPES[$mime];
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['INSERT INTO [AICHAT-files]', [
+				'user_id' => $this->_aiChatUserId(),
+				'name' => $name,
+				'mime' => $mime,
+				'size' => filesize($path),
+				'path' => $stored,
+				'created' => $this->_aiChatNow(),
+			]]
+		]]);
+		return [
+			'id' => (int)$this->db->getInsertId(),
+			'name' => $name,
+			'mime' => $mime,
+			'size' => filesize($path),
+			'kind' => 'image',
+			'prompt' => mb_substr($data['revised_prompt'] ?? $prompt, 0, 1000),
+		];
+	}
+
+	/* ===================== answering ===================== */
+
+	// Tools the model may call on its own (only when the admin allows it and the feature is set up)
+	private function _aiChatTools()
+	{
+		$tools = [];
+		if ($this->_aiChatSearchEnabled() && $this->config['AICHAT-searchAuto']) {
+			$tools[] = ['type' => 'function', 'function' => [
+				'name' => 'web_search',
+				'description' => 'Search the web for current or specific information. Use it for recent events, facts you are unsure about, prices, versions and documentation.',
+				'parameters' => ['type' => 'object', 'properties' => ['query' => ['type' => 'string', 'description' => 'Search engine query']], 'required' => ['query']],
+			]];
+		}
+		if ($this->_aiChatImagesEnabled() && $this->config['AICHAT-imageAuto']) {
+			$tools[] = ['type' => 'function', 'function' => [
+				'name' => 'generate_image',
+				'description' => 'Create an image from a detailed description when the user asks for a picture, drawing, logo or other image.',
+				'parameters' => ['type' => 'object', 'properties' => ['prompt' => ['type' => 'string', 'description' => 'Detailed description of the image']], 'required' => ['prompt']],
+			]];
+		}
+		return $tools;
+	}
+
+	/**
+	 * One streamed request to /chat/completions. Text and thinking are forwarded to the browser as they arrive.
+	 */
+	private function _aiChatStreamRound($body)
+	{
+		$round = ['answer' => '', 'reasoning' => '', 'toolCalls' => [], 'errorBody' => '', 'aborted' => false, 'code' => 0, 'curlError' => ''];
+		$buffer = '';
+		$curl = $this->_aiChatCurl($this->_aiChatUrl('chat/completions'), max(30, (int)$this->config['AICHAT-requestTimeout']));
+		curl_setopt_array($curl, [
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => json_encode($body),
+			CURLOPT_HTTPHEADER => array_merge($this->_aiChatHeaders(), ['Accept: text/event-stream']),
+			CURLOPT_WRITEFUNCTION => function ($curl, $chunk) use (&$round, &$buffer) {
+				if (connection_aborted()) {
+					// The user pressed stop or closed the page: end the upstream request too
+					$round['aborted'] = true;
+					return 0;
+				}
+				if ((int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE) >= 400) {
+					$round['errorBody'] .= $chunk;
+					return strlen($chunk);
+				}
+				$buffer .= $chunk;
+				while (($end = strpos($buffer, "\n")) !== false) {
+					$line = trim(substr($buffer, 0, $end));
+					$buffer = substr($buffer, $end + 1);
+					if (strpos($line, 'data:') !== 0) {
+						continue;
+					}
+					$payload = trim(substr($line, 5));
+					if ($payload === '[DONE]') {
+						continue;
+					}
+					$event = json_decode($payload, true);
+					if (isset($event['error'])) {
+						$round['errorBody'] .= $payload;
+						continue;
+					}
+					$delta = $event['choices'][0]['delta'] ?? [];
+					// Reasoning models stream their thinking under different names depending on the server
+					$thinking = $delta['reasoning_content'] ?? ($delta['reasoning'] ?? null);
+					if (is_string($thinking) && $thinking !== '') {
+						$round['reasoning'] .= $thinking;
+						$this->_aiChatSendEvent(['type' => 'reasoning', 'content' => $thinking]);
+					}
+					$text = $delta['content'] ?? null;
+					if (is_string($text) && $text !== '') {
+						$round['answer'] .= $text;
+						$this->_aiChatSendEvent(['type' => 'delta', 'content' => $text]);
+					}
+					// Tool calls arrive in pieces: the name first, the JSON arguments spread over several chunks
+					foreach ($delta['tool_calls'] ?? [] as $position => $call) {
+						$index = $call['index'] ?? $position;
+						$current = $round['toolCalls'][$index] ?? ['id' => null, 'name' => '', 'arguments' => ''];
+						$current['id'] = $call['id'] ?? $current['id'];
+						$current['name'] .= $call['function']['name'] ?? '';
+						$current['arguments'] .= $call['function']['arguments'] ?? '';
+						$round['toolCalls'][$index] = $current;
+					}
+				}
+				return strlen($chunk);
+			},
+		]);
+		curl_exec($curl);
+		$round['code'] = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+		$round['curlError'] = curl_error($curl);
+		ksort($round['toolCalls']);
+		$round['toolCalls'] = array_values($round['toolCalls']);
+		return $round;
+	}
+
+	private function _aiChatRoundError($round)
+	{
+		if ($round['errorBody'] !== '') {
+			return $this->_aiChatUpstreamError(json_decode($round['errorBody'], true), $round['errorBody'], $round['code'] ?: 500);
+		}
+		if (!$round['aborted'] && $round['answer'] === '' && $round['reasoning'] === '' && !$round['toolCalls'] && ($round['code'] >= 400 || $round['curlError'])) {
+			return $round['curlError'] ?: 'The AI server answered ' . $round['code'];
+		}
+		return null;
+	}
+
+	// Adds the search results to the latest question, so they work with every model (no tool support needed)
+	private function _aiChatAddResultsToQuestion(&$messages, $query, $results)
+	{
+		$block = "\n\n<web_search_results query=\"" . $query . "\">\n" . $this->_aiChatFormatResults($results, 0) . "\n</web_search_results>\n" .
+			'Use these web search results (searched ' . gmdate('Y-m-d') . ') where they help, and cite them inline as [1], [2] etc.';
+		for ($i = count($messages) - 1; $i >= 0; $i--) {
+			if ($messages[$i]['role'] !== 'user') {
+				continue;
+			}
+			if (is_array($messages[$i]['content'])) {
+				$messages[$i]['content'][0]['text'] .= $block;
+			} else {
+				$messages[$i]['content'] .= $block;
+			}
+			return;
+		}
+	}
+
+	private function _aiChatLastQuestion($chatId)
+	{
+		$question = '';
+		foreach ($this->_aiChatMessages($chatId) as $message) {
+			if ($message['role'] === 'user') {
+				$question = (string)$message['content'];
+			}
+		}
+		return $question;
+	}
+
+	/**
+	 * Streams an answer to the browser as server-sent events.
+	 * Events: user (stored question), status, sources, image, delta / reasoning (text pieces), done (stored answer), title, error.
 	 */
 	public function _aiChatStream($chatId, $data)
 	{
@@ -951,8 +1445,18 @@ class AiChat extends Organizr
 		if (!$chat) {
 			return false;
 		}
+		$imageMode = !empty($data['image']);
+		$searchMode = !empty($data['search']) && !$imageMode;
+		if ($imageMode && !$this->_aiChatImagesEnabled()) {
+			$this->setAPIResponse('error', 'Image generation is turned off', 409);
+			return false;
+		}
+		if ($searchMode && !$this->_aiChatSearchEnabled()) {
+			$this->setAPIResponse('error', 'Web search is not set up', 409);
+			return false;
+		}
 		$model = $this->_aiChatPickModel($data['model'] ?? $chat['model']);
-		if (!$model) {
+		if (!$model && !$imageMode) {
 			$this->setAPIResponse('error', 'No model is available. Ask an admin to check the AI Chat settings.', 409);
 			return false;
 		}
@@ -962,7 +1466,7 @@ class AiChat extends Organizr
 			$this->setAPIResponse('error', $e->getMessage(), 422);
 			return false;
 		}
-		if ($model !== $chat['model']) {
+		if ($model && $model !== $chat['model']) {
 			$this->processQueries([['function' => 'query', 'query' => ['UPDATE [AICHAT-chats] SET', ['model' => $model], 'WHERE `id` = ?', (int)$chatId]]]);
 		}
 
@@ -984,93 +1488,165 @@ class AiChat extends Organizr
 			$this->_aiChatSendEvent(['type' => 'user', 'message' => $userMessage]);
 		}
 
-		$body = ['model' => $model, 'messages' => $this->_aiChatBuildMessages($chatId), 'stream' => true];
-		if (is_numeric($this->config['AICHAT-temperature'])) {
-			$body['temperature'] = (float)$this->config['AICHAT-temperature'];
-		}
-		if ((int)$this->config['AICHAT-maxTokens'] > 0) {
-			$body['max_tokens'] = (int)$this->config['AICHAT-maxTokens'];
-		}
-
-		$answer = '';
-		$reasoning = '';
-		$buffer = '';
-		$errorBody = '';
-		$aborted = false;
-		$curl = $this->_aiChatCurl($this->_aiChatUrl('chat/completions'), max(30, (int)$this->config['AICHAT-requestTimeout']));
-		curl_setopt_array($curl, [
-			CURLOPT_POST => true,
-			CURLOPT_POSTFIELDS => json_encode($body),
-			CURLOPT_HTTPHEADER => array_merge($this->_aiChatHeaders(), ['Accept: text/event-stream']),
-			CURLOPT_WRITEFUNCTION => function ($curl, $chunk) use (&$answer, &$reasoning, &$buffer, &$errorBody, &$aborted) {
-				if (connection_aborted()) {
-					// The user pressed stop or closed the page: end the upstream request too
-					$aborted = true;
-					return 0;
-				}
-				$code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-				if ($code >= 400) {
-					$errorBody .= $chunk;
-					return strlen($chunk);
-				}
-				$buffer .= $chunk;
-				while (($end = strpos($buffer, "\n")) !== false) {
-					$line = trim(substr($buffer, 0, $end));
-					$buffer = substr($buffer, $end + 1);
-					if (strpos($line, 'data:') !== 0) {
-						continue;
-					}
-					$payload = trim(substr($line, 5));
-					if ($payload === '[DONE]') {
-						continue;
-					}
-					$event = json_decode($payload, true);
-					if (isset($event['error'])) {
-						$errorBody .= $payload;
-						continue;
-					}
-					$delta = $event['choices'][0]['delta'] ?? [];
-					// Reasoning models stream their thinking under different names depending on the server
-					$thinking = $delta['reasoning_content'] ?? ($delta['reasoning'] ?? null);
-					if (is_string($thinking) && $thinking !== '') {
-						$reasoning .= $thinking;
-						$this->_aiChatSendEvent(['type' => 'reasoning', 'content' => $thinking]);
-					}
-					$text = $delta['content'] ?? null;
-					if (is_string($text) && $text !== '') {
-						$answer .= $text;
-						$this->_aiChatSendEvent(['type' => 'delta', 'content' => $text]);
-					}
-				}
-				return strlen($chunk);
-			},
-		]);
-		curl_exec($curl);
-		$code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-		$curlError = curl_error($curl);
-
-		if ($errorBody !== '' || (!$aborted && $answer === '' && $reasoning === '' && ($code >= 400 || $curlError))) {
-			$message = $errorBody !== ''
-				? $this->_aiChatUpstreamError(json_decode($errorBody, true), $errorBody, $code ?: 500)
-				: ($curlError ?: 'The AI server sent no answer');
-			$this->setLoggerChannel('AI Chat')->warning($message, ['model' => $model]);
-			if ($answer === '') {
-				$this->_aiChatSendEvent(['type' => 'error', 'message' => $message]);
+		// "Create image" turns the message into an image prompt; no chat model is involved
+		if ($imageMode) {
+			$prompt = $this->_aiChatLastQuestion($chatId);
+			$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Creating image...']);
+			try {
+				$image = $this->_aiChatGenerateImage($prompt);
+			} catch (RuntimeException $e) {
+				$this->setLoggerChannel('AI Chat')->warning($e->getMessage());
+				$this->_aiChatSendEvent(['type' => 'error', 'message' => $e->getMessage()]);
 				exit;
 			}
+			$this->_aiChatSendEvent(['type' => 'image', 'image' => $image]);
+			$stored = $this->_aiChatInsertMessage($chatId, 'assistant', '', [$image], trim($this->config['AICHAT-imageModel']) ?: 'image', null, ['image' => true]);
+			$this->_aiChatSendEvent(['type' => 'done', 'message' => $stored]);
+			$this->_aiChatFinishTitle($chat, $chatId, $model, $prompt);
+			exit;
 		}
-		$stored = $this->_aiChatInsertMessage($chatId, 'assistant', $answer, [], $model, $reasoning !== '' ? $reasoning : null);
+
+		$messages = $this->_aiChatBuildMessages($chatId);
+		$sources = [];
+		$searches = [];
+		if ($searchMode) {
+			$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Thinking of a search...']);
+			$query = $this->_aiChatSearchQuery($chatId, $model);
+			$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Searching the web for "' . $query . '"']);
+			[$results, $error] = $this->_aiChatWebSearch($query);
+			if ($error) {
+				$this->setLoggerChannel('AI Chat')->warning($error);
+				$this->_aiChatSendEvent(['type' => 'status', 'text' => $error . ' - answering without it']);
+			} else {
+				$searches[] = $query;
+				$sources = $results;
+				$this->_aiChatSendEvent(['type' => 'sources', 'sources' => $sources, 'query' => $query]);
+				$this->_aiChatAddResultsToQuestion($messages, $query, $results);
+			}
+		}
+
+		$tools = $this->_aiChatTools();
+		$answer = '';
+		$reasoning = '';
+		$images = [];
+		$aborted = false;
+		$error = null;
+		for ($round = 0; $round < 5; $round++) {
+			$body = ['model' => $model, 'messages' => $messages, 'stream' => true];
+			if (is_numeric($this->config['AICHAT-temperature'])) {
+				$body['temperature'] = (float)$this->config['AICHAT-temperature'];
+			}
+			if ((int)$this->config['AICHAT-maxTokens'] > 0) {
+				$body['max_tokens'] = (int)$this->config['AICHAT-maxTokens'];
+			}
+			// The last round never offers tools, so the model has to answer
+			$offerTools = $tools && $round < 4;
+			if ($offerTools) {
+				$body['tools'] = $tools;
+			}
+			$result = $this->_aiChatStreamRound($body);
+			$error = $this->_aiChatRoundError($result);
+			if ($error && $offerTools && $round === 0 && $result['answer'] === '' && in_array($result['code'], [400, 404, 422, 500], true)) {
+				// Model or server without tool support: ask again without tools
+				$this->setLoggerChannel('AI Chat')->info('Retrying without tools: ' . $error, ['model' => $model]);
+				$tools = [];
+				$round = -1;
+				$error = null;
+				continue;
+			}
+			$answer .= $result['answer'];
+			$reasoning .= $result['reasoning'];
+			$aborted = $result['aborted'];
+			if ($error || $aborted || !$result['toolCalls']) {
+				break;
+			}
+			// Run the tools the model asked for and give it the results
+			$calls = [];
+			foreach ($result['toolCalls'] as $index => $call) {
+				$calls[] = ['id' => $call['id'] ?: 'call_' . $round . '_' . $index, 'type' => 'function', 'function' => ['name' => $call['name'], 'arguments' => $call['arguments'] !== '' ? $call['arguments'] : '{}']];
+			}
+			$messages[] = ['role' => 'assistant', 'content' => $result['answer'] !== '' ? $result['answer'] : null, 'tool_calls' => $calls];
+			foreach ($calls as $call) {
+				$arguments = json_decode($call['function']['arguments'], true) ?: [];
+				$output = $this->_aiChatRunTool($call['function']['name'], $arguments, $sources, $searches, $images);
+				$messages[] = ['role' => 'tool', 'tool_call_id' => $call['id'], 'content' => $output];
+			}
+			if ($answer !== '' && substr($answer, -1) !== "\n") {
+				$answer .= "\n\n";
+				$this->_aiChatSendEvent(['type' => 'delta', 'content' => "\n\n"]);
+			}
+		}
+
+		if ($error && $answer === '' && !$images) {
+			$this->setLoggerChannel('AI Chat')->warning($error, ['model' => $model]);
+			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error]);
+			exit;
+		}
+		$meta = [];
+		if ($sources) {
+			$meta['sources'] = $sources;
+			$meta['searches'] = $searches;
+		}
+		$stored = $this->_aiChatInsertMessage($chatId, 'assistant', trim($answer), $images, $model, $reasoning !== '' ? $reasoning : null, $meta ?: null);
 		if ($aborted) {
 			exit;
 		}
 		$this->_aiChatSendEvent(['type' => 'done', 'message' => $stored]);
-		if ($this->config['AICHAT-autoTitle'] && $chat['title'] === self::NEW_CHAT_TITLE && $answer !== '') {
-			$title = $this->_aiChatGenerateTitle($chatId, $model);
-			if ($title) {
-				$this->_aiChatSendEvent(['type' => 'title', 'title' => $title]);
-			}
-		}
+		$this->_aiChatFinishTitle($chat, $chatId, $model, null);
 		exit;
+	}
+
+	private function _aiChatRunTool($name, $arguments, &$sources, &$searches, &$images)
+	{
+		switch ($name) {
+			case 'web_search':
+				$query = mb_substr(trim((string)($arguments['query'] ?? '')), 0, 200);
+				if ($query === '' || !$this->_aiChatSearchEnabled()) {
+					return 'Web search is not available.';
+				}
+				$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Searching the web for "' . $query . '"']);
+				[$results, $error] = $this->_aiChatWebSearch($query);
+				if ($error) {
+					return $error;
+				}
+				$text = $this->_aiChatFormatResults($results, count($sources)) . "\n\nCite the results you use inline as [n].";
+				$searches[] = $query;
+				$sources = array_merge($sources, $results);
+				$this->_aiChatSendEvent(['type' => 'sources', 'sources' => $sources, 'query' => $query]);
+				return $text;
+			case 'generate_image':
+				$prompt = trim((string)($arguments['prompt'] ?? ''));
+				if ($prompt === '' || !$this->_aiChatImagesEnabled()) {
+					return 'Image generation is not available.';
+				}
+				$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Creating image...']);
+				try {
+					$image = $this->_aiChatGenerateImage($prompt);
+				} catch (RuntimeException $e) {
+					return $e->getMessage();
+				}
+				$images[] = $image;
+				$this->_aiChatSendEvent(['type' => 'image', 'image' => $image]);
+				return 'The image was created and is already shown to the user below your message. Do not add a link or markdown image for it.';
+			default:
+				return 'Unknown tool ' . $name;
+		}
+	}
+
+	private function _aiChatFinishTitle($chat, $chatId, $model, $fallback)
+	{
+		if (!$this->config['AICHAT-autoTitle'] || $chat['title'] !== self::NEW_CHAT_TITLE) {
+			return;
+		}
+		$title = $model ? $this->_aiChatGenerateTitle($chatId, $model) : null;
+		if (!$title && $fallback) {
+			// No chat model (image only): name the chat after the prompt
+			$title = mb_substr(trim(preg_replace('/\s+/', ' ', $fallback)), 0, 60);
+			$this->processQueries([['function' => 'query', 'query' => ['UPDATE [AICHAT-chats] SET', ['title' => $title], 'WHERE `id` = ?', (int)$chatId]]]);
+		}
+		if ($title) {
+			$this->_aiChatSendEvent(['type' => 'title', 'title' => $title]);
+		}
 	}
 
 	private function _aiChatGenerateTitle($chatId, $model)
