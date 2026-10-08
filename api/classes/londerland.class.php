@@ -1024,25 +1024,6 @@ class Londerland
 		return $match[1];
 	}
 
-	public function languagePacks($encode = false)
-	{
-		$files = array();
-		foreach (glob(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'langpack' . DIRECTORY_SEPARATOR . "*.json") as $filename) {
-			if (strpos(basename($filename), '[') !== false) {
-				$explode = explode('[', basename($filename));
-				$files[] = array(
-					'filename' => basename($filename),
-					'code' => $explode[0],
-					'language' => $this->matchBrackets(basename($filename))
-				);
-			}
-		}
-		usort($files, function ($a, $b) {
-			return $a['language'] <=> $b['language'];
-		});
-		return ($encode) ? json_encode($files) : $files;
-	}
-
 	public function getRootPath()
 	{
 		$count = (count(explode('/', $_SERVER['REQUEST_URI']))) - 2;
@@ -1094,22 +1075,34 @@ class Londerland
 
 	public function defaultThemeInformation()
 	{
+		// style: the Style (Settings > Customize > Appearance > Colors & Themes) a theme is made for
+		$themes = [
+			'Londerland' => 'dark',
+			'Blue' => 'light',
+			'Amethyst' => 'dark',
+			'Lavender' => 'light',
+			'Midnight' => 'dark',
+			'Arctic' => 'dark',
+			'Forest' => 'dark',
+			'Ember' => 'dark',
+			'Crimson' => 'dark',
+			'Mint' => 'light',
+			'Sand' => 'light',
+			'Rose' => 'light',
+		];
+		$information = [];
+		foreach ($themes as $name => $style) {
+			$information[$name] = [
+				'name' => $name,
+				'repo' => null,
+				'version' => '1.0.0',
+				'path' => 'css/themes',
+				'style' => $style
+			];
+		}
 		return [
-			'files' => ['Blue', 'Londerland'],
-			'information' => [
-				'Blue' => [
-					'name' => 'Blue',
-					'repo' => null,
-					'version' => '1.0.0',
-					'path' => 'css/themes'
-				],
-				'Londerland' => [
-					'name' => 'Londerland',
-					'repo' => null,
-					'version' => '1.0.0',
-					'path' => 'css/themes'
-				]
-			]
+			'files' => array_keys($themes),
+			'information' => $information
 		];
 	}
 
@@ -6064,7 +6057,16 @@ class Londerland
 			$array['password'] = password_hash($array['password'], PASSWORD_BCRYPT);
 		}
 		if (array_key_exists('image', $array)) {
-			$array['image'] = $this->sanitizeUserString($array['image']);
+			// Avatar: a web address or an image inside Londerland (e.g. uploaded with the Image Manager); empty = Gravatar
+			$image = trim((string)$array['image']);
+			if ($image === '') {
+				$array['image'] = $this->gravatar($array['email'] ?? $user['email']);
+			} elseif (preg_match('/^(https?:\/\/|data\/|plugins\/images\/)/i', $image)) {
+				$array['image'] = $this->sanitizeUserString($image);
+			} else {
+				$this->setAPIResponse('error', 'Avatar must be a web address (http:// or https://) or an image path such as data/userTabs/me.png', 422);
+				return false;
+			}
 		}
 		if (array_key_exists('register_date', $array)) {
 			$this->setAPIResponse('error', 'Cannot update register date', 409);
@@ -6081,7 +6083,7 @@ class Londerland
 				)
 			),
 		];
-		$this->setAPIResponse(null, 'User info updated');
+		$this->setAPIResponse(null, 'User info updated', null, array_key_exists('image', $array) ? ['image' => $array['image']] : null);
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('Updated User Info for [' . $user['username'] . ']');
 		return $this->processQueries($response);

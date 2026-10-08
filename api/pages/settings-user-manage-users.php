@@ -42,7 +42,12 @@ function get_page_settings_user_manage_users($Londerland)
 			columns: [
 				{ title: window.lang.translate("Avatar"), field: "image", width: 70, hozAlign: "center", headerSort: false, responsive: 2,
 					formatter: function(cell) {
-						return $("<img alt=\"user-img\" class=\"rounded-circle\" width=\"45\">").attr("src", cell.getValue())[0];
+						return $("<img alt=\"user-img\" class=\"rounded-circle\" width=\"45\" style=\"cursor: pointer\">").attr({ src: cell.getValue(), title: window.lang.translate("Change avatar") })[0];
+					},
+					cellClick: function(e, cell) {
+						changeUserAvatar(cell.getRow().getData().id, cell.getValue(), function(image) {
+							cell.setValue(image, true);
+						});
 					}
 				},
 				{ title: window.lang.translate("Username"), field: "username", editor: "input", validator: "required", minWidth: 150 },

@@ -1089,6 +1089,12 @@ $(document).on('change keydown', '.addFormTick :input', function(e) {
                 let response = data.response;
                 let path = response.data[value]['path'];
                 changeTheme(path + '/' + value);
+                // Built-in themes are made for either the Light or the Dark style: switch it along
+                let style = response.data[value]['style'];
+                let $style = $('.styleChanger');
+                if (style && $style.length && $style.val() !== style) {
+                    $style.val(style).trigger('change');
+                }
             }catch(e) {
                 londerlandCatchError(e,data);
             }
