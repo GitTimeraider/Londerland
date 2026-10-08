@@ -1314,6 +1314,17 @@ span.homepage-text {
 .faded {
   opacity: 0.5;
 }
+/* Homepage Order: names in white on the coloured blocks (FullCalendar used to set this); disabled items are
+   shown muted instead of see-through so their name stays readable */
+.homepage-drag {
+  color: #fff;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.homepage-drag.faded {
+  opacity: 1;
+  filter: grayscale(0.7) brightness(0.7);
+}
 
 .btn-link,
 a {
