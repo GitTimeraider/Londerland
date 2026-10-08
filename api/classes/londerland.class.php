@@ -2516,6 +2516,8 @@ class Londerland
 				$this->settingsOption('switch', 'hideRegistration', ['label' => 'Hide Registration', 'help' => 'Enable this to hide the Registration button on the login screen']),
 				$this->settingsOption('number', 'rememberMeDays', ['label' => 'Remember Me Length', 'help' => 'Number of days cookies and tokens will be valid for', 'attr' => 'min="1"']),
 				$this->settingsOption('switch', 'rememberMe', ['label' => 'Remember Me', 'help' => 'Default status of Remember Me button on login screen']),
+				$this->settingsOption('switch', 'loginEmailNewDevice', ['label' => 'E-mail on Login from a New Device', 'help' => 'E-mails a user when they log in from a browser or device they never used before (needs the PHP Mailer plugin). Logging out and browser updates do not count as new.']),
+				$this->settingsOption('multiple-url', 'loginEmailIgnoreIPs', ['label' => 'No New Device E-mail From', 'placeholder' => 'e.g. 192.168.1.0/24', 'help' => 'Logins from these addresses never send the new device e-mail. Type an entry and press Enter, one per address, subnet or range: 192.168.1.20, 192.168.1.0/24 or 192.168.1.10-192.168.1.50']),
 				$this->settingsOption('multiple-url', 'localIPList', ['label' => 'Override Local IP or Subnet', 'placeholder' => 'e.g. 192.168.1.0/24', 'help' => 'IPv4 only. Visitors from these addresses count as local. Type an entry and press Enter, one per address, subnet or range: 192.168.1.20, 192.168.1.0/24 or 192.168.1.10-192.168.1.50']),
 				$this->settingsOption('input', 'wanDomain', ['label' => 'WAN Domain', 'placeholder' => 'only domain and tld - i.e. domain.com', 'help' => 'Enter domain if you wish to be forwarded to a local address - Local Address filled out on next item']),
 				$this->settingsOption('url', 'localAddress', ['label' => 'Local Address', 'placeholder' => 'http://home.local', 'help' => 'Full local address of londerland install - i.e. http://home.local or http://192.168.0.100']),
@@ -3692,47 +3694,41 @@ class Londerland
 		$query = $this->processQueries($response);
 		if ($token) {
 			$this->logger->debug('Token has been created');
-			$browserCount = array_column($query['tokens'], 'browser');
-			$browserCount = array_count_values($browserCount);
-			if (isset($browserCount[$_SERVER ['HTTP_USER_AGENT']])) {
-				if ($browserCount[$_SERVER ['HTTP_USER_AGENT']] <= 1) {
-					if ($this->config['PHPMAILER-enabled']) {
-						$PhpMailer = new PhpMailer();
-						$emailTemplate = array(
-							'type' => 'device',
-							'body' => '
-								<h2>Hey there {user}!</h2>
-								We noticed a login attempt to your account and want to make sure it\'s you.<br />
-								If this was you, please ignore this email.<br /><br />
-								If this wasn\'t you, please change your password and revoke all tokens.<br /><br />
-								<b>Details:</b><br/ >
-								IP: ' . $this->userIP() . '<br />
-								Browser: ' . $_SERVER ['HTTP_USER_AGENT'] . '<br />
-								',
-							'subject' => 'We noticed a login attempt to your account on a new device.',
-							'user' => $result['username'],
-							'password' => null,
-							'inviteCode' => null,
-						);
+			if ($this->isNewLoginDevice($result['id'], $_SERVER['HTTP_USER_AGENT'] ?? '') && $this->newDeviceEmailWanted($this->userIP())) {
+				if ($this->config['PHPMAILER-enabled']) {
+					$PhpMailer = new PhpMailer();
+					$emailTemplate = array(
+						'type' => 'device',
+						'body' => '
+							<h2>Hey there {user}!</h2>
+							We noticed a login attempt to your account and want to make sure it\'s you.<br />
+							If this was you, please ignore this email.<br /><br />
+							If this wasn\'t you, please change your password and revoke all tokens.<br /><br />
+							<b>Details:</b><br/ >
+							IP: ' . $this->userIP() . '<br />
+							Browser: ' . $_SERVER ['HTTP_USER_AGENT'] . '<br />
+							',
+						'subject' => 'We noticed a login attempt to your account on a new device.',
+						'user' => $result['username'],
+						'password' => null,
+						'inviteCode' => null,
+					);
 
-						$emailTemplate = $PhpMailer->_phpMailerPluginEmailTemplate($emailTemplate);
-						$sendEmail = array(
-							'to' => $result['email'],
-							'subject' => $emailTemplate['subject'],
-							'body' => $PhpMailer->_phpMailerPluginBuildEmail($emailTemplate),
-						);
-						$response = $PhpMailer->_phpMailerPluginSendEmail($sendEmail);
-						if ($response == true) {
-							$this->logger->debug('Sent new device email');
-						} else {
-							$this->logger->debug('Could not send new device email');
-						}
+					$emailTemplate = $PhpMailer->_phpMailerPluginEmailTemplate($emailTemplate);
+					$sendEmail = array(
+						'to' => $result['email'],
+						'subject' => $emailTemplate['subject'],
+						'body' => $PhpMailer->_phpMailerPluginBuildEmail($emailTemplate),
+					);
+					$response = $PhpMailer->_phpMailerPluginSendEmail($sendEmail);
+					if ($response == true) {
+						$this->logger->debug('Sent new device email');
 					} else {
-						$this->logger->debug('Email not setup - cannot send new device email');
+						$this->logger->debug('Could not send new device email');
 					}
+				} else {
+					$this->logger->debug('Email not setup - cannot send new device email');
 				}
-			} else {
-				$this->logger->debug('Could not find token in database');
 			}
 		} else {
 			$this->logger->warning('Token creation error');
@@ -3966,6 +3962,100 @@ class Londerland
 				return false;
 			}
 		}
+	}
+
+	/**
+	 * Devices (browser + system, without version numbers) a user logged in from. Kept apart from the tokens,
+	 * which are deleted on logout, so logging out or a browser update does not make a device "new" again.
+	 * The table is created on first use and filled from the current tokens, so upgrading sends no e-mails.
+	 */
+	private function knownDevicesReady()
+	{
+		if ($this->config['driver'] == 'sqlite3') {
+			$query = ["SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' AND `name` = %s", 'known_devices'];
+		} else {
+			$query = ['SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s', (string)$this->config['dbName'], 'known_devices'];
+		}
+		if ($this->processQueries([['function' => 'fetchSingle', 'query' => $query]])) {
+			return true;
+		}
+		$this->processQueries([['function' => 'query', 'query' => 'CREATE TABLE `known_devices` (
+			`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+			`user_id`	INTEGER,
+			`device`	TEXT,
+			`browser`	TEXT,
+			`ip`	TEXT,
+			`first_seen`	DATETIME,
+			`last_seen`	DATETIME
+		);']]);
+		$tokens = $this->processQueries([['function' => 'fetchAll', 'query' => 'SELECT `user_id`, `browser`, `ip`, `created` FROM `tokens`']]) ?: [];
+		$seen = [];
+		foreach ($tokens as $token) {
+			$device = $this->loginDeviceKey($token['browser'] ?? '');
+			if (isset($seen[$token['user_id'] . $device])) {
+				continue;
+			}
+			$seen[$token['user_id'] . $device] = true;
+			$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [known_devices]', [
+				'user_id' => $token['user_id'],
+				'device' => $device,
+				'browser' => $token['browser'],
+				'ip' => $token['ip'],
+				'first_seen' => $token['created'],
+				'last_seen' => $token['created'],
+			]]]]);
+		}
+		return true;
+	}
+
+	private function loginDeviceKey($userAgent)
+	{
+		// version numbers change with every browser update; the rest (browser, system) identifies the device
+		return sha1(strtolower(preg_replace('/[0-9._]+/', '', (string)$userAgent)));
+	}
+
+	/**
+	 * Remembers the device; true when this user never logged in from it before
+	 */
+	public function isNewLoginDevice($userId, $userAgent)
+	{
+		$this->knownDevicesReady();
+		$device = $this->loginDeviceKey($userAgent);
+		$now = gmdate('Y-m-d H:i:s');
+		$known = $this->processQueries([['function' => 'fetchSingle', 'query' => ['SELECT `id` FROM `known_devices` WHERE `user_id` = ? AND `device` = ?', $userId, $device]]]);
+		if ($known) {
+			$this->processQueries([['function' => 'query', 'query' => ['UPDATE `known_devices` SET', ['last_seen' => $now, 'ip' => $this->userIP(), 'browser' => $userAgent], 'WHERE `id` = ?', $known]]]);
+			return false;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [known_devices]', [
+			'user_id' => $userId,
+			'device' => $device,
+			'browser' => $userAgent,
+			'ip' => $this->userIP(),
+			'first_seen' => $now,
+			'last_seen' => $now,
+		]]]]);
+		return true;
+	}
+
+	/**
+	 * Settings > System Settings > Main > Login: e-mails can be switched off, or skipped for some addresses
+	 */
+	public function newDeviceEmailWanted($ip)
+	{
+		if (!($this->config['loginEmailNewDevice'] ?? true)) {
+			return false;
+		}
+		$ipLong = ip2long((string)$ip);
+		if ($ipLong !== false) {
+			foreach (explode(',', (string)($this->config['loginEmailIgnoreIPs'] ?? '')) as $entry) {
+				$range = $this->convertIPToRange($entry);
+				if ($range && $ipLong >= ip2long($range['from']) && $ipLong <= ip2long($range['to'])) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public function logout()
