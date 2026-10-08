@@ -2,10 +2,10 @@ name: Docker image
 
 on:
   push:
-    branches: [v2-master]
+    branches: [master]
     tags: ['v*']
   pull_request:
-    branches: [v2-master]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
