@@ -1,19 +1,18 @@
 <p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true" alt="Londerland" width="420"></p>
 
+#### Disclaimer: 
+While guided and checked, AI is responsible for half of the coding. Development is also 100% for own personal use, no promises.
+__________________________________
+
 **Londerland** is a self-hosted web portal you can put on the internet as your own website:
 one address with your own name, logo and look, where visitors see a public front page and members log in
 for more. It works just as well as the private start page for your home network, but it is built to feel like a
 website, not like a wall of server tiles.
 
-### Disclaimers: 
-#### Even though guided and checked, AI is responsible for over half of the coding. 
-Also keep in mind that this software is mostly developed for personal use by myself and thus might not receive all feature requests desired and even be discontinued.
-################################################################
-
 - **Public when you want it.** Guests (visitors who are not logged in) can get their own front page and their
   own tabs, so the same address serves a public site for everyone and private pages for members.
 - **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
-  and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
+  and favicon, a theme and colurs, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
 - **Pages, not just links.** The front page is built from blocks such as up to eight Custom HTML sections (any HTML you like),
   a calendar, weather and bookmarks. Tabs show any web page inside the site or open it in a new window.
 - **Members and groups.** Invite members by e-mail; every tab and front page block is shown only to the
