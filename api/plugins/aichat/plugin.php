@@ -392,7 +392,7 @@ class AiChat extends Londerland
 					'type' => 'switch',
 					'name' => 'AICHAT-searchAuto',
 					'label' => 'Model May Search by Itself',
-					'help' => 'Offers a web_search tool, so models with tool calling can search whenever they need to, also without the globe button.',
+					'help' => 'Offers a web_search tool, so models with tool calling can search whenever they need to, also without the globe button. Needs a Search Provider above (not Off).' . ($this->config['AICHAT-searchAuto'] && !$this->_aiChatSearchEnabled() ? ' WARNING: the Search Provider is Off, so the model gets no search tool now.' : ''),
 					'value' => $this->config['AICHAT-searchAuto']
 				),
 				array(
@@ -1596,6 +1596,11 @@ class AiChat extends Londerland
 		}
 
 		$tools = $this->_aiChatTools();
+		$notices = [];
+		if ($this->config['AICHAT-searchAuto'] && !$this->_aiChatSearchEnabled()) {
+			$notices[] = 'Web search is not available: "Model May Search by Itself" is on, but no Search Provider is chosen in the AI Chat settings.';
+			$this->_aiChatSendEvent(['type' => 'notice', 'notices' => $notices]);
+		}
 		$answer = '';
 		$reasoning = '';
 		$images = [];
@@ -1617,8 +1622,12 @@ class AiChat extends Londerland
 			$result = $this->_aiChatStreamRound($body);
 			$error = $this->_aiChatRoundError($result);
 			if ($error && $offerTools && $round === 0 && $result['answer'] === '' && in_array($result['code'], [400, 404, 422, 500], true)) {
-				// Model or server without tool support: ask again without tools
-				$this->setLoggerChannel('AI Chat')->info('Retrying without tools: ' . $error, ['model' => $model]);
+				// Model or server without tool support: ask again without tools, and say so
+				$this->setLoggerChannel('AI Chat')->warning('The AI server refused the tools, retrying without them: ' . $error, ['model' => $model]);
+				$notices[] = 'The AI server refused the ' . implode(' and ', array_map(function ($tool) {
+						return $tool['function']['name'];
+					}, $tools)) . ' tool, so this answer was made without it. Server message: ' . mb_substr($error, 0, 300);
+				$this->_aiChatSendEvent(['type' => 'notice', 'notices' => $notices]);
 				$tools = [];
 				$round = -1;
 				$error = null;
@@ -1653,6 +1662,9 @@ class AiChat extends Londerland
 			exit;
 		}
 		$meta = [];
+		if ($notices) {
+			$meta['notices'] = $notices;
+		}
 		if ($sources) {
 			$meta['sources'] = $sources;
 			$meta['searches'] = $searches;

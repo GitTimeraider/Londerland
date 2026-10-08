@@ -663,6 +663,17 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   font-size: 13px;
 }
 
+/* Warning above an answer (for example web search not available) */
+.aichat-answer-notice {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-left: 3px solid #ffa726;
+  background: rgba(255, 167, 38, 0.1);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--aichat-muted);
+}
+
 /* Web sources under an answer */
 .aichat-sources {
   margin-top: 10px;
