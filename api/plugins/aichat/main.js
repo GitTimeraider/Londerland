@@ -650,6 +650,14 @@
 		return $html.html();
 	}
 
+	// Warnings about the answer, for example when web search could not be offered to the model
+	function noticesHtml(notices) {
+		if (!notices || !notices.length) {
+			return '';
+		}
+		return notices.map((n) => `<div class="aichat-answer-notice"><i class="fa fa-exclamation-triangle me-2"></i>${escapeHtml(t(n))}</div>`).join('');
+	}
+
 	function messageHtml(msg, isLast) {
 		const classes = ['aichat-message', msg.role];
 		if (isLast) {
@@ -661,6 +669,7 @@
 			body += `<div class="aichat-attachments">${msg.attachments.map((a) => attachmentHtml(a, false)).join('')}</div>`;
 		}
 		if (msg.role === 'assistant') {
+			body += noticesHtml(meta.notices);
 			if (msg.reasoning) {
 				body += `<details class="aichat-reasoning"><summary>${escapeHtml(t('Thinking'))}</summary><div class="aichat-reasoning-body">${escapeHtml(msg.reasoning)}</div></details>`;
 			}
@@ -797,7 +806,7 @@
 		}
 		$messages.find('.aichat-message').removeClass('last');
 		$messages.find('.aichat-regenerate').remove();
-		const $answer = $(`<div class="aichat-message assistant last"><div class="aichat-status"></div><div class="aichat-reasoning-slot"></div><div class="aichat-bubble aichat-markdown"><span class="aichat-typing"><span></span><span></span><span></span></span></div><div class="aichat-generated-list"></div><div class="aichat-sources-slot"></div></div>`);
+		const $answer = $(`<div class="aichat-message assistant last"><div class="aichat-status"></div><div class="aichat-notice-slot"></div><div class="aichat-reasoning-slot"></div><div class="aichat-bubble aichat-markdown"><span class="aichat-typing"><span></span><span></span><span></span></span></div><div class="aichat-generated-list"></div><div class="aichat-sources-slot"></div></div>`);
 		$messages.append($answer);
 		scrollToBottom(true);
 		state.controller = new AbortController();
@@ -876,6 +885,9 @@
 							break;
 						case 'status':
 							setStatus(event.text);
+							break;
+						case 'notice':
+							$answer.find('.aichat-notice-slot').html(noticesHtml(event.notices));
 							break;
 						case 'sources':
 							sources = event.sources;
