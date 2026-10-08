@@ -3,6 +3,8 @@ return array(
 	'AICHAT-enabled' => false,
 	// Settings ending in -include are sent to the browser; everything else (API key, prompts) stays on the server
 	'AICHAT-Auth-include' => '4',
+	// Group IDs that get the chat (comma separated); 'auto' = AICHAT-Auth-include and higher groups, as before
+	'AICHAT-groups-include' => 'auto',
 	'AICHAT-uploads-include' => true,
 	'AICHAT-maxUploadMB-include' => '20',
 	// Chat button: name under the icon and colour (empty = theme colour)

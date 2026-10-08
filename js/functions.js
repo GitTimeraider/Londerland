@@ -482,6 +482,10 @@ function getQueryVariable(variable) {
   return false;
 }
 function iconPrefix(source) {
+  if (!source) {
+    // e.g. a category saved without an image
+    return '<i class="fa fa-question fa-fw"></i>';
+  }
   var tabIcon = source.split("::");
   var icons = {
     materialize: "mdi mdi-",
@@ -505,6 +509,10 @@ function iconPrefix(source) {
   }
 }
 function iconPrefixSplash(source) {
+  if (!source) {
+    // e.g. a category saved without an image
+    return '<i class="fa fa-question fa-fw"></i>';
+  }
   var tabIcon = source.split("::");
   var icons = {
     materialize: "mdi mdi-",

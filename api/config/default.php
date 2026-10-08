@@ -18,6 +18,8 @@ return [
 	'ldapType' => '1',
 	'logo' => 'plugins/images/londerland/londerland-logo-h.png',
 	'loginLogo' => 'plugins/images/londerland/londerland-logo-h.png',
+	// Settings > System Settings > About; empty = the Londerland logo
+	'aboutLogo' => '',
 	'loginWallpaper' => '',
 	'title' => 'Londerland',
 	'useLogo' => false,
@@ -514,6 +516,8 @@ return [
 	'localIPFrom' => '',
 	'localIPTo' => '',
 	'localIPList' => '',
+	'loginEmailNewDevice' => true,
+	'loginEmailIgnoreIPs' => '',
 	'sandbox' => 'allow-presentation,allow-forms,allow-same-origin,allow-pointer-lock,allow-scripts,allow-popups,allow-modals,allow-top-navigation,allow-downloads,allow-orientation-lock,allow-popups-to-escape-sandbox,allow-top-navigation-by-user-activation',
 	'iframeAllow' => 'fullscreen,autoplay,clipboard-read,clipboard-write,camera,microphone,speaker-selection,display-capture,web-share,encrypted-media,picture-in-picture',
 	'description' => 'Londerland - all your web apps in one place',
