@@ -72,7 +72,7 @@ class Londerland
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.0';
+	public $version = '2.2.1';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -2438,6 +2438,9 @@ class Londerland
 			'Settings Page' => [
 				$this->settingsOption('select', 'defaultSettingsTab', ['label' => 'Default Settings Tab', 'options' => $this->getSettingsTabs(), 'help' => 'Choose which Settings Tab to be default when opening settings page']),
 			],
+			'The Movie Database' => [
+				$this->settingsOption('token', 'tmdbApiKey', ['label' => 'TMDB API Key', 'help' => 'Your own API key (v3) from themoviedb.org. Needed for the movie and TV lists and search in the Ombi and Overseerr request items']),
+			],
 			'API' => [
 				$this->settingsOption('password-alt-copy', 'londerlandAPI', ['label' => 'Londerland API']),
 				$this->settingsOption('button', null, ['label' => 'Generate New API Key', 'class' => 'newAPIKey', 'icon' => 'fa fa-refresh', 'text' => 'Generate']),
@@ -4511,6 +4514,8 @@ class Londerland
 				'enableLocalAddressForward' => $this->config['enableLocalAddressForward'],
 			],
 			'misc' => [
+				// Used by the browser for TMDB lookups in the request items
+				'tmdbApiKey' => $this->qualifyRequest(998) ? $this->config['tmdbApiKey'] : '',
 				'installedPlugins' => $this->qualifyRequest(1) ? $this->config['installedPlugins'] : '',
 				'installedThemes' => $this->qualifyRequest(1) ? $this->config['installedThemes'] : '',
 				'return' => $_SERVER['HTTP_REFERER'] ?? false,

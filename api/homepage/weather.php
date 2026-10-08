@@ -22,6 +22,8 @@ trait WeatherHomepageItem
 					$this->settingsOption('auth', 'homepageWeatherAndAirAuth'),
 				],
 				'Connection' => [
+					$this->settingsOption('token', 'breezometerToken', ['label' => 'Breezometer API Key', 'help' => 'Your own key from breezometer.com, used for weather, air quality and pollen']),
+					$this->settingsOption('blank'),
 					$this->settingsOption('input', 'homepageWeatherAndAirLatitude', ['label' => 'Latitude', 'help' => 'Please enter full latitude including minus if needed']),
 					$this->settingsOption('input', 'homepageWeatherAndAirLongitude', ['label' => 'Longitude', 'help' => 'Please enter full longitude including minus if needed']),
 					$this->settingsOption('blank'),
@@ -52,6 +54,7 @@ trait WeatherHomepageItem
 					'homepageWeatherAndAirAuth'
 				],
 				'not_empty' => [
+					'breezometerToken',
 					'homepageWeatherAndAirLatitude',
 					'homepageWeatherAndAirLongitude'
 				]
@@ -84,12 +87,26 @@ trait WeatherHomepageItem
 				$this->setAPIResponse('error', 'Query was not supplied', 422);
 				return false;
 			}
-			$url = $this->qualifyURL('https://api.mapbox.com/geocoding/v5/mapbox.places/' . urlencode($query) . '.json?access_token=pk.eyJ1IjoiY2F1c2VmeCIsImEiOiJjazhyeGxqeXgwMWd2M2ZydWQ4YmdjdGlzIn0.R50iYuMewh1CnUZ7sFPdHA&limit=5&fuzzyMatch=true');
-			$response = \WpOrg\Requests\Requests::get($url);
-			if ($response->success) {
-				$this->setAPIResponse('success', null, 200, json_decode($response->body));
-				return json_decode($response->body);
+			// Open-Meteo's geocoding service needs no account or key
+			$url = 'https://geocoding-api.open-meteo.com/v1/search?name=' . urlencode($query) . '&count=5&language=en&format=json';
+			$response = \WpOrg\Requests\Requests::get($url, [], ['timeout' => 15]);
+			if (!$response->success) {
+				$this->setAPIResponse('error', 'Place lookup failed', 502);
+				return false;
 			}
+			$results = json_decode($response->body, true)['results'] ?? [];
+			// Same shape as before (a GeoJSON-like list), so the settings page can stay as it is
+			$features = [];
+			foreach ($results as $place) {
+				$name = implode(', ', array_filter([$place['name'] ?? '', $place['admin1'] ?? '', $place['country'] ?? '']));
+				$features[] = [
+					'place_name' => htmlspecialchars($name, ENT_QUOTES),
+					'center' => [(float)$place['longitude'], (float)$place['latitude']],
+				];
+			}
+			$places = ['type' => 'FeatureCollection', 'features' => $features];
+			$this->setAPIResponse('success', null, 200, $places);
+			return $places;
 		} catch (\WpOrg\Requests\Exception $e) {
 			$this->setResponse(500, $e->getMessage());
 			return false;

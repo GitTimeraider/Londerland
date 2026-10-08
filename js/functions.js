@@ -13209,7 +13209,7 @@ function youtubeCheck(title, link) {
 function requestSearch(title, page = 1) {
   return $.ajax({
     url:
-      "https://api.themoviedb.org/3/search/multi?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+      "https://api.themoviedb.org/3/search/multi?api_key=" + tmdbApiKey() + "&language=" +
       activeInfo.language +
       "&query=" +
       title +
@@ -13223,49 +13223,49 @@ function requestSearchList(list, page = 1) {
   switch (list) {
     case "top-movie":
       url =
-        "https://api.themoviedb.org/3/movie/top_rated?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/movie/top_rated?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "pop-movie":
       url =
-        "https://api.themoviedb.org/3/movie/popular?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/movie/popular?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "up-movie":
       url =
-        "https://api.themoviedb.org/3/movie/upcoming?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/movie/upcoming?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "theatre-movie":
       url =
-        "https://api.themoviedb.org/3/movie/now_playing?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/movie/now_playing?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "top-tv":
       url =
-        "https://api.themoviedb.org/3/tv/top_rated?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/tv/top_rated?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "pop-tv":
       url =
-        "https://api.themoviedb.org/3/tv/popular?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/tv/popular?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
       break;
     case "today-tv":
       url =
-        "https://api.themoviedb.org/3/tv/airing_today?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
+        "https://api.themoviedb.org/3/tv/airing_today?api_key=" + tmdbApiKey() + "&language=" +
         activeInfo.language +
         "&region=US&page=" +
         page;
@@ -13276,17 +13276,21 @@ function requestSearchList(list, page = 1) {
     url: url,
   });
 }
+// The admin's own TMDB key (Settings > System Settings > Main > The Movie Database)
+function tmdbApiKey() {
+  return encodeURIComponent(activeInfo.settings.misc.tmdbApiKey || "");
+}
 function requestNewID(id) {
   return $.ajax({
     url:
       "https://api.themoviedb.org/3/tv/" +
       id +
-      "/external_ids?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=en-US",
+      "/external_ids?api_key=" + tmdbApiKey() + "&language=en-US",
   });
 }
 function getTmdbImages(id, type) {
   return $.ajax({
-    url: `https://api.themoviedb.org/3/${type}/${id}/images?api_key=83cf4ee97bb728eeaf9d4a54e64356a1`,
+    url: `https://api.themoviedb.org/3/${type}/${id}/images?api_key=${tmdbApiKey()}`,
   });
 }
 function inlineLoad() {
