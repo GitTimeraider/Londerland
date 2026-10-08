@@ -27,12 +27,12 @@
   width: 68px;
   height: 68px;
   padding: 0;
-  color: #fff;
-  background: var(--aichat-accent);
+  color: var(--aichat-launcher-text, #fff);
+  background: var(--aichat-launcher-bg, var(--aichat-accent));
   border: 3px solid rgba(255, 255, 255, 0.9);
   /* rounded bubble with a pointed corner towards the screen edge */
   border-radius: 50% 50% 8px 50%;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(44, 171, 227, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 0 4px color-mix(in srgb, var(--aichat-launcher-bg, var(--aichat-accent)) 25%, transparent);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
@@ -41,19 +41,29 @@
   line-height: 1;
 }
 .aichat-launcher-label {
+  /* the name sits where the bubble rounds off on the left: keep it narrow and nudge it towards the square corner */
+  max-width: 50px;
+  transform: translateX(2px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 11px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.05em;
 }
+.aichat-launcher-long .aichat-launcher-label {
+  font-size: 9.5px;
+  letter-spacing: 0;
+}
 .aichat-launcher:hover,
 .aichat-launcher:focus-visible {
   transform: scale(1.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 6px rgba(44, 171, 227, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 6px color-mix(in srgb, var(--aichat-launcher-bg, var(--aichat-accent)) 35%, transparent);
   outline: none;
 }
 .aichat-launcher[aria-expanded="true"] {
-  background: #1e8fc4;
+  background: color-mix(in srgb, var(--aichat-launcher-bg, var(--aichat-accent)) 82%, #000);
   border-radius: 50%;
 }
 .aichat-launcher[aria-expanded="true"] .aichat-launcher-label {

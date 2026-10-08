@@ -31,3 +31,9 @@ $(document).on('click', '.aichatTestSearch', function () {
 			$button.prop('disabled', false);
 		});
 });
+// Chat button colour: colour picker with a few presets (light and dark purple first)
+$('body').arrive('#AICHAT-settings-items input.aichat-color-picker', function () {
+	initColorPickers(this, {
+		swatches: ['#b39ddb', '#5e35b1', '#2cabe3', '#26a69a', '#66bb6a', '#ffa726', '#ef5350', '#ec407a', '#78909c', '#212121'],
+	});
+});

@@ -230,12 +230,35 @@
 		return activeInfo.plugins.includes['AICHAT-images-include'] === true;
 	}
 
+	// Name and colour of the chat button come from the plugin settings
+	function styleLauncher() {
+		const includes = activeInfo.plugins.includes;
+		const label = trim(includes['AICHAT-launcherLabel-include']) || t('AI');
+		const $launcher = $('.aichat-launcher');
+		$launcher.find('.aichat-launcher-label').text(label.slice(0, 12));
+		$launcher.toggleClass('aichat-launcher-long', label.length > 6);
+		const color = trim(includes['AICHAT-launcherColor-include']);
+		if (!color || !window.CSS || !CSS.supports('color', color)) {
+			return;
+		}
+		$launcher[0].style.setProperty('--aichat-launcher-bg', color);
+		// dark text on light colours so the icon and name stay readable
+		const probe = $('<span>').css('color', color).appendTo('body');
+		const rgb = (getComputedStyle(probe[0]).color.match(/[\d.]+/g) || []).map(Number);
+		probe.remove();
+		if (rgb.length >= 3) {
+			const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+			$launcher[0].style.setProperty('--aichat-launcher-text', lum > 0.6 ? '#1d1f26' : '#fff');
+		}
+	}
+
 	function buildDom() {
 		const uploads = activeInfo.plugins.includes['AICHAT-uploads-include'] !== false;
 		// Big chat bubble fixed in the bottom right corner of every page
 		$('body')
 			.addClass('aichat-enabled')
-			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label">${escapeHtml(t('AI'))}</span></button>`);
+			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label"></span></button>`);
+		styleLauncher();
 		$('body').append(`
 			<section class="aichat-panel" role="dialog" aria-label="${escapeHtml(t('AI Chat'))}">
 				<aside class="aichat-sidebar">

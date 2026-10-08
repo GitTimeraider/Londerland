@@ -38,7 +38,7 @@ $Londerland = new Londerland(true);
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet">
-    <link id="style" href="css/dark.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link id="style" href="css/<?php echo (($Londerland->config['style'] ?? '') === 'light') ? 'light' : 'dark'; ?>.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
 	<?php echo $Londerland->setTheme(); ?>
@@ -82,8 +82,8 @@ $Londerland = new Londerland(true);
                                 class="ti-reload"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light" onclick="closeCurrentTab(event);"> <i
                                 class="ti-close"></i></a></li>
-                <li class=""><a class="dropdown-toggle waves-effect waves-light" onclick="openInNewBrowserTab();"> <i
-                                class="ti-arrow-top-right"></i></a></li>
+                <li class=""><a class="dropdown-toggle waves-effect waves-light open-in-new-tab" onclick="openInNewBrowserTab();" title="Open in a new browser tab"> <i
+                                class="ti-new-window"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light hidden" onclick="splashMenu();"> <i
                                 class="ti-layout-grid2"></i></a></li>
             </ul>
@@ -173,7 +173,6 @@ $Londerland = new Londerland(true);
 	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<?php echo '<script>languageList = ' . $Londerland->languagePacks(true) . ";</script>\n"; ?>
 <script src="assets/vendor/jquery/jquery.min.js"></script>
 <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="assets/vendor/metismenu/metisMenu.min.js"></script>
