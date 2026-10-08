@@ -1,21 +1,50 @@
 <p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true" alt="Londerland" width="420"></p>
 
-**Londerland** puts all of your self-hosted web apps on one page, behind one login.
-Add your services (Sonarr, Radarr, Plex, Home Assistant, a router page, anything with a web interface) as tabs,
-choose who may see which tab, and open them all from a single place instead of remembering IP addresses and ports.
+#### Disclaimer: 
+While guided and checked, AI is responsible for half of the coding. Development is also 100% for own personal use, no promises.
+__________________________________
+
+**Londerland** is a self-hosted web portal you can put on the internet as your own website:
+one address with your own name, logo and look, where visitors see a public front page and members log in
+for more. It works just as well as the private start page for your home network, but it is built to feel like a
+website, not like a wall of server tiles.
+
+- **Public when you want it.** Guests (visitors who are not logged in) can get their own front page and their
+  own tabs, so the same address serves a public site for everyone and private pages for members.
+- **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
+  and favicon, a theme and colurs, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
+- **Pages, not just links.** The front page is built from blocks such as up to eight Custom HTML sections (any HTML you like),
+  a calendar, weather and bookmarks. Tabs show any web page inside the site or open it in a new window.
+- **Members and groups.** Invite members by e-mail; every tab and front page block is shown only to the
+  groups you choose.
+- **AI Chat** for logged in members, with any OpenAI-compatible server.
 
 ## Features
 
-- **Tabs** for every web app, shown inside Londerland (iFrame) or opened in a new window.
-- **Users and groups**: decide per tab which group may open it; guests can get their own tabs.
-- **Homepage** with live items for Plex, Emby, Jellyfin, Sonarr, Radarr, Lidarr, SABnzbd, qBittorrent, Deluge, Transmission, Ombi, Overseerr, Tautulli, a calendar and more.
-- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel), with optional two-factor authentication.
-- **Single sign-on** for supported apps, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth) using `api/v2/auth`.
-- **AI Chat** for logged in users with any OpenAI-compatible server, including web search and image generation ([details below](#ai-chat)).
-- **Plugins**: invites, e-mail (PHPMailer), health checks, speed test, chat, bookmarks and more.
-- **Look and feel**: themes, colours, your own logo and title, custom CSS and JavaScript, login page and splash screen.
-- **Backups** on a schedule, a log viewer, an image manager and a built-in API with documentation (`/docs`).
-- Works on phones and tablets, and in many languages.
+- **Front page** made of blocks that you order yourself: Custom HTML, calendar (also iCal feeds), weather, bookmarks,
+  health checks, speed test and more, each visible to guests or only to chosen groups.
+- **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, with a start tab per group.
+- **Visitors and members**: guest access, local accounts, invites and e-mail (PHPMailer), groups that decide who sees what,
+  login lockout after failed attempts and e-mails about new device logins.
+- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
+  with optional two-factor authentication.
+- **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
+- **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
+- **Works on phones and tablets**, and in many languages.
+- **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
+- **Integrations** if you also run it at home: live front page blocks for apps such as Plex, Jellyfin, Sonarr, Radarr,
+  qBittorrent or Pi-hole, single sign-on for supported apps, and reverse proxy authentication
+  (Nginx `auth_request`, Traefik/Caddy forward auth) using `api/v2/auth`.
+
+## Using it as a public website
+
+1. Install it (see below) and finish the setup wizard.
+2. Put it behind a reverse proxy with HTTPS (for example Nginx Proxy Manager, Caddy or Traefik) and point your domain at it.
+   Do not expose the container's port to the internet without HTTPS.
+3. In Londerland, open **Settings > Customize** and set the title, description, logo, favicon, theme and login page.
+4. Add front page blocks under **Settings > Homepage Items** (for example **Custom HTML** for your own text and layout)
+   and set who may see each block to **Guest** for the public part.
+5. For tabs visitors should see, set the group under **Settings > Tab Editor** to **Guest**. Everything else stays for members only.
 
 ## Install with Docker
 
