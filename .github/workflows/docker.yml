@@ -2,10 +2,10 @@ name: Docker image
 
 on:
   push:
-    branches: [v2-master]
+    branches: [master, develop]
     tags: ['v*']
   pull_request:
-    branches: [v2-master]
+    branches: [master, develop]
   workflow_dispatch:
 
 concurrency:
@@ -39,6 +39,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/londerland
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
