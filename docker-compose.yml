@@ -18,6 +18,11 @@ services:
     user: "99:100"
     security_opt:
       - no-new-privileges:true
+    # No Linux capabilities are needed when running with "user:".
+    # Without "user:" (as root) add these back:
+    #   cap_add: [CHOWN, DAC_READ_SEARCH, SETUID, SETGID]
+    cap_drop:
+      - ALL
     ports:
       # <port on your machine>:<port in the container>. Change the left number if 80 is already in use, e.g. "8080:80"
       - "80:80"

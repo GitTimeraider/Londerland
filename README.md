@@ -49,6 +49,8 @@ Run these commands in a terminal on your Docker host (for example an SSH session
        user: "99:100"
        security_opt:
          - no-new-privileges:true
+       cap_drop:
+         - ALL
        ports:
          - "80:80"
        environment:
@@ -76,6 +78,7 @@ docker run -d \
   --name londerland \
   --user 99:100 \
   --security-opt=no-new-privileges:true \
+  --cap-drop=ALL \
   -p 80:80 \
   -e TZ=Etc/UTC \
   -v "$(pwd)/londerland-data:/var/www/html/data" \
@@ -94,6 +97,7 @@ for example `/var/www/html/data/db/`, so the database is kept when the container
 |---|---|---|
 | `--user` / `user:` | `99:100` | The user and group the container runs as. Everything in the data folder gets this owner. Leave it out to run as root (see below). |
 | `--security-opt` / `security_opt:` | `no-new-privileges:true` | Stops processes in the container from gaining extra rights. Works with and without `--user`. |
+| `--cap-drop` / `cap_drop:` | `ALL` | Removes all Linux capabilities. Works as it is with `--user`; as root, add back the four listed below. |
 | `-p` / `ports:` | `8080:80` | `<port on your machine>:<port in the container>`. |
 | `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
 | `-e LONDERLAND_PORT` | `8080` | The port Londerland listens on **inside** the container (default `80`). Only needed with `--network host`, rootless Docker or Docker older than 20.10; then also change the right side of `-p`. |
@@ -105,6 +109,19 @@ exact `chown` command to run. Nothing in the container needs root in this mode.
 
 **Running as root (no `--user`)**: at start the container gives the data folder to its own web user (`www-data`, uid 33),
 and the web server and scheduled jobs run as that user.
+
+**Capabilities (`--cap-drop=ALL`)**:
+
+| How you run it | Capabilities to add back |
+|---|---|
+| With `--user` (for example `99:100`) | None. `--cap-drop=ALL` works as it is. |
+| As root (no `--user`) | `--cap-add=CHOWN --cap-add=DAC_READ_SEARCH --cap-add=SETUID --cap-add=SETGID` |
+
+As root, `CHOWN` and `DAC_READ_SEARCH` let the container give the data folder (also folders in it that belong to someone else)
+to `www-data`, and `SETUID` and `SETGID` let the web server and the scheduled jobs switch to that user.
+In Docker Compose, put them under `cap_add:` (one per line, without `--cap-add=`).
+Port 80 needs no capability on Docker 20.10 or newer; on older Docker, set `LONDERLAND_PORT` to a port above 1023.
+If a capability is missing, the container stops and `docker logs londerland` says which ones to add.
 
 The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
 

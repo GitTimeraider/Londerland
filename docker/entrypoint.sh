@@ -3,8 +3,9 @@
 #
 # Works in two ways:
 #  - started as root (default): the data folder is given to www-data, Apache drops to www-data
-#  - started with --user UID:GID (for example 99:100): everything runs as that user, nothing needs root,
-#    so --security-opt=no-new-privileges:true and read-only images work too
+#  - started with --user UID:GID (for example 99:100): everything runs as that user and nothing needs root
+#    or any capability, so --security-opt=no-new-privileges:true and --cap-drop=ALL work as they are
+# As root with --cap-drop=ALL, add back CHOWN, DAC_READ_SEARCH, SETUID and SETGID (see the README).
 set -e
 
 APP_DIR=/var/www/html
@@ -13,9 +14,15 @@ export TZ="${TZ:-UTC}"
 
 if [ "$(id -u)" = "0" ]; then
     mkdir -p "$DATA_DIR"
-    # A freshly mounted volume may be owned by root; the web server runs as www-data
-    if [ "$(stat -c %u "$DATA_DIR")" != "$(id -u www-data)" ]; then
-        chown -R www-data:www-data "$DATA_DIR"
+    # A freshly mounted volume may be owned by root; the web server runs as www-data.
+    # Look at the whole tree, so a change that was cut off earlier is finished; a folder find cannot read counts too.
+    if [ -n "$(find "$DATA_DIR" \( ! -user www-data -o ! -group www-data \) -print -quit 2>/dev/null || echo unreadable)" ]; then
+        if ! chown -R www-data:www-data "$DATA_DIR"; then
+            echo "Londerland: could not give $DATA_DIR to www-data (uid $(id -u www-data))." >&2
+            echo "With --cap-drop=ALL, also add: --cap-add=CHOWN --cap-add=DAC_READ_SEARCH --cap-add=SETUID --cap-add=SETGID" >&2
+            echo "Or run with --user UID:GID, which needs no capabilities at all." >&2
+            exit 1
+        fi
     fi
     RUN_JOBS_AS="setpriv --reuid=www-data --regid=www-data --init-groups"
 else
