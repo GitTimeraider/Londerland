@@ -173,7 +173,6 @@ $Londerland = new Londerland(true);
 	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<?php echo '<script>languageList = ' . $Londerland->languagePacks(true) . ";</script>\n"; ?>
 <script src="assets/vendor/jquery/jquery.min.js"></script>
 <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="assets/vendor/metismenu/metisMenu.min.js"></script>

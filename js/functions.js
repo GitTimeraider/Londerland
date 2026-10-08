@@ -1,25 +1,3 @@
-// Create language switcher instance
-var lang = new Lang();
-var langStrings = { token: {} };
-loadLanguageList();
-var falbackLanguage =
-  languageList.filter(
-    (p) => p.code == language(moment.locale(navigator.languages[0]))
-  ).length > 0
-    ? language(moment.locale(navigator.languages[0]))
-    : "en";
-lang.init({
-  //defaultLang: 'en',
-  currentLang: getCookie("londerlandLanguage")
-    ? getCookie("londerlandLanguage")
-    : falbackLanguage,
-  cookie: {
-    name: "londerlandLanguage",
-    expiry: 365,
-    path: "/",
-  },
-  allowCookieOverride: true,
-});
 var OAuthLoginNeeded = false;
 var directToHash = false;
 var pingOrg = false;
@@ -57,13 +35,6 @@ $(document).ready(function () {
   local("r", "loggingIn");
 });
 /* NORMAL FUNCTIONS */
-function setLangCookie(lang) {
-  Cookies.set("londerlandLanguage", lang, {
-    expires: 365,
-    path: "/",
-  });
-}
-
 function highlightObject(json) {
   if (typeof json != "string") {
     json = JSON.stringify(json, undefined, "\t");
@@ -246,11 +217,6 @@ function clipboard(trigger = true, string = null) {
     clipboard.click();
   }
 }
-function getLangStrings() {
-  let strings = JSON.stringify(window.langStrings, null, "\t");
-  clipboard(true, strings);
-  londerlandConsole("JSON Function", "Copied JSON Strings to clipboard");
-}
 function getHiddenProp() {
   var prefixes = ["webkit", "moz", "ms", "o"];
   // if 'hidden' is natively supported just return it
@@ -266,11 +232,6 @@ function isHidden() {
   var prop = getHiddenProp();
   if (!prop) return false;
   return document[prop];
-}
-function loadLanguageList() {
-  $.each(languageList, function (i, v) {
-    lang.dynamic(v.code, "js/langpack/" + v.filename);
-  });
 }
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -2582,66 +2543,6 @@ function buildCategoryEditor() {
     });
 }
 /* END LONDERLAND API FUNCTIONS */
-function buildLanguage(replace = false, newLang = null) {
-  var languageItems = "";
-  var currentLanguage = getCookie("londerlandLanguage")
-    ? getCookie("londerlandLanguage")
-    : window.lang.currentLang;
-  var newLangCode = "";
-  $.each(languageList, function (i, v) {
-    if (newLang === v.language) {
-      newLangCode = v.code;
-    }
-    var active = v.code == currentLanguage ? "" : "";
-    languageItems +=
-      `
-			<a onclick="window.lang.change('` +
-      v.code +
-      `');buildLanguage(true,'` +
-      v.language +
-      `')" href="javascript:void(0);" class="` +
-      active +
-      `">
-				<div class="mail-content"><h5 class="m-0">` +
-      v.language +
-      `</h5><span class="mail-desc" lang="en">` +
-      active +
-      `</span></div>
-			</a>
-		`;
-  });
-  var lang = `
-		<li class="dropdown" id="languageDropdown">
-			<a class="dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#" aria-expanded="false"> <i class="fa fa-language"></i><span></span></a>
-			<ul class="dropdown-menu mailbox animated bounceInDown language-box">
-				<li>
-					<div class="drop-title" lang="en">Choose Language</div>
-				</li>
-				<li>
-					<div class="message-center default-scrollbar">${languageItems}</div>
-				</li>
-			</ul>
-			<!-- /.dropdown-messages -->
-		</li>
-	`;
-  if (replace == true) {
-    setLangCookie(newLangCode);
-    $("#languageDropdown").replaceWith(lang);
-    message(
-      "",
-      window.lang.translate("Changed Language To") + ": " + newLang,
-      activeInfo.settings.notifications.position,
-      "#FFF",
-      "success",
-      "3500"
-    );
-  } else if (replace == "wizard") {
-    $(lang).appendTo(".navbar-right");
-  } else {
-    return lang;
-  }
-}
-
 function updateUserInformation() {
   var passwordMatch = true;
   var username = $("#accountUsername").val();
@@ -3149,7 +3050,7 @@ function userMenu(user) {
   var showDebug = activeInfo.settings.misc.debugArea
     ? '<li><a href="javascript:void(0)" onclick="toggleDebug();"><i class="mdi mdi-bug fa-fw"></i> <span lang="en">Debug Area</span></a></li>'
     : "";
-  menuList += buildLanguage();
+  pageLoad();
   if (user.data.user.loggedin === true) {
     menuList +=
       `
@@ -15234,7 +15135,6 @@ function launch() {
         switch (json.data.status.status) {
           case "wizard":
             buildWizard();
-            buildLanguage("wizard");
             break;
           case "dependencies":
             buildDependencyCheck(json);

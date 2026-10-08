@@ -6026,9 +6026,6 @@ html {
   max-width: 100px;
   min-width: 100px;
 }
-.language-box {
-  position: absolute !important;
-}
 .password-alt li .select2-selection__choice__display {
   -webkit-text-security: disc;
 }

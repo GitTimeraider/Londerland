@@ -1024,25 +1024,6 @@ class Londerland
 		return $match[1];
 	}
 
-	public function languagePacks($encode = false)
-	{
-		$files = array();
-		foreach (glob(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'langpack' . DIRECTORY_SEPARATOR . "*.json") as $filename) {
-			if (strpos(basename($filename), '[') !== false) {
-				$explode = explode('[', basename($filename));
-				$files[] = array(
-					'filename' => basename($filename),
-					'code' => $explode[0],
-					'language' => $this->matchBrackets(basename($filename))
-				);
-			}
-		}
-		usort($files, function ($a, $b) {
-			return $a['language'] <=> $b['language'];
-		});
-		return ($encode) ? json_encode($files) : $files;
-	}
-
 	public function getRootPath()
 	{
 		$count = (count(explode('/', $_SERVER['REQUEST_URI']))) - 2;

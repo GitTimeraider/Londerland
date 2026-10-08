@@ -67,20 +67,6 @@ function get_page_error($Londerland)
 	</div>
 </section>
 <script>
-languageList = ' . $Londerland->languagePacks(true) . '
-var langStrings = { "token": {} };
-var lang = new Lang();
-loadLanguageList();
-lang.init({
-	currentLang: (getCookie("londerlandLanguage")) ? getCookie("londerlandLanguage") : "en",
-	cookie: {
-		name: "londerlandLanguage",
-		expiry: 365,
-		path: "/"
-	},
-	allowCookieOverride: true
-});
-
 $.urlParam = function(name){
 	let results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(window.location.href);
 	if (results == null) {
@@ -112,11 +98,6 @@ function local(type,key,value=null){
 				break;
 		}
 	}
-}
-function loadLanguageList(){
-	$.each(languageList, function(i,v) {
-		lang.dynamic(v.code, "' . $nonRootPath . 'js/langpack/"+v.filename);
-	});
 }
 function getCookie(cname) {
 	var name = cname + "=";
