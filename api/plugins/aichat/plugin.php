@@ -149,7 +149,8 @@ class AiChat extends Londerland
 				`user_id`	INTEGER PRIMARY KEY,
 				`default_model`	TEXT,
 				`system_prompt`	TEXT,
-				`send_on_enter`	INTEGER DEFAULT 1
+				`send_on_enter`	INTEGER DEFAULT 1,
+				`web_tools`	INTEGER DEFAULT 1
 			);'
 		];
 		foreach ($tables as $name => $create) {
@@ -160,6 +161,9 @@ class AiChat extends Londerland
 		// Tables from the first version of the plugin have no meta column yet
 		if (!$this->_aiChatColumnExists('AICHAT-messages', 'meta')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-messages` ADD `meta` LONGTEXT']]);
+		}
+		if (!$this->_aiChatColumnExists('AICHAT-prefs', 'web_tools')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-prefs` ADD `web_tools` INTEGER DEFAULT 1']]);
 		}
 	}
 
@@ -394,16 +398,9 @@ class AiChat extends Londerland
 				array(
 					'type' => 'switch',
 					'name' => 'AICHAT-searchAuto',
-					'label' => 'Model May Search by Itself',
-					'help' => 'Offers a web_search tool, so models with tool calling can search whenever they need to, also without the globe button. Needs a Search Provider above (not Off).' . ($this->config['AICHAT-searchAuto'] && !$this->_aiChatSearchEnabled() ? ' WARNING: the Search Provider is Off, so the model gets no search tool now.' : ''),
+					'label' => 'Model May Use the Web by Itself',
+					'help' => 'Offers models with tool calling a fetch_url tool to open and read web pages (a link the user pasted or a search result) and, when a Search Provider is chosen above, a web_search tool. Users get a Web button in the chat box to turn this off and on for themselves.',
 					'value' => $this->config['AICHAT-searchAuto']
-				),
-				array(
-					'type' => 'switch',
-					'name' => 'AICHAT-fetchAuto',
-					'label' => 'Model May Read Web Pages',
-					'help' => 'Offers a fetch_url tool, so models with tool calling can open a link (one the user pasted or a search result) and read the page. Works without a Search Provider.',
-					'value' => $this->config['AICHAT-fetchAuto']
 				),
 				array(
 					'type' => 'switch',
@@ -660,6 +657,8 @@ class AiChat extends Londerland
 			'default_model' => $prefs['default_model'] ?? null,
 			'system_prompt' => $prefs['system_prompt'] ?? '',
 			'send_on_enter' => isset($prefs['send_on_enter']) ? (bool)$prefs['send_on_enter'] : true,
+			// The web button in the chat box: may the model search and read pages by itself
+			'web_tools' => isset($prefs['web_tools']) ? (bool)$prefs['web_tools'] : true,
 		];
 	}
 
@@ -675,10 +674,14 @@ class AiChat extends Londerland
 		if (array_key_exists('send_on_enter', $data)) {
 			$prefs['send_on_enter'] = filter_var($data['send_on_enter'], FILTER_VALIDATE_BOOLEAN);
 		}
+		if (array_key_exists('web_tools', $data)) {
+			$prefs['web_tools'] = filter_var($data['web_tools'], FILTER_VALIDATE_BOOLEAN);
+		}
 		$row = [
 			'default_model' => $prefs['default_model'],
 			'system_prompt' => $prefs['system_prompt'],
 			'send_on_enter' => $prefs['send_on_enter'] ? 1 : 0,
+			'web_tools' => $prefs['web_tools'] ? 1 : 0,
 		];
 		$this->processQueries([
 			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-prefs` WHERE `user_id` = ?', $this->_aiChatUserId()]],
@@ -1576,14 +1579,16 @@ class AiChat extends Londerland
 	private function _aiChatTools()
 	{
 		$tools = [];
-		if ($this->_aiChatSearchEnabled() && $this->config['AICHAT-searchAuto']) {
+		// Admin switch plus the user's own Web button in the chat box
+		$webTools = $this->config['AICHAT-searchAuto'] && $this->_aiChatGetPrefs()['web_tools'];
+		if ($webTools && $this->_aiChatSearchEnabled()) {
 			$tools[] = ['type' => 'function', 'function' => [
 				'name' => 'web_search',
 				'description' => 'Search the web for current or specific information. Use it for recent events, facts you are unsure about, prices, versions and documentation.',
 				'parameters' => ['type' => 'object', 'properties' => ['query' => ['type' => 'string', 'description' => 'Search engine query']], 'required' => ['query']],
 			]];
 		}
-		if ($this->config['AICHAT-fetchAuto']) {
+		if ($webTools) {
 			$tools[] = ['type' => 'function', 'function' => [
 				'name' => 'fetch_url',
 				'description' => 'Open a web page and read its text. Use it when the user gives a link, and to read a search result in full when its snippet is not enough. Long pages come in parts: call again with the offset given at the end to read further.',
@@ -1806,10 +1811,6 @@ class AiChat extends Londerland
 
 		$tools = $this->_aiChatTools();
 		$notices = [];
-		if ($this->config['AICHAT-searchAuto'] && !$this->_aiChatSearchEnabled()) {
-			$notices[] = 'Web search is not available: "Model May Search by Itself" is on, but no Search Provider is chosen in the AI Chat settings.';
-			$this->_aiChatSendEvent(['type' => 'notice', 'notices' => $notices]);
-		}
 		$answer = '';
 		$reasoning = '';
 		$images = [];
@@ -1907,7 +1908,7 @@ class AiChat extends Londerland
 				return $text;
 			case 'fetch_url':
 				$url = trim((string)($arguments['url'] ?? ''));
-				if ($url === '' || !$this->config['AICHAT-fetchAuto']) {
+				if ($url === '' || !$this->config['AICHAT-searchAuto']) {
 					return 'Reading web pages is not available.';
 				}
 				if (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
