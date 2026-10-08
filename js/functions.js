@@ -1,4 +1,9 @@
 var OAuthLoginNeeded = false;
+// The page itself never scrolls (html has overflow: hidden), so popups must scroll in their own fixed layer.
+// Magnific Popup's default ('auto') switches that off on phones, which left long popups stuck.
+if ($.magnificPopup) {
+  $.extend($.magnificPopup.defaults, { fixedContentPos: true, fixedBgPos: true });
+}
 var directToHash = false;
 var pingOrg = false;
 var checkCommitLoadStatus = false;
