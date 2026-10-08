@@ -1,0 +1,176 @@
+/* Londerland theme "Mint" - use with the Light style */
+@import url("../fonts/rubik/rubik.css");
+/*Theme Colors*/
+/*bootstrap Color*/
+/*Normal Color*/
+/*Border radius*/
+/*Preloader*/
+.preloader {
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  position: fixed;
+  z-index: 99999;
+  background: #f1f9f7;
+}
+.preloader .cssload-speeding-wheel {
+  position: absolute;
+  top: calc(50% - 3.5px);
+  left: calc(50% - 3.5px);
+}
+#londerlandNewsPanel .card-body {
+    background: #fbfefd;
+}
+/*Just change your choise color here its theme Colors*/
+body {
+  background: #f1f9f7;
+}
+#page-wrapper {
+  background: #f1f9f7;
+}
+/*Top Header Part*/
+.logo i {
+  color: #ffffff;
+}
+.navbar-header {
+  background: #1f9e8b;
+}
+.navbar-top-links > li > a {
+  color: #ffffff;
+}
+.sidebar .sidebar-head {
+  background: #fbfefd;
+}
+.sidebar .sidebar-head h3 {
+  color: #46635d;
+}
+/*Right panel*/
+.right-sidebar .rpanel-title {
+  background: #1f9e8b;
+}
+/*Bread Crumb*/
+.bg-title .breadcrumb .active {
+  color: #1f9e8b;
+}
+/*Sidebar*/
+.sidebar {
+  background: #fbfefd;
+  box-shadow: 1px 0px 20px rgba(0, 0, 0, 0.08);
+}
+.sidebar .label-custom {
+  background: #01c0c8;
+}
+#side-menu li a {
+  color: #46635d;
+}
+#side-menu li a {
+  color: #46635d;
+  border-left: 0px solid #fbfefd;
+}
+#side-menu > li > a:hover,
+#side-menu > li > a:focus {
+  background: rgba(0, 0, 0, 0.07);
+}
+#side-menu > li > a.active {
+  background: #1f9e8b;
+  color: #ffffff;
+  font-weight: 500;
+}
+#side-menu ul > li > a:hover {
+  color: #1f9e8b;
+}
+#side-menu ul > li > a.active {
+  color: #1f9e8b;
+  font-weight: 500;
+}
+.user-profile .user-pro-body .u-dropdown {
+  color: #46635d;
+}
+/*themecolor*/
+.bg-theme {
+  background-color: #1f9e8b !important;
+}
+.bg-theme-dark {
+  background-color: #1f9e8b !important;
+}
+/*Button*/
+.btn-custom {
+  background: #1f9e8b;
+  border: 1px solid #1f9e8b;
+  color: #ffffff;
+}
+.btn-custom:hover {
+  background: #1f9e8b;
+  opacity: 0.8;
+  color: #ffffff;
+  border: 1px solid #1f9e8b;
+}
+/*Custom tab*/
+.customtab li.active a,
+.customtab li.active a:hover,
+.customtab li.active a:focus {
+  border-bottom: 2px solid #1f9e8b;
+  color: #1f9e8b;
+}
+.tabs-vertical li.active a,
+.tabs-vertical li.active a:hover,
+.tabs-vertical li.active a:focus {
+  background: #1f9e8b;
+  border-right: 2px solid #1f9e8b;
+}
+/*Nav-pills*/
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:focus,
+.nav-pills > li.active > a:hover {
+  background: #1f9e8b;
+  color: #ffffff;
+}
+
+/* Accent colour */
+.card-info,
+.card-info .card-header {
+  border-color: #1f9e8b;
+}
+.btn-info,
+.btn-info.disabled,
+.btn-info:disabled {
+  background: #1f9e8b;
+  border-color: #1f9e8b;
+  color: #ffffff;
+}
+.btn-info:hover,
+.btn-info:focus,
+.btn-info.focus,
+.btn-info:active {
+  background: #187e6f;
+  border-color: #187e6f;
+  color: #ffffff;
+}
+.sttabs nav li.tab-current a {
+  color: #1f9e8b;
+}
+.text-info,
+a.text-info:hover {
+  color: #1f9e8b !important;
+}
+.bg-info {
+  background-color: #1f9e8b !important;
+}
+.customvtab .tabs-vertical li.active a,
+.customvtab .tabs-vertical li.active a:focus,
+.customvtab .tabs-vertical li.active a:hover {
+  border-right-color: #1f9e8b;
+}
+.card-info .card-header {
+  background-color: #1f9e8b;
+}
+.customtab2 li.active a,
+.customtab2 li.active a:focus,
+.customtab2 li.active a:hover {
+  background: #1f9e8b;
+  color: #ffffff;
+}
+.card-info .card-header .btn-info {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
+}

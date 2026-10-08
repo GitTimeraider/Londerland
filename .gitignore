@@ -112,6 +112,16 @@ strings.json
 css/themes/*.css
 !css/themes/Londerland.css
 !css/themes/Blue.css
+!css/themes/Amethyst.css
+!css/themes/Lavender.css
+!css/themes/Midnight.css
+!css/themes/Arctic.css
+!css/themes/Forest.css
+!css/themes/Ember.css
+!css/themes/Crimson.css
+!css/themes/Mint.css
+!css/themes/Sand.css
+!css/themes/Rose.css
 *sonflix*
 plugins/images/cache/*.jpg
 testdata*

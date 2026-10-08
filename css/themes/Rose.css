@@ -1,0 +1,176 @@
+/* Londerland theme "Rose" - use with the Light style */
+@import url("../fonts/rubik/rubik.css");
+/*Theme Colors*/
+/*bootstrap Color*/
+/*Normal Color*/
+/*Border radius*/
+/*Preloader*/
+.preloader {
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  position: fixed;
+  z-index: 99999;
+  background: #fcf2f6;
+}
+.preloader .cssload-speeding-wheel {
+  position: absolute;
+  top: calc(50% - 3.5px);
+  left: calc(50% - 3.5px);
+}
+#londerlandNewsPanel .card-body {
+    background: #fffafc;
+}
+/*Just change your choise color here its theme Colors*/
+body {
+  background: #fcf2f6;
+}
+#page-wrapper {
+  background: #fcf2f6;
+}
+/*Top Header Part*/
+.logo i {
+  color: #ffffff;
+}
+.navbar-header {
+  background: #d0457a;
+}
+.navbar-top-links > li > a {
+  color: #ffffff;
+}
+.sidebar .sidebar-head {
+  background: #fffafc;
+}
+.sidebar .sidebar-head h3 {
+  color: #74505d;
+}
+/*Right panel*/
+.right-sidebar .rpanel-title {
+  background: #d0457a;
+}
+/*Bread Crumb*/
+.bg-title .breadcrumb .active {
+  color: #d0457a;
+}
+/*Sidebar*/
+.sidebar {
+  background: #fffafc;
+  box-shadow: 1px 0px 20px rgba(0, 0, 0, 0.08);
+}
+.sidebar .label-custom {
+  background: #01c0c8;
+}
+#side-menu li a {
+  color: #74505d;
+}
+#side-menu li a {
+  color: #74505d;
+  border-left: 0px solid #fffafc;
+}
+#side-menu > li > a:hover,
+#side-menu > li > a:focus {
+  background: rgba(0, 0, 0, 0.07);
+}
+#side-menu > li > a.active {
+  background: #d0457a;
+  color: #ffffff;
+  font-weight: 500;
+}
+#side-menu ul > li > a:hover {
+  color: #d0457a;
+}
+#side-menu ul > li > a.active {
+  color: #d0457a;
+  font-weight: 500;
+}
+.user-profile .user-pro-body .u-dropdown {
+  color: #74505d;
+}
+/*themecolor*/
+.bg-theme {
+  background-color: #d0457a !important;
+}
+.bg-theme-dark {
+  background-color: #d0457a !important;
+}
+/*Button*/
+.btn-custom {
+  background: #d0457a;
+  border: 1px solid #d0457a;
+  color: #ffffff;
+}
+.btn-custom:hover {
+  background: #d0457a;
+  opacity: 0.8;
+  color: #ffffff;
+  border: 1px solid #d0457a;
+}
+/*Custom tab*/
+.customtab li.active a,
+.customtab li.active a:hover,
+.customtab li.active a:focus {
+  border-bottom: 2px solid #d0457a;
+  color: #d0457a;
+}
+.tabs-vertical li.active a,
+.tabs-vertical li.active a:hover,
+.tabs-vertical li.active a:focus {
+  background: #d0457a;
+  border-right: 2px solid #d0457a;
+}
+/*Nav-pills*/
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:focus,
+.nav-pills > li.active > a:hover {
+  background: #d0457a;
+  color: #ffffff;
+}
+
+/* Accent colour */
+.card-info,
+.card-info .card-header {
+  border-color: #d0457a;
+}
+.btn-info,
+.btn-info.disabled,
+.btn-info:disabled {
+  background: #d0457a;
+  border-color: #d0457a;
+  color: #ffffff;
+}
+.btn-info:hover,
+.btn-info:focus,
+.btn-info.focus,
+.btn-info:active {
+  background: #a63761;
+  border-color: #a63761;
+  color: #ffffff;
+}
+.sttabs nav li.tab-current a {
+  color: #d0457a;
+}
+.text-info,
+a.text-info:hover {
+  color: #d0457a !important;
+}
+.bg-info {
+  background-color: #d0457a !important;
+}
+.customvtab .tabs-vertical li.active a,
+.customvtab .tabs-vertical li.active a:focus,
+.customvtab .tabs-vertical li.active a:hover {
+  border-right-color: #d0457a;
+}
+.card-info .card-header {
+  background-color: #d0457a;
+}
+.customtab2 li.active a,
+.customtab2 li.active a:focus,
+.customtab2 li.active a:hover {
+  background: #d0457a;
+  color: #ffffff;
+}
+.card-info .card-header .btn-info {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
+}
