@@ -2,7 +2,7 @@
 
 use Dibi\Connection;
 
-class Organizr
+class Londerland
 {
 	// Use Custom Functions From Traits;
 	use TwoFAFunctions;
@@ -19,12 +19,11 @@ class Organizr
 	use OAuthFunctions;
 	use OIDCFunctions;
 	use OptionsFunction;
-	use OrganizrFunctions;
+	use LonderlandFunctions;
 	use PluginFunctions;
 	use StaticFunctions;
 	use SSOFunctions;
 	use TokenFunctions;
-	use UpdateFunctions;
 	use UpgradeFunctions;
 
 	// Use homepage item functions
@@ -72,8 +71,8 @@ class Organizr
 
 
 	// ===================================
-	// Organizr Version
-	public $version = '2.1.5000';
+	// Londerland Version
+	public $version = '2.2.0';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -101,7 +100,7 @@ class Organizr
 	public $warnings;
 	public $errors;
 	public bool $loggerSetup = false;
-	public OrganizrLogger $logger;
+	public LonderlandLogger $logger;
 
 	public function __construct($checkForUpdates = false)
 	{
@@ -119,7 +118,7 @@ class Organizr
 		$this->errors = E_ERROR;//E_ALL & ~E_NOTICE
 		// Set current time
 		$this->currentTime = gmdate('Y-m-d\TH:i:s\Z');
-		// Set variable if install is for official docker
+		// Set variable if install is the Docker image
 		$this->docker = (file_exists(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'Docker.txt'));
 		// Set variable if install is for develop and set php Error levels
 		$this->dev = (file_exists(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'Dev.txt'));
@@ -135,8 +134,8 @@ class Organizr
 		$this->defaultConfigPath = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'default.php';
 		// Load Config file
 		$this->config = $this->config();
-		// Set cookie name for Organizr Instance
-		$this->cookieName = ($this->hasConfig()) ? $this->config['uuid'] !== '' ? 'organizr_token_' . $this->config['uuid'] : 'organizr_token_temp' : 'organizr_token_temp';
+		// Set cookie name for Londerland Instance
+		$this->cookieName = ($this->hasConfig()) ? $this->config['uuid'] !== '' ? 'londerland_token_' . $this->config['uuid'] : 'londerland_token_temp' : 'londerland_token_temp';
 
 		// Set custom Error handler
 		set_error_handler([$this, 'setAPIErrorResponse'], $this->errors);
@@ -157,8 +156,8 @@ class Organizr
 		$this->phpErrors();
 
 
-		// Set organizr Logs and logger
-		$this->logFile = $this->setOrganizrLog();
+		// Set londerland Logs and logger
+		$this->logFile = $this->setLonderlandLog();
 		$this->setLoggerChannel();
 
 		// Connect to DB
@@ -170,8 +169,8 @@ class Organizr
 		$this->setCurrentUser();
 		// might just run this at index
 		$this->upgradeCheck();
-		// Is Page load Organizr OAuth?
-		$this->checkForOrganizrOAuth();
+		// Is Page load Londerland OAuth?
+		$this->checkForLonderlandOAuth();
 		// Is user Blacklisted?
 		$this->checkIfUserIsBlacklisted();
 	}
@@ -305,17 +304,17 @@ class Organizr
 
 	public function setDeviceUUID()
 	{
-		if (!isset($_COOKIE['organizr_user_uuid'])) {
-			$this->coookie('set', 'organizr_user_uuid', $this->gen_uuid(), 7);
+		if (!isset($_COOKIE['londerland_user_uuid'])) {
+			$this->coookie('set', 'londerland_user_uuid', $this->gen_uuid(), 7);
 		}
 	}
 
 	public function refreshDeviceUUID()
 	{
-		if (isset($_COOKIE['organizr_user_uuid'])) {
-			$this->coookie('delete', 'organizr_user_uuid');
+		if (isset($_COOKIE['londerland_user_uuid'])) {
+			$this->coookie('delete', 'londerland_user_uuid');
 		}
-		$this->coookie('set', 'organizr_user_uuid', $this->gen_uuid(), 7);
+		$this->coookie('set', 'londerland_user_uuid', $this->gen_uuid(), 7);
 	}
 
 	public function setCurrentUser($validate = true)
@@ -351,7 +350,7 @@ class Organizr
 		ini_set('display_errors', $displayErrors);
 	}
 
-	public function checkForOrganizrOAuth()
+	public function checkForLonderlandOAuth()
 	{
 		// Oauth?
 		if ($this->hasDB() && $this->user) {
@@ -365,8 +364,8 @@ class Organizr
 				];
 				if ($this->config['authProxyEnabled'] && ($this->config['authProxyHeaderName'] !== '' || $this->config['authProxyHeaderNameEmail'] !== '') && $this->config['authProxyWhitelist'] !== '') {
 					if (isset($this->getallheadersi()[strtolower($this->config['authProxyHeaderName'])]) || isset($this->getallheadersi()[strtolower($this->config['authProxyHeaderNameEmail'])])) {
-						$this->coookieSeconds('set', 'organizrOAuth', 'true', 20000, false);
-						$this->setLoggerChannel('OAuth')->info('OAuth pre-check passed - adding organizrOAuth cookie', $data);
+						$this->coookieSeconds('set', 'londerlandOAuth', 'true', 20000, false);
+						$this->setLoggerChannel('OAuth')->info('OAuth pre-check passed - adding londerlandOAuth cookie', $data);
 					} else {
 						$data = array_merge($data, ['headers' => $this->getallheadersi()]);
 						$this->setLoggerChannel('OAuth')->debug('Headers not set', $data);
@@ -672,7 +671,7 @@ class Organizr
 				"email" => $currentEmail,
 				"user_ip" => $currentIP,
 				"requested_group" => $group,
-				"uuid" => $_COOKIE['organizr_user_uuid'] ?? 'n/a'
+				"uuid" => $_COOKIE['londerland_user_uuid'] ?? 'n/a'
 			];
 			$this->logger->debug('Starting check', $userInfo);
 			$responseMessage = 'User is not Authorized or User is locked';
@@ -699,9 +698,9 @@ class Organizr
 					$redirect = 'Location: ' . $redirectDomain . $return;
 				}
 				if ($this->qualifyRequest($group) && $unlocked) {
-					header("X-Organizr-User: $currentUser");
-					header("X-Organizr-Email: $currentEmail");
-					header("X-Organizr-Group: $currentGroup");
+					header("X-Londerland-User: $currentUser");
+					header("X-Londerland-Email: $currentEmail");
+					header("X-Londerland-Group: $currentGroup");
 					$responseMessage = 'User is authorized';
 					$this->setAPIResponse('success', $responseMessage, 200, $userInfo);
 					$this->logger->debug($responseMessage, $userInfo);
@@ -719,7 +718,7 @@ class Organizr
 			}
 			return true;
 		} else {
-			$this->setAPIResponse('error', 'Organizr is not setup or an error occurred', 401);
+			$this->setAPIResponse('error', 'Londerland is not setup or an error occurred', 401);
 			return false;
 		}
 	}
@@ -872,7 +871,7 @@ class Organizr
 	public function handleError($number, $message, $file, $line, $type)
 	{
 		$log = false;
-		$error = sprintf('Organizr %s:  %s in %s on line %d', $number, $message, $file, $line);
+		$error = sprintf('Londerland %s:  %s in %s on line %d', $number, $message, $file, $line);
 		error_log($error);
 		if ($this->dev) {
 			$log = true;
@@ -954,7 +953,7 @@ class Organizr
 
 	public function refreshCookieName()
 	{
-		$this->cookieName = $this->config['uuid'] !== '' ? 'organizr_token_' . $this->config['uuid'] : 'organizr_token_temp';
+		$this->cookieName = $this->config['uuid'] !== '' ? 'londerland_token_' . $this->config['uuid'] : 'londerland_token_temp';
 	}
 
 	public function favIcons($rootPath = '')
@@ -1057,7 +1056,7 @@ class Organizr
 		$theme = $theme ?? $this->config['theme'];
 		$themeInformation = $this->validateTheme($theme);
 		if (!$themeInformation) {
-			$themeInformation = $this->defaultThemeInformation()['information']['Organizr'];
+			$themeInformation = $this->defaultThemeInformation()['information']['Londerland'];
 		}
 		return '<link id="theme" href="' . $rootPath . $themeInformation['path'] . '/' . $themeInformation['name'] . '.css?v=' . $this->fileHash . '" rel="stylesheet">';
 	}
@@ -1075,12 +1074,12 @@ class Organizr
 
 	public function getAllThemesInformation()
 	{
-		$organizrThemes = $this->defaultThemeInformation();
+		$londerlandThemes = $this->defaultThemeInformation();
 		$userThemes = $this->userThemeInformation();
 		if ($userThemes) {
-			return array_merge($organizrThemes['information'], $userThemes);
+			return array_merge($londerlandThemes['information'], $userThemes);
 		}
-		return $organizrThemes['information'];
+		return $londerlandThemes['information'];
 	}
 
 	public function userThemeInformation()
@@ -1096,7 +1095,7 @@ class Organizr
 	public function defaultThemeInformation()
 	{
 		return [
-			'files' => ['Blue', 'Organizr'],
+			'files' => ['Blue', 'Londerland'],
 			'information' => [
 				'Blue' => [
 					'name' => 'Blue',
@@ -1104,8 +1103,8 @@ class Organizr
 					'version' => '1.0.0',
 					'path' => 'css/themes'
 				],
-				'Organizr' => [
-					'name' => 'Organizr',
+				'Londerland' => [
+					'name' => 'Londerland',
 					'repo' => null,
 					'version' => '1.0.0',
 					'path' => 'css/themes'
@@ -1116,15 +1115,15 @@ class Organizr
 
 	public function getAllThemes()
 	{
-		$organizrThemes = $this->getOrganizrThemes();
+		$londerlandThemes = $this->getLonderlandThemes();
 		$userThemes = $this->getUserThemes();
 		if ($userThemes) {
-			return array_merge($organizrThemes, $userThemes);
+			return array_merge($londerlandThemes, $userThemes);
 		}
-		return $organizrThemes;
+		return $londerlandThemes;
 	}
 
-	public function getOrganizrThemes()
+	public function getLonderlandThemes()
 	{
 		$themes = [];
 		$themeFolder = $this->root . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'themes';
@@ -1238,8 +1237,8 @@ class Organizr
 	public function pluginFiles($type, $settings = false, $rootPath = '')
 	{
 		$files = '';
-		$organizrPlugins = $this->root . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'plugins';
-		$files .= $this->pluginFilesFromDirectory($organizrPlugins, 'api/plugins/', $type, $settings);
+		$londerlandPlugins = $this->root . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'plugins';
+		$files .= $this->pluginFilesFromDirectory($londerlandPlugins, 'api/plugins/', $type, $settings);
 		$userPlugins = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins';
 		$files .= $this->pluginFilesFromDirectory($userPlugins, 'data/plugins/', $type, $settings);
 		return $files;
@@ -1247,9 +1246,9 @@ class Organizr
 
 	public function formKey($script = true)
 	{
-		if (isset($this->config['organizrHash'])) {
-			if ($this->config['organizrHash'] !== '') {
-				$hash = password_hash(substr($this->config['organizrHash'], 2, 10), PASSWORD_BCRYPT);
+		if (isset($this->config['londerlandHash'])) {
+			if ($this->config['londerlandHash'] !== '') {
+				$hash = password_hash(substr($this->config['londerlandHash'], 2, 10), PASSWORD_BCRYPT);
 				return ($script) ? '<script>local("s","formKey","' . $hash . '");</script>' : $hash;
 			}
 		}
@@ -1258,7 +1257,7 @@ class Organizr
 	private function checkPHP()
 	{
 		if (!(version_compare(PHP_VERSION, $this->minimumPHP) >= 0)) {
-			die($this->showHTML('PHP Version', 'Organizr needs PHP Version: ' . $this->minimumPHP . '<br/> You have PHP Version: ' . PHP_VERSION));
+			die($this->showHTML('PHP Version', 'Londerland needs PHP Version: ' . $this->minimumPHP . '<br/> You have PHP Version: ' . PHP_VERSION));
 		}
 	}
 
@@ -1268,7 +1267,7 @@ class Organizr
 			if (isset($this->config['dbLocation']) && isset($this->config['dbName'])) {
 				$db = is_writable($this->config['dbLocation'] . $this->config['dbName']);
 				if (!$db) {
-					//die($this->showHTML('Organizr DB is not writable!', 'Please check permissions and/or disk space'));
+					//die($this->showHTML('Londerland DB is not writable!', 'Please check permissions and/or disk space'));
 				}
 			} else {
 				die($this->showHTML('Config File Malformed', 'dbLocation and/or dbName is not listed in config.php'));
@@ -1438,13 +1437,84 @@ class Organizr
 	{
 		// Load config or default
 		if (file_exists($this->userConfigPath)) {
-			$config = $this->fillDefaultConfig($this->loadConfig($this->userConfigPath));
+			$config = $this->fillDefaultConfig($this->migrateLegacyConfig($this->loadConfig($this->userConfigPath)));
 		} else {
 			$config = $this->fillDefaultConfig($this->loadConfig($this->defaultConfigPath));
 		}
 		if ((!is_array($config) || !file_exists($this->userConfigPath)) && $tries < 5) {
 			$tries++;
 			return $this->config($tries);
+		}
+		return $config;
+	}
+
+	/**
+	 * One-time conversion of a config file written by Organizr (the project Londerland is based on):
+	 * renames its config keys, points the default logos and theme to the Londerland ones and drops
+	 * settings of features that no longer exist. The file is rewritten once; afterwards this is a no-op.
+	 */
+	public function migrateLegacyConfig($config)
+	{
+		if (!is_array($config)) {
+			return $config;
+		}
+		$legacy = 'organizr';
+		$hasLegacyKeys = false;
+		foreach (array_keys($config) as $key) {
+			if (stripos($key, $legacy) !== false) {
+				$hasLegacyKeys = true;
+				break;
+			}
+		}
+		if (!$hasLegacyKeys && ($config['theme'] ?? '') !== ucfirst($legacy)) {
+			return $config;
+		}
+		$removed = ['branch', 'checkForUpdate', 'checkForPluginUpdate', 'checkForThemeUpdate', 'autoUpdateCronEnabled', 'autoUpdateCronSchedule', 'githubAccessToken', 'githubMenuLink', 'ignoredNewsIds', 'externalPluginMarketplaceRepos', 'externalThemeMarketplaceRepos', $legacy . 'SupportMenuLink', $legacy . 'DocsMenuLink', $legacy . 'FeatureRequestLink'];
+		$oldDefaults = [
+			'title' => ucfirst($legacy) . ' V2',
+			'description' => ucfirst($legacy) . ' - Accept no others',
+			'PHPMAILER-smtpHostSenderName' => ucfirst($legacy),
+			'PHPMAILER-smtpHostSenderEmail' => 'no-reply@' . ucfirst($legacy) . '.tld',
+		];
+		$newDefaults = [
+			'title' => 'Londerland',
+			'description' => 'Londerland - all your web apps in one place',
+			'PHPMAILER-smtpHostSenderName' => 'Londerland',
+			'PHPMAILER-smtpHostSenderEmail' => 'no-reply@example.com',
+		];
+		$migrated = [];
+		foreach ($config as $key => $value) {
+			if (in_array($key, $removed, true)) {
+				continue;
+			}
+			$newKey = str_replace([ucfirst($legacy), $legacy], ['Londerland', 'londerland'], $key);
+			if (isset($oldDefaults[$key]) && $value === $oldDefaults[$key]) {
+				$value = $newDefaults[$key];
+			} elseif ($key == 'PHPMAILER-logo' && is_string($value) && stripos($value, 'raw.githubusercontent.com') !== false) {
+				// The old default pointed to the logo in the original project's repository
+				$value = '';
+			} elseif (is_string($value) && str_contains($value, 'plugins/images/' . $legacy . '/')) {
+				$value = str_replace(['plugins/images/' . $legacy . '/', $legacy . '-logo-h', $legacy . '_logo'], ['plugins/images/londerland/', 'londerland-logo-h', 'londerland_logo'], $value);
+			}
+			$migrated[$newKey] = $value;
+		}
+		if (($migrated['theme'] ?? '') === ucfirst($legacy)) {
+			$migrated['theme'] = 'Londerland';
+		}
+		// Keep the stored version so the normal upgrade steps still run afterwards
+		$migrated['apply_CONFIG_VERSION'] = $config['configVersion'] ?? $this->version;
+		// config.bak.php is replaced on every save, so keep a separate copy of the original file
+		$original = dirname($this->userConfigPath) . DIRECTORY_SEPARATOR . 'config.before-londerland.php';
+		if (!file_exists($original)) {
+			@copy($this->userConfigPath, $original);
+		}
+		if ($this->createConfig($migrated)) {
+			if (function_exists('opcache_invalidate')) {
+				opcache_invalidate($this->userConfigPath, true);
+			}
+			unset($migrated['apply_CONFIG_VERSION']);
+			$migrated['configVersion'] = $config['configVersion'] ?? $this->version;
+			return $migrated;
 		}
 		return $config;
 	}
@@ -1484,7 +1554,7 @@ class Organizr
 		if (!($status['minVersion'])) {
 			$status['action'] = 'php';
 			if ($action) {
-				header($this->getServerPath() . 'api/v2/organizr/error');
+				header($this->getServerPath() . 'api/v2/londerland/error');
 				exit;
 			}
 		} elseif (count($dependenciesInactive) > 0) {
@@ -1496,7 +1566,7 @@ class Organizr
 		} else {
 			$status['action'] = 'launch';
 			if ($action) {
-				echo '<script type="text/javascript"> window.location.href="' . $this->getServerPath() . 'api/v2/organizr/error/409' . '";</script>';
+				echo '<script type="text/javascript"> window.location.href="' . $this->getServerPath() . 'api/v2/londerland/error/409' . '";</script>';
 				exit;
 			}
 		}
@@ -1592,7 +1662,7 @@ class Organizr
 					"token" => null,
 					"tokenDate" => null,
 					"tokenExpire" => null,
-					"username" => "Organizr API",
+					"username" => "Londerland API",
 					"uid" => $this->guestHash(0, 5),
 					"group" => 'Admin',
 					"groupID" => 0,
@@ -1924,7 +1994,7 @@ class Organizr
 
 	public function getPageList()
 	{
-		return $GLOBALS['organizrPages'];
+		return $GLOBALS['londerlandPages'];
 	}
 
 	public function getPage($page)
@@ -1946,7 +2016,7 @@ class Organizr
 	{
 		// Grab token
 		$requesterToken = $this->getallheadersi()['token'] ?? ($_GET['apikey'] ?? false);
-		$apiKey = ($this->config['organizrAPI']) ?? null;
+		$apiKey = ($this->config['londerlandAPI']) ?? null;
 		// Check token or API key
 		// If API key, return 0 for admin
 		if (strlen($requesterToken) == 20 && $requesterToken == $apiKey) {
@@ -2178,36 +2248,12 @@ class Organizr
 		return null;
 	}
 
-	public function getPluginSettings()
-	{
-		return [
-			'Marketplace' => [
-				$this->settingsOption('notice', null, ['notice' => 'danger', 'body' => '3rd Party Repositories are not affiliated with Organizr and therefore the code on these repositories are not inspected.  Use at your own risk.']),
-				$this->settingsOption('multiple-url', 'externalPluginMarketplaceRepos', ['override' => 12, 'label' => 'External Marketplace Repo', 'help' => 'Only supports Github repos']),
-				$this->settingsOption('token', 'githubAccessToken', ['label' => 'Github Person Access Token', 'help' => 'The Github Person Access Token will help with API rate limiting as well as let you access your own Private Repos']),
-				$this->settingsOption('switch', 'checkForPluginUpdate', ['label' => 'Check for Plugin Updates', ['help' => 'Check for updates on page load']])
-			]
-		];
-	}
-
-	public function getThemeSettings()
-	{
-		return [
-			'Marketplace' => [
-				$this->settingsOption('notice', null, ['notice' => 'danger', 'body' => '3rd Party Repositories are not affiliated with Organizr and therefore the themes on these repositories are not inspected.  Use at your own risk.']),
-				$this->settingsOption('multiple-url', 'externalThemeMarketplaceRepos', ['override' => 12, 'label' => 'External Marketplace Repo', 'help' => 'Only supports Github repos']),
-				$this->settingsOption('token', 'githubAccessToken', ['label' => 'Github Person Access Token', 'help' => 'The Github Person Access Token will help with API rate limiting as well as let you access your own Private Repos']),
-				$this->settingsOption('switch', 'checkForThemeUpdate', ['label' => 'Check for Theme Updates', ['help' => 'Check for updates on page load']])
-			]
-		];
-	}
-
 	public function getCustomizeAppearance()
 	{
 		return [
 			'Top Bar' => [
 				$this->settingsOption('input', 'logo', ['label' => 'Logo URL']),
-				$this->settingsOption('input', 'title', ['label' => 'Organizr Title']),
+				$this->settingsOption('input', 'title', ['label' => 'Londerland Title']),
 				$this->settingsOption('switch', 'useLogo', ['label' => 'Use Logo instead of Title', 'help' => 'Also sets the title of your site']),
 				$this->settingsOption('input', 'description', ['label' => 'Meta Description', 'help' => 'Used to set the description for SEO meta tags']),
 			],
@@ -2215,11 +2261,7 @@ class Organizr
 				$this->settingsOption('switch', 'allowCollapsableSideMenu', ['label' => 'Allow Side Menu to be Collapsable']),
 				$this->settingsOption('switch', 'sideMenuCollapsed', ['label' => 'Side Menu Collapsed at Launch']),
 				$this->settingsOption('switch', 'collapseSideMenuOnClick', ['label' => 'Collapse Side Menu after clicking Tab']),
-				$this->settingsOption('switch', 'githubMenuLink', ['label' => 'Show GitHub Repo Link']),
-				$this->settingsOption('switch', 'organizrFeatureRequestLink', ['label' => 'Show Organizr Feature Request Link']),
-				$this->settingsOption('switch', 'organizrSupportMenuLink', ['label' => 'Show Organizr Support Link']),
-				$this->settingsOption('switch', 'organizrDocsMenuLink', ['label' => 'Show Organizr Docs Link']),
-				$this->settingsOption('switch', 'organizrSignoutMenuLink', ['label' => 'Show Organizr Sign out & in Button on Sidebar']),
+				$this->settingsOption('switch', 'londerlandSignoutMenuLink', ['label' => 'Show Londerland Sign out & in Button on Sidebar']),
 				$this->settingsOption('switch', 'expandCategoriesByDefault', ['label' => 'Expand All Categories']),
 				$this->settingsOption('switch', 'autoCollapseCategories', ['label' => 'Auto-Collapse Categories']),
 				$this->settingsOption('switch', 'autoExpandNavBar', ['label' => 'Auto-Expand Nav Bar']),
@@ -2396,17 +2438,10 @@ class Organizr
 			'Settings Page' => [
 				$this->settingsOption('select', 'defaultSettingsTab', ['label' => 'Default Settings Tab', 'options' => $this->getSettingsTabs(), 'help' => 'Choose which Settings Tab to be default when opening settings page']),
 			],
-			'Other' => [
-				$this->settingsOption('switch', 'checkForUpdate', ['label' => 'Check For Update', 'help' => 'Check for update on Organizr load']),
-			],
-			'Github' => [
-				$this->settingsOption('select', 'branch', ['label' => 'Branch', 'value' => $this->config['branch'], 'options' => $this->getBranches(), 'disabled' => $this->docker, 'help' => ($this->docker) ? 'Since you are using the Official Docker image, Change the image to change the branch' : 'Choose which branch to download from']),
-				$this->settingsOption('button', 'force-install-branch', ['label' => 'Force Install Branch', 'class' => 'updateNow', 'icon' => 'fa fa-download', 'text' => 'Retrieve', 'attr' => ($this->docker) ? 'title="Pull the latest image and recreate your container to update"' : '', 'help' => ($this->docker) ? 'Since you are using a Docker image, pull the latest image and recreate your container to update Organizr' : 'This will re-download all of the source files for Organizr']),
-			],
 			'API' => [
-				$this->settingsOption('password-alt-copy', 'organizrAPI', ['label' => 'Organizr API']),
+				$this->settingsOption('password-alt-copy', 'londerlandAPI', ['label' => 'Londerland API']),
 				$this->settingsOption('button', null, ['label' => 'Generate New API Key', 'class' => 'newAPIKey', 'icon' => 'fa fa-refresh', 'text' => 'Generate']),
-				$this->settingsOption('notice', null, ['title' => 'API Documentation', 'body' => 'The documentation for Organizr\'s API is included with this installation.  To access the docs, use the button below.', 'bodyHTML' => '<br/><br/><div class="row"><div class="col-xl-2 col-md-4 col-12"><a href="' . $this->getServerPath() . 'docs/" target="_blank" class="btn w-100 btn-primary text-white" lang="en">Organizr Docs</a></div></div>'])
+				$this->settingsOption('notice', null, ['title' => 'API Documentation', 'body' => 'The documentation for Londerland\'s API is included with this installation.  To access the docs, use the button below.', 'bodyHTML' => '<br/><br/><div class="row"><div class="col-xl-2 col-md-4 col-12"><a href="' . $this->getServerPath() . 'docs/" target="_blank" class="btn w-100 btn-primary text-white" lang="en">Londerland Docs</a></div></div>'])
 			],
 			'Authentication' => [
 				$this->settingsOption('select', 'authType', ['id' => 'authSelect', 'label' => 'Authentication Type', 'value' => $this->config['authType'], 'options' => $this->getAuthTypes()]),
@@ -2417,7 +2452,7 @@ class Organizr
 				$this->settingsOption('button', '', ['class' => 'getPlexMachineAuth plexAuth switchAuth', 'label' => 'Get Plex Machine', 'icon' => 'fa fa-id-badge', 'text' => 'Retrieve', 'attr' => 'onclick="showPlexMachineForm(\'#settings-main-form [name=plexID]\')"']),
 				$this->settingsOption('input', 'plexAdmin', ['label' => 'Plex Admin Username or Email', 'class' => 'plexAuth switchAuth', 'placeholder' => 'Admin username for Plex']),
 				$this->settingsOption('switch', 'plexoAuth', ['label' => 'Enable Plex oAuth', 'class' => 'plexAuth switchAuth']),
-				$this->settingsOption('switch', 'ignoreTFAIfPlexOAuth', ['label' => 'Ignore 2FA if Plex OAuth ', 'class' => 'plexAuth switchAuth', 'help' => 'Enabling this will disable Organizr 2FA (If applicable) if User uses Plex OAuth to login']),
+				$this->settingsOption('switch', 'ignoreTFAIfPlexOAuth', ['label' => 'Ignore 2FA if Plex OAuth ', 'class' => 'plexAuth switchAuth', 'help' => 'Enabling this will disable Londerland 2FA (If applicable) if User uses Plex OAuth to login']),
 				$this->settingsOption('switch', 'plexStrictFriends', ['label' => 'Strict Plex Friends ', 'class' => 'plexAuth switchAuth', 'help' => 'Enabling this will only allow Friends that have shares to the Machine ID entered above to login, Having this disabled will allow all Friends on your Friends list to login']),
 				$this->settingsOption('switch', 'ignoreTFALocal', ['label' => 'Ignore External 2FA on Local Subnet', 'help' => 'Enabling this will bypass external 2FA security if user is on local Subnet']),
 				$this->settingsOption('url', 'authBackendHost', ['class' => 'ldapAuth ftpAuth switchAuth', 'label' => 'Host Address', 'placeholder' => 'http(s) | ftp(s) | ldap(s)://hostname:port']),
@@ -2456,7 +2491,7 @@ class Organizr
 				$this->settingsOption('code-editor', 'blacklistedMessage', ['mode' => 'html']),
 			],
 			'Logs' => [
-				$this->settingsOption('folder', 'logLocation', ['label' => 'Log Save Path', 'help' => 'Folder path to save Organizr Logs - Please test before saving', 'value' => $this->logLocation()]),
+				$this->settingsOption('folder', 'logLocation', ['label' => 'Log Save Path', 'help' => 'Folder path to save Londerland Logs - Please test before saving', 'value' => $this->logLocation()]),
 				$this->settingsOption('select', 'logLevel', ['label' => 'Log Level', 'options' => $this->logLevels()]),
 				$this->settingsOption('switch', 'includeDatabaseQueriesInDebug', ['label' => 'Include Database Queries', 'help' => 'Include Database queries in debug logs']),
 				$this->settingsOption('number', 'maxLogFiles', ['label' => 'Maximum Log Files', 'help' => 'Number of log files to preserve', 'attr' => 'min="1"']),
@@ -2472,12 +2507,10 @@ class Organizr
 			'Cron' => [
 				$this->settingsOption('cron-file'),
 				$this->settingsOption('blank'),
-				$this->settingsOption('enable', 'autoUpdateCronEnabled', ['label' => 'Auto-Update Organizr']),
-				$this->settingsOption('cron', 'autoUpdateCronSchedule'),
-				$this->settingsOption('enable', 'autoBackupCronEnabled', ['label' => 'Auto-Backup Organizr']),
+				$this->settingsOption('enable', 'autoBackupCronEnabled', ['label' => 'Auto-Backup Londerland']),
 				$this->settingsOption('cron', 'autoBackupCronSchedule'),
 				$this->settingsOption('number', 'keepBackupsCountCron', ['label' => '# Backups Keep', 'help' => 'Number of backups to keep', 'attr' => 'min="1"']),
-				$this->settingsOption('folder', 'backupLocation', ['label' => 'Backup Save Path', 'help' => 'Folder path to save Organizr Backups - Please test before saving', 'value' => $this->getOrganizrBackupLocation()]),
+				$this->settingsOption('folder', 'backupLocation', ['label' => 'Backup Save Path', 'help' => 'Folder path to save Londerland Backups - Please test before saving', 'value' => $this->getLonderlandBackupLocation()]),
 				$this->settingsOption('blank'),
 
 			],
@@ -2488,7 +2521,7 @@ class Organizr
 				$this->settingsOption('switch', 'rememberMe', ['label' => 'Remember Me', 'help' => 'Default status of Remember Me button on login screen']),
 				$this->settingsOption('multiple-url', 'localIPList', ['label' => 'Override Local IP or Subnet', 'help' => 'IPv4 only at the moment - This will set your login as local if your IP falls within the From and To']),
 				$this->settingsOption('input', 'wanDomain', ['label' => 'WAN Domain', 'placeholder' => 'only domain and tld - i.e. domain.com', 'help' => 'Enter domain if you wish to be forwarded to a local address - Local Address filled out on next item']),
-				$this->settingsOption('url', 'localAddress', ['label' => 'Local Address', 'placeholder' => 'http://home.local', 'help' => 'Full local address of organizr install - i.e. http://home.local or http://192.168.0.100']),
+				$this->settingsOption('url', 'localAddress', ['label' => 'Local Address', 'placeholder' => 'http://home.local', 'help' => 'Full local address of londerland install - i.e. http://home.local or http://192.168.0.100']),
 				$this->settingsOption('switch', 'enableLocalAddressForward', ['label' => 'Enable Local Address Forward', 'help' => 'Enables the local address forward if on local address and accessed from WAN Domain']),
 				$this->settingsOption('switch', 'disableRecoverPass', ['label' => 'Disable Recover Password', 'help' => 'Disables recover password area']),
 				$this->settingsOption('input', 'customForgotPassText', ['label' => 'Custom Recover Password Text', 'help' => 'Text or HTML for recovery password section']),
@@ -2538,7 +2571,7 @@ class Organizr
 								<div class="card-header"><span lang="en">Notice</span></div>
 								<div class="card-wrapper collapse show" aria-expanded="true">
 									<div class="card-body">
-										<span lang="en">By default, Organizr uses certificates from https://curl.se/docs/caextract.html<br/>If you would like to use your own certificate, please upload it below.  You will then need to enable each homepage item to use it.</span>
+										<span lang="en">By default, Londerland uses certificates from https://curl.se/docs/caextract.html<br/>If you would like to use your own certificate, please upload it below.  You will then need to enable each homepage item to use it.</span>
 									</div>
 								</div>
 							</div>
@@ -2586,14 +2619,8 @@ class Organizr
 									<div class="card-header"><span lang="en">Please Read First</span></div>
 									<div class="card-wrapper collapse show" aria-expanded="true">
 										<div class="card-body">
-											<span lang="en">Using multiple SSO application will cause your Cookie Header item to increase.  If you haven\'t increased it by now, please follow this guide</span>
+											<span lang="en">Using multiple SSO application will cause your Cookie Header item to increase.  If you haven\'t done so yet, increase the maximum request header size of your reverse proxy</span>
 											<br/><br/>
-											<div class="row">
-												<div class="col-xl-2 col-md-4 col-12">
-													<a href="https://docs.organizr.app/help/faq/organizr-login-error" target="_blank" class="btn w-100 btn-primary text-white" lang="en">Cookie Header Guide</a>
-												</div>
-											</div>
-											<br/>
 											<span lang="en">This is not the same as database authentication - i.e. Plex Authentication | Emby Authentication | FTP Authentication<br/>Click Main on the sub-menu above.</span>
 										</div>
 									</div>
@@ -2621,27 +2648,27 @@ class Organizr
 			'Overseerr' => [
 				$this->settingsOption('url', 'overseerrURL'),
 				$this->settingsOption('token', 'overseerrToken'),
-				$this->settingsOption('username', 'overseerrFallbackUser', ['label' => 'Overseerr Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Organizr is unable to perform SSO.  Organizr will request a User Token based off of this user credentials']),
+				$this->settingsOption('username', 'overseerrFallbackUser', ['label' => 'Overseerr Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Londerland is unable to perform SSO.  Londerland will request a User Token based off of this user credentials']),
 				$this->settingsOption('password', 'overseerrFallbackPassword', ['label' => 'Overseerr Fallback Password']),
 				$this->settingsOption('enable', 'ssoOverseerr'),
 			],
 			'Petio' => [
 				$this->settingsOption('url', 'petioURL'),
 				$this->settingsOption('token', 'petioToken'),
-				$this->settingsOption('username', 'petioFallbackUser', ['label' => 'Petio Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Organizr is unable to perform SSO.  Organizr will request a User Token based off of this user credentials']),
+				$this->settingsOption('username', 'petioFallbackUser', ['label' => 'Petio Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Londerland is unable to perform SSO.  Londerland will request a User Token based off of this user credentials']),
 				$this->settingsOption('password', 'petioFallbackPassword', ['label' => 'Petio Fallback Password']),
 				$this->settingsOption('enable', 'ssoPetio'),
 			],
 			'Ombi' => [
 				$this->settingsOption('url', 'ombiURL'),
 				$this->settingsOption('token', 'ombiToken'),
-				$this->settingsOption('username', 'ombiFallbackUser', ['label' => 'Ombi Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Organizr is unable to perform SSO.  Organizr will request a User Token based off of this user credentials']),
+				$this->settingsOption('username', 'ombiFallbackUser', ['label' => 'Ombi Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Londerland is unable to perform SSO.  Londerland will request a User Token based off of this user credentials']),
 				$this->settingsOption('password', 'ombiFallbackPassword', ['label' => 'Ombi Fallback Password']),
 				$this->settingsOption('enable', 'ssoOmbi'),
 			],
 			'Jellyfin' => [
 				$this->settingsOption('url', 'jellyfinURL', ['label' => 'Jellyfin API URL', 'help' => 'Please make sure to use the local address to the API']),
-				$this->settingsOption('url', 'jellyfinSSOURL', ['label' => 'Jellyfin SSO URL', 'help' => 'Please make sure to use the same (sub)domain to access Jellyfin as Organizr\'s']),
+				$this->settingsOption('url', 'jellyfinSSOURL', ['label' => 'Jellyfin SSO URL', 'help' => 'Please make sure to use the same (sub)domain to access Jellyfin as Londerland\'s']),
 				$this->settingsOption('enable', 'ssoJellyfin'),
 			],
 			'Komga' => [
@@ -2649,7 +2676,7 @@ class Organizr
 				$this->settingsOption('auth', 'ssoKomgaAuth'),
 				$this->settingsOption('enable', 'ssoKomga'),
 				$this->settingsOption('blank'),
-				$this->settingsOption('username', 'komgaFallbackUser', ['label' => 'Komga Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Organizr is unable to perform SSO.  Organizr will request a User Token based off of this user credentials']),
+				$this->settingsOption('username', 'komgaFallbackUser', ['label' => 'Komga Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Londerland is unable to perform SSO.  Londerland will request a User Token based off of this user credentials']),
 				$this->settingsOption('password', 'komgaFallbackPassword', ['label' => 'Komga Fallback Password']),
 				$this->settingsOption('password', 'komgaSSOMasterPassword', ['label' => 'Komga Master Password', 'help' => 'Sets master password if using oAuth backend - This will set the password on the login form for logins using oAuth where no password is supplied.']),
 			],
@@ -2666,7 +2693,7 @@ class Organizr
 				$this->settingsOption('url', 'oidcAutoRedirectLogoutUrl', ['label' => 'Custom Logout URL', 'help' => 'Redirect to this URL after logout (e.g., OIDC provider logout endpoint)']),
 				$this->settingsOption('blank'),
 				$this->settingsOption('switch', 'oidcAutoCreateUsers', ['label' => 'Auto-Create Users', 'help' => 'Automatically create users on first OIDC login']),
-				$this->settingsOption('switch', 'oidcLinkExistingUsers', ['label' => 'Link Existing Users', 'help' => 'Link OIDC accounts to existing Organizr users by email']),
+				$this->settingsOption('switch', 'oidcLinkExistingUsers', ['label' => 'Link Existing Users', 'help' => 'Link OIDC accounts to existing Londerland users by email']),
 				$this->settingsOption('switch', 'oidcUpdateGroupsOnLogin', ['label' => 'Update Groups on Login', 'help' => 'Re-sync group membership from OIDC on each login']),
 				$this->settingsOption('select', 'oidcDefaultGroupId', ['label' => 'Default Group', 'help' => 'Group assigned to new OIDC users if no mapping matches', 'options' => $this->groupSelect()]),
 				$this->settingsOption('blank'),
@@ -2676,12 +2703,12 @@ class Organizr
 					['name' => 'Highest Privilege (lowest ID)', 'value' => 'highest_privilege'],
 					['name' => 'Lowest Privilege (highest ID)', 'value' => 'lowest_privilege'],
 				]]),
-				$this->settingsOption('textbox', 'oidcGroupMappings', ['label' => 'Group Mappings (JSON)', 'help' => 'Map OIDC groups to Organizr group IDs. Example: {"oidc-admins": 0, "oidc-users": 3}']),
+				$this->settingsOption('textbox', 'oidcGroupMappings', ['label' => 'Group Mappings (JSON)', 'help' => 'Map OIDC groups to Londerland group IDs. Example: {"oidc-admins": 0, "oidc-users": 3}']),
 			],
 			'OIDC: Authentik' => [
 				$this->settingsOption('enable', 'oidcAuthentikEnabled', ['label' => 'Enable Authentik']),
 				$this->settingsOption('input', 'oidcAuthentikName', ['label' => 'Display Name', 'placeholder' => 'Authentik']),
-				$this->settingsOption('url', 'oidcAuthentikDiscoveryUrl', ['label' => 'Discovery URL', 'help' => 'e.g., https://authentik.example.com/application/o/organizr/.well-known/openid-configuration']),
+				$this->settingsOption('url', 'oidcAuthentikDiscoveryUrl', ['label' => 'Discovery URL', 'help' => 'e.g., https://authentik.example.com/application/o/londerland/.well-known/openid-configuration']),
 				$this->settingsOption('input', 'oidcAuthentikClientId', ['label' => 'Client ID']),
 				$this->settingsOption('password', 'oidcAuthentikClientSecret', ['label' => 'Client Secret']),
 				$this->settingsOption('input', 'oidcAuthentikScopes', ['label' => 'Scopes', 'placeholder' => 'openid,profile,email,groups']),
@@ -2736,19 +2763,6 @@ class Organizr
 				'anchor' => 'settings-plugins-disabled-anchor',
 				'name' => 'Inactive',
 			],
-			[
-				'active' => false,
-				'api' => 'api/v2/page/settings_plugins_settings',
-				'anchor' => 'settings-plugins-settings-anchor',
-				'name' => 'Settings',
-			],
-			[
-				'active' => false,
-				'api' => false,
-				'anchor' => 'settings-plugins-marketplace-anchor',
-				'name' => 'Marketplace',
-				'onclick' => 'loadPluginMarketplace();'
-			],
 		];
 		$userManagementMenu = [
 			[
@@ -2776,19 +2790,6 @@ class Organizr
 				'api' => 'api/v2/page/settings_customize_appearance',
 				'anchor' => 'settings-customize-appearance-anchor',
 				'name' => 'Appearance',
-			],
-			[
-				'active' => false,
-				'api' => 'api/v2/page/settings_customize_settings',
-				'anchor' => 'settings-customize-settings-anchor',
-				'name' => 'Marketplace Settings',
-			],
-			[
-				'active' => false,
-				'api' => false,
-				'anchor' => 'settings-customize-marketplace-anchor',
-				'name' => 'Marketplace',
-				'onclick' => 'loadThemeMarketplace();'
 			],
 		];
 		$tabEditorMenu = [
@@ -2844,21 +2845,9 @@ class Organizr
 			],
 			[
 				'active' => false,
-				'api' => false,
-				'anchor' => 'settings-settings-updates-anchor',
-				'name' => 'Updates'
-			],
-			[
-				'active' => false,
 				'api' => 'api/v2/page/settings_settings_backup',
 				'anchor' => 'settings-settings-backup-anchor',
 				'name' => 'Backup'
-			],
-			[
-				'active' => false,
-				'api' => false,
-				'anchor' => 'settings-settings-donate-anchor',
-				'name' => 'Donate'
 			],
 		];
 		$systemMenus['system_settings'] = $this->buildSettingsMenus($systemSettingsMenu, 'System Settings');
@@ -2943,27 +2932,6 @@ class Organizr
 		);
 		$this->config[$array['name']] = $array['value'];
 		return (bool)$this->updateConfig($newItem);
-	}
-
-	public function ignoreNewsId($id)
-	{
-		if (!$id) {
-			$this->setAPIResponse('error', 'News id was not supplied', 409);
-			return false;
-		}
-		$id = array(intval($id));
-		$newsIds = $this->config['ignoredNewsIds'];
-		$newsIds = array_merge($newsIds, $id);
-		$newsIds = array_unique($newsIds);
-		$this->updateConfig(['ignoredNewsIds' => $newsIds]);
-		$this->setAPIResponse('success', 'News id is now ignored', 200, null);
-	}
-
-	public function getNewsIds()
-	{
-		$newsIds = $this->config['ignoredNewsIds'];
-		$this->setAPIResponse('success', null, 200, $newsIds);
-		return $newsIds;
 	}
 
 	public function testWizardPath($array)
@@ -3078,8 +3046,8 @@ class Organizr
 			'driver' => $driver,
 			'dbName' => $dbName,
 			'license' => $license,
-			'organizrHash' => $hashKey,
-			'organizrAPI' => $api,
+			'londerlandHash' => $hashKey,
+			'londerlandAPI' => $api,
 			'registrationPassword' => $registrationPassword,
 			'uuid' => $this->gen_uuid()
 		);
@@ -3672,9 +3640,9 @@ class Organizr
 		$now = new DateTimeImmutable();
 		$token = $config->builder()
 			// Configures the issuer (iss claim)
-			->issuedBy('Organizr')
+			->issuedBy('Londerland')
 			// Configures the audience (aud claim)
-			->permittedFor('Organizr')
+			->permittedFor('Londerland')
 			// Configures the id (jti claim)
 			->identifiedBy('4f1g23a12aa')
 			// Configures the time that the token was issue (iat claim)
@@ -4400,7 +4368,7 @@ class Organizr
 		}
 	}
 
-	public function organizrSpecialSettings()
+	public function londerlandSpecialSettings()
 	{
 		// js activeInfo
 		return [
@@ -4568,14 +4536,9 @@ class Organizr
 				'authProxyOverrideLogout' => $this->config['authProxyOverrideLogout'],
 				'authProxyLogoutURL' => $this->config['authProxyLogoutURL'],
 				'disableHomepageModals' => $this->config['disableHomepageModals'],
-				'checkForUpdate' => $this->config['checkForUpdate']
 			],
 			'menuLink' => [
-				'githubMenuLink' => $this->config['githubMenuLink'],
-				'organizrSupportMenuLink' => $this->config['organizrSupportMenuLink'],
-				'organizrDocsMenuLink' => $this->config['organizrDocsMenuLink'],
-				'organizrSignoutMenuLink' => $this->config['organizrSignoutMenuLink'],
-				'organizrFeatureRequestLink' => $this->config['organizrFeatureRequestLink']
+				'londerlandSignoutMenuLink' => $this->config['londerlandSignoutMenuLink'],
 			]
 		];
 	}
@@ -4596,7 +4559,7 @@ class Organizr
 	public function isApprovedRequest($method, $data)
 	{
 		$requesterToken = $this->getallheadersi()['token'] ?? ($_GET['apikey'] ?? false);
-		$apiKey = ($this->config['organizrAPI']) ?? null;
+		$apiKey = ($this->config['londerlandAPI']) ?? null;
 		if (isset($data['formKey'])) {
 			$formKey = $data['formKey'];
 		} elseif (isset($this->getallheadersi()['formkey'])) {
@@ -4625,7 +4588,7 @@ class Organizr
 
 	public function checkFormKey($formKey = '')
 	{
-		return password_verify(substr($this->config['organizrHash'], 2, 10), $formKey);
+		return password_verify(substr($this->config['londerlandHash'], 2, 10), $formKey);
 	}
 
 	public function buildHomepage()
@@ -5713,648 +5676,6 @@ class Organizr
 		return '';
 	}
 
-	public function marketplaceFileListFormat($files, $folder, $type)
-	{
-		foreach ($files as $k => $v) {
-			$splitFiles = explode('|', $v);
-			$prePath = (strlen($k) !== 1) ? $k . '/' : $k;
-			foreach ($splitFiles as $file) {
-				$filesList[] = array(
-					'fileName' => $file,
-					'path' => $prePath,
-					'githubPath' => 'https://raw.githubusercontent.com/causefx/Organizr/v2-' . $type . '/' . $folder . $prePath . $file
-				);
-			}
-		}
-		return $filesList;
-	}
-
-	public function removeTheme($theme)
-	{
-		$this->setLoggerChannel('Theme Marketplace');
-		$theme = $this->cleanClassName($theme, '_');
-		$array = $this->getThemesMarketplace();
-		$arrayLower = array_change_key_case($array);
-		if (!$array) {
-			$this->setAPIResponse('error', 'Could not access theme marketplace', 409);
-			return false;
-		}
-		if (!isset($arrayLower[$theme])) {
-			$this->setAPIResponse('error', 'Theme does not exist in marketplace', 404);
-			return false;
-		} else {
-			$key = array_search($theme, array_keys($arrayLower));
-			$theme = array_keys($array)[$key];
-		}
-		$array = $array[$theme];
-		$themeDir = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'themes' . DIRECTORY_SEPARATOR . $array['project_folder'] . DIRECTORY_SEPARATOR;
-		$dirExists = file_exists($themeDir);
-		if ($dirExists) {
-			if (!$this->rrmdir($themeDir)) {
-				$this->logger->info('Remove File Failed  for: ' . $array['project_folder']);
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Theme is not installed', 404);
-			return false;
-		}
-		$this->updateInstalledThemes('uninstall', $theme, $array);
-		$this->setAPIResponse('success', 'Theme removed', 200, $array);
-		return true;
-	}
-
-	public function installTheme($theme)
-	{
-		$this->setLoggerChannel('Theme Marketplace');
-		$theme = $this->cleanClassName($theme, '_');
-		$array = $this->getThemesMarketplace();
-		$arrayLower = array_change_key_case($array);
-		if (!$array) {
-			$this->setAPIResponse('error', 'Could not access theme marketplace', 409);
-			return false;
-		}
-		if (!isset($arrayLower[$theme])) {
-			$this->setAPIResponse('error', 'Theme [' . $theme . '] does not exist in marketplace', 404, $arrayLower);
-			return false;
-		} else {
-			$key = array_search($theme, array_keys($arrayLower));
-			$theme = array_keys($array)[$key];
-		}
-		$array = $array[$theme];
-		// Check Version of Organizr against minimum version needed
-		$compare = new Composer\Semver\Comparator;
-		if ($compare->lessThan($this->version, $array['minimum_organizr_version'])) {
-			$this->logger->warning('Minimum Organizr version needed: ' . $array['minimum_organizr_version']);
-			$this->setResponse(500, 'Minimum Organizr version needed: ' . $array['minimum_organizr_version'] . ' | Current Version: ' . $this->version);
-			return true;
-		}
-		// It is okay to user Plugin function - we should rename it so it is universal
-		$files = $this->getPluginFilesFromRepo($theme, $array);
-		if ($files) {
-			$downloadList = $this->themeFileListFormat($files, $array['project_folder']);
-		} else {
-			$this->logger->warning('File list failed for: ' . $array['github_folder']);
-			$this->setAPIResponse('error', 'Could not get download list for theme', 409);
-			return false;
-		}
-		if (!$downloadList) {
-			$this->logger->warning('Setting download list failed for: ' . $array['github_folder']);
-			$this->setAPIResponse('error', 'Could not get download list for theme', 409);
-			return false;
-		}
-		foreach ($downloadList as $k => $v) {
-			$file = array(
-				'from' => $v['githubPath'],
-				'to' => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $v['path'] . $v['fileName']),
-				'path' => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $v['path'])
-			);
-			$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'themes');
-			if (!$this->downloadFileToPath($file['from'], $file['to'], $file['path'])) {
-				$this->setLoggerChannel('Theme Marketplace');
-				$this->logger->warning('Downloaded File Failed  for: ' . $v['githubPath']);
-				$this->setAPIResponse('error', 'Theme download failed', 500);
-				return false;
-			}
-		}
-		$this->updateInstalledThemes('install', $theme, $array);
-		$this->setAPIResponse('success', 'Theme installed', 200, $array);
-		return true;
-	}
-
-	public function themeFileListFormat($files, $folder)
-	{
-		$filesList = false;
-		foreach ($files as $k => $v) {
-			if ($v['type'] !== 'dir') {
-				$filesList[] = array(
-					'fileName' => $v['name'],
-					'path' => $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'themes' . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . str_replace($v['name'], '', $v['path']),
-					'githubPath' => $v['download_url']
-				);
-			}
-		}
-		$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'themes' . DIRECTORY_SEPARATOR . $folder);
-		return $filesList;
-	}
-
-	public function pluginFileListFormat($files, $folder)
-	{
-		$filesList = false;
-		foreach ($files as $k => $v) {
-			if ($v['type'] !== 'dir') {
-				$filesList[] = array(
-					'fileName' => $v['name'],
-					'path' => $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . str_replace($v['name'], '', $v['path']),
-					'githubPath' => $v['download_url']
-				);
-			}
-		}
-		$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . $folder);
-		return $filesList;
-	}
-
-	public function getPluginFilesFromGithub($plugin = 'test')
-	{
-		$url = 'https://api.github.com/repos/causefx/organizr/contents/' . $plugin . '?ref=v2-plugins';
-		$options = array('verify' => false);
-		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-		if ($response->success) {
-			return json_decode($response->body, true);
-		}
-		return false;
-	}
-
-	public function getBranchFromGithub($repo)
-	{
-		$url = 'https://api.github.com/repos/' . $repo;
-		$options = array('verify' => false);
-		$response = \WpOrg\Requests\Requests::get($url, $this->setGithubAccessToken(), $options);
-		try {
-			if ($response->success) {
-				$github = json_decode($response->body, true);
-				return $github['default_branch'] ?? null;
-			} else {
-				$this->setLoggerChannel('Plugins');
-				$this->logger->warning('Plugin failed to get branch from Github', $this->apiResponseFormatter($response->body));
-				return false;
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->logger->error($e);
-			$this->setAPIResponse('error', $e->getMessage(), 401);
-			return false;
-		}
-	}
-
-	public function getFilesFromGithub($repo, $branch)
-	{
-		if (!$repo || !$branch) {
-			return false;
-		}
-		$url = 'https://api.github.com/repos/' . $repo . '/git/trees/' . $branch . '?recursive=1';
-		$options = array('verify' => false);
-		$response = \WpOrg\Requests\Requests::get($url, $this->setGithubAccessToken(), $options);
-		try {
-			if ($response->success) {
-				$github = json_decode($response->body, true);
-				return is_array($github) ? $github : null;
-			} else {
-				$this->setLoggerChannel('Plugins');
-				$this->logger->warning('Plugin failed to get branch from Github', $this->apiResponseFormatter($response->body));
-				return false;
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->logger->error($e);
-			$this->setAPIResponse('error', $e->getMessage(), 401);
-			return false;
-		}
-	}
-
-	public function formatFilesFromGithub($files, $repo, $branch, $folder)
-	{
-		if (!$files || !$repo || !$branch || !$folder) {
-			return false;
-		}
-		if (isset($files['tree'])) {
-			$fileList = [];
-			foreach ($files['tree'] as $k => $v) {
-				if ($v['type'] !== 'tree') {
-					$fileInfo = pathinfo($v['path']);
-					$v['name'] = $fileInfo['basename'];
-					$v['download_url'] = 'https://raw.githubusercontent.com/' . $repo . '/' . $branch . '/' . $v['path'];
-					if ($folder == 'root') {
-						$fileList[] = $v;
-					} else {
-						if (stripos($v['path'], $folder) !== false) {
-							$v['path'] = (substr($v['path'], 0, strlen($folder)) == $folder) ? substr($v['path'], (strlen($folder) + 1)) : $v['path'];
-							$fileList[] = $v;
-						}
-					}
-				}
-			}
-			return $fileList;
-		}
-		return false;
-	}
-
-	public function getPluginFilesFromRepo($plugin, $pluginDetails)
-	{
-		if (stripos($pluginDetails['repo'], 'github.com') !== false) {
-			$repo = explode('https://github.com/', $pluginDetails['repo']);
-		} else {
-			return false;
-		}
-		$branch = $this->getBranchFromGithub($repo[1]);
-		if ($branch) {
-			return $this->formatFilesFromGithub($this->getFilesFromGithub($repo[1], $branch), $repo[1], $branch, $pluginDetails['github_folder']);
-		}
-		return false;
-	}
-
-	public function installPlugin($plugin)
-	{
-		$this->setLoggerChannel('Plugin Marketplace');
-		$plugin = $this->reverseCleanClassName($plugin);
-		$array = $this->getPluginsMarketplace();
-		$arrayLower = array_change_key_case($array);
-		if (!$array) {
-			$this->setAPIResponse('error', 'Could not access plugin marketplace', 409);
-			return false;
-		}
-		if (!$arrayLower[$plugin]) {
-			$this->setAPIResponse('error', 'Plugin does not exist in marketplace', 404);
-			return false;
-		} else {
-			$key = array_search($plugin, array_keys($arrayLower));
-			$plugin = array_keys($array)[$key];
-		}
-		$array = $array[$plugin];
-		// Check Version of Organizr against minimum version needed
-		$compare = new Composer\Semver\Comparator;
-		if ($compare->lessThan($this->version, $array['minimum_organizr_version'])) {
-			$this->logger->warning('Minimum Organizr version needed: ' . $array['minimum_organizr_version']);
-			$this->setResponse(500, 'Minimum Organizr version needed: ' . $array['minimum_organizr_version'] . ' | Current Version: ' . $this->version);
-			return true;
-		}
-		$files = $this->getPluginFilesFromRepo($plugin, $array);
-		if ($files) {
-			$downloadList = $this->pluginFileListFormat($files, $array['project_folder']);
-		} else {
-			$this->logger->warning('File list failed for: ' . $array['github_folder']);
-			$this->setAPIResponse('error', 'Could not get download list for plugin', 409);
-			return false;
-		}
-		if (!$downloadList) {
-			$this->logger->warning('Setting download list failed for: ' . $array['github_folder']);
-			$this->setAPIResponse('error', 'Could not get download list for plugin', 409);
-			return false;
-		}
-		foreach ($downloadList as $k => $v) {
-			$file = array(
-				'from' => $v['githubPath'],
-				'to' => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $v['path'] . $v['fileName']),
-				'path' => str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $v['path'])
-			);
-			$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins');
-			if (!$this->downloadFileToPath($file['from'], $file['to'], $file['path'])) {
-				$this->setLoggerChannel('Plugin Marketplace');
-				$this->logger->warning('Downloaded File Failed  for: ' . $v['githubPath']);
-				$this->setAPIResponse('error', 'Plugin download failed', 500);
-				return false;
-			}
-		}
-		$this->updateInstalledPlugins('install', $plugin, $array);
-		$this->setAPIResponse('success', 'Plugin installed', 200, $array);
-		return true;
-	}
-
-	public function removePlugin($plugin)
-	{
-		$this->setLoggerChannel('Plugin Marketplace');
-		$plugin = $this->reverseCleanClassName($plugin);
-		$array = $this->getPluginsMarketplace();
-		$arrayLower = array_change_key_case($array);
-		if (!$array) {
-			$this->setAPIResponse('error', 'Could not access plugin marketplace', 409);
-			return false;
-		}
-		if (!$arrayLower[$plugin]) {
-			$this->setAPIResponse('error', 'Plugin does not exist in marketplace', 404);
-			return false;
-		} else {
-			$key = array_search($plugin, array_keys($arrayLower));
-			$plugin = array_keys($array)[$key];
-		}
-		$array = $array[$plugin];
-		$pluginDir = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . $array['project_folder'] . DIRECTORY_SEPARATOR;
-		$dirExists = file_exists($pluginDir);
-		if ($dirExists) {
-			if (!$this->rrmdir($pluginDir)) {
-				$this->logger->info('Remove File Failed  for: ' . $array['project_folder']);
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Plugin is not installed', 404);
-			return false;
-		}
-		$this->updateInstalledPlugins('uninstall', $plugin, $array);
-		$this->setAPIResponse('success', 'Plugin removed', 200, $array);
-		return true;
-	}
-
-	public function updateInstalledPlugins($action, $plugin, $pluginDetails)
-	{
-		if (!$action || !$plugin || !$pluginDetails) {
-			return false;
-		}
-		$config = $this->config['installedPlugins'];
-		$config = is_array($config) ? $config : [];
-		switch ($action) {
-			case 'install':
-			case 'update':
-				$update[$plugin] = [
-					'name' => $plugin,
-					'version' => $pluginDetails['version'],
-					'repo' => $pluginDetails['repo']
-				];
-				$config = array_merge($config, $update);
-				break;
-			default:
-				unset($config[$plugin]);
-				break;
-		}
-		$this->updateConfig(['installedPlugins' => $config]);
-	}
-
-	public function updateInstalledThemes($action, $theme, $themeDetails)
-	{
-		if (!$action || !$theme || !$themeDetails) {
-			return false;
-		}
-		$config = $this->config['installedThemes'];
-		$config = is_array($config) ? $config : [];
-		switch ($action) {
-			case 'install':
-			case 'update':
-				$update[$theme] = [
-					'name' => $theme,
-					'version' => $themeDetails['version'],
-					'repo' => $themeDetails['repo'],
-					'path' => 'data/themes/' . $themeDetails['project_folder']
-				];
-				$config = array_merge($config, $update);
-				break;
-			default:
-				unset($config[$theme]);
-				break;
-		}
-		$this->updateConfig(['installedThemes' => $config]);
-	}
-
-	public function getThemesGithub()
-	{
-		$url = 'https://raw.githubusercontent.com/causefx/Organizr/v2-themes/themes.json';
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-		if ($response->success) {
-			return json_decode($response->body, true);
-		}
-		return false;
-	}
-
-	public function getPluginsGithub()
-	{
-		$url = 'https://raw.githubusercontent.com/causefx/Organizr/v2-plugins/plugins.json';
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		try {
-			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-			if ($response->success) {
-				return json_decode($response->body, true);
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			return false;
-		}
-		return false;
-	}
-
-	public function getPluginsMarketplace()
-	{
-		$plugins = $this->getPluginsGithubCombined();
-		foreach ($plugins as $pluginName => $pluginDetails) {
-			$plugins[$pluginName]['installed'] = (isset($this->config['installedPlugins'][$pluginName]));
-			$plugins[$pluginName]['installed_version'] = $this->config['installedPlugins'][$pluginName]['version'] ?? null;
-			$plugins[$pluginName]['needs_update'] = ($plugins[$pluginName]['installed'] && ($plugins[$pluginName]['installed_version'] !== $plugins[$pluginName]['version']));
-			$plugins[$pluginName]['status'] = $this->getPluginStatus($plugins[$pluginName]);
-		}
-		return $plugins;
-	}
-
-	public function getThemesMarketplace()
-	{
-		$themes = $this->getThemesGithubCombined();
-		foreach ($themes as $themeName => $themeDetails) {
-			$themes[$themeName]['installed'] = (isset($this->config['installedThemes'][$themeName]));
-			$themes[$themeName]['installed_version'] = $this->config['installedThemes'][$themeName]['version'] ?? null;
-			$themes[$themeName]['needs_update'] = ($themes[$themeName]['installed'] && ($themes[$themeName]['installed_version'] !== $themes[$themeName]['version']));
-			$themes[$themeName]['status'] = $this->getPluginStatus($themes[$themeName]);
-		}
-		return $themes;
-	}
-
-	public function getThemesGithubCombined()
-	{
-		// Organizr Repo
-		$urls = [$this->getMarketplaceJSONFromRepo('https://github.com/Organizr/Organizr-Themes')];
-		foreach (explode(',', $this->config['externalThemeMarketplaceRepos']) as $repo) {
-			$urls[] = $this->getMarketplaceJSONFromRepo($repo);
-		}
-		$themes = [];
-		foreach ($urls as $repo) {
-			$options = ($this->localURL($repo)) ? array('verify' => false) : array();
-			try {
-				$response = \WpOrg\Requests\Requests::get($repo, array(), $options);
-				if ($response->success) {
-					$themes = array_merge($themes, json_decode($response->body, true));
-				} else {
-					$this->setLoggerChannel('Themes');
-					$this->logger->warning('Getting Marketplace items from Github', $this->apiResponseFormatter($response->body));
-					return false;
-				}
-			} catch (\WpOrg\Requests\Exception $e) {
-				//return false;
-			}
-		}
-		return $themes;
-	}
-
-	public function getPluginStatus($pluginDetails)
-	{
-		if ($pluginDetails['needs_update']) {
-			return 'Update Available';
-		} elseif ($pluginDetails['installed']) {
-			return 'Up to date';
-		} else {
-			return 'Not Installed';
-		}
-	}
-
-	public function getPluginsGithubCombined()
-	{
-		// Organizr Repo
-		$urls = [$this->getMarketplaceJSONFromRepo('https://github.com/Organizr/Organizr-Plugins')];
-		foreach (explode(',', $this->config['externalPluginMarketplaceRepos']) as $repo) {
-			$urls[] = $this->getMarketplaceJSONFromRepo($repo);
-		}
-		$plugins = [];
-		foreach ($urls as $repo) {
-			$options = ($this->localURL($repo)) ? array('verify' => false) : array();
-			try {
-				$response = \WpOrg\Requests\Requests::get($repo, array(), $options);
-				if ($response->success) {
-					$plugins = array_merge($plugins, json_decode($response->body, true));
-				} else {
-					$this->setLoggerChannel('Plugins');
-					$this->logger->warning('Getting Marketplace items from Github', $this->apiResponseFormatter($response->body));
-					return false;
-				}
-			} catch (\WpOrg\Requests\Exception $e) {
-				//return false;
-			}
-		}
-		return $plugins;
-	}
-
-	public function getMarketplaceJSONFromRepo($url)
-	{
-		if (stripos($url, '.json') !== false) {
-			return $url;
-		} elseif (stripos($url, 'github.com') !== false) {
-			$repo = explode('https://github.com/', $url);
-			$newURL = 'https://api.github.com/repos/' . $repo[1] . '/contents';
-			$options = ($this->localURL($newURL)) ? array('verify' => false) : array();
-			try {
-				$response = \WpOrg\Requests\Requests::get($newURL, $this->setGithubAccessToken(), $options);
-				if ($response->success) {
-					$jsonFiles = json_decode($response->body, true);
-					foreach ($jsonFiles as $file) {
-						if (stripos($file['name'], '.json') !== false) {
-							return $file['download_url'];
-						}
-					}
-					return false;
-				} else {
-					$this->setLoggerChannel('Plugins');
-					$this->logger->warning('Getting Marketplace JSON from Github', $this->apiResponseFormatter($response->body));
-					return false;
-				}
-			} catch (\WpOrg\Requests\Exception $e) {
-				return false;
-			}
-		}
-		return false;
-	}
-
-	public function setGithubAccessToken()
-	{
-		return ($this->config['githubAccessToken'] !== '') ? ['Authorization' => 'token ' . $this->config['githubAccessToken']] : [];
-	}
-
-	public function formatGithubAccessToken()
-	{
-		$accessToken = $this->setGithubAccessToken();
-		if (count($accessToken) >= 1) {
-			return key($accessToken) . ': ' . $accessToken[key($accessToken)];
-		} else {
-			return '';
-		}
-	}
-
-	public function getOpenCollectiveBackers()
-	{
-		$url = 'https://opencollective.com/organizr/members/users.json?limit=100&offset=0';
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		try {
-			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-			if ($response->success) {
-				$api = json_decode($response->body, true);
-				foreach ($api as $k => $backer) {
-					$api[$k] = array_merge($api[$k], ['sortName' => strtolower($backer['name'])]);
-				}
-				$this->setAPIResponse('success', '', 200, $api);
-				return $api;
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setResponse(500, $e->getMessage());
-			return false;
-		}
-		$this->setAPIResponse('error', 'Error connecting to Open Collective', 409);
-		return false;
-	}
-
-	public function getGithubSponsors()
-	{
-		$url = 'https://github.com/sponsors/causefx';
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-		if ($response->success) {
-			$sponsors = [];
-			try {
-				$dom = \Dom\HTMLDocument::createFromString($response->body, LIBXML_NOERROR);
-				$contents = $dom->querySelectorAll('div#sponsors a');
-				foreach ($contents as $content) {
-					$html = $content->innerHTML;
-					preg_match('/(@[a-zA-Z])\w+/', $html, $username);
-					preg_match('/(?i)\b((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'\".,<>?«»""\'\']))/', $html, $image);
-					if (isset($image[0]) && isset($username[0])) {
-						$sponsors[] = [
-							'name' => str_replace('@', '', $username[0]),
-							'sortName' => str_replace('@', '', strtolower($username[0])),
-							'image' => str_replace('s=60', 's=200', $image[0]),
-							'isActive' => true,
-							'type' => 'USER',
-							'role' => 'BACKER'
-						];
-					}
-				}
-				$this->setAPIResponse('success', '', 200, $sponsors);
-				return $sponsors;
-			} catch (\Throwable $e) {
-				$this->setAPIResponse('error', 'Error connecting to Github', 409);
-				return false;
-			}
-		}
-		$this->setAPIResponse('error', 'Error connecting to Github', 409);
-		return false;
-	}
-
-	public function getAllSponsors()
-	{
-		$sponsors = [];
-		$list = [
-			'openCollective' => $this->getOpenCollectiveBackers(),
-			'github' => $this->getGithubSponsors()
-		];
-		foreach ($list as $k => $sponsor) {
-			if ($sponsor) {
-				$sponsors = array_merge($sponsor, $sponsors);
-			}
-		}
-		if ($sponsors) {
-			usort($sponsors, function ($a, $b) {
-				return $a['sortName'] <=> $b['sortName'];
-			});
-		}
-		$this->setAPIResponse('success', '', 200, $sponsors);
-		return $sponsors;
-	}
-
-	public function getOrganizrSmtpFromAPI()
-	{
-		$url = 'https://api.organizr.app/?cmd=smtp';
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		try {
-			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-			if ($response->success) {
-				return json_decode($response->body, true);
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setResponse(500, $e->getMessage());
-			return false;
-		}
-		return false;
-	}
-
-	public function saveOrganizrSmtpFromAPI()
-	{
-		$api = $this->getOrganizrSmtpFromAPI();
-		if ($api) {
-			$this->updateConfigItems($api['response']['data']);
-			$this->setAPIResponse(null, 'SMTP activated with Organizr SMTP account');
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public function guestHash($start, $end)
 	{
 		$ip = $this->userIP();
@@ -6397,122 +5718,6 @@ class Organizr
 			}
 		} elseif (file_exists($src)) {
 			copy($src, $dst);
-		}
-		return true;
-	}
-
-	public function unzipFile($zipFile)
-	{
-		ini_set('max_execution_time', 0);
-		set_time_limit(0);
-		$zip = new ZipArchive;
-		$extractPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "upgrade/";
-		$this->setLoggerChannel('File Management');
-		if ($zip->open($extractPath . $zipFile) != "true") {
-			$this->logger->warning('organizr could not unzip upgrade.zip');
-		} else {
-			$this->logger->debug('organizr unzipped upgrade.zip');
-		}
-		/* Extract Zip File */
-		$zip->extractTo($extractPath);
-		$zip->close();
-		return true;
-	}
-
-	public function downloadFile($url, $path)
-	{
-		ini_set('max_execution_time', 0);
-		set_time_limit(0);
-		$folderPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "upgrade" . DIRECTORY_SEPARATOR;
-		$this->setLoggerChannel('File Management');
-		if (!file_exists($folderPath)) {
-			if (@!mkdir($folderPath)) {
-				$this->logger->warning('Folder Creation failed');
-				return false;
-			}
-		}
-		$newfname = $folderPath . $path;
-		$context = stream_context_create(
-			array(
-				'ssl' => array(
-					'verify_peer' => true,
-					'cafile' => $this->getCert()
-				)
-			)
-		);
-		$file = fopen($url, 'rb', false, $context);
-		if ($file) {
-			$newf = fopen($newfname, 'wb');
-			if ($newf) {
-				while (!feof($file)) {
-					fwrite($newf, fread($file, 1024 * 8), 1024 * 8);
-				}
-			}
-		} else {
-			$this->logger->warning('Organizr could not download ' . $url);
-			return false;
-		}
-		if ($file) {
-			fclose($file);
-			$this->logger->debug('Organizr finished downloading the github zip file');
-		} else {
-			$this->logger->warning('Organizr could not download the github zip file');
-			return false;
-		}
-		if ($newf) {
-			fclose($newf);
-			$this->logger->debug('Organizr created upgrade zip file from github zip file');
-		} else {
-			$this->logger->warning('Organizr could not create upgrade zip file from github zip file');
-			return false;
-		}
-		return true;
-	}
-
-	public function downloadFileToPath($from, $to, $path)
-	{
-		if (((stripos($from, 'api.github.com') !== false) || (stripos($from, 'raw.githubusercontent.com') !== false)) && $this->config['githubAccessToken'] !== '') {
-			$context = stream_context_create(
-				array(
-					'ssl' => array(
-						'verify_peer' => false,
-						'cafile' => $this->getCert()
-					),
-					'http' => array(
-						'method' => 'GET',
-						'header' => $this->formatGithubAccessToken()
-					)
-				)
-			);
-		} else {
-			$context = stream_context_create([]);
-		}
-		ini_set('max_execution_time', 0);
-		set_time_limit(0);
-
-		$this->makeDir($path);
-		$file = fopen($from, 'rb', false, $context);
-		if ($file) {
-			$newf = fopen($to, 'wb', false, $context);
-			if ($newf) {
-				while (!feof($file)) {
-					fwrite($newf, fread($file, 1024 * 8), 1024 * 8);
-				}
-			}
-		} else {
-			$this->logger->warning('Organizr could not download file');
-		}
-		if ($file) {
-			fclose($file);
-			$this->logger->debug('Organizr finished downloading the file');
-		} else {
-			$this->logger->warning('Organizr could not download file');
-		}
-		if ($newf) {
-			fclose($newf);
-			$this->logger->debug('Organizr saved and/or moved the file');
-		} else {
-			$this->logger->warning('Organizr could not save and/or move the file');
 		}
 		return true;
 	}
@@ -7207,7 +6412,7 @@ class Organizr
 
 	public function encrypt($password, $key = null)
 	{
-		$key = ($key) ? $key : ((isset($this->config['organizrHash'])) ? $this->config['organizrHash'] : null);
+		$key = ($key) ? $key : ((isset($this->config['londerlandHash'])) ? $this->config['londerlandHash'] : null);
 		return openssl_encrypt($password, 'AES-256-CBC', $key, 0, $this->fillString($key, 16));
 	}
 
@@ -7216,42 +6421,16 @@ class Organizr
 		if (empty($password)) {
 			return '';
 		}
-		$key = ($key) ? $key : ((isset($this->config['organizrHash'])) ? $this->config['organizrHash'] : null);
+		$key = ($key) ? $key : ((isset($this->config['londerlandHash'])) ? $this->config['londerlandHash'] : null);
 		return openssl_decrypt($password, 'AES-256-CBC', $key, 0, $this->fillString($key, 16));
-	}
-
-	public function checkValidCert($file)
-	{
-		if (file_exists($file)) {
-			return filesize($file) > 0;
-		} else {
-			return false;
-		}
 	}
 
 	public function getCert()
 	{
-		$url = 'http://curl.haxx.se/ca/cacert.pem';
-		$file = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'functions' . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert.pem';
-		$file2 = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'functions' . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert-initial.pem';
-		$useCert = ($this->checkValidCert($file)) ? $file : $file2;
-		if ($this->config['selfSignedCert'] !== '') {
-			if (file_exists($this->config['selfSignedCert'])) {
-				return $this->config['selfSignedCert'];
-			}
+		if ($this->config['selfSignedCert'] !== '' && file_exists($this->config['selfSignedCert'])) {
+			return $this->config['selfSignedCert'];
 		}
-		$context = stream_context_create(
-			array(
-				'ssl' => array(
-					'verify_peer' => true,
-					'cafile' => $useCert
-				)
-			)
-		);
-		if (!$this->checkValidCert($file) || (file_exists($file) && time() - 2592000 > filemtime($file))) {
-			file_put_contents($file, fopen($url, 'r', false, $context));
-		}
-		return ($this->checkValidCert($file)) ? $file : $file2;
+		return caBundlePath();
 	}
 
 	public function hasCustomCert()
@@ -7284,13 +6463,13 @@ class Organizr
 
 	public function createCronFile()
 	{
-		$file = $this->root . DIRECTORY_SEPARATOR . 'Cron.txt';
+		$file = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'Cron.txt';
 		file_put_contents($file, time());
 	}
 
 	public function checkCronFile()
 	{
-		$file = $this->root . DIRECTORY_SEPARATOR . 'Cron.txt';
+		$file = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'Cron.txt';
 		return file_exists($file) && time() - 120 < filemtime($file);
 	}
 
@@ -7322,7 +6501,7 @@ class Organizr
 			$headers = array(
 				'Accept' => 'application/json',
 				'Content-Type' => 'application/x-www-form-urlencoded',
-				'X-Plex-Product' => 'Organizr',
+				'X-Plex-Product' => 'Londerland',
 				'X-Plex-Version' => '2.0',
 				'X-Plex-Client-Identifier' => $this->config['uuid'],
 			);
@@ -7908,7 +7087,7 @@ public function youtubeSearch($query)
 		$url = $this->qualifyURL('https://plex.tv/pms/servers');
 		$options = ($this->localURL($url)) ? array('verify' => false) : array();
 		$headers = [
-			'X-Plex-Product' => 'Organizr',
+			'X-Plex-Product' => 'Londerland',
 			'X-Plex-Version' => '2.0',
 			'X-Plex-Client-Identifier' => '01010101-10101010',
 			'X-Plex-Token' => $this->config['plexToken'],

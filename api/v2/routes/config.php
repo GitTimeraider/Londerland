@@ -1,12 +1,12 @@
 <?php
 $app->get('/config[/{item}[/{term}]]', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
 		if (isset($args['item'])) {
 			$search = ($args['term']) ?? null;
-			$Organizr->getConfigItem($args['item'], $search);
+			$Londerland->getConfigItem($args['item'], $search);
 		} else {
-			$GLOBALS['api']['response']['data'] = $Organizr->getConfigItems();
+			$GLOBALS['api']['response']['data'] = $Londerland->getConfigItems();
 		}
 		
 	}
@@ -16,9 +16,9 @@ $app->get('/config[/{item}[/{term}]]', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->put('/config', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->updateConfigItems($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->updateConfigItems($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

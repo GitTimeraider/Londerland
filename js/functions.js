@@ -10,11 +10,11 @@ var falbackLanguage =
     : "en";
 lang.init({
   //defaultLang: 'en',
-  currentLang: getCookie("organizrLanguage")
-    ? getCookie("organizrLanguage")
+  currentLang: getCookie("londerlandLanguage")
+    ? getCookie("londerlandLanguage")
     : falbackLanguage,
   cookie: {
-    name: "organizrLanguage",
+    name: "londerlandLanguage",
     expiry: 365,
     path: "/",
   },
@@ -48,9 +48,9 @@ $.fn.serializeObject = function () {
   });
   return o;
 };
-// Start Organizr
+// Start Londerland
 $(document).ready(function () {
-  if (getCookie("organizrOAuth")) {
+  if (getCookie("londerlandOAuth")) {
     OAuthLoginNeeded = true;
   }
   launch();
@@ -58,7 +58,7 @@ $(document).ready(function () {
 });
 /* NORMAL FUNCTIONS */
 function setLangCookie(lang) {
-  Cookies.set("organizrLanguage", lang, {
+  Cookies.set("londerlandLanguage", lang, {
     expires: 365,
     path: "/",
   });
@@ -202,14 +202,12 @@ function getDebugPreInfo() {
   var formatted =
     "Version: " +
     activeInfo.version +
-    "<br/>Branch: " +
-    activeInfo.branch +
     "<br/>Server OS: " +
     activeInfo.serverOS +
     "<br/>PHP: " +
     activeInfo.phpVersion +
     "<br/>Install Type: " +
-    (activeInfo.settings.misc.docker ? "Official Docker" : "Native") +
+    (activeInfo.settings.misc.docker ? "Docker" : "Native") +
     "<br/>Auth Type: " +
     activeInfo.settings.misc.authType +
     "<br/>Auth Backend: " +
@@ -239,36 +237,6 @@ function orgDebugList(cmd) {
     orgDebug();
   }
 }
-function updateIssueLink(line) {
-  let preNumber = line.match(/\S*\#(.*)/g);
-  if (preNumber !== null) {
-    preNumber = preNumber.toString();
-    let numberSplit = preNumber.split("#");
-    let issueType = numberSplit[0].replace("(", "").replace(")", "");
-    let issueNumber = numberSplit[1].replace("(", "").replace(")", "");
-    let issueWord =
-      issueType.toLowerCase() == "fr"
-        ? '<i class="icon-arrow-up-circle"></i> feature'
-        : '<i class="fa fa-github"></i> issue';
-    let colorType =
-      issueType.toLowerCase() == "fr" ? "text-bg-info" : "text-bg-primary";
-    let issueLink =
-      issueType.toLowerCase() == "fr"
-        ? "https://feature.organizr.app/posts/" + issueNumber
-        : "https://github.com/causefx/Organizr/issues/" + issueNumber;
-    issueLink =
-      '<span class="badge upgrade-label text-uppercase ' +
-      colorType +
-      ' rounded-pill font-12 float-end"><a class="text-white text-uppercase" href="' +
-      issueLink +
-      '" target="_blank">' +
-      issueWord +
-      "</a></span>";
-    return line.replace(preNumber, issueLink);
-  } else {
-    return line;
-  }
-}
 function clipboard(trigger = true, string = null) {
   let clipboard = $("#internal-clipboard");
   if (string) {
@@ -281,7 +249,7 @@ function clipboard(trigger = true, string = null) {
 function getLangStrings() {
   let strings = JSON.stringify(window.langStrings, null, "\t");
   clipboard(true, strings);
-  organizrConsole("JSON Function", "Copied JSON Strings to clipboard");
+  londerlandConsole("JSON Function", "Copied JSON Strings to clipboard");
 }
 function getHiddenProp() {
   var prefixes = ["webkit", "moz", "ms", "o"];
@@ -322,13 +290,13 @@ function isNumberKey(evt) {
 function setTabInfo(id, action, value) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole("Set Tab Info", "No Tab Info Found... Id: " + id, "error");
+    londerlandConsole("Set Tab Info", "No Tab Info Found... Id: " + id, "error");
     return false;
   }
   let tab = cleanClass(tabInfo.name);
   if (
-    tab == "Organizr-Support" ||
-    tab == "Organizr-Docs" ||
+    tab == "Londerland-Support" ||
+    tab == "Londerland-Docs" ||
     tab == "Feature-Request"
   ) {
     return false;
@@ -366,7 +334,7 @@ function tabTimerAction() {
             tabInformation[v.id]["increments"] + 1;
           if (tabInformation[v.id]["increments"] >= minutes) {
             tabInformation[v.id]["increments"] = 0;
-            organizrConsole("Tab Function", "Auto Closing tab: " + tab);
+            londerlandConsole("Tab Function", "Auto Closing tab: " + tab);
             closeTab(v.id);
           }
         }
@@ -383,7 +351,7 @@ function tabTimerAction() {
           tabInformation[v.id]["increments"] + 1;
         if (tabInformation[v.id]["increments"] >= minutes) {
           tabInformation[v.id]["increments"] = 0;
-          organizrConsole("Tab Function", "Auto Reloading tab: " + tab);
+          londerlandConsole("Tab Function", "Auto Reloading tab: " + tab);
           reloadTab(v.id);
         }
       }
@@ -395,7 +363,7 @@ function timerIncrement() {
   tabTimerAction();
   //check for cookieExpiry
   if (hasCookie) {
-    if (getCookie("organizrToken")) {
+    if (getCookie("londerlandToken")) {
       //do nothing
     } else {
       location.reload();
@@ -476,8 +444,8 @@ function getDefault(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
     if (getHash() === false) {
-      organizrConsole("Get Default", "No Tab Info Found... Id: " + id, "error");
-      organizrConsole(
+      londerlandConsole("Get Default", "No Tab Info Found... Id: " + id, "error");
+      londerlandConsole(
         "Get Default",
         "Trying to load next tab in cycle",
         "error"
@@ -488,21 +456,21 @@ function getDefault(id) {
   }
   if (
     getHash() === false ||
-    (getHash() === "OrganizrLogin" && activeInfo.user.loggedin)
+    (getHash() === "LonderlandLogin" && activeInfo.user.loggedin)
   ) {
     if (tabInfo) {
       switchTab(id);
     } else {
       $(".allTabsList").first().children().click();
     }
-  } else if (getHash() == "OrganizrLogin") {
+  } else if (getHash() == "LonderlandLogin") {
     loadNextTab(true);
   } else {
     let hashTab = getHash();
     let hashType = isNaN(hashTab) ? "name" : "id";
     let tabInfo = findTab(hashTab, hashType);
     if (!tabInfo) {
-      organizrConsole(
+      londerlandConsole(
         "Get Hash",
         "No Tab Info Found... Hash: " + hashTab,
         "error"
@@ -523,7 +491,7 @@ function getDefault(id) {
 function getTabType(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Tab Type Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -612,20 +580,20 @@ function dirtyHash(hash) {
 // What the hell is this?  I don't remember this lol
 function noTabs(arrayItems) {
   if (arrayItems.data.user.loggedin === true) {
-    organizrAPI2("GET", "api/v2/page/tabs")
+    londerlandAPI2("GET", "api/v2/page/tabs")
       .done(function (data) {
         try {
           var json = data.response;
-          organizrConsole("Organizr Function", "No tabs available");
-          $(json.data).appendTo($(".organizr-area"));
-          $(".organizr-area").removeClass("hidden");
+          londerlandConsole("Londerland Function", "No tabs available");
+          $(json.data).appendTo($(".londerland-area"));
+          $(".londerland-area").removeClass("hidden");
           $("#preloader").fadeOut();
         } catch (e) {
-          organizrCatchError(e, data);
+          londerlandCatchError(e, data);
         }
       })
       .fail(function (xhr) {
-        OrganizrApiError(xhr, "Error");
+        LonderlandApiError(xhr, "Error");
       });
   } else {
     $(".show-login").trigger("click");
@@ -661,7 +629,7 @@ function logout() {
     "success",
     "10000"
   );
-  organizrAPI2("GET", "api/v2/logout")
+  londerlandAPI2("GET", "api/v2/logout")
     .done(function (data) {
       local("set", "message", "Goodbye|Logout Successful|success");
       history.replaceState(null, null, " ");
@@ -675,10 +643,10 @@ function logout() {
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Logout Failed");
+      LonderlandApiError(xhr, "Logout Failed");
     });
 }
-function reloadOrganizr() {
+function reloadLonderland() {
   location.reload();
 }
 function hideFrames(split = null) {
@@ -791,7 +759,7 @@ function toggleParentActive(id) {
 function swapBodyClass(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole("Swap Body", "No Tab Info Found... Id: " + id, "error");
+    londerlandConsole("Swap Body", "No Tab Info Found... Id: " + id, "error");
     return false;
   }
   let prior = $("body").attr("data-active-tab");
@@ -822,7 +790,7 @@ function switchToPlugin(plugin) {
 function switchTab(id, split = null) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole("Switch Tab", "No Tab Info Found... Id: " + id, "error");
+    londerlandConsole("Switch Tab", "No Tab Info Found... Id: " + id, "error");
     return false;
   }
   if (activeInfo.settings.misc.collapseSideMenuOnClick) {
@@ -854,12 +822,12 @@ function switchTab(id, split = null) {
         .addClass("active");
       editPageTitle(tabInfo.name);
       if (newTab.hasClass("loaded")) {
-        organizrConsole("Tab Function", "Switching to tab: " + tabInfo.name);
+        londerlandConsole("Tab Function", "Switching to tab: " + tabInfo.name);
         newTab.addClass("show").removeClass("hidden");
         setTabInfo(id, "active", true);
       } else {
         //$("#preloader").fadeIn();
-        organizrConsole("Tab Function", "Loading new tab for: " + tabInfo.name);
+        londerlandConsole("Tab Function", "Loading new tab for: " + tabInfo.name);
         $("#menu-" + id + " a")
           .children()
           .addClass("tabLoaded");
@@ -881,12 +849,12 @@ function switchTab(id, split = null) {
         .addClass("active");
       editPageTitle(tabInfo.name);
       if (newTab.hasClass("loaded")) {
-        organizrConsole("Tab Function", "Switching to tab: " + tabInfo.name);
+        londerlandConsole("Tab Function", "Switching to tab: " + tabInfo.name);
         newTab.addClass("show").removeClass("hidden");
         setTabInfo(id, "active", true);
       } else {
         $("#preloader").fadeIn();
-        organizrConsole("Tab Function", "Loading new tab for: " + tabInfo.name);
+        londerlandConsole("Tab Function", "Loading new tab for: " + tabInfo.name);
         $("#menu-" + id + " a")
           .children()
           .addClass("tabLoaded");
@@ -913,13 +881,13 @@ function switchTab(id, split = null) {
         .removeClass("hidden");
       break;
     default:
-      organizrConsole("Tab Function", "Action not set", "error");
+      londerlandConsole("Tab Function", "Action not set", "error");
   }
 }
 function popTab(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Pop Tab Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -947,20 +915,20 @@ function popTab(id) {
     case "3":
     case "_blank":
     case "popout":
-      organizrConsole(
+      londerlandConsole(
         "Tab Function",
         "Creating New Window for tab id: " + id + " | " + name
       );
       window.open(tabInfo.access_url, "_blank");
       break;
     default:
-      organizrConsole("Tab Function", "Action not set", "error");
+      londerlandConsole("Tab Function", "Action not set", "error");
   }
 }
 function closeTab(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Close Tab Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -978,14 +946,14 @@ function closeTab(id) {
         case "internal":
           // quick check if homepage
           if (tabInfo.access_url == "api/v2/page/homepage") {
-            organizrConsole(
-              "Organizr Function",
+            londerlandConsole(
+              "Londerland Function",
               "Clearing All Homepage AJAX calls"
             );
             clearAJAX("homepage");
             $.xhrPool.abortAll();
           }
-          organizrConsole("Tab Function", "Closing tab: " + tabInfo.name);
+          londerlandConsole("Tab Function", "Closing tab: " + tabInfo.name);
           $("#internal-" + id).html("");
           $("#menu-" + id + " a").removeClass("active");
           $("#menu-" + id + " a")
@@ -998,7 +966,7 @@ function closeTab(id) {
         case 1:
         case "1":
         case "iframe":
-          organizrConsole("Tab Function", "Closing tab: " + tab);
+          londerlandConsole("Tab Function", "Closing tab: " + tab);
           $("#menu-" + id + " a").removeClass("active");
           $("#menu-" + id + " a")
             .children()
@@ -1015,7 +983,7 @@ function closeTab(id) {
         case "popout":
           break;
         default:
-          organizrConsole("Tab Function", "Action not set", "error");
+          londerlandConsole("Tab Function", "Action not set", "error");
       }
     }
   }
@@ -1023,7 +991,7 @@ function closeTab(id) {
 function reloadTab(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Reload Tab Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -1031,14 +999,14 @@ function reloadTab(id) {
     return false;
   }
   $("#preloader").fadeIn();
-  organizrConsole("Tab Function", "Reloading tab: " + tabInfo.name);
+  londerlandConsole("Tab Function", "Reloading tab: " + tabInfo.name);
   switch (tabInfo.type) {
     case 0:
     case "0":
     case "internal":
       if (tabInfo.access_url == "api/v2/page/homepage") {
-        organizrConsole(
-          "Organizr Function",
+        londerlandConsole(
+          "Londerland Function",
           "Clearing All Homepage AJAX calls"
         );
         clearAJAX("homepage");
@@ -1060,13 +1028,13 @@ function reloadTab(id) {
     case "popout":
       break;
     default:
-      organizrConsole("Tab Function", "Action not set", "error");
+      londerlandConsole("Tab Function", "Action not set", "error");
   }
   $("#preloader").fadeOut();
 }
 function reloadCurrentTab() {
   //$("#preloader").fadeIn();
-  organizrConsole("Tab Function", "Reloading Current tab");
+  londerlandConsole("Tab Function", "Reloading Current tab");
   let id = null;
   let iframe = $(".iFrame-listing").find(".show");
   let internal = $(".internal-listing").find(".show");
@@ -1089,7 +1057,7 @@ function reloadCurrentTab() {
       if (id) {
         var tabInfo = findTab(id);
         if (!tabInfo) {
-          organizrConsole(
+          londerlandConsole(
             "Reload Current Tab Function",
             "No Tab Info Found... Id: " + id,
             "error"
@@ -1100,8 +1068,8 @@ function reloadCurrentTab() {
         return false;
       }
       if (tabInfo.access_url == "api/v2/page/homepage") {
-        organizrConsole(
-          "Organizr Function",
+        londerlandConsole(
+          "Londerland Function",
           "Clearing All Homepage AJAX calls"
         );
         clearAJAX("homepage");
@@ -1155,7 +1123,7 @@ function loadNextTab(loadNextTabIfNotLoaded = false) {
       }
       tabActions(1, id);
     } else {
-      organizrConsole("Tab Function", "No Available Tab to open", "error");
+      londerlandConsole("Tab Function", "No Available Tab to open", "error");
     }
   }
 }
@@ -1176,7 +1144,7 @@ function closeCurrentTab(event) {
   let id = $("body").attr("data-active-tab-id");
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Close Current Tab Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -1198,14 +1166,14 @@ function closeCurrentTab(event) {
     case "internal":
       // quick check if homepage
       if (tabInfo.access_url == "api/v2/page/homepage") {
-        organizrConsole(
-          "Organizr Function",
+        londerlandConsole(
+          "Londerland Function",
           "Clearing All Homepage AJAX calls"
         );
         clearAJAX("homepage");
         $.xhrPool.abortAll();
       }
-      organizrConsole("Organizr Function", "Closing tab: " + tabInfo.name);
+      londerlandConsole("Londerland Function", "Closing tab: " + tabInfo.name);
       $("#internal" + extra + "-" + id).html("");
       $("#menu-" + id + " a").removeClass("active");
       $("#menu-" + id + " a")
@@ -1220,7 +1188,7 @@ function closeCurrentTab(event) {
     case 1:
     case "1":
     case "iframe":
-      organizrConsole("Organizr Function", "Closing tab: " + tabInfo.name);
+      londerlandConsole("Londerland Function", "Closing tab: " + tabInfo.name);
       $("#menu-" + id + " a").removeClass("active");
       $("#menu-" + id + " a")
         .children()
@@ -1241,14 +1209,14 @@ function closeCurrentTab(event) {
     case "popout":
       break;
     default:
-      organizrConsole("Tab Function", "No Available Tab to open", "error");
+      londerlandConsole("Tab Function", "No Available Tab to open", "error");
   }
 }
 function openInNewBrowserTab() {
   let id = $("body").attr("data-active-tab-id");
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Open In New Browser Tab Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -1268,7 +1236,7 @@ function tabActions(event, id, redirectURL = "") {
   }
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Tab Action Function",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -1284,12 +1252,12 @@ function tabActions(event, id, redirectURL = "") {
   } else if (event.shiftKey && !event.ctrlKey && !event.altKey) {
     reloadTab(id);
   } else if (event.ctrlKey && event.shiftKey && !event.altKey) {
-    organizrConsole("Tab Function", "Action not defined yet", "info");
+    londerlandConsole("Tab Function", "Action not defined yet", "info");
   } else if (event.ctrlKey && event.altKey && !event.shiftKey) {
-    organizrConsole("Tab Function", "Action not defined yet", "info");
+    londerlandConsole("Tab Function", "Action not defined yet", "info");
     switchTab(id, true);
   } else if (event.shiftKey && event.altKey && !event.ctrlKey) {
-    organizrConsole("Tab Function", "Action not defined yet", "info");
+    londerlandConsole("Tab Function", "Action not defined yet", "info");
   } else {
     switchTab(id);
     if (type !== 2) {
@@ -1326,7 +1294,7 @@ function arrayContains(needle, arrhaystack) {
 /* END NORMAL FUNCTIONS */
 /* BUILD FUNCTIONS */
 /* END BUILD FUNCTIONS */
-/* ORGANIZR API FUNCTIONS */
+/* LONDERLAND API FUNCTIONS */
 function selectOptions(options, active) {
   var selectOptions = "";
   $.each(options, function (i, v) {
@@ -1747,18 +1715,18 @@ function buildFormItem(item) {
 }
 function checkCronFile() {
   $(".cron-results-container").removeClass("hidden");
-  organizrAPI2("GET", "api/v2/test/cron")
+  londerlandAPI2("GET", "api/v2/test/cron")
     .done(function (data) {
       try {
         $(".cron-results").text("Cron file is setup correctly");
       } catch (e) {
         $(".cron-results").text("Unknown error");
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
       $(".cron-results").text("Cron file is not setup or is setup incorrectly");
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildPluginsItem(array, type = "enabled") {
@@ -1899,394 +1867,8 @@ function buildPluginsItem(array, type = "enabled") {
 		</div>
 	</div>`;
 }
-function buildPluginsItemOld(array) {
-  var activePlugins = "";
-  var inactivePlugins = "";
-  $.each(array, function (i, v) {
-    var settingsPage =
-      v.settings == true
-        ? `
-		<!-- Plugin Settings Page -->
-		<form id="` +
-          v.idPrefix +
-          `-settings-page" class="mfp-hide white-popup mfp-with-anim addFormTick col-lg-10 offset-lg-1" autocomplete="off">
-            <div class="card bg-org card-info">
-                <div class="card-header">
-                    <span lang="en">` +
-          v.name +
-          ` Settings</span>
-                    <button type="button" class="btn bg-org btn-circle close-popup float-end"><i class="fa fa-times"></i> </button>
-                    <button id="` +
-          v.idPrefix +
-          `-settings-page-save" onclick="submitSettingsForm('` +
-          v.idPrefix +
-          `-settings-page')" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end hidden animated loop-animation rubberBand m-r-20" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save</span></button>
-                </div>
-                <div class="card-wrapper collapse show" aria-expanded="true">
-                    <div class="bg-org">
-                        <fieldset id="` +
-          v.idPrefix +
-          `-settings-items" style="border:0;" class=""><h2>Loading...</h2></fieldset>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-		</form>
-		`
-        : "";
-    var href =
-      v.settings == true
-        ? "#" + v.idPrefix + "-settings-page"
-        : "javascript:void(0);";
-    if (v.enabled == true) {
-      var activeToggle =
-        `<li><a class="btn default btn-outline disablePlugin" href="javascript:void(0);" data-plugin-name="` +
-        v.name +
-        `" data-config-prefix="` +
-        v.configPrefix +
-        `" data-config-name="` +
-        v.configPrefix +
-        `-enabled"><i class="ti-power-off fa-2x"></i></a></li>`;
-      var settings =
-        `<li><a class="btn default btn-outline popup-with-form" href="` +
-        href +
-        `" data-effect="mfp-3d-unfold"data-plugin-name="` +
-        v.name +
-        `" id="` +
-        v.idPrefix +
-        `-settings-button" data-config-prefix="` +
-        v.configPrefix +
-        `" data-api="${v.api}" data-settings="${v.settings}" data-bind="${v.bind}"><i class="ti-panel fa-2x"></i></a></li>`;
-    } else {
-      var activeToggle =
-        `<li><a class="btn default btn-outline enablePlugin" href="javascript:void(0);" data-plugin-name="` +
-        v.name +
-        `" data-config-prefix="` +
-        v.configPrefix +
-        `" data-config-name="` +
-        v.configPrefix +
-        `-enabled"><i class="ti-plug fa-2x"></i></a></li>`;
-      var settings = "";
-    }
-    var plugin =
-      `
-		<div class="col-xl-2 col-lg-2 col-md-4 col-4">
-			<div class="white-box m-0">
-				<div class="el-card-item p-0">
-					<div class="el-card-avatar el-overlay-1 m-0"> <img class="lazyload" data-src="` +
-      v.image +
-      `">
-						<div class="el-overlay">
-							<ul class="el-info">
-								${settings} ${activeToggle}
-							</ul>
-						</div>
-					</div>
-					<div class="el-card-content">
-						<h3 class="box-title elip">` +
-      v.name +
-      `</h3>
-						<small class="elip text-uppercase p-b-10">` +
-      v.category +
-      `</small>
-					</div>
-				</div>
-			</div>
-		</div>
-		`;
-    if (v.enabled == true) {
-      activePlugins += plugin + settingsPage;
-    } else {
-      inactivePlugins += plugin + settingsPage;
-    }
-  });
-  activePlugins =
-    activePlugins.length !== 0
-      ? activePlugins
-      : '<h2 class="text-center" lang="en">Nothing Active</h2>';
-  inactivePlugins =
-    inactivePlugins.length !== 0
-      ? inactivePlugins
-      : '<h2 class="text-center" lang="en">Everything Active</h2>';
-  var panes =
-    `
-	<select class="form-control settings-dropdown-box plugin-menu w-100 visible-xs">
-		<option value="#settings-plugins-active-anchor" lang="en">Active</option>
-		<option value="#settings-plugins-inactive-anchor" lang="en">Inactive</option>
-		<option value="#settings-plugins-marketplace-anchor" lang="en">Marketplace</option>
-	</select>
-	<ul class="nav customtab2 nav-tabs nav-non-mobile hidden-xs" data-dropdown="plugin-menu" role="tablist">
-		<li onclick="changeSettingsMenu('Settings::Plugins::Active')" role="presentation" class="active"><a id="settings-plugins-active-anchor" href="#settings-plugins-active" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-file"></i></span><span class="hidden-xs" lang="en">Active</span></a>
-		</li>
-		<li onclick="changeSettingsMenu('Settings::Plugins::Inactive')" role="presentation" class=""><a id="settings-plugins-inactive-anchor" href="#settings-plugins-inactive" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-zip"></i></span><span class="hidden-xs" lang="en">Inactive</span></a>
-		</li>
-		<li onclick="changeSettingsMenu('Settings::Plugins::Marketplace');loadMarketplace('plugins');" role="presentation" class=""><a id="settings-plugins-marketplace-anchor" href="#settings-plugins-marketplace" aria-controls="home" role="tab" data-bs-toggle="tab" aria-expanded="false"><span class="visible-xs"><i class="ti-shopping-cart-full"></i></span><span class="hidden-xs" lang="en">Marketplace</span></a>
-		</li>
-	</ul>
-	<!-- Tab panes -->
-	<div class="tab-content">
-		<div role="tabpanel" class="tab-pane fade show active" id="settings-plugins-active">
-			<div class="card bg-org card-info">
-				<div class="card-header">
-					<span lang="en">Active Plugins</span>
-				</div>
-				<div class="card-wrapper collapse show" aria-expanded="true">
-					<div class="card-body bg-org">
-						<div class="row el-element-overlay m-b-40">` +
-    activePlugins +
-    `</div>
-					</div>
-				</div>
-			</div>
-			<div class="clearfix"></div>
-		</div>
-		<div role="tabpanel" class="tab-pane fade" id="settings-plugins-inactive">
-			<div class="card bg-org card-info">
-				<div class="card-header">
-					<span lang="en">Inactive Plugins</span>
-				</div>
-				<div class="card-wrapper collapse show" aria-expanded="true">
-					<div class="card-body bg-org">
-						<div class="row el-element-overlay m-b-40">` +
-    inactivePlugins +
-    `</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div role="tabpanel" class="tab-pane fade" id="settings-plugins-marketplace">
-			<div class="card bg-org card-info">
-				<div class="card-header">
-					<span lang="en">Plugin Marketplace</span>
-				</div>
-				<div class="card-wrapper collapse show" aria-expanded="true">
-					<div class="table-responsive">
-                        <table class="table table-hover manage-u-table">
-                            <thead>
-                                <tr>
-                                    <th width="70" class="text-center" lang="en">PLUGIN</th>
-                                    <th></th>
-                                    <th lang="en">CATEGORY</th>
-                                    <th lang="en">STATUS</th>
-                                    <th lang="en" style="text-align:center">INFO</th>
-                                    <th lang="en" style="text-align:center">INSTALL</th>
-                                    <th lang="en" style="text-align:center">DELETE</th>
-                                </tr>
-                            </thead>
-                            <tbody id="managePluginTable"></tbody>
-                        </table>
-                    </div>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	`;
 
-  return panes;
-}
-function loadMarketplace(type) {
-  marketplaceJSON(type)
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-      switch (type) {
-        case "plugins":
-          loadMarketplacePluginsItems(response);
-          break;
-        case "themes":
-          loadMarketplaceThemesItems(response);
-          break;
-        default:
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function loadThemeMarketplace() {
-  $("#manageThemeTable").html(
-    '<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>'
-  );
-  organizrAPI2("GET", "api/v2/themes/marketplace")
-    .done(function (data) {
-      try {
-        let response = data.response;
-        loadMarketplaceThemesItems(response.data);
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "loadThemeMarketplace Failed");
-    });
-}
-function loadPluginMarketplace() {
-  $("#managePluginTable").html(
-    '<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>'
-  );
-  organizrAPI2("GET", "api/v2/plugins/marketplace")
-    .done(function (data) {
-      try {
-        let response = data.response;
-        loadMarketplacePluginsItems(response.data);
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "loadPluginMarketplace Failed");
-    });
-}
-function loadMarketplacePluginsItems(plugins) {
-  var pluginList = "";
-  $.each(plugins, function (i, v) {
-    if (v.icon == null || v.icon == "") {
-      v.icon = "test.png";
-    }
-    var installButton =
-      v.status == "Update Available" ? "fa fa-download" : "fa fa-plus";
-    var removeButton = v.status == "Not Installed" ? "disabled" : "";
-    v.name = i;
-    pluginList +=
-      `
-            <tr class="pluginManagement" data-name="${i}" data-version="${v.version}" data-repo="${v.repo}">
-                <td class="text-center el-element-overlay">
-                    <div class="el-card-item p-0">
-                        <div class="el-card-avatar el-overlay-1 m-0">
-                            <img alt="user-img" src="` +
-      v.icon +
-      `" width="45">
-                        </div>
-                    </div>
-                </td>
-                <td>` +
-      i +
-      `
-                    <br><span class="text-muted">` +
-      v.version +
-      `</span>
-                    <br><span class="text-muted">` +
-      v.author +
-      `</span>
-                </td>
-                <td>` +
-      v.category +
-      `</td>
-                <td lang="en">` +
-      v.status +
-      `</td>
-                <td style="text-align:center"><button type="button" onclick='aboutPlugin(` +
-      JSON.stringify(v) +
-      `);' class="btn btn-success btn-outline btn-circle btn-lg popup-with-form" href="#about-plugin-form" data-effect="mfp-3d-unfold"><i class="fa fa-info"></i></button></td>
-                <td style="text-align:center"><button type="button" onclick='installPlugin("` +
-      cleanClass(i) +
-      `");' class="btn btn-info btn-outline btn-circle btn-lg"><i class="` +
-      installButton +
-      `"></i></button></td>
-                <td style="text-align:center"><button type="button" onclick='removePlugin("` +
-      cleanClass(i) +
-      `");' class="btn btn-danger btn-outline btn-circle btn-lg" ` +
-      removeButton +
-      `><i class="fa fa-trash"></i></button></td>
-            </tr>
-        `;
-  });
-  $("#managePluginTable").html(pluginList);
-}
-
-function getRepoUsernameAndRepoName(repo) {
-  let parts = repo.split("/");
-  if (parts.length) {
-    return parts[parts.length - 2] + "/" + parts[parts.length - 1];
-  } else {
-    return repo;
-  }
-}
-
-function loadMarketplaceThemesItems(themes) {
-  var themeList = "";
-  $.each(themes, function (i, v) {
-    if (v.icon == null || v.icon == "") {
-      v.icon = "test.png";
-    }
-    //v.status = themeStatus(i,v.version);
-    var installButton =
-      v.status == "Update Available" ? "fa fa-download" : "fa fa-plus";
-    var removeButton = v.status == "Not Installed" ? "disabled" : "";
-    let category =
-      v.repo == "https://github.com/Organizr/Organizr-Themes"
-        ? "Official"
-        : "3rd Party";
-    let categoryTooltip = getRepoUsernameAndRepoName(v.repo);
-    v.name = i;
-    let cleanName = i.replace(/_/gi, " ");
-    themeList += `
-            <tr class="themeManagement" data-name="${i}" data-version="${
-      v.version
-    }">
-                <td class="text-center el-element-overlay">
-                    <div class="el-card-item p-0">
-                        <div class="el-card-avatar el-overlay-1 m-0">
-                            <img alt="user-img" src="${v.icon}" width="45">
-                        </div>
-                    </div>
-                </td>
-                <td>${cleanName}
-                    <br><span class="text-muted">${v.version}</span>
-                    <br><span class="text-muted">${v.author}</span>
-                </td>
-                <td><span data-bs-toggle="tooltip" title="${categoryTooltip}" data-bs-placement="bottom">${category}</span></td>
-                <td lang="en">${v.status}</td>
-                <td style="text-align:center"><button type="button" onclick='aboutTheme(${JSON.stringify(
-                  v
-                )});' class="btn btn-success btn-outline btn-circle btn-lg popup-with-form" href="#about-theme-form" data-effect="mfp-3d-unfold"><i class="fa fa-info"></i></button></td>
-                <td style="text-align:center"><button type="button" onclick='installTheme("${cleanClass(
-                  i
-                )}");themeAnalytics("${
-      v.name
-    }");' class="btn btn-info btn-outline btn-circle btn-lg"><i class="${installButton}"></i></button></td>
-                <td style="text-align:center"><button type="button" onclick='removeTheme("${cleanClass(
-                  i
-                )}");' class="btn btn-danger btn-outline btn-circle btn-lg" ${removeButton}><i class="fa fa-trash"></i></button></td>
-            </tr>
-        `;
-  });
-  $("#manageThemeTable").html(themeList);
-}
-function aboutPluginImages(images) {
-  var imageList = "";
-  if (Object.keys(images).length !== 0) {
-    var imageCount = 0;
-    $.each(images, function (i, v) {
-      imageCount++;
-      var active = imageCount == 1 ? "active" : "";
-      imageList +=
-        `
-            <div class="carousel-item ` +
-        active +
-        `">
-                <div class="overlaybg"><img src="` +
-        v +
-        `" /></div>
-                <div class="news-content"><span class="badge text-bg-info rounded-pill">` +
-        i +
-        `</span></div>
-            </div>
-            `;
-    });
-  } else {
-    imageList += `
-            <div class="carousel-item active">
-                <div class="overlaybg"><img src="plugins/images/organizr/logo-wide.png" /></div>
-            </div>
-        `;
-  }
-  return imageList;
-}
 // Folder/file list rendered with native <details> elements
 function buildFileTree(files) {
   let escape = (text) => $("<div>").text(text).html();
@@ -2302,370 +1884,8 @@ function buildFileTree(files) {
     )
     .join("");
 }
-function aboutPluginFiles(fileList) {
-  var files = [];
-  $.each(fileList, function (i, v) {
-    var splitFiles = v.split("|");
-    var formattedSplit = [];
-    $.each(splitFiles, function (i, v) {
-      var arrayFilePush = {
-        text: v,
-      };
-      formattedSplit.push(arrayFilePush);
-    });
-    var arrayPush = {
-      text: i,
-      nodes: formattedSplit,
-    };
-    files.push(arrayPush);
-  });
-  return files;
-}
-function pluginFileList(fileList, folder, type) {
-  var files = [];
-  $.each(fileList, function (i, v) {
-    var splitFiles = v.split("|");
-    var formattedSplit = [];
-    var prePath = i.length !== 1 ? i + "/" : i;
-    $.each(splitFiles, function (i, v) {
-      var arrayPush = {
-        fileName: v,
-        path: prePath,
-        githubPath:
-          "https://raw.githubusercontent.com/causefx/Organizr/v2-" +
-          type +
-          "/" +
-          folder +
-          prePath +
-          v,
-      };
-      files.push(arrayPush);
-    });
-  });
-  return files;
-}
-function aboutTheme(theme) {
-  var files = aboutPluginFiles(theme.files);
-  var imageList = aboutPluginImages(theme.images);
-  var homepageLink =
-    theme.website !== "" || theme.website !== null
-      ? "onclick=\"window.open('" + theme.website + "','_blank');\""
-      : " ";
-
-  var infoBox =
-    `
-    <div class="row">
-        <div class="col-xl-6 col-md-12 col-12">
-            <div class="row">
-                <div class="col-xl-12 col-md-12 col-12">
-                    <div class="white-box p-10" id="aboutThemeScroll">
-                        ` +
-    theme.description +
-    `
-                    </div>
-                </div>
-                <div class="clearfix">&nbsp;</div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse">
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-envelope-open text-info"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse" ` +
-    homepageLink +
-    `>
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-home text-danger"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse" onclick="$('.themeFileList').toggleClass('hidden');">
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-folder text-purple"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-12 col-12 themeFileList hidden">
-                    <div id="treeviewTheme" class=""></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6 col-md-12 col-12">
-            <div class="news-slide m-b-15">
-                <div class="vcarousel carousel slide">
-                    <!-- Carousel items -->
-                    <div class="carousel-inner">
-                        ` +
-    imageList +
-    `
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
-  $("#about-theme-title").html(
-    theme.name + "&nbsp;<small>" + theme.version + "</small>"
-  );
-  $("#about-theme-body").html(infoBox);
-  $(".vcarousel").carousel({
-    interval: 3000,
-  });
-  $("#treeviewTheme").html(buildFileTree(files));
-  $("#aboutThemeScroll").css({ height: "225px", "overflow-y": "auto" });
-}
-function aboutPlugin(plugin) {
-  var files = aboutPluginFiles(plugin.files);
-  var imageList = aboutPluginImages(plugin.images);
-  var homepageLink =
-    plugin.website !== "" || plugin.website !== null
-      ? "onclick=\"window.open('" + plugin.website + "','_blank');\""
-      : " ";
-
-  var infoBox =
-    `
-    <div class="row">
-        <div class="col-xl-6 col-md-12 col-12">
-            <div class="row">
-                <div class="col-xl-12 col-md-12 col-12">
-                    <div class="white-box p-10" id="aboutPluginScroll">
-                        ` +
-    plugin.description +
-    `
-                    </div>
-                </div>
-                <div class="clearfix">&nbsp;</div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse">
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-envelope-open text-info"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse" ` +
-    homepageLink +
-    `>
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-home text-danger"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-4 col-12">
-                    <div class="white-box mouse" onclick="$('.pluginFileList').toggleClass('hidden');">
-                        <ul class="list-inline two-part text-center m-b-0">
-                            <li><i class="icon-folder text-purple"></i></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-12 col-12 pluginFileList hidden">
-                    <div id="treeview5" class=""></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6 col-md-12 col-12">
-            <div class="news-slide m-b-15">
-                <div class="vcarousel carousel slide">
-                    <!-- Carousel items -->
-                    <div class="carousel-inner">
-                        ` +
-    imageList +
-    `
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
-  $("#about-plugin-title").html(
-    plugin.name + "&nbsp;<small>" + plugin.version + "</small>"
-  );
-  $("#about-plugin-body").html(infoBox);
-  $(".vcarousel").carousel({
-    interval: 3000,
-  });
-  $("#treeview5").html(buildFileTree(files));
-  $("#aboutPluginScroll").css({ height: "225px", "overflow-y": "auto" });
-}
-function removePlugin(plugin = null) {
-  if (plugin == null) {
-    return false;
-  }
-  message(
-    "Removing Plugin",
-    plugin,
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "5000"
-  );
-  organizrAPI2("DELETE", "api/v2/plugins/manage/" + plugin, {})
-    .done(function (data) {
-      try {
-        let html = data.response;
-        loadPluginMarketplace();
-        message(
-          plugin + " Removed",
-          "",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Removal Failed");
-    });
-}
-function removeTheme(theme = null) {
-  if (theme == null) {
-    return false;
-  }
-  message(
-    "Removing Theme",
-    theme,
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "5000"
-  );
-  organizrAPI2("DELETE", "api/v2/themes/manage/" + theme, {})
-    .done(function (data) {
-      try {
-        let html = data.response;
-        loadThemeMarketplace();
-        message(
-          theme + " Removed",
-          "",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Removal Failed");
-    });
-}
-function installPlugin(plugin = null) {
-  if (plugin == null) {
-    return false;
-  }
-  message(
-    "Installing Plugin",
-    plugin,
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "5000"
-  );
-  organizrAPI2("POST", "api/v2/plugins/manage/" + plugin, {})
-    .done(function (data) {
-      try {
-        var html = data.response;
-        loadPluginMarketplace();
-        message(
-          plugin + " Installed",
-          "",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Install Failed");
-    });
-}
-function installTheme(theme = null) {
-  if (theme == null) {
-    return false;
-  }
-  message(
-    "Installing Theme",
-    theme,
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "5000"
-  );
-  organizrAPI2("POST", "api/v2/themes/manage/" + theme, {})
-    .done(function (data) {
-      try {
-        var html = data.response;
-        loadThemeMarketplace();
-        message(
-          theme + " Installed",
-          "",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Install Failed");
-    });
-}
-function pluginStatus(name = null, version = null) {
-  var installedPlugins = [];
-  var installedPluginsList = [];
-  if (activeInfo.settings.misc.installedPlugins !== "") {
-    installedPlugins = activeInfo.settings.misc.installedPlugins.split("|");
-    $.each(installedPlugins, function (i, v) {
-      var plugin = v.split(":");
-      installedPluginsList[plugin[0]] = plugin[1];
-    });
-    if (typeof installedPluginsList[name] !== "undefined") {
-      if (version !== installedPluginsList[name]) {
-        return "Update Available";
-      } else {
-        return "Up to date";
-      }
-    } else {
-      return "Not Installed";
-    }
-  } else {
-    return "Not Installed";
-  }
-}
-function themeStatus(name = null, version = null) {
-  var installedThemes = [];
-  var installedThemesList = [];
-  if (activeInfo.settings.misc.installedThemes !== "") {
-    installedThemes = activeInfo.settings.misc.installedThemes.split("|");
-    $.each(installedThemes, function (i, v) {
-      var theme = v.split(":");
-      installedThemesList[theme[0]] = theme[1];
-    });
-    if (typeof installedThemesList[name] !== "undefined") {
-      if (version !== installedThemesList[name]) {
-        return "Update Available";
-      } else {
-        return "Up to date";
-      }
-    } else {
-      return "Not Installed";
-    }
-  } else {
-    return "Not Installed";
-  }
-}
 function copyHomepageJSON(item) {
-  organizrAPI2("GET", "api/v2/settings/homepage/" + item + "/debug")
+  londerlandAPI2("GET", "api/v2/settings/homepage/" + item + "/debug")
     .done(function (data) {
       try {
         let response = data.response;
@@ -2680,11 +1900,11 @@ function copyHomepageJSON(item) {
           "5000"
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Copy JSON Failed");
+      LonderlandApiError(xhr, "Copy JSON Failed");
     });
 }
 function homepageItemFormHTML(v) {
@@ -2770,7 +1990,7 @@ function completeHomepageLoad(item, data) {
 }
 function editHomepageItem(item, reload = false) {
   ajaxloader(".editHomepageItemBox-" + item, "in");
-  organizrAPI2("GET", "api/v2/settings/homepage/" + item)
+  londerlandAPI2("GET", "api/v2/settings/homepage/" + item)
     .done(function (data) {
       try {
         let response = data.response;
@@ -2790,12 +2010,12 @@ function editHomepageItem(item, reload = false) {
         bootstrap.Modal.getOrCreateInstance(modalElement).show();
         //$('#editHomepageItemCall').click();
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       ajaxloader(".editHomepageItemBox-" + item);
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Edit Homepage Failed");
+      LonderlandApiError(xhr, "Edit Homepage Failed");
       ajaxloader(".editHomepageItemBox-" + item);
     });
 }
@@ -2835,48 +2055,34 @@ function buildHomepageItem(array) {
   }
   return listing;
 }
-function buildPluginsOLD() {
-  organizrAPI2("GET", "api/v2/plugins")
-    .done(function (data) {
-      try {
-        var response = data.response;
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-      $("#main-plugin-area").html(buildPluginsItemOLD(response.data));
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
 function buildPlugins(status = "enabled") {
-  organizrAPI2("GET", "api/v2/plugins/" + status)
+  londerlandAPI2("GET", "api/v2/plugins/" + status)
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#" + status + "-plugin-area").html(
         buildPluginsItem(response.data, status)
       );
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildHomepage() {
-  organizrAPI2("GET", "api/v2/settings/homepage")
+  londerlandAPI2("GET", "api/v2/settings/homepage")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#settings-homepage-list").html(buildHomepageItem(response.data));
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildFormGroup(array) {
@@ -3063,7 +2269,7 @@ function buildImageManagerViewItem(array) {
   return imageListing;
 }
 function buildImageManagerView() {
-  organizrAPI2("GET", "api/v2/image")
+  londerlandAPI2("GET", "api/v2/image")
     .done(function (data) {
       try {
         let response = data.response;
@@ -3071,127 +2277,99 @@ function buildImageManagerView() {
           buildImageManagerViewItem(response.data)
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function buildPluginsSettings() {
-  organizrAPI2("GET", "api/v2/settings/plugin")
-    .done(function (data) {
-      try {
-        let response = data.response;
-        $("#plugin-settings-form").html(buildFormGroup(response.data));
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function buildThemeSettings() {
-  organizrAPI2("GET", "api/v2/settings/theme")
-    .done(function (data) {
-      try {
-        let response = data.response;
-        $("#theme-settings-form").html(buildFormGroup(response.data));
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildCustomizeAppearance() {
-  organizrAPI2("GET", "api/v2/settings/appearance")
+  londerlandAPI2("GET", "api/v2/settings/appearance")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#customize-appearance-form").html(buildFormGroup(response.data));
       initColorPickers("input.pick-a-color-custom-options");
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildSSO() {
-  organizrAPI2("GET", "api/v2/settings/sso")
+  londerlandAPI2("GET", "api/v2/settings/sso")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#sso-form").html(buildFormGroup(response.data));
     })
     .fail(function (xhr) {
-      console.error("Organizr Function: API Connection Failed");
+      console.error("Londerland Function: API Connection Failed");
     });
 }
 function buildSettingsMain() {
-  organizrAPI2("GET", "api/v2/settings/main")
+  londerlandAPI2("GET", "api/v2/settings/main")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#settings-main-form").html(buildFormGroup(response.data));
       changeAuth();
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildUserManagement() {
-  organizrAPI2("GET", "api/v2/users?includeGroups")
+  londerlandAPI2("GET", "api/v2/users?includeGroups")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#manageUserTable").html(buildUserManagementItem(response.data));
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildGroupManagement() {
-  organizrAPI2("GET", "api/v2/groups?includeUsers")
+  londerlandAPI2("GET", "api/v2/groups?includeUsers")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#manageGroupTable").html(buildGroupManagementItem(response.data));
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function buildTabEditor() {
-  organizrAPI2("GET", "api/v2/tabs")
+  londerlandAPI2("GET", "api/v2/tabs")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#tabEditorTable").html(buildTabEditorItem(response.data));
       checkTabHomepageItems();
       addTabSortable();
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function addTabSortable() {
@@ -3390,24 +2568,24 @@ function addEditHomepageItem(id, type) {
   return false;
 }
 function buildCategoryEditor() {
-  organizrAPI2("GET", "api/v2/tabs")
+  londerlandAPI2("GET", "api/v2/tabs")
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#categoryEditorTable").html(buildCategoryEditorItem(response.data));
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
-/* END ORGANIZR API FUNCTIONS */
+/* END LONDERLAND API FUNCTIONS */
 function buildLanguage(replace = false, newLang = null) {
   var languageItems = "";
-  var currentLanguage = getCookie("organizrLanguage")
-    ? getCookie("organizrLanguage")
+  var currentLanguage = getCookie("londerlandLanguage")
+    ? getCookie("londerlandLanguage")
     : window.lang.currentLang;
   var newLangCode = "";
   $.each(languageList, function (i, v) {
@@ -3491,7 +2669,7 @@ function updateUserInformation() {
       post["password"] = password1;
     }
     ajaxloader(".content-wrap", "in");
-    organizrAPI2("PUT", "api/v2/users/" + activeInfo.user.userID, post)
+    londerlandAPI2("PUT", "api/v2/users/" + activeInfo.user.userID, post)
       .done(function (data) {
         try {
           var response = data.response;
@@ -3505,12 +2683,12 @@ function updateUserInformation() {
             "5000"
           );
         } catch (e) {
-          organizrCatchError(e, data);
+          londerlandCatchError(e, data);
         }
         ajaxloader();
       })
       .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update User");
+        LonderlandApiError(xhr, "Update User");
         ajaxloader();
       });
   }
@@ -3518,12 +2696,12 @@ function updateUserInformation() {
 function twoFA(action, type, secret = null) {
   switch (action) {
     case "activate":
-      organizrAPI2("POST", "api/v2/2fa/" + type, {})
+      londerlandAPI2("POST", "api/v2/2fa/" + type, {})
         .done(function (data) {
           try {
             var html = data.response;
           } catch (e) {
-            organizrCatchError(e, data);
+            londerlandCatchError(e, data);
           }
           let div =
             `
@@ -3559,11 +2737,11 @@ function twoFA(action, type, secret = null) {
           });
         })
         .fail(function (xhr) {
-          OrganizrApiError(xhr, "2FA");
+          LonderlandApiError(xhr, "2FA");
         });
       break;
     case "deactivate":
-      organizrAPI2("DELETE", "api/v2/2fa")
+      londerlandAPI2("DELETE", "api/v2/2fa")
         .done(function (data) {
           try {
             message(
@@ -3576,18 +2754,18 @@ function twoFA(action, type, secret = null) {
             );
             $(".2fa-list").replaceWith(buildTwoFA("internal"));
           } catch (e) {
-            organizrCatchError(e, data);
+            londerlandCatchError(e, data);
           }
         })
         .fail(function (xhr) {
-          OrganizrApiError(xhr, "2FA");
+          LonderlandApiError(xhr, "2FA");
         });
       break;
     case "verify":
       var secret = $(".twofa-modal-secret").text();
       var code = $("#twofa-verify").val();
       if (type !== "" && secret !== "" && code !== "") {
-        organizrAPI2("POST", "api/v2/2fa", {
+        londerlandAPI2("POST", "api/v2/2fa", {
           type: type,
           secret: secret,
           code: code,
@@ -3606,11 +2784,11 @@ function twoFA(action, type, secret = null) {
               Swal.close();
               twoFA("save", type, secret);
             } catch (e) {
-              organizrCatchError(e, data);
+              londerlandCatchError(e, data);
             }
           })
           .fail(function (xhr) {
-            OrganizrApiError(xhr, "2FA");
+            LonderlandApiError(xhr, "2FA");
           });
       } else {
         message(
@@ -3624,7 +2802,7 @@ function twoFA(action, type, secret = null) {
       }
       break;
     case "save":
-      organizrAPI2("PUT", "api/v2/2fa", { type: type, secret: secret })
+      londerlandAPI2("PUT", "api/v2/2fa", { type: type, secret: secret })
         .done(function (data) {
           try {
             var html = data.response;
@@ -3638,11 +2816,11 @@ function twoFA(action, type, secret = null) {
             );
             $(".2fa-list").replaceWith(buildTwoFA(type));
           } catch (e) {
-            organizrCatchError(e, data);
+            londerlandCatchError(e, data);
           }
         })
         .fail(function (xhr) {
-          OrganizrApiError(xhr, "2FA");
+          LonderlandApiError(xhr, "2FA");
         });
       break;
   }
@@ -3657,7 +2835,7 @@ function buildTwoFA(current) {
                             <span class="circle circle-md bg-info"><i class="mdi mdi-webpack mdi-24px"></i></span>
                         </li>
                         <li class="col-middle">
-                            <h5>Organizr Authenticator</h5>
+                            <h5>Londerland Authenticator</h5>
                             <h5><span lang="en">Current</span></h5>
                         </li>
                     </ul>
@@ -3705,30 +2883,12 @@ function buildTwoFA(current) {
     `;
   return element;
 }
-function scrapeCall() {
-  // Define the URL to scrape [only supports GET at the moment
-  var url = "https://api.github.com/users/causefx/repos";
-  // Define callbacks variable first
-  var callbacks = $.Callbacks();
-  // Add functions that will deal with the data
-  callbacks.add(scrapeFunction);
-  // Call the API function to scrape the page you want [types = 'json' or 'html']
-  scrapeAPI(url, callbacks, "json");
-}
-function scrapeFunction(data) {
-  // Here you would do whatever you like
-  if (data.data.result == "Success") {
-    console.log("Success!!!");
-  }
-  console.log("data:");
-  console.log(data);
-}
 function scrapeAPI(url, callbacks = null, type = null) {
   if (typeof url === "undefined") {
     console.log("error");
     return false;
   }
-  organizrAPI2("POST", "api/v2/homepage/scrape", { url: url, type: type })
+  londerlandAPI2("POST", "api/v2/homepage/scrape", { url: url, type: type })
     .done(function (data) {
       try {
         let response = data.response;
@@ -3738,15 +2898,15 @@ function scrapeAPI(url, callbacks = null, type = null) {
           }
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Scrape");
+      LonderlandApiError(xhr, "Scrape");
     });
 }
 function revokeToken(id) {
-  organizrAPI2("DELETE", "api/v2/token/" + id, {})
+  londerlandAPI2("DELETE", "api/v2/token/" + id, {})
     .done(function (data) {
       try {
         $("#token-" + id).fadeOut();
@@ -3759,12 +2919,12 @@ function revokeToken(id) {
           "3500"
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
       ajaxloader();
-      OrganizrApiError(xhr, "Revoke Token");
+      LonderlandApiError(xhr, "Revoke Token");
     });
 }
 function buildActiveTokens(array) {
@@ -3976,7 +3136,7 @@ function accountManager(user) {
 			</div>
 		</div>
 		`;
-    $(".organizr-area").after(accountDiv);
+    $(".londerland-area").after(accountDiv);
     pageLoad();
   }
 }
@@ -4096,59 +3256,14 @@ function userMenu(user) {
   );
 }
 function menuExtraTabs() {
-  return [
-    {
-      id: 99999991,
-      type: 2,
-      group_id: 1,
-      name: "Github Repo",
-      access_url: "https://github.com/causefx/organizr",
-      url: "https://github.com/causefx/organizr",
-      image: "fontawesome::github",
-      active: activeInfo.settings.menuLink.githubMenuLink,
-      ping_url: null,
-    },
-    {
-      id: 99999992,
-      type: 1,
-      group_id: 1,
-      name: "Organizr Support",
-      access_url: "https://organizr.app/support",
-      url: "https://organizr.app/support",
-      image: "fontawesome::life-ring",
-      active: activeInfo.settings.menuLink.organizrSupportMenuLink,
-      ping_url: null,
-    },
-    {
-      id: 99999993,
-      type: 2,
-      group_id: 1,
-      name: "Organizr Docs",
-      access_url: "https://docs.organizr.app",
-      url: "https://docs.organizr.app",
-      image: "simpleline::docs",
-      active: activeInfo.settings.menuLink.organizrDocsMenuLink,
-      ping_url: null,
-    },
-    {
-      id: 99999994,
-      type: 1,
-      group_id: 1,
-      name: "Feature Request",
-      access_url: "https://feature.organizr.app",
-      url: "https://feature.organizr.app",
-      image: "simpleline::arrow-up-circle",
-      active: activeInfo.settings.menuLink.organizrFeatureRequestLink,
-      ping_url: null,
-    },
-  ];
+  return [];
 }
 function menuExtras(active) {
   let adminMenu = '<li class="devider"></li>';
-  let extraOrganizrLinks = menuExtraTabs();
+  let extraLonderlandLinks = menuExtraTabs();
   activeInfo.tabs = [].concat(activeInfo.tabs, menuExtraTabs());
 
-  $.each(extraOrganizrLinks, function (i, v) {
+  $.each(extraLonderlandLinks, function (i, v) {
     tabInformation[v.id] = {
       id: v.id,
       name: cleanClass(v.name),
@@ -4167,14 +3282,14 @@ function menuExtras(active) {
         : "";
   });
   if (active === true) {
-    return activeInfo.settings.menuLink.organizrSignoutMenuLink
+    return activeInfo.settings.menuLink.londerlandSignoutMenuLink
       ? `
 			<li class="devider"></li>
 			<li id="sign-out"><a class="waves-effect" onclick="logout();"><i class="fa fa-sign-out fa-fw"></i> <span class="hide-menu" lang="en">Logout</span></a></li>
 		` + adminMenu
       : "" + adminMenu;
   } else {
-    return activeInfo.settings.menuLink.organizrSignoutMenuLink
+    return activeInfo.settings.menuLink.londerlandSignoutMenuLink
       ? `
 			<li class="devider"></li>
 			<li id="menu-login"><a class="waves-effect show-login" href="javascript:void(0)"><i class="mdi mdi-login fa-fw"></i> <span class="hide-menu" lang="en">Login/Register</span></a></li>
@@ -4231,7 +3346,7 @@ function buildFrame(id, split = null) {
   let extra = split ? "right-" : "";
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole("Build Frame", "No Tab Info Found... Id: " + id, "error");
+    londerlandConsole("Build Frame", "No Tab Info Found... Id: " + id, "error");
     return false;
   }
   var sandbox = activeInfo.settings.misc.sandbox;
@@ -4276,7 +3391,7 @@ function buildInternalContainer(id, split = null) {
 function buildMenuList(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole(
+    londerlandConsole(
       "Build Menu List",
       "No Tab Info Found... Id: " + id,
       "error"
@@ -4372,7 +3487,7 @@ function tabProcess(arrayItems) {
             $(internalList).appendTo($(".internal-listing-right"));
             if (v.preload) {
               var newTab = $("#internal-" + v.id);
-              organizrConsole(
+              londerlandConsole(
                 "Tab Function",
                 "Preloading new tab for: " + cleanClass(v.name)
               );
@@ -4392,7 +3507,7 @@ function tabProcess(arrayItems) {
             $(iFrameList).appendTo($(".iFrame-listing-right"));
             if (v.preload) {
               var newTab = $("#container-" + v.id);
-              organizrConsole(
+              londerlandConsole(
                 "Tab Function",
                 "Preloading new tab for: " + cleanClass(v.name)
               );
@@ -4411,7 +3526,7 @@ function tabProcess(arrayItems) {
           case "popout":
             break;
           default:
-            organizrConsole("Tab Function", "Action not set", "error");
+            londerlandConsole("Tab Function", "Action not set", "error");
         }
       }
     });
@@ -4433,37 +3548,37 @@ function buildLogin() {
   closeSideMenu();
   removeMenuActive();
   $("#menu-login a").addClass("active");
-  organizrAPI2("GET", "api/v2/page/login")
+  londerlandAPI2("GET", "api/v2/page/login")
     .done(function (data) {
       try {
         var response = data.response;
-        organizrConsole("Organizr Function", "Opening Login Page");
+        londerlandConsole("Londerland Function", "Opening Login Page");
         $(".login-area").html(response.data);
-        setHash("OrganizrLogin");
+        setHash("LonderlandLogin");
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Login Error");
+      LonderlandApiError(xhr, "Login Error");
     });
   $("#preloader").fadeOut();
 }
 function buildLockscreen() {
   $("#preloader").fadeIn();
   closeSideMenu();
-  organizrAPI2("GET", "api/v2/page/lockscreen")
+  londerlandAPI2("GET", "api/v2/page/lockscreen")
     .done(function (data) {
       try {
         var response = data.response;
-        organizrConsole("Organizr Function", "Adding Lockscreen");
+        londerlandConsole("Londerland Function", "Adding Lockscreen");
         $(response.data).appendTo($("body"));
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   $("#preloader").fadeOut();
 }
@@ -4513,7 +3628,7 @@ function buildSplashScreen(json) {
     '<li ><a href="javascript:void(0)" onclick="$(\'.splash-screen\').removeClass(\'hidden\').addClass(\'show\')"><i class="ti-layout-grid2 fa-fw"></i> <span lang="en">Splash Page</span></a></li>';
   if (items) {
     closeSideMenu();
-    organizrConsole("Organizr Function", "Adding Splash Screen");
+    londerlandConsole("Londerland Function", "Adding Splash Screen");
     var splash =
       `
         <section id="splashScreen" class="lock-screen splash-screen default-scroller fade ${hiddenSplash}">
@@ -4599,7 +3714,7 @@ function buildTabTypeSelect(tabID, typeID, disabled) {
   var array = [
     {
       type_id: 0,
-      type: "Organizr",
+      type: "Londerland",
     },
     {
       type_id: 1,
@@ -5042,7 +4157,7 @@ function buildTabEditorItem(array) {
   return tabList;
 }
 function editTabForm(id) {
-  organizrAPI2("GET", "api/v2/tabs/" + id, true)
+  londerlandAPI2("GET", "api/v2/tabs/" + id, true)
     .done(function (data) {
       try {
         let response = data.response;
@@ -5064,11 +4179,11 @@ function editTabForm(id) {
           $("#edit-tab-form [name=url]").prop("disabled", null);
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Tab Error");
+      LonderlandApiError(xhr, "Tab Error");
     });
 }
 function getSubmitSettingsFormValueSingle(form, index, value) {
@@ -5154,12 +4269,12 @@ function submitSettingsForm(form, homepageItem = false) {
     default:
   }
   if (size > 0) {
-    organizrAPI2("PUT", "api/v2/config", submit, true)
+    londerlandAPI2("PUT", "api/v2/config", submit, true)
       .done(function (data) {
         try {
           var response = data.response;
         } catch (e) {
-          organizrCatchError(e, data);
+          londerlandCatchError(e, data);
         }
         if (callbacks) {
           callbacks.fire();
@@ -5208,7 +4323,7 @@ function submitSettingsForm(form, homepageItem = false) {
         }
       })
       .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update Error");
+        LonderlandApiError(xhr, "Update Error");
       });
     $("#" + form + " :input").each(function () {
       var input = $(this);
@@ -5250,13 +4365,13 @@ function submitHomepageOrder() {
   });
   var callbacks = $.Callbacks();
   if (size > 0) {
-    organizrAPI2("PUT", "api/v2/config", submit, true)
+    londerlandAPI2("PUT", "api/v2/config", submit, true)
       .done(function (data) {
         try {
           var response = data.response;
           $("#submitHomepageOrder-save").addClass("hidden");
         } catch (e) {
-          organizrCatchError(e, data);
+          londerlandCatchError(e, data);
         }
         message(
           "Updated Homepage Order",
@@ -5271,7 +4386,7 @@ function submitHomepageOrder() {
         }
       })
       .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update Error");
+        LonderlandApiError(xhr, "Update Error");
       });
   } else {
     console.log("add error");
@@ -5306,12 +4421,12 @@ function submitTabOrder(newTabs) {
   }
   var callbacks = $.Callbacks();
   callbacks.add(buildTabEditor);
-  organizrAPI2("PUT", "api/v2/tabs", data, true)
+  londerlandAPI2("PUT", "api/v2/tabs", data, true)
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       message(
         "Tab Order Updated",
@@ -5327,7 +4442,7 @@ function submitTabOrder(newTabs) {
       $(".saveTabOrderButton").addClass("hidden");
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Update Error");
+      LonderlandApiError(xhr, "Update Error");
     });
 }
 function submitCategoryOrder() {
@@ -5346,12 +4461,12 @@ function submitCategoryOrder() {
       data.push(temp);
     }
   });
-  organizrAPI2("PUT", "api/v2/categories", data, true)
+  londerlandAPI2("PUT", "api/v2/categories", data, true)
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       message(
         "Category Order Updated",
@@ -5367,649 +4482,24 @@ function submitCategoryOrder() {
       $(".saveTabOrderButton").addClass("hidden");
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Update Error");
+      LonderlandApiError(xhr, "Update Error");
     });
 }
-function buildTR(array, type, badge) {
-  var listing = "";
-  var arrayItems = array.split("|");
-  if (hasValue(arrayItems) === true) {
-    $.each(arrayItems, function (i, v) {
-      listing +=
-        `
-			<tr>
-				<td  width="70"><span class="badge text-bg-` +
-        badge +
-        `"><span lang="en">` +
-        type +
-        `</span></span></td>
-				<td class="text-capitalize">` +
-        updateIssueLink(v) +
-        `</td>
-			</tr>
-			`;
-    });
-    return listing;
-  }
-  return " ";
-}
-function buildVersion(array) {
-  var x = 0;
-  var versions =
-    '<div class="col-lg-3 col-md-4 col-6 m-b-10 float-end"><button onclick="manualUpdateCheck()" class="btn btn-sm btn-primary btn-rounded waves-effect waves-light float-end row b-none buttonManualUpdateCheck" type="button"><span class="btn-label"><i class="fa fa-globe"></i></span><span lang="en">Check For Updates</span></button></div><div class="clearfix"></div>';
-  var listing = "";
-  var currentV = currentVersion;
-  var installed = "";
-  var spanClass = "";
-  var button = "";
-  $.each(array, function (i, v) {
-    listing += buildTR(v.new, "NEW", "info");
-    listing += buildTR(v.fixed, "FIXED", "success");
-    listing += buildTR(v.notes, "NOTE", "warning");
-    if (currentV === i) {
-      button =
-        '<button class="btn btn-sm btn-success btn-rounded waves-effect waves-light disabled float-end row b-none" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Installed</span></button>';
-    } else if (x === 0) {
-      button =
-        '<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none" type="button" onclick="updateNow();"><span class="btn-label"><i class="fa fa-download"></i></span><span lang="en">Install Update</span></button>';
-    }
-    let tableClass = x == 0 ? "" : "hidden";
-    let divClassPadding = x == 0 ? "" : "p-b-0";
-    let divClassMargin = x == 0 ? "" : "m-b-0";
-    let toggleButtonText = x == 0 ? "Less" : "More";
-    let toggleButtonIcon = x == 0 ? "up" : "down";
-    let divStatus = x == 0 ? "opened" : "closed";
-    versions +=
-      `
-		<div class="white-box bg-org ${divClassPadding} update-main-div-${x}" data-status="${divStatus}">
-			<div class="col-lg-3 col-md-4 col-6 float-end">` +
-      button +
-      `</div>
-			<h3 class="box-title ${divClassMargin} update-box-title-${x}">` +
-      i +
-      `</h3>
-			<div class="row sales-report">
-				<div class="col-lg-12 col-md-12 col-12">
-					<div class="float-start">
-						<span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
-      moment(v.date).format("LL") +
-      `">` +
-      moment.utc(v.date, "YYYY-MM-DD hh:mm[Z]").local().fromNow() +
-      `</span>
-						<p class="text-info p-0">` +
-      v.title +
-      `</p>
-					</div>
-					<button class="btn btn-sm btn-primary btn-rounded waves-effect waves-light float-end" onclick="toggleGithubVersion(${x})" type="button"><span class="btn-label"><i class="fa fa-long-arrow-${toggleButtonIcon} toggleButtonIcon-${x}"></i></span><span lang="en" class="toggleButton-${x}">${toggleButtonText}</span></button>
-				</div>
-			</div>
-			<div class="table-responsive ${tableClass} update-table-${x}">
-				<table class="table inverse-bordered-table">
-					<tbody>
-						` +
-      listing +
-      `
-					</tbody>
-				</table>
-			</div>
-		</div>
-		`;
-    listing = "";
-    button = "";
-    x++;
-  });
-  return versions;
-}
-function toggleGithubVersion(id) {
-  let status = $(".update-main-div-" + id).attr("data-status");
-  if (status == "opened") {
-    $(".update-main-div-" + id).attr("data-status", "closed");
-    $(".update-main-div-" + id).addClass("p-b-0");
-    $(".update-box-title-" + id).addClass("m-b-0");
-    $(".update-table-" + id).addClass("hidden");
-    $(".toggleButton-" + id).text("More");
-    $(".toggleButtonIcon-" + id)
-      .removeClass("fa-long-arrow-up")
-      .addClass("fa-long-arrow-down");
-  } else {
-    $(".update-main-div-" + id).attr("data-status", "opened");
-    $(".update-main-div-" + id).removeClass("p-b-0");
-    $(".update-box-title-" + id).removeClass("m-b-0");
-    $(".update-table-" + id).removeClass("hidden");
-    $(".toggleButton-" + id).text("Less");
-    $(".toggleButtonIcon-" + id)
-      .addClass("fa-long-arrow-up")
-      .removeClass("fa-long-arrow-down");
-  }
-}
-function manualUpdateCheck() {
-  $(".buttonManualUpdateCheck").addClass("disabled");
-  $(".buttonManualUpdateCheck i")
-    .removeClass("fa-globe")
-    .addClass("fa-refresh fa-spin");
-  setTimeout(function () {
-    updateCheck();
-    checkCommitLoad();
-  }, 1000);
-  setTimeout(function () {
-    $(".buttonManualUpdateCheck").removeClass("disabled");
-    $(".buttonManualUpdateCheck i")
-      .removeClass("fa-refresh fa-spin fa-globe")
-      .addClass("fa-check");
-  }, 1500);
-  return true;
-}
-function updateCheck() {
-  githubVersions()
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-      for (var a in reverseObject(response)) {
-        var latest = a;
-        break;
-      }
-      if (latest !== currentVersion) {
-        organizrConsole(
-          "Update Function",
-          "Update to " + latest + " is available",
-          "warning"
-        );
-        if (activeInfo.settings.misc.docker === false) {
-          let tabInfo = findTab("api/v2/page/settings", "access_url");
-          if (tabInfo) {
-            messageSingle(
-              window.lang.translate("Update Available"),
-              latest +
-                " " +
-                window.lang.translate("is available, goto") +
-                ' <a href="javascript:void(0)" onclick="tabActions(event,\'' +
-                tabInfo.id +
-                "');clickPath('update')\"><span lang=\"en\">Update Tab</span></a>",
-              activeInfo.settings.notifications.position,
-              "#FFF",
-              "update",
-              "60000"
-            );
-          }
-        }
-      } else {
-        organizrConsole(
-          "Update Function",
-          "Already running latest version: " + latest,
-          "info"
-        );
-      }
-      $("#githubVersions").html(buildVersion(reverseObject(response)));
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function ignoreNewsId(id) {
-  organizrAPI2("POST", "api/v2/news/" + id, {})
-    .done(function (data) {
-      try {
-        let response = data.response;
-        message(
-          "News Item",
-          "Item now ignored",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-        $(".newsItem-" + id).remove();
-        $(".newsHeart-" + id).remove();
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "News");
-    });
-}
-function newsLoad() {
-  newsJSON()
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-        var items = [];
-        var limit = 5;
-        var count = 0;
-        organizrAPI2("get", "api/v2/news")
-          .done(function (data) {
-            try {
-              let ignoredIds = data.response.data;
-              ignoredIds = ignoredIds == null ? [] : ignoredIds;
-              $.each(response, function (i, v) {
-                count++;
-                let ignore = ignoredIds.includes(v.id);
-                let alertDefined =
-                  typeof v.important !== "undefined" && v.important !== false;
-                let alert =
-                  alertDefined && ignore == false
-                    ? `<span class="animated loop-animation flash text-danger mouse newsItem-${v.id}" onclick="ignoreNewsId('${v.id}')">&nbsp; <i class="ti-alert"></i>&nbsp; Important Message - Click me to Ignore</span>`
-                    : "";
-                let heartBeat =
-                  alertDefined && ignore == false
-                    ? `<div class="notify float-start newsHeart-${v.id}"><span class="heartbit"></span><span class="point"></span></div>`
-                    : "";
-                let newBody =
-                  `
-			                <h5 class="float-start"><i class="ti-calendar"></i>&nbsp;` +
-                  moment(v.date).format("LLL") +
-                  alert +
-                  `</h5>
-			                <h5 class="float-end">` +
-                  v.author +
-                  `</h5>
-			                <div class="clearfix"></div>
-			                ` +
-                  (v.subTitle ? "<h5>" + v.subTitle + "</h5>" : "") +
-                  `
-			                <p>` +
-                  v.body +
-                  `</p>
-			                `;
-                if (count <= limit) {
-                  items[i] = {
-                    title: v.title + heartBeat,
-                    body: newBody,
-                  };
-                }
-              });
-              var body = buildAccordion(items, true);
-              $("#organizrNewsPanel").html(body);
-            } catch (e) {
-              organizrCatchError(e, data);
-            }
-          })
-          .fail(function (xhr) {
-            OrganizrApiError(xhr, "News");
-          });
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function checkPluginUpdates() {
-  if (!activeInfo.user.loggedin || activeInfo.user.groupID > 1) {
-    return false;
-  }
-  organizrAPI2("get", "api/v2/plugins/marketplace")
-    .done(function (data) {
-      try {
-        let update = false;
-        let pluginsNeedingUpdate = [];
-        let plugins = data.response.data;
-        $.each(plugins, function (i, v) {
-          if (v.needs_update) {
-            update = true;
-            pluginsNeedingUpdate.push(i);
-          }
-        });
-        if (update) {
-          pluginsNeedingUpdate = "[" + pluginsNeedingUpdate.join(", ") + "]";
-          messageSingle(
-            window.lang.translate("Update Available"),
-            '<a href="javascript:void(0)" onclick="shortcut(\'plugin-marketplace\');"><span lang="en">The following plugin(s) need updates</span></a>: ' +
-              pluginsNeedingUpdate,
-            activeInfo.settings.notifications.position,
-            "#FFF",
-            "update",
-            "600000"
-          );
-        }
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Marketplace");
-    });
-}
-function checkCommitLoad() {
-  if (
-    activeInfo.settings.misc.docker &&
-    activeInfo.settings.misc.githubCommit !== "n/a" &&
-    activeInfo.settings.misc.githubCommit !== null
-  ) {
-    if (checkCommitLoadStatus == false) {
-      checkCommitLoadStatus = true;
-      getLatestCommitJSON()
-        .done(function (data) {
-          try {
-            var latest = data.sha.toString().trim();
-            var current = activeInfo.settings.misc.githubCommit
-              .toString()
-              .trim();
-            var link =
-              "https://github.com/causefx/Organizr/compare/" +
-              current +
-              "..." +
-              latest;
-            if (latest !== current) {
-              messageSingle(
-                window.lang.translate("Update Available"),
-                ' <a href="' +
-                  link +
-                  '" target="_blank"><span lang="en">Compare Difference</span></a> <span lang="en">or</span> <a href="javascript:void(0)" onclick="updateNow()"><span lang="en">Update Now</span></a>',
-                activeInfo.settings.notifications.position,
-                "#FFF",
-                "update",
-                "600000"
-              );
-            } else {
-              organizrConsole(
-                "Update Function",
-                "Organizr Docker - Up to date"
-              );
-            }
-          } catch (e) {
-            organizrCatchError(e, data);
-          }
-          checkCommitLoadStatus = false;
-        })
-        .fail(function (xhr) {
-          console.error("Organizr Function: Github Connection Failed");
-          checkCommitLoadStatus = false;
-        });
-    }
-  }
-}
-function sponsorLoad() {
-  sponsorsJSON()
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-      $("#sponsorList").html(buildSponsor(response));
-      $("#sponsorListModals").html(buildSponsorModal(response));
-      initCarousel(".sponsor-items", { autoplay: true });
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function backersLoad() {
-  organizrAPI2("GET", "api/v2/sponsors/all")
+function getLonderlandBackups() {
+  londerlandAPI2("GET", "api/v2/backup")
     .done(function (data) {
       try {
         let json = data.response;
-        $("#backersList").html(buildBackers(json.data));
-        initCarousel(".backers-items", { autoplay: true });
+        $("#backup-file-list").html(buildLonderlandBackups(json.data));
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
-function buildBackers(array) {
-  let backers = "";
-  $.each(array, function (i, v) {
-    if (v.type == "USER" && v.role == "BACKER" && v.isActive) {
-      v.name = v.name ? v.name : "User";
-      v.image = v.image ? v.image : "plugins/images/default_user.png";
-      backers += `
-		        <!-- /.usercard -->
-		        <div class="item lazyload recent-sponsor imageSource"  data-src="${v.image}">
-		            <span class="elip recent-title">${v.name}</span>
-		        </div>
-		        <!-- /.usercard-->
-		    `;
-    }
-  });
-  backers += `
-        <!-- /.usercard -->
-        <div class="item lazyload recent-sponsor mouse imageSource mouse" onclick="window.open('https://opencollective.com/organizr', '_blank')" data-src="plugins/images/sponsor-open-collective.png">
-            <span class="elip recent-title" lang="en">You</span>
-        </div>
-        <!-- /.usercard-->
-    `;
-  return backers;
-}
-function sponsorDetails(id) {
-  sponsorsJSON()
-    .done(function (data) {
-      try {
-        let response = JSON.parse(data);
-        let coupon = response[id].coupon == null ? false : true;
-        let couponAbout = response[id].coupon_about == null ? false : true;
-        let extraInfo =
-          coupon && couponAbout
-            ? `
-				<hr/>
-		        <h3>Coupon Code:</h3>
-		        <p><span class="badge rounded-pill text-bg-info float-end">${response[id].coupon}</span>
-		        <span class=" float-start">${response[id].coupon_about}</span></p>
-		    `
-            : "";
-        if (typeof response[id].logo_dark !== "undefined") {
-          if (activeInfo.style == "dark") {
-            response[id].logo = response[id].logo_dark;
-          }
-        }
-        let html = `
-		        <div class="card card-default">
-                    <div class="card-header">${response[id].company_name}</div>
-                    <div class="card-wrapper collapse show">
-                        <div class="card-body">
-                            <div class="overlay-box">
-                                <div class="user-content">
-                                    <a href="javascript:void(0)"><img src="${response[id].logo}" class="thumb-lg rounded-circle" alt="img"></a>
-                                    <h4 class="text-white">${response[id].company_name}</h4>
-                                    <h5 class="text-white"><a href="${response[id].website}" target="_blank">Website</a></h5>
-                                </div>
-                            </div>
-                            <hr/>
-                            <div class="text-start">${response[id].about} ${extraInfo}</div>
-                        </div>
-                    </div>
-                </div>
-		    `;
-        Swal.fire({
-          html: createElementFromHTML(html),
-          showConfirmButton: false,
-          customClass: { popup: "bg-org" },
-        });
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function sponsorAbout(id, array) {
-  var coupon = array.coupon != null;
-  var couponAbout = array.coupon_about != null;
-  var extraInfo =
-    coupon && couponAbout
-      ? `
-        <h3>Coupon Code:</h3>
-        <p><span class="badge rounded-pill text-bg-info float-end">` +
-        array.coupon +
-        `</span>
-        <span class=" float-start">` +
-        array.coupon_about +
-        `</span></p>
-    `
-      : "";
-  if (typeof array.logo_dark !== "undefined") {
-    if (activeInfo.style == "dark") {
-      array.logo = array.logo_dark;
-    }
-  }
-  return (
-    `
-        <!--  modal content -->
-        <div id="sponsor-` +
-    id +
-    `-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel-` +
-    id +
-    `" aria-hidden="true" style="display: none;">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        <h4 class="modal-title" id="mySmallModalLabel-` +
-    id +
-    `">` +
-    array.company_name +
-    `</h4> </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="comment-center p-t-10">
-                                    <div class="comment-body b-none">
-                                        <div class="user-img"> <img src="` +
-    array.logo +
-    `" alt="user" class="rounded-circle"> </div>
-                                        <div class="mail-content">
-                                            <h5><a href="` +
-    array.website +
-    `" target="_blank">` +
-    array.company_name +
-    `</a></h5>
-                                            ` +
-    array.about +
-    extraInfo +
-    `
-                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- /.modal-content -->
-            </div>
-            <!-- /.modal-dialog -->
-        </div>
-        <!-- /.modal -->
-    `
-  );
-}
-function buildSponsor(array) {
-  var sponsors = "";
-  $.each(array, function (i, v) {
-    var hasCoupon = "";
-    if (v.about) {
-      if (v.coupon) {
-        hasCoupon = `
-                    <span class="text-center has-coupon-text">Has Coupon</span>
-                    <span class="text-center has-coupon"><i class="fa fa-ticket" aria-hidden="true"></i></span>
-                `;
-      }
-    }
-    var sponsorAboutModal = v.about
-      ? "onclick=\"sponsorDetails('" +
-        i +
-        "');sponsorAnalytics('" +
-        v.company_name +
-        "');\""
-      : "onclick=\"window.open('" +
-        v.website +
-        "', '_blank');sponsorAnalytics('" +
-        v.company_name +
-        "');\"";
-    if (typeof v.logo_dark !== "undefined") {
-      if (activeInfo.style == "dark") {
-        v.logo = v.logo_dark;
-      }
-    }
-    sponsors += `
-            <!-- /.usercard -->
-            <div class="item lazyload recent-sponsor mouse imageSource mouse" ${sponsorAboutModal} data-src="${v.logo}" data-id="${i}">
-                <span class="elip recent-title">${v.company_name}</span>
-                ${hasCoupon}
-            </div>
-            <!-- /.usercard-->
-        `;
-  });
-  sponsors += `
-        <!-- /.usercard -->
-        <div class="item lazyload recent-sponsor mouse imageSource mouse" onclick="window.open('https://www.patreon.com/bePatron?c=1320444&rid=2874514', '_blank')" data-src="plugins/images/sponsor-patreon.png">
-            <span class="elip recent-title" lang="en">Patreon Sponsor</span>
-        </div>
-        <div class="item lazyload recent-sponsor mouse imageSource mouse" onclick="window.open('https://opencollective.com/organizr', '_blank')" data-src="plugins/images/sponsor-open-collective.png">
-            <span class="elip recent-title" lang="en">OpenCollective Sponsor</span>
-        </div>
-        <!-- /.usercard-->
-    `;
-  return sponsors;
-}
-function buildSponsorModal(array) {
-  var sponsors = "";
-  $.each(array, function (i, v) {
-    var sponsorAboutModal = v.about ? sponsorAbout(i, v) : "";
-    sponsors += sponsorAboutModal;
-  });
-  return sponsors;
-}
-function sponsorAnalytics(sponsor_name) {
-  var uuid = activeInfo.settings.misc.uuid;
-  $.ajax({
-    type: "POST",
-    url: "https://api.organizr.app/",
-    data: {
-      sponsor_name: sponsor_name,
-      user_uuid: uuid,
-      cmd: "sponsor",
-    },
-    cache: false,
-    async: true,
-    complete: function (xhr, status) {
-      if (xhr.status === 200) {
-        let result = JSON.parse(xhr.responseText);
-      }
-    },
-  });
-}
-function themeAnalytics(theme_name) {
-  var uuid = activeInfo.settings.misc.uuid;
-  $.ajax({
-    type: "POST",
-    url: "https://api.organizr.app/",
-    data: {
-      theme_name: theme_name,
-      user_uuid: uuid,
-      cmd: "theme",
-    },
-    cache: false,
-    async: true,
-    complete: function (xhr, status) {
-      if (xhr.status === 200) {
-        let result = JSON.parse(xhr.responseText);
-      }
-    },
-  });
-}
-function getOrganizrBackups() {
-  organizrAPI2("GET", "api/v2/backup")
-    .done(function (data) {
-      try {
-        let json = data.response;
-        $("#backup-file-list").html(buildOrganizrBackups(json.data));
-      } catch (e) {
-        organizrCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr);
-    });
-}
-function createOrganizrBackup() {
+function createLonderlandBackup() {
   $("#settings-settings-backup").block({
     message:
       '<p style="margin:0;padding:8px;font-size:24px;" lang="en">Backing up...</p>',
@@ -6019,24 +4509,24 @@ function createOrganizrBackup() {
       backgroundColor: "#707cd2",
     },
   });
-  organizrAPI2("POST", "api/v2/backup", {})
+  londerlandAPI2("POST", "api/v2/backup", {})
     .done(function (data) {
       try {
         let response = data.response;
         if (response) {
-          getOrganizrBackups();
+          getLonderlandBackups();
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#settings-settings-backup").unblock();
     })
     .fail(function (xhr) {
       $("#settings-settings-backup").unblock();
-      OrganizrApiError(xhr, "Backup Error");
+      LonderlandApiError(xhr, "Backup Error");
     });
 }
-function buildOrganizrBackups(array) {
+function buildLonderlandBackups(array) {
   let list = "";
   if (array.total_files > 0) {
     $.each(array.files, function (i, v) {
@@ -6076,42 +4566,9 @@ function buildOrganizrBackups(array) {
   $("#backup-total-size").html(array.total_size);
   return list;
 }
-function updateBar() {
-  return `
-	<div class="white-box m-0">
-        <div class="row">
-            <div class="col-xl-12">
-                <h3 id="update-title" class="box-title float-start"></h3><h3 id="update-time" class="box-title float-end hidden"><span id="update-seconds"></span>&nbsp;<span lang="en">Seconds</span></h3>
-				<div class="clearfix"></div>
-                <div class="progress progress-lg">
-                    <div id="update-bar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 0%;" role="progressbar">0%</div>
-                </div>
-            </div>
-            <h6>If error occurs - Use Esc key to close modal</h6>
-        </div>
-    </div>
-	`;
-}
-function showUpdateBar() {
-  Swal.fire({
-    html: createElementFromHTML(updateBar()),
-    showConfirmButton: false,
-    customClass: { popup: "bg-org" },
-    allowOutsideClick: false,
-  });
-}
-function updateUpdateBar(title, percent, update = false) {
-  $("#update-title").text(title);
-  $("#update-bar").text(percent);
-  $("#update-bar").css("width", percent);
-  if (update) {
-    $("#update-time").removeClass("hidden");
-    countdown(10);
-  }
-}
 function countdown(remaining) {
   if (remaining === 0) {
-    local("set", "message", "Organizr Update|Update Successful|update");
+    local("set", "message", "Londerland Update|Update Successful|update");
     location.reload(true);
   }
   $("#update-seconds").text(remaining);
@@ -6119,186 +4576,13 @@ function countdown(remaining) {
     countdown(remaining - 1);
   }, 1000);
 }
-function dockerUpdate() {
-  if (activeInfo.settings.misc.docker) {
-    showUpdateBar();
-    updateUpdateBar("Starting Download", "20%");
-    messageSingle(
-      window.lang.translate("[DO NOT CLOSE WINDOW]"),
-      window.lang.translate("Starting Update Process"),
-      activeInfo.settings.notifications.position,
-      "#FFF",
-      "success",
-      "60000"
-    );
-    organizrAPI2("GET", "api/v2/update/docker")
-      .done(function (data) {
-        updateUpdateBar("Restarting Organizr in", "100%", true);
-        messageSingle(
-          window.lang.translate("[DO NOT CLOSE WINDOW]"),
-          "Update complete",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "60000"
-        );
-      })
-      .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update Error");
-      });
-  }
-}
-function windowsUpdate() {
-  if (activeInfo.serverOS == "win") {
-    showUpdateBar();
-    updateUpdateBar("Starting Download", "20%");
-    messageSingle(
-      window.lang.translate("[DO NOT CLOSE WINDOW]"),
-      window.lang.translate("Starting Update Process"),
-      activeInfo.settings.notifications.position,
-      "#FFF",
-      "success",
-      "60000"
-    );
-    organizrAPI2("GET", "api/v2/update/windows")
-      .done(function (data) {
-        updateUpdateBar("Restarting Organizr in", "100%", true);
-        messageSingle(
-          window.lang.translate("[DO NOT CLOSE WINDOW]"),
-          "Update complete",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "60000"
-        );
-      })
-      .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update Error");
-      });
-  }
-}
-function linuxUpdate() {
-  if (activeInfo.serverOS !== "win" && !activeInfo.settings.misc.docker) {
-    showUpdateBar();
-    updateUpdateBar("Starting Download", "20%");
-    messageSingle(
-      window.lang.translate("[DO NOT CLOSE WINDOW]"),
-      window.lang.translate("Starting Update Process"),
-      activeInfo.settings.notifications.position,
-      "#FFF",
-      "success",
-      "60000"
-    );
-    organizrAPI2("GET", "api/v2/update/linux")
-      .done(function (data) {
-        updateUpdateBar("Restarting Organizr in", "100%", true);
-        messageSingle(
-          window.lang.translate("[DO NOT CLOSE WINDOW]"),
-          "Update complete",
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "60000"
-        );
-      })
-      .fail(function (xhr) {
-        OrganizrApiError(xhr, "Update Error");
-      });
-  }
-}
-function updateNow() {
-  clearAJAX();
-  if (activeInfo.settings.misc.docker) {
-    dockerUpdate();
-    return false;
-  }
-  if (activeInfo.serverOS === "win") {
-    windowsUpdate();
-    return false;
-  }
-  if (activeInfo.serverOS !== "win" && !activeInfo.settings.misc.docker) {
-    linuxUpdate();
-    return false;
-  }
-  organizrConsole("Update Function", "Starting Update Process");
-  showUpdateBar();
-  updateUpdateBar("Starting Download", "5%");
-  messageSingle(
-    window.lang.translate("[DO NOT CLOSE WINDOW]"),
-    window.lang.translate("Starting Update Process"),
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "60000"
-  );
-  organizrAPI2("GET", "api/v2/update/download/" + activeInfo.branch)
-    .done(function (data) {
-      updateUpdateBar("Starting Unzip", "50%");
-      messageSingle(
-        window.lang.translate("[DO NOT CLOSE WINDOW]"),
-        window.lang.translate("Update File Downloaded"),
-        activeInfo.settings.notifications.position,
-        "#FFF",
-        "success",
-        "60000"
-      );
-      organizrAPI2("GET", "api/v2/update/unzip/" + activeInfo.branch)
-        .done(function (data) {
-          updateUpdateBar("Starting Copy", "70%");
-          messageSingle(
-            window.lang.translate("[DO NOT CLOSE WINDOW]"),
-            window.lang.translate("Update File Unzipped"),
-            activeInfo.settings.notifications.position,
-            "#FFF",
-            "success",
-            "60000"
-          );
-          organizrAPI2("GET", "api/v2/update/move/" + activeInfo.branch)
-            .done(function (data) {
-              updateUpdateBar("Starting Cleanup", "90%");
-              messageSingle(
-                window.lang.translate("[DO NOT CLOSE WINDOW]"),
-                window.lang.translate("Update Files Copied"),
-                activeInfo.settings.notifications.position,
-                "#FFF",
-                "success",
-                "60000"
-              );
-              organizrAPI2("GET", "api/v2/update/cleanup/" + activeInfo.branch)
-                .done(function (data) {
-                  updateUpdateBar("Restarting Organizr in", "100%", true);
-                  messageSingle(
-                    window.lang.translate("[DO NOT CLOSE WINDOW]"),
-                    window.lang.translate("Update Cleanup Finished"),
-                    activeInfo.settings.notifications.position,
-                    "#FFF",
-                    "success",
-                    "60000"
-                  );
-                })
-                .fail(function (xhr) {
-                  OrganizrApiError(xhr, "Update Error");
-                });
-            })
-            .fail(function (xhr) {
-              OrganizrApiError(xhr, "Update Error");
-            });
-        })
-        .fail(function (xhr) {
-          OrganizrApiError(xhr, "Update Error");
-        });
-    })
-    .fail(function (xhr) {
-      OrganizrApiError(xhr, "Update Error");
-    });
-}
 function settingsAPI2(post, callbacks = null, asyncValue = true) {
-  organizrAPI2("POST", post.api, post.data, asyncValue)
+  londerlandAPI2("POST", post.api, post.data, asyncValue)
     .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       message(
         post.messageTitle,
@@ -6320,17 +4604,17 @@ $.xhrPool.abortAll = function (url) {
   $(this).each(function (i, jqXHR) {
     //  cycle through list of recorded connection
     if (!url || url === jqXHR.requestURL) {
-      organizrConsole("Organizr API Abort", jqXHR.requestURL, "info");
+      londerlandConsole("Londerland API Abort", jqXHR.requestURL, "info");
       jqXHR.abort(); //  aborts connection
       $.xhrPool.splice(i, 1); //  removes from list by index
     }
   });
 };
 $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-  //organizrConsole('Organizr API Function',options.url,'info');
+  //londerlandConsole('Londerland API Function',options.url,'info');
   jqXHR.requestURL = options.url;
 });
-function organizrAPI2(type, path, data = null, asyncValue = true) {
+function londerlandAPI2(type, path, data = null, asyncValue = true) {
   $.xhrPool.abortAll(path);
   var timeout = 10000;
   switch (path) {
@@ -6416,84 +4700,84 @@ function organizrAPI2(type, path, data = null, asyncValue = true) {
         contentType: "application/json",
       });
     default:
-      console.warn("Organizr API: Method Not Supported");
+      console.warn("Londerland API: Method Not Supported");
   }
 }
-function loadSettingsPage2(api, element, organizrFn) {
+function loadSettingsPage2(api, element, londerlandFn) {
   $(element).html(
     '<h2 class="col-xl-12 m-t-0 text-center card card-body bg-org"><i class="fa fa-spin fa-refresh"></i><br> <span lang="en">Loading</span></h2><div class="clearfix"></div>'
   );
-  organizrAPI2("get", api)
+  londerlandAPI2("get", api)
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
-      organizrConsole("Organizr Function", "Loading " + organizrFn);
+      londerlandConsole("Londerland Function", "Loading " + londerlandFn);
       $(element).html(response.data);
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function loadInternal(id, split = null) {
   let extra = split ? "right-" : "";
   let tabInfo = findTab(id);
   if (!tabInfo) {
-    organizrConsole("Load Internal", "No Tab Info Found... Id: " + id, "error");
+    londerlandConsole("Load Internal", "No Tab Info Found... Id: " + id, "error");
     return false;
   }
   let url = tabInfo.access_url;
-  organizrAPI2("get", url)
+  londerlandAPI2("get", url)
     .done(function (data) {
       try {
         var html = data.response;
         $("#internal-" + extra + id).html(html.data);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function loadInternalOriginal(url, tabName) {
-  organizrAPI("get", url)
+  londerlandAPI("get", url)
     .done(function (data) {
       try {
         var html = JSON.parse(data);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       $("#internal-" + tabName).html(html.data);
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
-function loadSettingsPage(api, element, organizrFn) {
-  organizrAPI("get", api)
+function loadSettingsPage(api, element, londerlandFn) {
+  londerlandAPI("get", api)
     .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
-      organizrConsole("Organizr Function", "Loading " + organizrFn);
+      londerlandConsole("Londerland Function", "Loading " + londerlandFn);
       $(element).html(response.data);
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function settingsAPI(post, callbacks = null, asyncValue = true) {
-  organizrAPI("POST", post.api, post, asyncValue)
+  londerlandAPI("POST", post.api, post, asyncValue)
     .done(function (data) {
       try {
         var response = JSON.parse(data);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       message(
         post.messageTitle,
@@ -6511,7 +4795,7 @@ function settingsAPI(post, callbacks = null, asyncValue = true) {
       console.error(post.error);
     });
 }
-function organizrAPI(type, path, data = null, asyncValue = true) {
+function londerlandAPI(type, path, data = null, asyncValue = true) {
   var timeout = 10000;
   switch (path) {
     case "api/?v1/windows/update":
@@ -6551,50 +4835,15 @@ function organizrAPI(type, path, data = null, asyncValue = true) {
         },
       });
     default:
-      console.warn("Organizr API: Method Not Supported");
+      console.warn("Londerland API: Method Not Supported");
   }
-}
-function githubVersions() {
-  return $.ajax({
-    url:
-      "https://raw.githubusercontent.com/causefx/Organizr/" +
-      activeInfo.branch +
-      "/js/version.json",
-  });
-}
-function sponsorsJSON() {
-  return $.ajax({
-    url: "https://raw.githubusercontent.com/causefx/Organizr/v2-develop/js/sponsors.json",
-  });
-}
-function newsJSON() {
-  return $.ajax({
-    url: "https://raw.githubusercontent.com/causefx/Organizr/v2-develop/js/news.json",
-  });
-}
-function getLatestCommitJSON() {
-  return $.ajax({
-    url:
-      "https://api.github.com/repos/causefx/Organizr/commits/" +
-      activeInfo.branch,
-  });
-}
-function marketplaceJSON(type) {
-  return $.ajax({
-    url:
-      "https://raw.githubusercontent.com/causefx/Organizr/v2-" +
-      type +
-      "/" +
-      type +
-      ".json",
-  });
 }
 function allIcons() {
   return $.ajax({
     url: "js/icons.json",
   });
 }
-function organizrConnect(path) {
+function londerlandConnect(path) {
   return $.ajax({
     url: path,
   });
@@ -6610,40 +4859,40 @@ function changeSettingsMenu(path) {
   $("#settingsBreadcrumb").html(menu);
 }
 function buildWizard() {
-  organizrAPI2("GET", "api/v2/page/wizard")
+  londerlandAPI2("GET", "api/v2/page/wizard")
     .done(function (data) {
       try {
         var json = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
-      organizrConsole("Organizr Function", "Starting Install Wizard");
-      $(json.data).appendTo($(".organizr-area"));
-      $(".organizr-area").removeClass("hidden");
+      londerlandConsole("Londerland Function", "Starting Install Wizard");
+      $(json.data).appendTo($(".londerland-area"));
+      $(".londerland-area").removeClass("hidden");
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Wiizard Error");
+      LonderlandApiError(xhr, "Wiizard Error");
     });
   $("#preloader").fadeOut();
 }
 function buildDependencyCheck(orgdata) {
-  organizrAPI2("GET", "api/v2/page/dependencies")
+  londerlandAPI2("GET", "api/v2/page/dependencies")
     .done(function (data) {
       try {
         var json = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
-      organizrConsole("Organizr Function", "Starting Dependencies Check");
-      $(json.data).appendTo($(".organizr-area"));
-      $(".organizr-area").removeClass("hidden");
+      londerlandConsole("Londerland Function", "Starting Dependencies Check");
+      $(json.data).appendTo($(".londerland-area"));
+      $(".londerland-area").removeClass("hidden");
       $(buildBrowserInfo()).appendTo($("#browser-info"));
       $("#web-folder").html(buildWebFolder(orgdata));
       $("#php-version-check").html(buildPHPCheck(orgdata));
       $(buildDependencyInfo(orgdata)).appendTo($("#depenency-info"));
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Dependency Error");
+      LonderlandApiError(xhr, "Dependency Error");
     });
   $("#preloader").fadeOut();
 }
@@ -6860,7 +5109,7 @@ function local(type, key, value = null) {
         localStorage.removeItem(key);
         break;
       default:
-        console.warn("Organizr Function: localStorage action not defined");
+        console.warn("Londerland Function: localStorage action not defined");
     }
   }
 }
@@ -6934,28 +5183,28 @@ function logIcon(type, label = false) {
     );
   }
 }
-function toggleKillOrganizrLiveUpdate(interval = 5000) {
-  if ($(".organizr-log-live-update").hasClass("kill-organizr-log")) {
-    clearTimeout(timeouts["organizr-log"]);
-    $(".organizr-log-live-update i").toggleClass(
+function toggleKillLonderlandLiveUpdate(interval = 5000) {
+  if ($(".londerland-log-live-update").hasClass("kill-londerland-log")) {
+    clearTimeout(timeouts["londerland-log"]);
+    $(".londerland-log-live-update i").toggleClass(
       "fa-dot-circle-o animated loop-animation swing"
     );
-    $(".organizr-log-live-update").toggleClass("kill-organizr-log");
+    $(".londerland-log-live-update").toggleClass("kill-londerland-log");
   } else {
-    $(".organizr-log-live-update").toggleClass("kill-organizr-log");
-    organizrLogLiveUpdate(interval);
+    $(".londerland-log-live-update").toggleClass("kill-londerland-log");
+    londerlandLogLiveUpdate(interval);
   }
 }
-function organizrLogLiveUpdate(interval = 5000) {
+function londerlandLogLiveUpdate(interval = 5000) {
   var timeout = interval;
-  let timeoutTitle = "organizr-log";
-  $(".organizr-log-live-update i").toggleClass(
+  let timeoutTitle = "londerland-log";
+  $(".londerland-log-live-update i").toggleClass(
     "fa-dot-circle-o animated loop-animation swing"
   );
-  organizrLogTable.ajax.reload(null, false);
+  londerlandLogTable.ajax.reload(null, false);
   setTimeout(function () {
-    if ($(".organizr-log-live-update").hasClass("kill-organizr-log")) {
-      $(".organizr-log-live-update i").toggleClass(
+    if ($(".londerland-log-live-update").hasClass("kill-londerland-log")) {
+      $(".londerland-log-live-update i").toggleClass(
         "fa-dot-circle-o animated loop-animation swing"
       );
     }
@@ -6964,7 +5213,7 @@ function organizrLogLiveUpdate(interval = 5000) {
     clearTimeout(timeouts[timeoutTitle]);
   }
   timeouts[timeoutTitle] = setTimeout(function () {
-    organizrLogLiveUpdate(timeout);
+    londerlandLogLiveUpdate(timeout);
   }, timeout);
   delete timeout;
 }
@@ -8437,7 +6686,6 @@ function buildRequest(service, div, array) {
                         <div class="input-group-btn">
                             <button type="button" class="btn waves-effect waves-light btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span lang="en">Suggestions</span></button>
                             <ul class="dropdown-menu dropdown-menu-end">
-								<li><a onclick="requestList('org-mod', 'movie');" href="javascript:void(0)" lang="en">Organizr Mod Picks</a></li>
 								<li><a onclick="requestList('theatre-movie', 'movie');" href="javascript:void(0)" lang="en">In Theatres</a></li>
 								<li><a onclick="requestList('top-movie', 'movie');" href="javascript:void(0)" lang="en">Top Movies</a></li>
 								<li><a onclick="requestList('pop-movie', 'movie');" href="javascript:void(0)" lang="en">Popular Movies</a></li>
@@ -8758,7 +7006,7 @@ function processRequest(id, type) {
         type === "tv" &&
         activeInfo.settings.homepage.overseerr.userSelectTv === true
       ) {
-        organizrAPI2(
+        londerlandAPI2(
           "GET",
           "api/v2/homepage/overseerr/metadata/" + type + "/" + id
         )
@@ -8767,18 +7015,18 @@ function processRequest(id, type) {
               let response = data.response;
               buildRequestOverseerrSeasons(response);
             } catch (e) {
-              organizrCatchError(e, data);
+              londerlandCatchError(e, data);
             }
           })
           .fail(function (xhr) {
-            OrganizrApiError(xhr, "Overseerr Error");
+            LonderlandApiError(xhr, "Overseerr Error");
           });
       } else {
         requestActions(id, "add", type);
       }
       return false;
     default:
-      organizrConsole(
+      londerlandConsole(
         "Request Function",
         "Service for Processing not setup",
         "error"
@@ -8796,7 +7044,7 @@ function requestActions(id = null, action = null, type = null, extra = null) {
       overseerrActions(id, action, type, extra);
       break;
     default:
-      organizrConsole(
+      londerlandConsole(
         "Request Function",
         "Service for Request not setup",
         "error"
@@ -8848,7 +7096,7 @@ function overseerrActions(id, action, type = null, extra = null) {
     default:
       return false;
   }
-  organizrAPI2(method, apiUrl, data)
+  londerlandAPI2(method, apiUrl, data)
     .done(function (data) {
       try {
         let response = data.response;
@@ -8869,12 +7117,12 @@ function overseerrActions(id, action, type = null, extra = null) {
         homepageRequests("overseerr");
         cleanCloseSwal();
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
       ajaxloader();
-      OrganizrApiError(xhr, "Overseerr Error");
+      LonderlandApiError(xhr, "Overseerr Error");
     });
 }
 //Ombi actions
@@ -8922,7 +7170,7 @@ function ombiActions(id, action, type, extra = null) {
     default:
       return false;
   }
-  organizrAPI2(method, apiUrl, data)
+  londerlandAPI2(method, apiUrl, data)
     .done(function (data) {
       try {
         let response = data.response;
@@ -8940,12 +7188,12 @@ function ombiActions(id, action, type, extra = null) {
         homepageRequests("ombi");
         ajaxloader();
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
       ajaxloader();
-      OrganizrApiError(xhr, "Ombi Error");
+      LonderlandApiError(xhr, "Ombi Error");
     });
 }
 
@@ -9008,7 +7256,7 @@ function doneTyping() {
       ajaxloader();
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "TMDB Error");
+      LonderlandApiError(xhr, "TMDB Error");
       ajaxloader();
     });
 }
@@ -9034,7 +7282,7 @@ function requestList(list, type, page = 1) {
       ajaxloader();
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "TMDB Error");
+      LonderlandApiError(xhr, "TMDB Error");
       ajaxloader();
     });
 }
@@ -11332,7 +9580,7 @@ function homepagePihole(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePiholeRefresh;
-  organizrAPI2("GET", "api/v2/homepage/pihole/stats")
+  londerlandAPI2("GET", "api/v2/homepage/pihole/stats")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11342,11 +9590,11 @@ function homepagePihole(timeout) {
           $("#homepageOrderPihole").html(buildPihole(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "PiHole-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11362,7 +9610,7 @@ function homepageAdGuard(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageAdGuardRefresh;
-  organizrAPI2("GET", "api/v2/homepage/adguard/stats")
+  londerlandAPI2("GET", "api/v2/homepage/adguard/stats")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11372,11 +9620,11 @@ function homepageAdGuard(timeout) {
           $("#homepageOrderAdGuard").html(buildAdGuard(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "AdGuard-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11401,7 +9649,7 @@ function homepageHealthChecks(tags, timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageHealthChecksRefresh;
-  organizrAPI2("GET", apiUrl)
+  londerlandAPI2("GET", apiUrl)
     .done(function (data) {
       try {
         var response = data.response;
@@ -11412,11 +9660,11 @@ function homepageHealthChecks(tags, timeout) {
           );
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "HealthChecks-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11432,7 +9680,7 @@ function homepageUnifi(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageUnifiRefresh;
-  organizrAPI2("GET", "api/v2/homepage/unifi/data")
+  londerlandAPI2("GET", "api/v2/homepage/unifi/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11441,11 +9689,11 @@ function homepageUnifi(timeout) {
           $("#homepageOrderunifi").html(buildUnifi(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   var timeoutTitle = "Unifi-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11495,7 +9743,7 @@ function homepageDownloader(type, timeout) {
     default:
   }
   let lowerType = type.toLowerCase();
-  organizrAPI2("GET", "api/v2/homepage/" + lowerType + "/queue")
+  londerlandAPI2("GET", "api/v2/homepage/" + lowerType + "/queue")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11503,11 +9751,11 @@ function homepageDownloader(type, timeout) {
           buildDownloaderItem(response.data, type);
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = type + "-Downloader-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11523,7 +9771,7 @@ function homepageStream(type, timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageStreamRefresh;
-  organizrAPI2("GET", "api/v2/homepage/" + type + "/streams")
+  londerlandAPI2("GET", "api/v2/homepage/" + type + "/streams")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11534,11 +9782,11 @@ function homepageStream(type, timeout) {
           buildStream(response.data, type)
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = type + "-Stream-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11564,7 +9812,7 @@ function homepageRecent(type, timeout) {
       break;
     default:
   }
-  organizrAPI2("GET", "api/v2/homepage/" + type + "/recent")
+  londerlandAPI2("GET", "api/v2/homepage/" + type + "/recent")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11575,11 +9823,11 @@ function homepageRecent(type, timeout) {
         );
         initCarousel(".recent-items");
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = type + "-Recent-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -11591,7 +9839,7 @@ function homepageRecent(type, timeout) {
   delete timeout;
 }
 function homepagePlaylist(type, timeout = 30000) {
-  organizrAPI2("GET", "api/v2/homepage/" + type + "/playlists")
+  londerlandAPI2("GET", "api/v2/homepage/" + type + "/playlists")
     .done(function (data) {
       try {
         let response = data.response;
@@ -11602,11 +9850,11 @@ function homepagePlaylist(type, timeout = 30000) {
         );
         initCarousel(".playlist-items");
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function defaultRequestFilter(service) {
@@ -11673,7 +9921,7 @@ function homepageRequests(service, timeout) {
     default:
       return false;
   }
-  organizrAPI2("GET", apiUrl)
+  londerlandAPI2("GET", apiUrl)
     .done(function (data) {
       try {
         let response = data.response;
@@ -11685,11 +9933,11 @@ function homepageRequests(service, timeout) {
         // Default Filter
         defaultRequestFilter(service);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   if (typeof timeouts[service + "-Requests-Homepage"] !== "undefined") {
     clearTimeout(timeouts[service + "-Requests-Homepage"]);
@@ -11708,7 +9956,7 @@ function testAPIConnection(service, data = "") {
     "info",
     "60000"
   );
-  organizrAPI2("POST", "api/v2/test/" + service, data)
+  londerlandAPI2("POST", "api/v2/test/" + service, data)
     .done(function (data) {
       try {
         let response = data.response;
@@ -11721,11 +9969,11 @@ function testAPIConnection(service, data = "") {
           "10000"
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "API Error");
+      LonderlandApiError(xhr, "API Error");
     });
 }
 function getUnifiSite() {
@@ -11737,7 +9985,7 @@ function getUnifiSite() {
     "info",
     "10000"
   );
-  organizrAPI2("POST", "api/v2/test/unifi/site", {})
+  londerlandAPI2("POST", "api/v2/test/unifi/site", {})
     .done(function (data) {
       try {
         var response = data.response;
@@ -11788,11 +10036,11 @@ function getUnifiSite() {
           );
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "API Error");
+      LonderlandApiError(xhr, "API Error");
     });
 }
 function unifiSiteApply(name) {
@@ -11808,7 +10056,7 @@ function unifiSiteApply(name) {
     "10000"
   );
 }
-// FullCalendar's Intl time format for the moment-style formats stored in Organizr's settings
+// FullCalendar's Intl time format for the moment-style formats stored in Londerland's settings
 function calendarTimeFormat(format) {
   let formats = {
     "h(:mm)t": { hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "narrow" },
@@ -11844,11 +10092,11 @@ function calendarEventVisible(event) {
   );
 }
 function applyCalendarFilter() {
-  if (typeof organizrCalendar === "undefined") {
+  if (typeof londerlandCalendar === "undefined") {
     return;
   }
-  organizrCalendar.batchRendering(function () {
-    organizrCalendar.getEvents().forEach(function (event) {
+  londerlandCalendar.batchRendering(function () {
+    londerlandCalendar.getEvents().forEach(function (event) {
       event.setProp("display", calendarEventVisible(event) ? "auto" : "none");
     });
   });
@@ -11861,31 +10109,31 @@ function homepageCalendar(timeout) {
   if (activeInfo.settings.homepage.options.alternateHomepageHeaders) {
     $(".fc-toolbar").addClass("fc-alternate");
   }
-  organizrAPI2("GET", "api/v2/homepage/calendar")
+  londerlandAPI2("GET", "api/v2/homepage/calendar")
     .done(function (data) {
       try {
         let response = data.response;
-        if (typeof organizrCalendar !== "undefined") {
-          organizrCalendar.batchRendering(function () {
-            organizrCalendar.getEventSources().forEach(function (source) {
+        if (typeof londerlandCalendar !== "undefined") {
+          londerlandCalendar.batchRendering(function () {
+            londerlandCalendar.getEventSources().forEach(function (source) {
               source.remove();
             });
-            organizrCalendar.addEventSource(
+            londerlandCalendar.addEventSource(
               prepareCalendarEvents(response.data.events)
             );
-            organizrCalendar.addEventSource(
+            londerlandCalendar.addEventSource(
               prepareCalendarEvents(response.data.ical)
             );
-            organizrCalendar.today();
+            londerlandCalendar.today();
           });
           applyCalendarFilter();
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   if (typeof timeouts["calendar-Homepage"] !== "undefined") {
     clearTimeout(timeouts["calendar-Homepage"]);
@@ -12190,7 +10438,7 @@ function homepageTautulli(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageTautulliRefresh;
-  organizrAPI2("GET", "api/v2/homepage/tautulli/data")
+  londerlandAPI2("GET", "api/v2/homepage/tautulli/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -12199,11 +10447,11 @@ function homepageTautulli(timeout) {
           $("#homepageOrdertautulli").html(buildTautulli(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "Tautulli-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -12607,7 +10855,7 @@ function homepageWeatherAndAir(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageWeatherAndAirRefresh;
-  organizrAPI2("GET", "api/v2/homepage/weather/data")
+  londerlandAPI2("GET", "api/v2/homepage/weather/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -12618,11 +10866,11 @@ function homepageWeatherAndAir(timeout) {
           );
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "WeatherAndAir-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -12747,7 +10995,7 @@ function buildMonitorr(array) {
     return "";
   }
   if (array.error != undefined) {
-    organizrConsole("Monitorr Function", array.error, "error");
+    londerlandConsole("Monitorr Function", array.error, "error");
   } else {
     var services =
       typeof array.services !== "undefined"
@@ -12789,7 +11037,7 @@ function homepageMonitorr(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePiholeRefresh;
-  organizrAPI2("GET", "api/v2/homepage/monitorr/data")
+  londerlandAPI2("GET", "api/v2/homepage/monitorr/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -12799,11 +11047,11 @@ function homepageMonitorr(timeout) {
           $("#homepageOrderMonitorr").html(buildMonitorr(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "Monitorr-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -12923,7 +11171,7 @@ function buildUptimeKuma(array) {
     return "";
   }
   if (array.error != undefined) {
-    organizrConsole("Uptime Kuma Function", array.error, "error");
+    londerlandConsole("Uptime Kuma Function", array.error, "error");
   } else {
     var html = `
         <div id="allUptimeKuma">
@@ -12959,7 +11207,7 @@ function homepageUptimeKuma(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageUptimeKumaRefresh;
-  organizrAPI2("GET", "api/v2/homepage/kuma/data")
+  londerlandAPI2("GET", "api/v2/homepage/kuma/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -12970,11 +11218,11 @@ function homepageUptimeKuma(timeout) {
         }
       } catch (e) {
         console.log(e);
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "UptimeKuma-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -13082,7 +11330,7 @@ function buildPromPage(array) {
     return "";
   }
   if (array.error != undefined) {
-    organizrConsole("PromPage Function", array.error, "error");
+    londerlandConsole("PromPage Function", array.error, "error");
   } else {
     var html = `
         <div id="allPromPage">
@@ -13118,7 +11366,7 @@ function homepagePromPage(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepagePromPageRefresh;
-  organizrAPI2("GET", "api/v2/homepage/prompage/data")
+  londerlandAPI2("GET", "api/v2/homepage/prompage/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -13129,11 +11377,11 @@ function homepagePromPage(timeout) {
         }
       } catch (e) {
         console.log(e);
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "PromPage-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -13149,7 +11397,7 @@ function homepageSpeedtest(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageSpeedtestRefresh;
-  organizrAPI2("GET", "api/v2/homepage/speedtest/data")
+  londerlandAPI2("GET", "api/v2/homepage/speedtest/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -13158,11 +11406,11 @@ function homepageSpeedtest(timeout) {
           $("#homepageOrderSpeedtest").html(buildSpeedtest(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "Speedtest-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -13737,7 +11985,7 @@ function buildNetdataItem(array) {
     display += " ";
 
     if (e.error) {
-      organizrConsole(
+      londerlandConsole(
         "Netdata Function",
         "(Chart " + (i + 1) + "): " + e.error,
         "error"
@@ -13910,7 +12158,7 @@ function homepageNetdata(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageNetdataRefresh;
-  organizrAPI2("GET", "api/v2/homepage/netdata/data")
+  londerlandAPI2("GET", "api/v2/homepage/netdata/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -13921,11 +12169,11 @@ function homepageNetdata(timeout) {
           }
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   var timeoutTitle = "Netdata-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -14173,7 +12421,7 @@ function jackettDownload(url) {
   var post = {
     url: blackholeLink,
   };
-  organizrAPI2("POST", "api/v2/homepage/jackett/download/", post, true)
+  londerlandAPI2("POST", "api/v2/homepage/jackett/download/", post, true)
     .done(function () {
       message(
         "Torrent downloaded",
@@ -14185,7 +12433,7 @@ function jackettDownload(url) {
       );
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Error downloading torrent");
+      LonderlandApiError(xhr, "Error downloading torrent");
     });
 }
 function homepageProwlarr() {
@@ -14366,7 +12614,7 @@ function prowlarrDownload(url) {
     guid: args[0],
     indexerId: args[1],
   };
-  organizrAPI2("POST", "api/v2/homepage/prowlarr/download/", post, true)
+  londerlandAPI2("POST", "api/v2/homepage/prowlarr/download/", post, true)
     .done(function () {
       message(
         "Torrent downloaded",
@@ -14378,7 +12626,7 @@ function prowlarrDownload(url) {
       );
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Error downloading torrent");
+      LonderlandApiError(xhr, "Error downloading torrent");
     });
 }
 function homepageOctoprint(timeout) {
@@ -14386,7 +12634,7 @@ function homepageOctoprint(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageOctoprintRefresh;
-  organizrAPI2("GET", "api/v2/homepage/octoprint/data")
+  londerlandAPI2("GET", "api/v2/homepage/octoprint/data")
     .done(function (data) {
       try {
         let response = data.response;
@@ -14395,11 +12643,11 @@ function homepageOctoprint(timeout) {
           $("#homepageOrderOctoprint").html(buildOctoprint(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "Octoprint-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {
@@ -14587,7 +12835,7 @@ function PopupCenter(url, title, w, h) {
 function getPlexHeaders() {
   let plexTitle =
     activeInfo.appearance.title == ""
-      ? "Organizr"
+      ? "Londerland"
       : cleanClass(activeInfo.appearance.title);
   return {
     Accept: "application/json",
@@ -14825,7 +13073,7 @@ function oidcStart(provider) {
     "api/v2/oidc/" + encodeURIComponent(provider) + "/authorize";
 }
 function testOIDCConnection(provider) {
-  organizrAPI2(
+  londerlandAPI2(
     "GET",
     "api/v2/oidc/" + encodeURIComponent(provider) + "/test",
     ""
@@ -14940,7 +13188,7 @@ function youtubeCheck(title, link) {
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "YouTube API Error");
+      LonderlandApiError(xhr, "YouTube API Error");
       // Fallback: open YouTube search in a new tab/window
       var q = "";
       try {
@@ -15022,13 +13270,6 @@ function requestSearchList(list, page = 1) {
         "&region=US&page=" +
         page;
       break;
-    case "org-mod":
-      url =
-        "https://api.themoviedb.org/4/list/64438?api_key=83cf4ee97bb728eeaf9d4a54e64356a1&language=" +
-        activeInfo.language +
-        "&page=" +
-        page;
-      break;
     default:
   }
   return $.ajax({
@@ -15077,7 +13318,7 @@ function importUsers(type) {
     "success",
     "5000"
   );
-  organizrAPI2("POST", "api/v2/users/import/" + type, { type: type })
+  londerlandAPI2("POST", "api/v2/users/import/" + type, { type: type })
     .done(function (data) {
       try {
         var response = data.response;
@@ -15091,11 +13332,11 @@ function importUsers(type) {
         );
         $(".importUsersButton").attr("disabled", false);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Import Error");
+      LonderlandApiError(xhr, "Import Error");
     });
 }
 //Settings change auth
@@ -15138,7 +13379,7 @@ function changeAuth() {
     $(".switchAuth").parent().parent().parent().hide();
   }
 }
-function organizrSpecialSettings(array) {
+function londerlandSpecialSettings(array) {
   //media search
   if (
     array.settings.homepage.search.enabled == true &&
@@ -15166,7 +13407,7 @@ function organizrSpecialSettings(array) {
 		</div>
 		`;
     $(htmlDOM).prependTo(".navbar-right");
-    $(searchBoxResults).appendTo($(".organizr-area"));
+    $(searchBoxResults).appendTo($(".londerland-area"));
   }
 }
 function checkLocalForwardStatus(array) {
@@ -15178,8 +13419,8 @@ function checkLocalForwardStatus(array) {
       array.settings.login.wanDomain !== "" &&
       array.settings.login.localAddress !== ""
     ) {
-      organizrConsole("Organizr Function", "Local Login Enabled");
-      organizrConsole("Organizr Function", "Local Login Testing...");
+      londerlandConsole("Londerland Function", "Local Login Enabled");
+      londerlandConsole("Londerland Function", "Local Login Testing...");
       let remoteSite = array.settings.login.wanDomain;
       let localSite = array.settings.login.localAddress;
       try {
@@ -15190,14 +13431,14 @@ function checkLocalForwardStatus(array) {
           currentSite.indexOf(remoteSite) !== -1 &&
           currentURL.indexOf("override") === -1
         ) {
-          organizrConsole(
-            "Organizr Function",
+          londerlandConsole(
+            "Londerland Function",
             "Local Login Status: Local | Forwarding Now"
           );
           window.location = localSite;
         } else {
-          organizrConsole(
-            "Organizr Function",
+          londerlandConsole(
+            "Londerland Function",
             "Local Login Status: Not Local or Override was set - Ignoring Forward Request"
           );
         }
@@ -15384,12 +13625,12 @@ function pingUpdateItem(ping) {
   if (activeInfo.user.groupID > activeInfo.settings.ping.auth) {
     return false;
   }
-  organizrAPI2("GET", "api/v2/ping/" + ping)
+  londerlandAPI2("GET", "api/v2/ping/" + ping)
     .done(function (data) {
       try {
         var response = data.response;
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
       var i = ping;
       var v = response.data;
@@ -15499,7 +13740,7 @@ function pingUpdateItem(ping) {
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function pingUpdate(pingList, timeout) {
@@ -15674,17 +13915,17 @@ function lock() {
     );
     return false;
   }
-  organizrAPI2("POST", "api/v2/users/lock", "")
+  londerlandAPI2("POST", "api/v2/users/lock", "")
     .done(function (data) {
       try {
         let html = data.response;
         location.reload();
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "Lock Error");
+      LonderlandApiError(xhr, "Lock Error");
     });
 }
 function openSettings() {
@@ -15823,11 +14064,11 @@ function showBlackberryThemes(target) {
           customClass: { popup: "orgErrorAlert" },
         });
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function selectBlackberryTheme(theme, target) {
@@ -15859,11 +14100,11 @@ function selectBlackberryTheme(theme, target) {
           }
         });
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function orgErrorAlert(error) {
@@ -15948,7 +14189,7 @@ function toggleDebug() {
 	            <div class="sl-left bg-info"><i class="mdi mdi-package-variant-closed"></i></div>
 	            <div class="sl-right">
 	                <div>
-	                    <span lang="en">Organizr Information:</span>&nbsp;
+	                    <span lang="en">Londerland Information:</span>&nbsp;
 	                </div>
 	                <div id="debugPreInfo" class="desc"></div>
 	            </div>
@@ -16054,7 +14295,7 @@ function searchCoordinatesAPI(query) {
     "info",
     "5000"
   );
-  organizrAPI2("POST", "api/v2/homepage/weather/coordinates", { query: query })
+  londerlandAPI2("POST", "api/v2/homepage/weather/coordinates", { query: query })
     .done(function (data) {
       try {
         let html = data.response;
@@ -16119,14 +14360,14 @@ function searchCoordinatesAPI(query) {
             "warning",
             "10000"
           );
-          console.error("Organizr Function: API failed");
+          console.error("Londerland Function: API failed");
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr, "API Error");
+      LonderlandApiError(xhr, "API Error");
     });
 }
 function showLookupCoordinatesModal() {
@@ -16238,7 +14479,7 @@ function getPlexToken(selector) {
     $.ajax({
       type: "POST",
       headers: {
-        "X-Plex-Product": "Organizr",
+        "X-Plex-Product": "Londerland",
         "X-Plex-Version": "2.0",
         "X-Plex-Client-Identifier": "01010101-10101010",
       },
@@ -16307,7 +14548,7 @@ function showPlexMachineForm(selector = null) {
     showConfirmButton: false,
     customClass: { popup: "bg-org" },
   }).then(
-    organizrAPI2("GET", "api/v2/plex/servers?owned")
+    londerlandAPI2("GET", "api/v2/plex/servers?owned")
       .done(function (data) {
         try {
           let response = data.response;
@@ -16331,11 +14572,11 @@ function showPlexMachineForm(selector = null) {
             "</select>";
           $(".plexMachineListing").html(listing);
         } catch (e) {
-          organizrCatchError(e, data);
+          londerlandCatchError(e, data);
         }
       })
       .fail(function (xhr) {
-        OrganizrApiError(xhr, "API Error");
+        LonderlandApiError(xhr, "API Error");
         $(".plexMachineMessage").text("Plex Token Needed First");
         $(".plexMachineHeader")
           .addClass("card-warning")
@@ -16378,7 +14619,7 @@ function oAuthLoginNeededCheck(type = "OAuth") {
     "info",
     "10000"
   );
-  organizrAPI2("POST", "api/v2/login", data)
+  londerlandAPI2("POST", "api/v2/login", data)
     .done(function (data) {
       local("set", "message", "Welcome|Login Successful|success");
       local("r", "loggingIn");
@@ -16422,7 +14663,7 @@ function oAuthLoginNeededCheck(type = "OAuth") {
             "error",
             "10000"
           );
-          console.error("Organizr Function: API Connection Failed");
+          console.error("Londerland Function: API Connection Failed");
       }
       message(
         "Login Error",
@@ -16432,7 +14673,7 @@ function oAuthLoginNeededCheck(type = "OAuth") {
         "warning",
         "10000"
       );
-      console.error("Organizr Function: " + xhr.responseJSON.response.message);
+      console.error("Londerland Function: " + xhr.responseJSON.response.message);
       local("r", "loggingIn");
     });
 }
@@ -16465,7 +14706,7 @@ function exportLogs() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "organizr_logs.csv");
+    link.setAttribute("download", "londerland_logs.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -16548,7 +14789,7 @@ function formatLogDetails(details) {
 function checkToken(activate = false) {
   if (typeof activeInfo !== "undefined") {
     if (typeof activeInfo.settings.misc.uuid !== "undefined") {
-      var token = getCookie("organizr_token_" + activeInfo.settings.misc.uuid);
+      var token = getCookie("londerland_token_" + activeInfo.settings.misc.uuid);
       if (token) {
         setTimeout(function () {
           checkToken(true);
@@ -16678,7 +14919,7 @@ function objDiff(obj1, obj2) {
   // Return the object of differences
   return diffs;
 }
-function organizrConsole(subject, msg, type = "info") {
+function londerlandConsole(subject, msg, type = "info") {
   let color;
   switch (type) {
     case "error":
@@ -16698,8 +14939,8 @@ function organizrConsole(subject, msg, type = "info") {
     "color: " + color + "; background: white; font-weight: 700;"
   );
 }
-function organizrCatchError(e, data) {
-  organizrConsole("Organizr API Function", data, "warning");
+function londerlandCatchError(e, data) {
+  londerlandConsole("Londerland API Function", data, "warning");
   orgErrorAlert(
     "<h4>" +
       e +
@@ -16709,7 +14950,7 @@ function organizrCatchError(e, data) {
   console.trace();
   return false;
 }
-function OrganizrApiError(xhr, secondaryMessage = null) {
+function LonderlandApiError(xhr, secondaryMessage = null) {
   let msg = "";
   if (typeof xhr.responseJSON !== "undefined") {
     msg = xhr.responseJSON.response.message;
@@ -16720,7 +14961,7 @@ function OrganizrApiError(xhr, secondaryMessage = null) {
   } else {
     msg = "Connection Error";
   }
-  organizrConsole("Organizr API Function", msg, "error");
+  londerlandConsole("Londerland API Function", msg, "error");
 
   if (msg !== "abort") {
     if (secondaryMessage) {
@@ -16737,25 +14978,14 @@ function OrganizrApiError(xhr, secondaryMessage = null) {
   }
   return false;
 }
-function checkForUpdates() {
-  if (
-    activeInfo.user.loggedin &&
-    activeInfo.user.groupID <= 1 &&
-    activeInfo.settings.misc.checkForUpdate
-  ) {
-    updateCheck();
-    checkCommitLoad();
-    checkPluginUpdates();
-  }
-}
 
 function loadJavascript(script = null, defer = false) {
   if (script) {
-    organizrConsole("JS Loader", script);
-    organizrConsole("JS Loader", "Checking if script is loaded...");
+    londerlandConsole("JS Loader", script);
+    londerlandConsole("JS Loader", "Checking if script is loaded...");
     let loaded = $('script[src="' + script + '"]').length;
     if (!loaded) {
-      organizrConsole("JS Loader", "Script is NOT loaded... Loading now...");
+      londerlandConsole("JS Loader", "Script is NOT loaded... Loading now...");
       let head = document.getElementsByTagName("head")[0];
       let scriptEl = document.createElement("script");
       scriptEl.type = "text/javascript";
@@ -16763,7 +14993,7 @@ function loadJavascript(script = null, defer = false) {
       scriptEl.defer = false;
       head.appendChild(scriptEl);
     } else {
-      organizrConsole("JS Loader", "Script already loaded");
+      londerlandConsole("JS Loader", "Script already loaded");
     }
   }
 }
@@ -16814,13 +15044,6 @@ function shortcut(selectors = "") {
             'a[href$="Logs"]',
           ];
           break;
-        case "plugin-marketplace":
-          clickSettingsTab();
-          selectors = [
-            "#settings-main-plugins-anchor",
-            "#settings-plugins-marketplace-anchor",
-          ];
-          break;
         case "custom-cert":
           clickSettingsTab();
           selectors = [
@@ -16843,17 +15066,17 @@ function shortcut(selectors = "") {
   });
 }
 function getJournalMode() {
-  organizrAPI2("GET", "api/v2/database/journal")
+  londerlandAPI2("GET", "api/v2/database/journal")
     .done(function (data) {
       try {
         let response = data.response;
         $(".journal-mode").html(response.data.journal_mode);
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function setJournalMode(mode) {
@@ -16865,7 +15088,7 @@ function setJournalMode(mode) {
     "info",
     "1500"
   );
-  organizrAPI2("PUT", "api/v2/database/journal/" + mode, {})
+  londerlandAPI2("PUT", "api/v2/database/journal/" + mode, {})
     .done(function (data) {
       try {
         getJournalMode();
@@ -16879,11 +15102,11 @@ function setJournalMode(mode) {
           "5000"
         );
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
 }
 function toggleSideMenuClasses() {
@@ -16913,19 +15136,19 @@ function toggleTopBarHamburger() {
   $(".toggle-side-menu").toggleClass("hidden");
 }
 function toggleLogFilter(filter = "INFO") {
-  //choose-organizr-log
+  //choose-londerland-log
   filter = filter.toUpperCase();
-  $.each($(".choose-organizr-log").children(), function (i, v) {
+  $.each($(".choose-londerland-log").children(), function (i, v) {
     let url = $(v).val();
     let newURL = updateUrlParameter(url, "filter", filter);
     $(v).val(newURL);
   });
   $(".log-filter-text").text(filter);
   $(".log-filter-text").text(filter);
-  let currentURL = organizrLogTable.ajax.url();
+  let currentURL = londerlandLogTable.ajax.url();
   let updatedURL = updateUrlParameter(currentURL, "filter", filter);
-  organizrLogTable.ajax.url(updatedURL);
-  organizrLogTable.clear().draw().ajax.reload(null, false);
+  londerlandLogTable.ajax.url(updatedURL);
+  londerlandLogTable.clear().draw().ajax.reload(null, false);
 }
 function updateUrlParameter(uri, key, value) {
   // remove the hash part before operating on the uri
@@ -16950,15 +15173,7 @@ function updateUrlParameter(uri, key, value) {
   return uri + hash;
 }
 function launch() {
-  console.info(
-    "https://docs.organizr.app/help/faq/migration-guide#version-2-0-greater-than-version-2-1"
-  );
-  organizrConsole(
-    "API V2 API",
-    "If you see a 404 Error for api/v2/launch below this line, you have not setup the new location block... See URL above this line",
-    "error"
-  );
-  organizrConnect("api/v2/launch")
+  londerlandConnect("api/v2/launch")
     .done(function (data) {
       try {
         let json = data.response;
@@ -16983,7 +15198,6 @@ function launch() {
           token: json.data.user.token,
           user: json.data.user,
           plugins: json.data.plugins,
-          branch: json.data.branch,
           sso: json.data.sso,
           settings: json.data.settings,
           appearance: json.data.appearance,
@@ -16994,7 +15208,7 @@ function launch() {
         // Add element to signal activeInfo Ready
         $("#wrapper").after('<div id="activeInfo"></div>');
         console.info(
-          "%c Organizr %c ".concat(currentVersion, " "),
+          "%c Londerland %c ".concat(currentVersion, " "),
           "color: white; background: #66D9EF; font-weight: 700; font-size: 24px; font-family: Monospace;",
           "color: #66D9EF; background: white; font-weight: 700; font-size: 24px; font-family: Monospace;"
         );
@@ -17032,10 +15246,9 @@ function launch() {
               tabProcess(json);
               buildSplashScreen(json);
               accountManager(json);
-              organizrSpecialSettings(json.data);
+              londerlandSpecialSettings(json.data);
               getPingList(json);
               checkLocalForwardStatus(json.data);
-              checkForUpdates();
             }
             loadCustomJava(json.data.appearance);
             if (getCookie("lockout")) {
@@ -17056,10 +15269,10 @@ function launch() {
             }
             break;
           default:
-            console.error("Organizr Function: Action not set or defined");
+            console.error("Londerland Function: Action not set or defined");
         }
         console.info(
-          "%c Organizr %c ".concat("DOM Fully loaded", " "),
+          "%c Londerland %c ".concat("DOM Fully loaded", " "),
           "color: white; background: #AD80FD; font-weight: 700;",
           "color: #AD80FD; background: white; font-weight: 700;"
         );
@@ -17078,7 +15291,7 @@ function launch() {
       defineNotification();
       if (xhr.status == 404) {
         orgErrorAlert(
-          '<h2>Webserver not setup for Organizr v2.1</h2><h4>Please goto <a href="https://docs.organizr.app/help/faq/migration-guide#version-2-0-greater-than-version-2-1">Migration guide to complete the changes...</a></h4><h3>Webserver Error:</h3>' +
+          '<h2>Webserver not set up for Londerland</h2><h4>Requests to api/v2 must be passed to api/v2/index.php (see the rewrite rules in .htaccess)</h4><h3>Webserver Error:</h3>' +
             xhr.responseText
         );
         message(
@@ -17100,7 +15313,7 @@ function homepageBookmarks(timeout) {
     typeof timeout !== "undefined"
       ? timeout
       : activeInfo.settings.homepage.refresh.homepageBookmarksRefresh;
-  organizrAPI2("GET", "api/v2/plugins/bookmark/page")
+  londerlandAPI2("GET", "api/v2/plugins/bookmark/page")
     .done(function (data) {
       try {
         let response = data.response;
@@ -17109,11 +15322,11 @@ function homepageBookmarks(timeout) {
           $("#homepageOrderBookmarks").html(buildBookmarks(response.data));
         }
       } catch (e) {
-        organizrCatchError(e, data);
+        londerlandCatchError(e, data);
       }
     })
     .fail(function (xhr) {
-      OrganizrApiError(xhr);
+      LonderlandApiError(xhr);
     });
   let timeoutTitle = "Bookmarks-Homepage";
   if (typeof timeouts[timeoutTitle] !== "undefined") {

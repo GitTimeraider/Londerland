@@ -1,17 +1,17 @@
 <?php
 
-// OpenAPI documentation for the routes in api/v2/routes/organizr.php (collected by docs/index.php)
+// OpenAPI documentation for the routes in api/v2/routes/londerland.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
 #[OA\Get(
-	path: '/api/v2/organizr/{page}',
+	path: '/api/v2/londerland/{page}',
 	tags: [
 		'page',
 	],
-	summary: 'Get HTML for Organizr Pages',
+	summary: 'Get HTML for Londerland Pages',
 	parameters: [
 		new OA\Parameter(
 			name: 'page',
@@ -42,6 +42,6 @@ use OpenApi\Attributes as OA;
 		],
 	],
 )]
-final class V2RoutesOrganizr
+final class V2RoutesLonderland
 {
 }

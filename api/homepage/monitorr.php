@@ -82,7 +82,7 @@ trait MonitorrHomepageItem
 		$dataUrl = $url . '/assets/php/loop.php';
 		try {
 			$options = $this->requestOptions($url, $this->config['homepageMonitorrRefresh'], $this->config['monitorrDisableCertCheck'], $this->config['monitorrUseCustomCertificate']);
-			$response = \WpOrg\Requests\Requests::get($dataUrl, ['Token' => $this->config['organizrAPI']], $options);
+			$response = \WpOrg\Requests\Requests::get($dataUrl, ['Token' => $this->config['londerlandAPI']], $options);
 			if ($response->success) {
 				$html = html_entity_decode($response->body);
 				// This section grabs the names of all services by regex
@@ -125,7 +125,7 @@ trait MonitorrHomepageItem
 					$ext = $ext[key(array_slice($ext, -1, 1, true))];
 					$imageUrl = $url . '/assets' . $image;
 					$cacheDirectory = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
-					$img = \WpOrg\Requests\Requests::get($imageUrl, ['Token' => $this->config['organizrAPI']], $options);
+					$img = \WpOrg\Requests\Requests::get($imageUrl, ['Token' => $this->config['londerlandAPI']], $options);
 					if ($img->success) {
 						$base64 = 'data:image/' . $ext . ';base64,' . base64_encode($img->body);
 						$statuses[$service]['image'] = $base64;

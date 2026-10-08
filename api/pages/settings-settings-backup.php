@@ -1,26 +1,26 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_settings_backup';
-function get_page_settings_settings_backup($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_settings_backup';
+function get_page_settings_settings_backup($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '
     <script>
-		getOrganizrBackups();
+		getLonderlandBackups();
     </script>
  
     <div class="white-box bg-org">
 		<div class="col-lg-3 col-md-4 col-6 float-end">
-			<button onclick="createOrganizrBackup()" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end" type="button"><span class="btn-label"><i class="fa ti-export"></i></span><span lang="en">Create Backup</span></button>
+			<button onclick="createLonderlandBackup()" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end" type="button"><span class="btn-label"><i class="fa ti-export"></i></span><span lang="en">Create Backup</span></button>
 		</div>
-		<h3 class="box-title" lang="en">Backup Organizr</h3>
+		<h3 class="box-title" lang="en">Backup Londerland</h3>
 		<div class="row sales-report">
 			<div class="col-lg-6 col-md-6 col-6">
 				<h2 id="backup-total-files"><i class="fa fa-spin fa-spinner"></i></h2>

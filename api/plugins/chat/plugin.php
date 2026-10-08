@@ -18,7 +18,7 @@ $GLOBALS['plugins']['Chat'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-class Chat extends Organizr
+class Chat extends Londerland
 {
 	public function _chatPluginGetSettings()
 	{
@@ -37,7 +37,7 @@ class Chat extends Organizr
 										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Create an App called whatever you like and choose a cluster (Close to you)</span></li>
 										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Frontend (JQuery) - Backend (PHP)</span></li>
 										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Click the App Keys tab on top left</span></li>
-										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Copy and paste the 4 values into Organizr</span></li>
+										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Copy and paste the 4 values into Londerland</span></li>
 										<li><i class="fa fa-chevron-right text-danger"></i> <span lang="en">Save and reload!</span></li>
 									</ul>
 								</div>

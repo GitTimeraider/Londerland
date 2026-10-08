@@ -288,9 +288,9 @@ trait OIDCFunctions
 	}
 
 	/**
-	 * Map OIDC groups to Organizr group ID
+	 * Map OIDC groups to Londerland group ID
 	 */
-	public function mapOIDCGroupToOrganizr($oidcGroups)
+	public function mapOIDCGroupToLonderland($oidcGroups)
 	{
 		$mappings = json_decode($this->config['oidcGroupMappings'] ?? '{}', true) ?: [];
 		$mode = $this->config['oidcGroupMappingMode'] ?? 'first';
@@ -325,7 +325,7 @@ trait OIDCFunctions
 		}
 		switch ($mode) {
 			case 'highest_privilege':
-				// Lower group_id = higher privilege in Organizr (0 = admin)
+				// Lower group_id = higher privilege in Londerland (0 = admin)
 				return min($matchedGroups);
 			case 'lowest_privilege':
 				return max($matchedGroups);
@@ -356,7 +356,7 @@ trait OIDCFunctions
 			$this->setLoggerChannel('OIDC')->warning('No username available from OIDC claims');
 			return null;
 		}
-		$groupId = $this->mapOIDCGroupToOrganizr($oidcGroups);
+		$groupId = $this->mapOIDCGroupToLonderland($oidcGroups);
 		$group = $this->getGroupById($groupId);
 		$groupName = $group['group'] ?? 'User';
 		// Check if user exists by username
@@ -454,7 +454,7 @@ trait OIDCFunctions
 			$this->setAPIResponse('error', 'Failed to create or link user', 500);
 			return false;
 		}
-		// Create Organizr token
+		// Create Londerland token
 		$this->createToken($user['username'], $user['email'], $this->config['rememberMeDays']);
 		$this->setLoggerChannel('OIDC')->info('OIDC login successful: ' . $user['username']);
 		return $user;
@@ -518,7 +518,7 @@ trait OIDCFunctions
 	}
 
 	/**
-	 * Output callback success page - redirects to Organizr root
+	 * Output callback success page - redirects to Londerland root
 	 */
 	public function outputOIDCCallbackSuccess($username)
 	{

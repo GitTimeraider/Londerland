@@ -3,19 +3,19 @@
 use Cron\CronExpression;
 
 /**
- * Runs Organizr's cron jobs (cron.php and plugin advancedCron.php files).
+ * Runs Londerland's cron jobs (cron.php and plugin advancedCron.php files).
  * Keeps the job API of the previously used peppeocchi/php-cron-scheduler for closures.
  */
-class OrganizrScheduler
+class LonderlandScheduler
 {
 	private array $jobs = [];
 	private array $executedJobs = [];
 	private array $failedJobs = [];
 	private array $verboseOutput = [];
 
-	public function call(callable $fn, $args = [], $id = null): OrganizrScheduledJob
+	public function call(callable $fn, $args = [], $id = null): LonderlandScheduledJob
 	{
-		$job = new OrganizrScheduledJob($fn, (array)$args, $id);
+		$job = new LonderlandScheduledJob($fn, (array)$args, $id);
 		$this->jobs[] = $job;
 		return $job;
 	}
@@ -81,7 +81,7 @@ class OrganizrScheduler
 	// Shell commands (raw/php) are not supported; log instead of breaking the whole cron run
 	public function __call($name, $arguments)
 	{
-		(new Organizr())->log('Cron')->warning('Unsupported scheduler method called', ['method' => $name]);
+		(new Londerland())->log('Cron')->warning('Unsupported scheduler method called', ['method' => $name]);
 		return $this->call(fn() => null)->when(fn() => false);
 	}
 
@@ -91,7 +91,7 @@ class OrganizrScheduler
 	}
 }
 
-class OrganizrScheduledJob
+class LonderlandScheduledJob
 {
 	private $fn;
 	private array $args;
@@ -250,7 +250,7 @@ class OrganizrScheduledJob
 	// Skip the job while a previous run still holds its lock file
 	public function onlyOne($tempDir = null, ?callable $whenOverlapping = null): static
 	{
-		$this->lockFile = rtrim($tempDir ?? sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'organizr-cron-' . md5($this->id) . '.lock';
+		$this->lockFile = rtrim($tempDir ?? sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'londerland-cron-' . md5($this->id) . '.lock';
 		return $this;
 	}
 
@@ -264,7 +264,7 @@ class OrganizrScheduledJob
 	// Features such as e-mailing job output are not supported; log instead of breaking the whole cron run
 	public function __call($name, $arguments)
 	{
-		(new Organizr())->log('Cron')->warning('Unsupported cron job method called', ['method' => $name, 'job' => $this->id]);
+		(new Londerland())->log('Cron')->warning('Unsupported cron job method called', ['method' => $name, 'job' => $this->id]);
 		return $this;
 	}
 

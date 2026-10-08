@@ -6,16 +6,16 @@ $('body').arrive('#settings-main-tab-editor .nav-tabs', {onceOnly: true}, functi
 });
 function bookmarkCheckForTab() {
 	// Let check for tab with bookmark url
-	organizrAPI2('GET', 'api/v2/plugins/bookmark/setup/tab').done(function (data) {
+	londerlandAPI2('GET', 'api/v2/plugins/bookmark/setup/tab').done(function (data) {
 		try {
 			let response = data.response;
 			$('.bookmark-check-tab small').text('Bookmark Tab');
 			$('.bookmark-check-tab .result').text(response.message);
 		} catch (e) {
-			organizrCatchError(e, data);
+			londerlandCatchError(e, data);
 		}
 	}).fail(function (xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 		$('.bookmark-check-tab .result').text('Error...');
 	});
 }
@@ -28,16 +28,16 @@ $('body').arrive('.bookmark-check-tab', {onceOnly: false}, function() {
 });
 function bookmarkCheckForCategory(){
 	// Let check for tab with bookmark url
-	organizrAPI2('GET','api/v2/plugins/bookmark/setup/category').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/bookmark/setup/category').done(function(data) {
 		try {
 			let response = data.response;
 			$('.bookmark-check-category small').text('Bookmark Categories');
 			$('.bookmark-check-category .result').text(response.message);
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 		$('.bookmark-check-category .result').text('Error...');
 	});
 }
@@ -67,11 +67,11 @@ function bookmarkTabsLaunch(){
 
 var colorPickerInitialized = false;
 function buildBookmarkTabEditor(){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		$('#bookmarkTabEditorTable').html(buildBookmarkTabEditorItem(response.data));
 
@@ -87,7 +87,7 @@ function buildBookmarkTabEditor(){
 			colorPickerInitialized = true;
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 	});
 }
 
@@ -150,7 +150,7 @@ function buildBookmarkTabCategorySelect(array,tabID, categoryID){
 }
 
 function editBookmarkTabForm(id){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs/' + id,true).done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/bookmark/tabs/' + id,true).done(function(data) {
 		try {
 			let response = data.response;
 			console.log(response);
@@ -168,10 +168,10 @@ function editBookmarkTabForm(id){
 			}
 			generatePreviewBookmarkEditTab();
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Error');
+		LonderlandApiError(xhr, 'Tab Error');
 	});
 }
 
@@ -184,16 +184,16 @@ $(document).on("change", ".bookmarkEnabledSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"enabled":enabled},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"enabled":enabled},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Enable Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Enable Error');
+		LonderlandApiError(xhr, 'Tab Enable Error');
 	});
 });
 // CHANGE TAB GROUP
@@ -201,16 +201,16 @@ $(document).on("change", ".bookmarkTabGroupSelect", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"group_id":groupID},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"group_id":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Group Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Group Error');
+		LonderlandApiError(xhr, 'Tab Group Error');
 	});
 });
 // CHANGE TAB CATEGORY
@@ -219,16 +219,16 @@ $(document).on("change", ".bookmarkTabCategorySelect", function () {
 	var categoryID = $(this).find("option:selected").val();
 	console.log("CategoryID: " + categoryID);
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Category Error');
+		LonderlandApiError(xhr, 'Tab Category Error');
 	});
 });
 //DELETE TAB
@@ -247,11 +247,11 @@ $(document).on("click", ".bookmarkDeleteTab", function () {
 			var id = tab.parent().parent().attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkTabEditor );
-			organizrAPI2('DELETE','api/v2/plugins/bookmark/tabs/' + id, null,true).done(function(data) {
+			londerlandAPI2('DELETE','api/v2/plugins/bookmark/tabs/' + id, null,true).done(function(data) {
 				message('Tab Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 				if(callbacks){ callbacks.fire(); }
 			}).fail(function(xhr) {
-				OrganizrApiError(xhr, 'Tab Deleted Error');
+				LonderlandApiError(xhr, 'Tab Deleted Error');
 			});
 		}
 	});
@@ -287,19 +287,19 @@ $(document).on("click", ".editBookmarkTab", function () {
 	if(tabInfo.id !== '' && tabInfo.tabName !== '' && tabInfo.tabImage !== '' && tabInfo.background_color !== '' && tabInfo.text_color !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkTabEditor );
-		organizrAPI2('PUT','api/v2/plugins/bookmark/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
+		londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Tab Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#edit-bookmark-tab-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Tab Error');
+			LonderlandApiError(xhr, 'Tab Error');
 		});
 	}
 });
@@ -332,19 +332,19 @@ $(document).on("click", ".addNewBookmarkTab", function () {
 	if(tabInfo.order !== '' && tabInfo.name !== '' && tabInfo.url !== '' && tabInfo.image !== '' && tabInfo.background_color !== '' && tabInfo.text_color !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkTabEditor );
-		organizrAPI2('POST','api/v2/plugins/bookmark/tabs',tabInfo,true).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/bookmark/tabs',tabInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				clearSelect('.bookmarkTabIconImageList, .bookmarkTabIconIconList');
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Tab Created',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#new-bookmark-tab-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Tab Error');
+			LonderlandApiError(xhr, 'Tab Error');
 		});
 	}
 });
@@ -371,17 +371,17 @@ function submitBookmarkTabOrder(newTabs){
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildBookmarkTabEditor );
-	organizrAPI2('PUT','api/v2/plugins/bookmark/tabs',data,true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs',data,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Order Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 		$('.saveBookmarkTabOrderButton').addClass('hidden');
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Update Error');
+		LonderlandApiError(xhr, 'Update Error');
 	});
 }
 
@@ -489,15 +489,15 @@ function bookmarkCategoriesLaunch(){
 }
 
 function buildBookmarkCategoryEditor(){
-	organizrAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/bookmark/tabs').done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		$('#bookmarkCategoryEditorTable').html(buildBookmarkCategoryEditorItem(response.data));
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 	});
 }
 
@@ -541,19 +541,19 @@ $(document).on("click", ".addNewBookmarkCategory", function () {
 	if(categoryInfo.category !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkCategoryEditor );
-		organizrAPI2('POST','api/v2/plugins/bookmark/categories',categoryInfo,true).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/bookmark/categories',categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Category Added',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#new-bookmark-category-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Category Error');
+			LonderlandApiError(xhr, 'Category Error');
 		});
 	}
 });
@@ -573,11 +573,11 @@ $(document).on("click", ".deleteBookmarkCategory", function () {
 			var id = category.parent().parent().attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkCategoryEditor );
-			organizrAPI2('DELETE','api/v2/plugins/bookmark/categories/' + id, null,true).done(function(data) {
+			londerlandAPI2('DELETE','api/v2/plugins/bookmark/categories/' + id, null,true).done(function(data) {
 				message('Category Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 				if(callbacks){ callbacks.fire(); }
 			}).fail(function(xhr) {
-				OrganizrApiError(xhr, 'Category Deleted Error');
+				LonderlandApiError(xhr, 'Category Deleted Error');
 			});
 		}
 	});
@@ -601,19 +601,19 @@ $(document).on("click", ".editBookmarkCategory", function () {
 	if(categoryInfo.id !== '' && categoryInfo.category !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildBookmarkCategoryEditor );
-		organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
+		londerlandAPI2('PUT','api/v2/plugins/bookmark/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#edit-bookmark-category-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Category Error');
+			LonderlandApiError(xhr, 'Category Error');
 		});
 	}
 });
@@ -622,16 +622,16 @@ $(document).on("click", ".changeDefaultBookmarkCategory", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildBookmarkCategoryEditor );
-	organizrAPI2('PUT','api/v2/plugins/bookmark/categories/' + id, {"default":1},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/categories/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Default Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Default Cateogry Error');
+		LonderlandApiError(xhr, 'Default Cateogry Error');
 	});
 });
 // CHANGE CATEGORY ORDER
@@ -651,16 +651,16 @@ function submitBookmarkCategoryOrder(){
 			data.push(temp);
 		}
 	})
-	organizrAPI2('PUT','api/v2/plugins/bookmark/categories',data,true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/plugins/bookmark/categories',data,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Category Order Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 		$('.saveTabOrderButton').addClass('hidden');
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Update Error');
+		LonderlandApiError(xhr, 'Update Error');
 	});
 }

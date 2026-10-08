@@ -2,7 +2,7 @@
 // PLUGIN INFORMATION
 $GLOBALS['plugins']['AI Chat'] = array( // Plugin Name
 	'name' => 'AI Chat', // Plugin Name
-	'author' => 'Organizr', // Who wrote the plugin
+	'author' => 'Londerland', // Who wrote the plugin
 	'category' => 'Utilities', // One to Two Word Description
 	'link' => '', // Link to plugin info
 	'license' => 'personal,business', // License Type use , for multiple
@@ -21,7 +21,7 @@ $GLOBALS['plugins']['AI Chat'] = array( // Plugin Name
  * Chat with any OpenAI-compatible (/v1/chat/completions) server for logged in users.
  * The browser only talks to these routes; the API key never leaves the server.
  */
-class AiChat extends Organizr
+class AiChat extends Londerland
 {
 	// Text-like files are sent to the model as text, images as image parts, PDFs as extracted text
 	private const TEXT_EXTENSIONS = ['txt', 'md', 'markdown', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'ini', 'conf', 'cfg', 'toml', 'log', 'html', 'htm', 'css', 'js', 'mjs', 'ts', 'tsx', 'jsx', 'php', 'py', 'rb', 'go', 'rs', 'java', 'kt', 'c', 'h', 'cpp', 'hpp', 'cs', 'swift', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'sql', 'env', 'dockerfile', 'vue', 'svelte', 'lua', 'pl', 'r', 'scala', 'dart', 'tex'];
@@ -182,7 +182,7 @@ class AiChat extends Organizr
 									<ul class="list-icons">
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Works with any server that speaks the OpenAI API (/v1/chat/completions), for example OpenAI, Anthropic (https://api.anthropic.com/v1/), Ollama (http://ollama:11434/v1), LM Studio, LiteLLM, OpenRouter, vLLM or LocalAI.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen group (or higher) get a chat button in the bottom left corner. Guests never see it.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">The API key stays on the Organizr server; browsers never receive it.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">The API key stays on the Londerland server; browsers never receive it.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Save the settings, then use Test Connection to check the server and load its models.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Optional: set up Web Search and Images to give users a globe button (search the web first) and an image button (create a picture).</span></li>
 									</ul>
@@ -198,7 +198,7 @@ class AiChat extends Organizr
 					'label' => 'API Base URL',
 					'value' => $this->config['AICHAT-baseUrl'],
 					'placeholder' => 'https://api.openai.com/v1',
-					'help' => 'Address up to and including /v1. Organizr adds /models and /chat/completions to it.'
+					'help' => 'Address up to and including /v1. Londerland adds /models and /chat/completions to it.'
 				),
 				array(
 					'type' => 'password-alt',
@@ -1090,7 +1090,7 @@ class AiChat extends Organizr
 			CURLOPT_SSL_VERIFYPEER => (bool)$this->config['AICHAT-verifySSL'],
 			CURLOPT_SSL_VERIFYHOST => $this->config['AICHAT-verifySSL'] ? 2 : 0,
 			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Organizr AI Chat)',
+			CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Londerland AI Chat)',
 		]);
 		if ($method === 'POST') {
 			curl_setopt($curl, CURLOPT_POST, true);

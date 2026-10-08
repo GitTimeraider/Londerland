@@ -1,22 +1,21 @@
-<!-- Please Fill out as much information as possible, Thanks! -->
-###### Organizr Version: V 1.x
-###### Branch: Master/Develop
-###### WebServer: Nginx/Apache
-###### Operating System: Windows/MacOS/Ubuntu
+<!-- Please fill out as much as you can, thanks! -->
+###### Londerland version (Settings > System Settings > About):
+###### Install type: Docker image / own web server
+###### Web server / reverse proxy: Apache / Nginx / Traefik / Caddy / ...
+###### Browser:
 <hr>
 
-##### Problem Description:
+##### Problem description:
 <!---TYPE HERE--->
 
 <hr>
 
-##### Reproduction Steps:
+##### Steps to reproduce:
 <!---TYPE HERE--->
 
 <hr>
 
-#### Errors on screen?  If so paste here:
-<!-- (Errors go below the first ``` . Don't remove the ' tags) -->
+#### Errors on screen, in the browser console or in `docker logs`? Paste them here:
 ```
 
 ```

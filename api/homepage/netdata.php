@@ -141,7 +141,7 @@ trait NetDataHomepageItem
 	}
 }
 				</pre>
-				<p>The URL is appended to your netdata URL and returns JSON formatted data. The value field tells Organizr how to return the value you want from the netdata API. This should be formatted as comma-separated keys to access the desired value.</p>
+				<p>The URL is appended to your netdata URL and returns JSON formatted data. The value field tells Londerland how to return the value you want from the netdata API. This should be formatted as comma-separated keys to access the desired value.</p>
 				<table class="table table-striped">
 					<thead>
 						<tr>

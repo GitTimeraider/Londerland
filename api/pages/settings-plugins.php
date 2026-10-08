@@ -1,14 +1,14 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_plugins';
-function get_page_settings_plugins($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_plugins';
+function get_page_settings_plugins($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '

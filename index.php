@@ -1,6 +1,6 @@
 <?php
 include 'api/functions.php';
-$Organizr = new Organizr(true);
+$Londerland = new Londerland(true);
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark" ontouchmove>
@@ -10,14 +10,14 @@ $Organizr = new Organizr(true);
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
           name="viewport">
-    <meta content="<?php echo $Organizr->config['description']; ?>" name="description">
-    <meta content="CauseFX" name="author">
-	<?php echo $Organizr->favIcons(); ?>
-    <title><?php echo $Organizr->config['title']; ?></title>
+    <meta content="<?php echo $Londerland->config['description']; ?>" name="description">
+    <meta content="Londerland" name="author">
+	<?php echo $Londerland->favIcons(); ?>
+    <title><?php echo $Londerland->config['title']; ?></title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="application-name" content="<?php echo $Organizr->config['title']; ?>">
-    <meta name="apple-mobile-web-app-title" content="<?php echo $Organizr->config['title']; ?>">
+    <meta name="application-name" content="<?php echo $Londerland->config['title']; ?>">
+    <meta name="apple-mobile-web-app-title" content="<?php echo $Londerland->config['title']; ?>">
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/v4-shims.min.css" rel="stylesheet">
@@ -38,10 +38,10 @@ $Organizr = new Organizr(true);
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet">
-    <link id="style" href="css/dark.min.css?v=<?php echo $Organizr->fileHash; ?>" rel="stylesheet">
-    <link href="css/organizr.min.css?v=<?php echo $Organizr->fileHash; ?>" rel="stylesheet">
-	<?php echo $Organizr->pluginFiles('css'); ?>
-	<?php echo $Organizr->setTheme(); ?>
+    <link id="style" href="css/dark.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+	<?php echo $Londerland->pluginFiles('css'); ?>
+	<?php echo $Londerland->setTheme(); ?>
     <style id="user-appearance"></style>
     <style id="custom-theme-css"></style>
     <style id="custom-css"></style>
@@ -66,7 +66,7 @@ $Organizr = new Organizr(true);
     <nav class="navbar navbar-default navbar-static-top m-b-0 animated slideInDown">
         <div class="navbar-header">
             <div class="top-left-part hidden-xs p-r-10">
-				<?php echo $Organizr->showTopBarHamburger(); ?>
+				<?php echo $Londerland->showTopBarHamburger(); ?>
                 <!-- Logo -->
                 <a class="logo" href="javascript:void(0)">
                     <!-- Logo text image you can use text also -->
@@ -117,10 +117,10 @@ $Organizr = new Organizr(true);
             <div class="sidebar-head">
                 <h3>
                     <span class="open-close m-r-5">
-                        <?php echo $Organizr->showSideBarHamburger(); ?>
+                        <?php echo $Londerland->showSideBarHamburger(); ?>
                         <i class="ti-close visible-xs"></i>
                     </span>
-					<?php echo $Organizr->showSideBarText(); ?>
+					<?php echo $Londerland->showSideBarText(); ?>
                     <span class="hide-menu hidden-sm hidden-md hidden-lg" id="side-logo"></span>
                 </h3>
             </div>
@@ -139,13 +139,13 @@ $Organizr = new Organizr(true);
     <div class="error-page bg-org"></div>
     <div class="login-area hidden"></div>
     <div class="p-0" id="page-wrapper">
-        <div class="organizr-area hidden"></div>
+        <div class="londerland-area hidden"></div>
         <div class="plugin-listing p-0 hidden"></div>
         <div class="internal-listing p-0 hidden"></div>
         <div class="iFrame-listing p-0 hidden"></div>
     </div>
     <div class="splitRight hidden" id="page-wrapper-right">
-        <div class="organizr-area-right"></div>
+        <div class="londerland-area-right"></div>
         <div class="plugin-listing-right p-0 hidden"></div>
         <div class="internal-listing-right p-0 hidden"></div>
         <div class="iFrame-listing-right p-0 hidden"></div>
@@ -170,10 +170,10 @@ $Organizr = new Organizr(true);
     <!-- ============================================================== -->
     <a href="#" id="scroll" style="display: none;"><span></span></a>
     <button id="internal-clipboard" class="hidden"></button>
-	<?php echo $Organizr->inconspicuous(); ?>
+	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<?php echo '<script>languageList = ' . $Organizr->languagePacks(true) . ";</script>\n"; ?>
+<?php echo '<script>languageList = ' . $Londerland->languagePacks(true) . ";</script>\n"; ?>
 <script src="assets/vendor/jquery/jquery.min.js"></script>
 <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="assets/vendor/metismenu/metisMenu.min.js"></script>
@@ -205,18 +205,18 @@ $Organizr = new Organizr(true);
 <script src="assets/vendor/sortablejs/Sortable.min.js"></script>
 <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js"></script>
 <script src="assets/vendor/pusher-js/pusher.min.js"></script>
-<script src="js/i18n.js?v=<?php echo $Organizr->fileHash; ?>"></script>
-<script src="js/helpers.js?v=<?php echo $Organizr->fileHash; ?>"></script>
-<script src="js/functions.js?v=<?php echo $Organizr->fileHash; ?>"></script>
-<script src="js/custom.min.js?v=<?php echo $Organizr->fileHash; ?>"></script>
+<script src="js/i18n.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/helpers.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/functions.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/custom.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script id="custom-theme-javascript"></script>
 <script id="custom-javascript"></script>
 <?php
-echo $Organizr->googleTracking();
-echo $Organizr->pluginFiles('js');
-echo $Organizr->formKey();
-echo $Organizr->loadCalendarJS();
-echo $Organizr->CBPFWTabs();
+echo $Londerland->googleTracking();
+echo $Londerland->pluginFiles('js');
+echo $Londerland->formKey();
+echo $Londerland->loadCalendarJS();
+echo $Londerland->CBPFWTabs();
 ?>
 </body>
 

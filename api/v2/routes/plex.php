@@ -1,8 +1,8 @@
 <?php
 $app->post('/plex/register', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$Organizr->plexJoinAPI($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$Londerland->plexJoinAPI($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,10 +11,10 @@ $app->post('/plex/register', function ($request, $response, $args) {
 });
 $app->get('/plex/servers', function ($request, $response, $args) {
 	
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->getPlexServers();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->getPlexServers();
 		}
 		
 	}

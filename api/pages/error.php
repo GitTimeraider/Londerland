@@ -1,20 +1,20 @@
 <?php
-$GLOBALS['organizrPages'][] = 'error';
-function get_page_error($Organizr)
+$GLOBALS['londerlandPages'][] = 'error';
+function get_page_error($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	$nonRoot = isset($_GET['organizr']);
-	$nonRootPath = ($nonRoot) ? $Organizr->getRootPath() : '';
+	$nonRoot = isset($_GET['londerland']);
+	$nonRootPath = ($nonRoot) ? $Londerland->getRootPath() : '';
 	$error = $_GET['vars']['var1'] ?? 404;
-	$errorDetails = $Organizr->errorCodes($error);
+	$errorDetails = $Londerland->errorCodes($error);
 	$redirect = $_GET['vars']['var2'] ?? null;
 	if ($redirect) {
-		$Organizr->logger->debug($redirect);
+		$Londerland->logger->debug($redirect);
 	}
 	$GLOBALS['responseCode'] = 200;
 	return '
@@ -24,21 +24,21 @@ function get_page_error($Organizr)
 	<meta charset="utf-8">
 	<meta content="IE=edge" http-equiv="X-UA-Compatible">
 	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
-	<meta content="' . $Organizr->config['description'] . '" name="description">
-	<meta content="CauseFX" name="author">
-	' . $Organizr->favIcons($nonRootPath) . '
-	<title>Error ' . $Organizr->config['title'] . '</title>
-	' . $Organizr->loadResources(
+	<meta content="' . $Londerland->config['description'] . '" name="description">
+	<meta content="Londerland" name="author">
+	' . $Londerland->favIcons($nonRootPath) . '
+	<title>Error ' . $Londerland->config['title'] . '</title>
+	' . $Londerland->loadResources(
 			[
 				'assets/vendor/bootstrap/bootstrap.min.css',
 				'assets/vendor/fontawesome/css/all.min.css',
 				'css/dark.min.css',
-				'css/organizr.min.css',
+				'css/londerland.min.css',
 				'assets/vendor/jquery/jquery.min.js',
 				'js/i18n.js'
 			], $nonRootPath
 		) . '
-	' . $Organizr->setTheme(null, $nonRootPath) . '
+	' . $Londerland->setTheme(null, $nonRootPath) . '
 	<style id="user-appearance"></style>
 	<style id="custom-theme-css"></style>
 	<style id="custom-css"></style>
@@ -61,20 +61,20 @@ function get_page_error($Organizr)
 			<h1 class="text-danger">' . $error . '</h1>
 			<h2 class="text-uppercase" lang="en">' . $errorDetails['type'] . '</h2>
 			<h3 class="text-uppercase" lang="en">' . $errorDetails['description'] . '</h3>
-			<p class="text-muted my-4">Hey there, ' . $Organizr->user['username'] . ', ' . $Organizr->config['customErrorMessage'] . ' . </p>
+			<p class="text-muted my-4">Hey there, ' . $Londerland->user['username'] . ', ' . $Londerland->config['customErrorMessage'] . ' . </p>
 			<a href="' . $nonRootPath . '" class="btn btn-danger rounded-pill mb-5">Back Home</a>
 		</div>
 	</div>
 </section>
 <script>
-languageList = ' . $Organizr->languagePacks(true) . '
+languageList = ' . $Londerland->languagePacks(true) . '
 var langStrings = { "token": {} };
 var lang = new Lang();
 loadLanguageList();
 lang.init({
-	currentLang: (getCookie("organizrLanguage")) ? getCookie("organizrLanguage") : "en",
+	currentLang: (getCookie("londerlandLanguage")) ? getCookie("londerlandLanguage") : "en",
 	cookie: {
-		name: "organizrLanguage",
+		name: "londerlandLanguage",
 		expiry: 365,
 		path: "/"
 	},
@@ -89,7 +89,7 @@ $.urlParam = function(name){
 		return decodeURI(results[1]) || 0;
 	}
 };
-if ($.urlParam("return") !== null && "' . $Organizr->user['groupID'] . '" === "999") {
+if ($.urlParam("return") !== null && "' . $Londerland->user['groupID'] . '" === "999") {
 	local("set", "uri", $.urlParam("return"));
 }
 function localStorageSupport() {

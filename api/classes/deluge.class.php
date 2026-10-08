@@ -19,11 +19,11 @@ class deluge
 				$verify = 2;
 				break;
 			case 'NULL':
-				$cert = $options['organizr_cert'];
+				$cert = $options['londerland_cert'];
 				$verify = 2;
 				break;
 			default:
-				$cert = $options['organizr_cert'];
+				$cert = $options['londerland_cert'];
 				$verify = false;
 				break;
 		}

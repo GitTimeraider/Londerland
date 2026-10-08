@@ -2,7 +2,7 @@
 
 // OpenAPI documentation for the routes in api/plugins/php-mailer/api.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
@@ -16,7 +16,7 @@ use OpenApi\Attributes as OA;
 		new OA\Property(
 			description: 'email of recipients (csv)',
 			type: 'string',
-			example: 'causefx@organizr.app,elmer@organizr.app',
+			example: 'user@example.com,friend@example.com',
 			property: 'bcc',
 		),
 		new OA\Property(

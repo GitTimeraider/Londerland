@@ -166,10 +166,10 @@ trait SSOFunctions
 					$password = $this->decrypt($this->config['komgaSSOMasterPassword']);
 				}
 			}
-			$credentials = array('auth' => new OrganizrDigestAuth(array($email, $password)));
+			$credentials = array('auth' => new LonderlandDigestAuth(array($email, $password)));
 			$url = $this->qualifyURL($this->config['komgaURL']);
 			$options = $this->requestOptions($url, $this->getSSOTimeout(), true, false, $credentials);
-			$response = \WpOrg\Requests\Requests::get($url . '/api/v2/users/me', ['X-Auth-Token' => 'organizrSSO'], $options);
+			$response = \WpOrg\Requests\Requests::get($url . '/api/v2/users/me', ['X-Auth-Token' => 'londerlandSSO'], $options);
 			if ($response->success) {
 				if ($response->headers['x-auth-token']) {
 					$this->setLoggerChannel('Komga')->info('Grabbed token');
@@ -203,7 +203,7 @@ trait SSOFunctions
 			$url = $this->qualifyURL($this->config['jellyfinURL']);
 			$ssoUrl = $this->qualifyURL($this->config['jellyfinSSOURL']);
 			$headers = array(
-				'X-Emby-Authorization' => 'MediaBrowser Client="Organizr Jellyfin Tab", Device="Organizr_PHP", DeviceId="Organizr_SSO", Version="1.0"',
+				'X-Emby-Authorization' => 'MediaBrowser Client="Londerland Jellyfin Tab", Device="Londerland_PHP", DeviceId="Londerland_SSO", Version="1.0"',
 				"Accept" => "application/json",
 				"Content-Type" => "application/json",
 				"X-Forwarded-For" => $this->userIP()

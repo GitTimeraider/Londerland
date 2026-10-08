@@ -63,12 +63,12 @@ trait LogFunctions
 		}
 	}
 
-	public function setOrganizrLog()
+	public function setLonderlandLog()
 	{
 		if ($this->hasDB()) {
 			$this->makeDir($this->logLocation());
 			$logPath = $this->logLocation();
-			return $logPath . 'organizr.log';
+			return $logPath . 'londerland.log';
 		}
 		return false;
 	}
@@ -217,11 +217,11 @@ trait LogFunctions
 		return $this->setLoggerChannel(...$params);
 	}
 
-	public function setLoggerChannel($channel = 'Organizr', $username = null)
+	public function setLoggerChannel($channel = 'Londerland', $username = null)
 	{
 
 		if ($this->hasDB()) {
-			$channel = $channel ?: 'Organizr';
+			$channel = $channel ?: 'Londerland';
 			$setLogger = false;
 			if ($username) {
 				$username = $this->sanitizeUserString($username);
@@ -277,22 +277,22 @@ trait LogFunctions
 				break;
 		}
 		if ($slack) {
-			$organizrLogLevel = $this->getLogLevelClass($this->config['logLevel']);
-			if ($logLevel < $organizrLogLevel) {
-				$logLevel = $organizrLogLevel;
+			$londerlandLogLevel = $this->getLogLevelClass($this->config['logLevel']);
+			if ($logLevel < $londerlandLogLevel) {
+				$logLevel = $londerlandLogLevel;
 			}
 		}
 		return $logLevel;
 	}
 
-	public function setupLogger($channel = 'Organizr', $username = null)
+	public function setupLogger($channel = 'Londerland', $username = null)
 	{
 		if (!$username) {
 			$username = $this->user['username'] ?? 'System';
 		}
 		// Until the database and log file exist, log everything to a temporary file
 		$ready = $this->hasDB() && $this->logFile;
-		$channel = $ready ? ucwords(strtolower($channel)) : 'Organizr';
+		$channel = $ready ? ucwords(strtolower($channel)) : 'Londerland';
 		$logLevel = $ready ? $this->getLogLevelClass($this->config['logLevel']) : Monolog\Level::Debug->value;
 		$maxFiles = $ready ? (int)$this->config['maxLogFiles'] : 1;
 		try {
@@ -302,7 +302,7 @@ trait LogFunctions
 					$slackHandler = new Monolog\Handler\SlackWebhookHandler(
 						$this->config['slackLogWebhook'],
 						$this->config['slackLogWebHookChannel'] ?: null,
-						'Organizr',
+						'Londerland',
 						true,
 						':cat:',
 						true,
@@ -311,7 +311,7 @@ trait LogFunctions
 					);
 				}
 			}
-			$this->logger = new OrganizrLogger($channel, $username, $this->tempLogIfNeeded(), $maxFiles, Monolog\Level::fromValue($logLevel), $slackHandler);
+			$this->logger = new LonderlandLogger($channel, $username, $this->tempLogIfNeeded(), $maxFiles, Monolog\Level::fromValue($logLevel), $slackHandler);
 			$this->loggerSetup = true;
 			return $this->logger;
 		} catch (Exception $e) {
@@ -333,7 +333,8 @@ trait LogFunctions
 	public function tempLogIfNeeded()
 	{
 		if (!$this->logFile) {
-			return $this->root . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'organizr-' . $this->randString() . '.log';
+			// The system temp folder is writable for any user, the program folder may not be
+			return rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'londerland-' . $this->randString() . '.log';
 		} else {
 			return $this->logFile;
 		}
@@ -442,7 +443,7 @@ trait LogFunctions
 					$options .= '<option data-id="' . $k . '" value="api/v2/log/' . $k . '?filter=NONE&pageSize=1000&offset=0" ' . $selected . '>' . $name[0] . '</option>';
 					$i++;
 				}
-				return '<select class="form-control choose-organizr-log"><option data-id="all" value="api/v2/log/all?filter=NONE&pageSize=1000&offset=0">All</option>' . $options . '</select>';
+				return '<select class="form-control choose-londerland-log"><option data-id="all" value="api/v2/log/all?filter=NONE&pageSize=1000&offset=0">All</option>' . $options . '</select>';
 			}
 		}
 		return false;

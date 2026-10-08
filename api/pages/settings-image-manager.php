@@ -1,14 +1,14 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_image_manager';
-function get_page_settings_image_manager($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_image_manager';
+function get_page_settings_image_manager($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '

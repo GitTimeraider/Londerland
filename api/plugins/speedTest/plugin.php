@@ -16,7 +16,7 @@ $GLOBALS['plugins']['SpeedTest'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-class SpeedTest extends Organizr
+class SpeedTest extends Londerland
 {
 	public function speedTestGetSettings()
 	{

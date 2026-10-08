@@ -1,16 +1,23 @@
-# Organizr with Docker Compose
+# Londerland with Docker Compose
 #
-# Start:   docker compose up -d
-# Update:  docker compose pull && docker compose up -d
-# Logs:    docker compose logs -f organizr
-# Stop:    docker compose down
+# First time: create the data folder and give it to the user the container runs as (here 99:100):
+#            mkdir -p londerland-data && sudo chown -R 99:100 londerland-data
+# Start:     docker compose up -d
+# Update:    docker compose pull && docker compose up -d
+# Logs:      docker compose logs -f londerland
+# Stop:      docker compose down
 #
-# Everything Organizr needs is inside the image; the container downloads nothing when it starts.
+# Everything Londerland needs is inside the image; the container downloads nothing when it starts.
 
 services:
-  organizr:
-    image: ghcr.io/gittimeraider/organizr:latest
-    container_name: organizr
+  londerland:
+    image: ghcr.io/gittimeraider/londerland:latest
+    container_name: londerland
+    # Run as this user:group. Files in the data folder get this owner.
+    # Remove the line to run as root; the container then gives the data folder to its own web user.
+    user: "99:100"
+    security_opt:
+      - no-new-privileges:true
     ports:
       # <port on your machine>:<port in the container>. Change the left number if 80 is already in use, e.g. "8080:80"
       - "80:80"
@@ -19,5 +26,5 @@ services:
       - TZ=Etc/UTC
     volumes:
       # Settings, database, logs and uploaded images. Keep this folder to keep your setup across updates.
-      - ./organizr-data:/var/www/html/data
+      - ./londerland-data:/var/www/html/data
     restart: unless-stopped

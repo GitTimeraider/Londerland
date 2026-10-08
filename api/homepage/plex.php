@@ -25,7 +25,6 @@ trait PlexHomepageItem
 			}
 		}
 		$homepageSettings = [
-			'docs' => $this->docs('features/homepage/plex-homepage-item'),
 			'debug' => true,
 			'settings' => [
 				'Enable' => [

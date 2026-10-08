@@ -15,11 +15,10 @@ trait SonarrHomepageItem
 			return $homepageInformation;
 		}
 		$homepageSettings = [
-			'docs' => $this->docs('features/homepage/sonarr-homepage-item'),
 			'debug' => true,
 			'settings' => [
 				'About' => [
-					$this->settingsOption('about', 'Sonarr', ['about' => 'This item allows access to Sonarr\'s calendar data and aggregates it to Organizr\'s calendar.  Along with that you also have the Downloader function that allow access to Sonarr\'s queue.  The last item that is included is the API SOCKS function which acts as a middleman between API\'s which is useful if you are not port forwarding or reverse proxying Sonarr.']),
+					$this->settingsOption('about', 'Sonarr', ['about' => 'This item allows access to Sonarr\'s calendar data and aggregates it to Londerland\'s calendar.  Along with that you also have the Downloader function that allow access to Sonarr\'s queue.  The last item that is included is the API SOCKS function which acts as a middleman between API\'s which is useful if you are not port forwarding or reverse proxying Sonarr.']),
 				],
 				'Enable' => [
 					$this->settingsOption('enable', 'homepageSonarrEnabled'),
@@ -86,7 +85,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$results = $downloader->getRootFolder();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -179,7 +178,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], $this->config['homepageSonarrQueueRefresh'], $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$results = $downloader->getQueue();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -217,7 +216,7 @@ trait SonarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['sonarrDisableCertCheck'], $this->config['sonarrUseCustomCertificate']);
-				$sonarr = new OrganizrArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
+				$sonarr = new LonderlandArrClient($value['url'], $value['token'], 'sonarr', null, null, $options);
 				$sonarr = $sonarr->getCalendar($startDate, $endDate, $this->config['sonarrUnmonitored']);
 				$result = json_decode($sonarr, true);
 				if (is_array($result) || is_object($result)) {

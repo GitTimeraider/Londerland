@@ -118,7 +118,7 @@ trait PiHoleHomepageItem
 		$sessions = $this->doRequest($base_url, "getAuths", ["sid" => $sid]);
 		foreach ($sessions as $session) {
 			//  Skip if not right user agent, skip if current session
-			if ($session['user_agent'] != 'Organizr' || $session['current_session'] == '1') {
+			if ($session['user_agent'] != 'Londerland' || $session['current_session'] == '1') {
 				continue;
 			}
 			$this->doRequest($base_url,"deleteAuth", ["sid" => $sid],  $session['id']);
@@ -194,7 +194,7 @@ trait PiHoleHomepageItem
 			return $payload;
 		};
 		$url = $this->qualifyURL("$baseUrl/api/{$urlHandler($data)}");
-		$headers = $headers + ["User-Agent" => 'Organizr'];
+		$headers = $headers + ["User-Agent" => 'Londerland'];
 		try {
 			$response = \WpOrg\Requests\Requests::request($url, $headers, $payloadHandler($data), strtoupper($requestType));
 			

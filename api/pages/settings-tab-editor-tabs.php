@@ -1,14 +1,14 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_tab_editor_tabs';
-function get_page_settings_tab_editor_tabs($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_tab_editor_tabs';
+function get_page_settings_tab_editor_tabs($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	$iconSelectors = '

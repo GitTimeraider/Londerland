@@ -1,14 +1,14 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_user_manage_users';
-function get_page_settings_user_manage_users($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_user_manage_users';
+function get_page_settings_user_manage_users($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '
@@ -19,7 +19,7 @@ function get_page_settings_user_manage_users($Organizr)
 		const userError = function(title) {
 			return function(xhr) {
 				message(title, xhr.responseJSON.response.message, activeInfo.settings.notifications.position, "#FFF", "error", "10000");
-				console.error("Organizr Function: API Connection Failed");
+				console.error("Londerland Function: API Connection Failed");
 			};
 		};
 		window.refreshManageUsers = function() {
@@ -95,7 +95,7 @@ function get_page_settings_user_manage_users($Organizr)
 							confirmButtonColor: "#DD6B55"
 						}).then(function(result) {
 							if (result.isConfirmed) {
-								organizrAPI2("DELETE", "api/v2/users/" + user.id, null, true).done(function() {
+								londerlandAPI2("DELETE", "api/v2/users/" + user.id, null, true).done(function() {
 									window.refreshManageUsers();
 									message("User Deleted", "", activeInfo.settings.notifications.position, "#FFF", "success", "5000");
 								}).fail(userError("User Deleted Error"));
@@ -120,7 +120,7 @@ function get_page_settings_user_manage_users($Organizr)
 				alert("Could not get ID");
 				return;
 			}
-			organizrAPI2("PUT", "api/v2/users/" + id, { [field]: value }, true).done(function(data) {
+			londerlandAPI2("PUT", "api/v2/users/" + id, { [field]: value }, true).done(function(data) {
 				message("User Updated", data.response.message, activeInfo.settings.notifications.position, "#FFF", "success", "5000");
 			}).fail(function(xhr) {
 				cell.restoreOldValue();

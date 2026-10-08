@@ -1,8 +1,8 @@
 <?php
 $app->get('/token/me', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->user;
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->user;
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -10,9 +10,9 @@ $app->get('/token/me', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->post('/token/validate', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(999, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->validateToken($_REQUEST["Token"], true);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(999, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->validateToken($_REQUEST["Token"], true);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -20,9 +20,9 @@ $app->post('/token/validate', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->delete('/token/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(998, true)) {
-		$Organizr->revokeTokenByIdCurrentUser($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(998, true)) {
+		$Londerland->revokeTokenByIdCurrentUser($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

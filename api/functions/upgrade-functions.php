@@ -107,6 +107,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.0';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -464,12 +472,15 @@ trait UpgradeFunctions
 				$this->upgradePluginsToDataFolder();
 				break;
 			case '2.1.2200':
-				$this->backupOrganizr();
+				$this->backupLonderland();
 				$this->addGroupIdMaxToDatabase();
 				$this->addAddToAdminToDatabase();
 				break;
 			case '2.1.5000':
 				$this->fixGroupOIDC();
+				break;
+			case '2.2.0':
+				$this->upgradeTabImagesToLonderland();
 				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
@@ -632,6 +643,23 @@ trait UpgradeFunctions
 		return $this->processQueries($response);
 	}
 
+	public function upgradeTabImagesToLonderland()
+	{
+		// Tabs that used one of the logos of the old image folder
+		$response = [
+			array(
+				'function' => 'query',
+				'query' => array(
+					'UPDATE tabs SET image = REPLACE(REPLACE(REPLACE(image, %s, %s), %s, %s), %s, %s)',
+					'plugins/images/organizr/', 'plugins/images/londerland/',
+					'organizr-logo-h', 'londerland-logo-h',
+					'organizr_logo', 'londerland_logo',
+				)
+			),
+		];
+		return $this->processQueries($response);
+	}
+
 	public function upgradeHomepageTabURL()
 	{
 		$response = [
@@ -660,7 +688,7 @@ trait UpgradeFunctions
 					$newPlugins[$info[0]] = [
 						'name' => $info[0],
 						'version' => $info[1],
-						'repo' => 'organizr'
+						'repo' => 'londerland'
 					];
 				}
 			} else {
@@ -670,7 +698,7 @@ trait UpgradeFunctions
 					$newPlugins[$info[0]] = [
 						'name' => $info[0],
 						'version' => $info[1],
-						'repo' => 'https://github.com/Organizr/Organizr-Plugins'
+						'repo' => 'londerland'
 					];
 				}
 			}
@@ -727,7 +755,7 @@ trait UpgradeFunctions
 
 	public function removeOldCustomHTML()
 	{
-		$backup = $this->backupOrganizr();
+		$backup = $this->backupLonderland();
 		if ($backup) {
 			$keys = [
 				'homepageCustomHTML01Enabled' => 'homepageCustomHTMLoneEnabled',

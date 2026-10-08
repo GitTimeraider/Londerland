@@ -21,13 +21,13 @@ trait OverseerrHomepageItem
 				'Enable' => [
 					$this->settingsOption('enable', 'homepageOverseerrEnabled'),
 					$this->settingsOption('auth', 'homepageOverseerrAuth'),
-					$this->settingsOption('notice', '', ['title' => 'Attention', 'body' => 'Since Organizr supports multiple Request Providers, You must now select which service you want to submit requests through']),
+					$this->settingsOption('notice', '', ['title' => 'Attention', 'body' => 'Since Londerland supports multiple Request Providers, You must now select which service you want to submit requests through']),
 					$this->settingsOption('select', 'defaultRequestService', ['label' => 'Default Request Service', 'options' => $this->requestServiceOptions()]),
 				],
 				'Connection' => [
 					$this->settingsOption('url', 'overseerrURL'),
 					$this->settingsOption('token', 'overseerrToken'),
-					$this->settingsOption('username', 'overseerrFallbackUser', ['label' => 'Overseerr Fallback User', 'help' => 'Organizr will request an Overseerr User Token based off of this user credentials']),
+					$this->settingsOption('username', 'overseerrFallbackUser', ['label' => 'Overseerr Fallback User', 'help' => 'Londerland will request an Overseerr User Token based off of this user credentials']),
 					$this->settingsOption('password', 'overseerrFallbackPassword', ['label' => 'Overseerr Fallback Password',]),
 					$this->settingsOption('disable-cert-check', 'overseerrDisableCertCheck'),
 					$this->settingsOption('use-custom-certificate', 'overseerrUseCustomCertificate'),

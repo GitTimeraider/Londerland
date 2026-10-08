@@ -34,7 +34,7 @@ trait RTorrentHomepageItem
 											<br/></br>
 											<span lang="en">
 												<h4><b>Note about API URL</b></h4>
-												Organizr appends the url with <code>/RPC2</code> unless the URL ends in <code>.php</code><br/>
+												Londerland appends the url with <code>/RPC2</code> unless the URL ends in <code>.php</code><br/>
 												<h5>Possible URLs:</h5>
 												<li>http://localhost:8080</li>
 												<li>https://domain.site/xmlrpc.php</li>
@@ -88,7 +88,7 @@ trait RTorrentHomepageItem
 			$url = $this->rTorrentURL();
 			$options = $this->requestOptions($url, null, $this->config['rTorrentDisableCertCheck'], $this->config['rTorrentUseCustomCertificate']);
 			if ($this->config['rTorrentUsername'] !== '' && $this->decrypt($this->config['rTorrentPassword']) !== '') {
-				$credentials = array('auth' => new OrganizrDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
+				$credentials = array('auth' => new LonderlandDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
 			$data = xmlrpc_encode_request("system.listMethods", null);
@@ -187,7 +187,7 @@ trait RTorrentHomepageItem
 			$url = $this->rTorrentURL();
 			$options = $this->requestOptions($url, $this->config['rTorrentRefresh'], $this->config['rTorrentDisableCertCheck'], $this->config['rTorrentUseCustomCertificate']);
 			if ($this->config['rTorrentUsername'] !== '' && $this->decrypt($this->config['rTorrentPassword']) !== '') {
-				$credentials = array('auth' => new OrganizrDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
+				$credentials = array('auth' => new LonderlandDigestAuth(array($this->config['rTorrentUsername'], $this->decrypt($this->config['rTorrentPassword']))));
 				$options = array_merge($options, $credentials);
 			}
 			$data = xmlrpc_encode_request("d.multicall2", array(

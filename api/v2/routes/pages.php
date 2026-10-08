@@ -1,8 +1,8 @@
 <?php
 $app->get('/page/{page}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$page = $Organizr->getPage($args['page']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$page = $Londerland->getPage($args['page']);
 		if ($page) {
 			$GLOBALS['api']['response']['data'] = $page;
 		}
@@ -13,9 +13,9 @@ $app->get('/page/{page}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/page', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$page = $Organizr->getPageList();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$page = $Londerland->getPageList();
 		if ($page) {
 			$GLOBALS['api']['response']['data'] = $page;
 		}

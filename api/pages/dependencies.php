@@ -1,9 +1,9 @@
 <?php
-$GLOBALS['organizrPages'][] = 'dependencies';
-function get_page_dependencies($Organizr)
+$GLOBALS['londerlandPages'][] = 'dependencies';
+function get_page_dependencies($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
 	return '
 <script>
@@ -11,7 +11,7 @@ function get_page_dependencies($Organizr)
 <div class="container-fluid">
 	<div class="row bg-title">
 		<div class="col-xl-3 col-lg-4 col-md-4 col-12">
-			<h4 class="page-title" lang="en">Organizr Dependency Check</h4>
+			<h4 class="page-title" lang="en">Londerland Dependency Check</h4>
 		</div>
 		<!-- /.col-xl-12 -->
 	</div>

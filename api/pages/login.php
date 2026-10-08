@@ -1,22 +1,22 @@
 <?php
-$GLOBALS['organizrPages'][] = 'login';
-function get_page_login($Organizr)
+$GLOBALS['londerlandPages'][] = 'login';
+function get_page_login($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	$hideOrganizrLogin = ($Organizr->checkoAuth()) ? 'collapse' : 'collapse show';
-	$hideOrganizrLoginHeader = ($Organizr->checkoAuthOnly()) ? 'hidden' : '';
-	$hideOrganizrLoginHeader2 = ($Organizr->checkoAuth()) ? '' : 'hidden';
-	$hideOrganizrRecoveryPassword = ($Organizr->config['disableRecoverPass']) ? 'hidden' : '';
-	$customForgotPasswordText = (empty($Organizr->config['customForgotPassText'])) ? 'Enter your Email and instructions will be sent to you!' : $Organizr->config['customForgotPassText'];
-	$customForgotPasswordText = ($Organizr->config['disableRecoverPass']) ? 'Disabled' : $customForgotPasswordText;
+	$hideLonderlandLogin = ($Londerland->checkoAuth()) ? 'collapse' : 'collapse show';
+	$hideLonderlandLoginHeader = ($Londerland->checkoAuthOnly()) ? 'hidden' : '';
+	$hideLonderlandLoginHeader2 = ($Londerland->checkoAuth()) ? '' : 'hidden';
+	$hideLonderlandRecoveryPassword = ($Londerland->config['disableRecoverPass']) ? 'hidden' : '';
+	$customForgotPasswordText = (empty($Londerland->config['customForgotPassText'])) ? 'Enter your Email and instructions will be sent to you!' : $Londerland->config['customForgotPassText'];
+	$customForgotPasswordText = ($Londerland->config['disableRecoverPass']) ? 'Disabled' : $customForgotPasswordText;
 	$oidcAutoRedirectScript = '';
-	if ($Organizr->shouldAutoRedirectToOIDC()) {
-		$provider = $Organizr->getAutoRedirectProvider();
+	if ($Londerland->shouldAutoRedirectToOIDC()) {
+		$provider = $Londerland->getAutoRedirectProvider();
 		$oidcAutoRedirectScript = '
 // OIDC Auto-redirect
 if (!window.location.hash.includes("noredirect") && !sessionStorage.getItem("oidc_no_redirect")) {
@@ -36,7 +36,7 @@ if(activeInfo.settings.login.rememberMe){
 		<div class="white-box">
 			<form class="form-horizontal" id="loginform" onsubmit="return false;">
 				<input id="login-attempts" class="form-control" name="loginAttempts" type="hidden">
-				' . $Organizr->logoOrText() . '
+				' . $Londerland->logoOrText() . '
 				<div id="oAuth-div" class="form-group hidden">
 					<div class="col-12">
 						<div class="card card-success animated tada">
@@ -63,16 +63,16 @@ if(activeInfo.settings.login.rememberMe){
 					</div>
 				</div>
 				<div class="card-stack" id="login-panels" data-type="accordion" aria-multiselectable="true" role="tablist">
-					<!-- ORGANIZR LOGIN -->
+					<!-- LONDERLAND LOGIN -->
 					<div class="card">
-						<div class="card-header bg-org ' . $hideOrganizrLoginHeader . ' ' . $hideOrganizrLoginHeader2 . '" id="organizr-login-heading" role="tab">
-							<a class="card-title collapsed" data-bs-toggle="collapse" href="#organizr-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="organizr-login-collapse">
-								<img class="lazyload loginTitle" data-src="plugins/images/organizr/logo-no-border.png"> &nbsp;
-								<span class="text-uppercase fw300" lang="en">Login with Organizr</span>
+						<div class="card-header bg-org ' . $hideLonderlandLoginHeader . ' ' . $hideLonderlandLoginHeader2 . '" id="londerland-login-heading" role="tab">
+							<a class="card-title collapsed" data-bs-toggle="collapse" href="#londerland-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="londerland-login-collapse">
+								<img class="lazyload loginTitle" data-src="plugins/images/londerland/logo-no-border.png"> &nbsp;
+								<span class="text-uppercase fw300" lang="en">Login with Londerland</span>
 							</a>
 							<div class="clearfix"></div>
 						</div>
-						<div class="card-collapse ' . $hideOrganizrLogin . '" id="organizr-login-collapse" aria-labelledby="organizr-login-heading" role="tabpanel">
+						<div class="card-collapse ' . $hideLonderlandLogin . '" id="londerland-login-collapse" aria-labelledby="londerland-login-heading" role="tabpanel">
 							<div class="card-body">
 							
 								<div class="form-group">
@@ -102,18 +102,18 @@ if(activeInfo.settings.login.rememberMe){
 									<div class="col-md-12 text-center">
 										<input id="oAuth-Input" class="form-control" name="oAuth" type="hidden">
 										<input id="oAuthType-Input" class="form-control" name="oAuthType" type="hidden">
-										' . $Organizr->showLogin() . '
+										' . $Londerland->showLogin() . '
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-					<!-- END ORGANIZR LOGIN -->
+					<!-- END LONDERLAND LOGIN -->
 					<!-- PLEX OAUTH LOGIN -->
-					' . $Organizr->showoAuth() . '
+					' . $Londerland->showoAuth() . '
 					<!-- END PLEX OAUTH LOGIN -->
 					<!-- OIDC SSO LOGIN -->
-					' . $Organizr->showoAuthOIDC() . '
+					' . $Londerland->showoAuthOIDC() . '
 					<!-- END OIDC SSO LOGIN -->
 				</div>
 			</form>
@@ -156,12 +156,12 @@ if(activeInfo.settings.login.rememberMe){
 						<p class="text-muted" lang="en">' . $customForgotPasswordText . '</p>
 					</div>
 				</div>
-				<div class="form-group ' . $hideOrganizrRecoveryPassword . '">
+				<div class="form-group ' . $hideLonderlandRecoveryPassword . '">
 					<div class="col-12">
 						<input id="recover-input" class="form-control" name="email" type="text" placeholder="Email" lang="en" required>
 					</div>
 				</div>
-				<div class="form-group text-center m-t-20 ' . $hideOrganizrRecoveryPassword . '">
+				<div class="form-group text-center m-t-20 ' . $hideLonderlandRecoveryPassword . '">
 					<div class="col-12">
 						<button class="btn btn-primary btn-lg w-100 text-uppercase waves-effect waves-light reset-button" type="submit" lang="en">Reset</button>
 					</div>

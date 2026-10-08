@@ -89,7 +89,7 @@ trait ProwlarrHomepageItem
 			return false;
 		}
 		$apiURL = $this->qualifyURL($this->config['prowlarrURL']);
-		$endpoint = $apiURL . '/api/v1/search?apikey=' . $this->config['prowlarrToken'] . '&query=this-is-just-a-test-for-organizr';
+		$endpoint = $apiURL . '/api/v1/search?apikey=' . $this->config['prowlarrToken'] . '&query=this-is-just-a-test-for-londerland';
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['prowlarrDisableCertCheck'], $this->config['prowlarrUseCustomCertificate']);

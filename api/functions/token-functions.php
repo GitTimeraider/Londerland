@@ -15,15 +15,15 @@ trait TokenFunctions
 	// HMAC-SHA256 requires a key of at least 256 bits; stretch shorter hash keys so they remain usable
 	public function jwtSigningKey()
 	{
-		$hashKey = (string)$this->config['organizrHash'];
+		$hashKey = (string)$this->config['londerlandHash'];
 		return (strlen($hashKey) >= 32) ? $hashKey : hash('sha256', $hashKey);
 	}
 
 	public function validationConstraints()
 	{
 		return [
-			new Lcobucci\JWT\Validation\Constraint\IssuedBy('Organizr'),
-			new Lcobucci\JWT\Validation\Constraint\PermittedFor('Organizr'),
+			new Lcobucci\JWT\Validation\Constraint\IssuedBy('Londerland'),
+			new Lcobucci\JWT\Validation\Constraint\PermittedFor('Londerland'),
 			new Lcobucci\JWT\Validation\Constraint\LooseValidAt(Lcobucci\Clock\SystemClock::fromUTC())
 		];
 	}
@@ -34,7 +34,7 @@ trait TokenFunctions
 			$result = [];
 			// Check Token with JWT
 			// Set key
-			if (!isset($this->config['organizrHash'])) {
+			if (!isset($this->config['londerlandHash'])) {
 				return null;
 			}
 			$config = $this->configToken();

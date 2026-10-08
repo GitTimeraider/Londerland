@@ -1,8 +1,8 @@
 <?php
 $app->post('/certificate/custom', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->uploadCert();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->uploadCert();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

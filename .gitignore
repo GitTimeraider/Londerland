@@ -57,9 +57,9 @@ php_errors.log
 .pydio_id
 
 # =========================
-# Organizr files
+# Londerland files
 # =========================
-organizr-*.log
+londerland-*.log
 databaseLocation.ini.php
 homepageSettings.ini.php
 loginLog.json
@@ -90,7 +90,6 @@ config/users*.bak.db
 config/tmp/*
 data/*
 data/config/*
-docs/api.json
 images/cache/*
 backups/*
 backups/
@@ -98,11 +97,11 @@ backups
 tracy/
 logs/
 debug.php
-OrganizrV2/*
+LonderlandV2/*
 orgv2/*
 test/*
-organizrLoginLog.json
-organizrLog.json
+londerlandLoginLog.json
+londerlandLog.json
 api/config/config*
 upgrade/*
 api/upgrade*
@@ -111,7 +110,7 @@ api/functions/cert/custom.pem
 wallpaper.jpg
 strings.json
 css/themes/*.css
-!css/themes/Organizr.css
+!css/themes/Londerland.css
 !css/themes/Blue.css
 *sonflix*
 plugins/images/cache/*.jpg
@@ -201,5 +200,7 @@ node_modules/
 assets/vendor/
 # generated from the matching non-minified file by scripts/build-frontend.mjs
 css/dark.min.css
-css/organizr.min.css
+css/londerland.min.css
 js/custom.min.js
+dev-data/
+server.log

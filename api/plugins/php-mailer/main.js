@@ -15,7 +15,7 @@ function phpmLaunch(){
 				</div>
 			</div>
 			`;
-			$('.organizr-area').after(htmlDOM);
+			$('.londerland-area').after(htmlDOM);
 			$('.append-menu').after(menuList);
 			pageLoad();
 		}
@@ -42,7 +42,7 @@ function sendMail(){
 			body:body
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/php-mailer/email/send',post).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/php-mailer/email/send',post).done(function(data) {
 			var response = data.response;
 			if(response.result == 'success'){
 				$.magnificPopup.close();
@@ -51,7 +51,7 @@ function sendMail(){
 				messageSingle('',response.message,activeInfo.settings.notifications.position,'#FFF','error','5000');
 			}
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr);
+			LonderlandApiError(xhr);
 		});
 		ajaxloader();
 	}
@@ -194,12 +194,12 @@ $(document).on("change", "#email-user-list", function () {
 });
 $(document).on('click', '.loadUserList', function() {
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/php-mailer/email/list').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/php-mailer/email/list').done(function(data) {
 		var response = data.response;
 		$('#user-list-div').html(buildUserList(response.data));
 		initMultiSelect('#email-user-list', { closeOnSelect: false });
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 	});
 	ajaxloader();
 });
@@ -237,7 +237,7 @@ function addForgotPassword(){
 $(document).on('click', '.phpmSendTestEmail', function() {
 	messageSingle('',window.lang.translate('Sending Test E-Mail'),activeInfo.settings.notifications.position,'#FFF','info','5000');
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/php-mailer/email/test').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/php-mailer/email/test').done(function(data) {
 		var response = data.response;
 		if(response.message !== null && response.message.indexOf('|||DEBUG|||') == 0){
 			messageSingle('',window.lang.translate('Press F12 to check Console for output'),activeInfo.settings.notifications.position,'#FFF','warning','5000');
@@ -248,7 +248,7 @@ $(document).on('click', '.phpmSendTestEmail', function() {
 			messageSingle('',response.message,activeInfo.settings.notifications.position,'#FFF','error','5000');
 		}
 	}).fail(function(xhr, data) {
-		OrganizrApiError(xhr, 'Mailer Error');
+		LonderlandApiError(xhr, 'Mailer Error');
 	});
 	ajaxloader();
 });

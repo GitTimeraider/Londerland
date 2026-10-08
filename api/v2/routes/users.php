@@ -1,8 +1,8 @@
 <?php
 $app->get('/users', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getAllUsers();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getAllUsers();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,9 +11,9 @@ $app->get('/users', function ($request, $response, $args) {
 	
 });
 $app->post('/users', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->addUser($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->addUser($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -22,9 +22,9 @@ $app->post('/users', function ($request, $response, $args) {
 	
 });
 $app->get('/users/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getUserById($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getUserById($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -33,9 +33,9 @@ $app->get('/users/{id}', function ($request, $response, $args) {
 	
 });
 $app->put('/users/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(998, true)) {
-		$Organizr->updateUser($args['id'], $Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(998, true)) {
+		$Londerland->updateUser($args['id'], $Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -44,10 +44,10 @@ $app->put('/users/{id}', function ($request, $response, $args) {
 	
 });
 $app->delete('/users/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->deleteUser($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->deleteUser($args['id']);
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -56,9 +56,9 @@ $app->delete('/users/{id}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->post('/users/lock', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(998, true)) {
-		$Organizr->lockCurrentUser();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(998, true)) {
+		$Londerland->lockCurrentUser();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -67,9 +67,9 @@ $app->post('/users/lock', function ($request, $response, $args) {
 	
 });
 $app->post('/users/unlock', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(998, true)) {
-		$Organizr->unlockCurrentUser($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(998, true)) {
+		$Londerland->unlockCurrentUser($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -78,9 +78,9 @@ $app->post('/users/unlock', function ($request, $response, $args) {
 	
 });
 $app->post('/users/lock/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->lockUser($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->lockUser($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -89,9 +89,9 @@ $app->post('/users/lock/{id}', function ($request, $response, $args) {
 	
 });
 $app->post('/users/unlock/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->unlockUser($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->unlockUser($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -100,9 +100,9 @@ $app->post('/users/unlock/{id}', function ($request, $response, $args) {
 	
 });
 $app->post('/users/import/{type}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->importUsersType($args['type']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->importUsersType($args['type']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -111,8 +111,8 @@ $app->post('/users/import/{type}', function ($request, $response, $args) {
 	
 });
 $app->post('/users/register', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$Organizr->register($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$Londerland->register($Londerland->apiData($request));
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
 		->withHeader('Content-Type', 'application/json;charset=UTF-8')
@@ -120,8 +120,8 @@ $app->post('/users/register', function ($request, $response, $args) {
 	
 });
 $app->post('/users/recover', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$Organizr->recover($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$Londerland->recover($Londerland->apiData($request));
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
 		->withHeader('Content-Type', 'application/json;charset=UTF-8')

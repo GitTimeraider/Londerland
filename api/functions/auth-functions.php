@@ -27,7 +27,7 @@ trait AuthFunctions
 			'password' => (empty($this->config['ldapBindPassword'])) ? null : $this->decrypt($this->config['ldapBindPassword']),
 			'port' => (int)$ldapPort,
 			'follow_referrals' => false,
-			// LdapRecord: use_tls = ldaps:// (Organizr "SSL"), use_starttls = STARTTLS (Organizr "TLS")
+			// LdapRecord: use_tls = ldaps:// (Londerland "SSL"), use_starttls = STARTTLS (Londerland "TLS")
 			'use_tls' => (bool)$this->config['ldapSSL'],
 			'use_starttls' => (bool)$this->config['ldapTLS'],
 			'version' => 3,
@@ -183,7 +183,7 @@ trait AuthFunctions
 			$headers = array(
 				'Accept' => 'application/json',
 				'Content-Type' => 'application/x-www-form-urlencoded',
-				'X-Plex-Product' => 'Organizr',
+				'X-Plex-Product' => 'Londerland',
 				'X-Plex-Version' => '2.0',
 				'X-Plex-Client-Identifier' => $this->config['uuid'],
 			);
@@ -282,7 +282,7 @@ trait AuthFunctions
 		try {
 			$url = $this->qualifyURL($this->config['embyURL']) . '/Users/AuthenticateByName';
 			$headers = array(
-				'Authorization' => 'Emby UserId="e8837bc1-ad67-520e-8cd2-f629e3155721", Client="None", Device="Organizr", DeviceId="xxx", Version="1.0.0.0"',
+				'Authorization' => 'Emby UserId="e8837bc1-ad67-520e-8cd2-f629e3155721", Client="None", Device="Londerland", DeviceId="xxx", Version="1.0.0.0"',
 				'Content-Type' => 'application/json',
 			);
 			$data = array(
@@ -319,7 +319,7 @@ trait AuthFunctions
 		try {
 			$url = $this->qualifyURL($this->config['jellyfinURL']) . '/Users/authenticatebyname';
 			$headers = array(
-				'X-Emby-Authorization' => 'MediaBrowser Client="Organizr Auth", Device="Organizr", DeviceId="orgv2", Version="2.0"',
+				'X-Emby-Authorization' => 'MediaBrowser Client="Londerland Auth", Device="Londerland", DeviceId="orgv2", Version="2.0"',
 				'Content-Type' => 'application/json',
 			);
 			$data = array(
@@ -333,7 +333,7 @@ trait AuthFunctions
 					$this->setLoggerChannel('JellyFin')->info('Found User and Logged In');
 					// Login Success - Now Logout JellyFin Session As We No Longer Need It
 					$headers = array(
-						'X-Emby-Authorization' => 'MediaBrowser Client="Organizr Auth", Device="Organizr", DeviceId="orgv2", Version="2.0", Token="' . $json['AccessToken'] . '"',
+						'X-Emby-Authorization' => 'MediaBrowser Client="Londerland Auth", Device="Londerland", DeviceId="orgv2", Version="2.0", Token="' . $json['AccessToken'] . '"',
 						'Content-Type' => 'application/json',
 					);
 					$response = \WpOrg\Requests\Requests::post($this->qualifyURL($this->config['jellyfinURL']) . '/Sessions/Logout', $headers, array());
@@ -360,7 +360,7 @@ trait AuthFunctions
 			$connectURL = 'https://connect.emby.media/service/user/authenticate';
 			$headers = array(
 				'Accept' => 'application/json',
-				'X-Application' => 'Organizr/2.0'
+				'X-Application' => 'Londerland/2.0'
 			);
 			$data = array(
 				'nameOrEmail' => $username,

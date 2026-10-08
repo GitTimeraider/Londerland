@@ -16,7 +16,7 @@ $GLOBALS['plugins']['HealthChecks'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-class HealthChecks extends Organizr
+class HealthChecks extends Londerland
 {
 	public function _healthCheckPluginGetSettings()
 	{
@@ -135,7 +135,7 @@ class HealthChecks extends Organizr
 	{
 		$success = false;
 		$options = array('verify' => false, 'verifyname' => false, 'follow_redirects' => true, 'redirects' => 10, 'timeout' => 60);
-		$headers = array('Token' => $this->config['organizrAPI']);
+		$headers = array('Token' => $this->config['londerlandAPI']);
 		$url = $this->qualifyURL($url);
 		try {
 			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);

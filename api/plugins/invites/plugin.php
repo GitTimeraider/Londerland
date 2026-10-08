@@ -16,7 +16,7 @@ $GLOBALS['plugins']['Invites'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-class Invites extends Organizr
+class Invites extends Londerland
 {
 	public function __construct()
 	{

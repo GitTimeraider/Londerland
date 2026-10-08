@@ -2,7 +2,7 @@
 
 trait BackupFunctions
 {
-	public function getOrganizrBackupLocation()
+	public function getLonderlandBackupLocation()
 	{
 		$defaultPath = $this->config['dbLocation'] . 'backups' . DIRECTORY_SEPARATOR;
 		$userPath = $this->config['backupLocation'];
@@ -29,7 +29,7 @@ trait BackupFunctions
 	public function deleteBackup($filename)
 	{
 		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-		$path = $this->getOrganizrBackupLocation();
+		$path = $this->getLonderlandBackupLocation();
 		$filename = $path . $filename;
 		if ($ext == 'zip') {
 			if (file_exists($filename)) {
@@ -48,7 +48,7 @@ trait BackupFunctions
 
 	public function downloadBackup($filename)
 	{
-		$path = $this->getOrganizrBackupLocation();
+		$path = $this->getLonderlandBackupLocation();
 		$filename = $path . $filename;
 		if (file_exists($filename)) {
 			header('Content-Type: application/zip');
@@ -63,9 +63,9 @@ trait BackupFunctions
 		}
 	}
 
-	public function backupOrganizr($type = 'config')
+	public function backupLonderland($type = 'config')
 	{
-		$directory = $this->getOrganizrBackupLocation();
+		$directory = $this->getLonderlandBackupLocation();
 		@mkdir($directory, 0770, true);
 		switch ($type) {
 			case 'config':
@@ -74,7 +74,7 @@ trait BackupFunctions
 				break;
 			default:
 		}
-		$this->setLoggerChannel('Backup')->notice('Backing up Organizr');
+		$this->setLoggerChannel('Backup')->notice('Backing up Londerland');
 		$zipName = $directory . 'backup[' . date('Y-m-d_H-i') . ' - ' . $this->random_ascii_string(2) . '][' . $this->version . '].zip';
 		$zip = new ZipArchive;
 		$zip->open($zipName, ZipArchive::CREATE);
@@ -113,7 +113,7 @@ trait BackupFunctions
 				foreach ($list as $count => $backup) {
 					$count++;
 					if ($count <= $killCount) {
-						$this->log('Cron')->notice('Deleting organizr backup file as it is over limit', ['file' => $backup['name']]);
+						$this->log('Cron')->notice('Deleting londerland backup file as it is over limit', ['file' => $backup['name']]);
 						$this->deleteBackup($backup['name']);
 					}
 				}
@@ -124,7 +124,7 @@ trait BackupFunctions
 
 	public function getBackups()
 	{
-		$path = $this->getOrganizrBackupLocation();
+		$path = $this->getLonderlandBackupLocation();
 		@mkdir($path, 0770, true);
 		$files = array_diff(scandir($path), array('.', '..'));
 		$fileList = [];

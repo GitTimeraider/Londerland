@@ -1,14 +1,14 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_tab_editor_homepage_order';
-function get_page_settings_tab_editor_homepage_order($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_tab_editor_homepage_order';
+function get_page_settings_tab_editor_homepage_order($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '
@@ -33,7 +33,7 @@ function get_page_settings_tab_editor_homepage_order($Organizr)
 	</div>
     <div class="card-wrapper collapse show" aria-expanded="true">
         <div class="card-body bg-org" >
-        <div class="row el-element-overlay m-b-40" id="settings-homepage-order">' . $Organizr->buildHomepageSettings() . '</div>
+        <div class="row el-element-overlay m-b-40" id="settings-homepage-order">' . $Londerland->buildHomepageSettings() . '</div>
         </div>
     </div>
 </div>

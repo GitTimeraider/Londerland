@@ -1,7 +1,7 @@
 <?php
 
 /**
- * JellyStat Homepage Plugin for Organizr
+ * JellyStat Homepage Plugin for Londerland
  * Supports both Emby and Jellyfin servers via JellyStat API or embedded interface
  */
 
@@ -845,7 +845,7 @@ trait JellyStatHomepageItem
         }
 
         function getJellyStatData() {
-            return organizrAPI2("GET", "api/v2/homepage/jellystat")
+            return londerlandAPI2("GET", "api/v2/homepage/jellystat")
             .done(function(data) {
                 console.log("JellyStat API Response:", data);
                 if (data && data.response && data.response.result === "success" && data.response.data) {
@@ -1115,7 +1115,7 @@ trait JellyStatHomepageItem
                     
                     html += "</div>";
                     
-                    // Add metadata popup elements (Organizr style) using sanitized ID
+                    // Add metadata popup elements (Londerland style) using sanitized ID
                     // Include a hidden anchor to trigger Magnific Popup, matching Emby/Jellyfin implementation
                     html += "\u003ca class=\\"inline-popups " + sanitizedId + " hidden\\" href=\\"#" + sanitizedId + "-metadata-div\\" data-effect=\\"mfp-zoom-out\\"\u003e\u003c/a\u003e";
                     html += "\u003cdiv id=\\"" + sanitizedId + "-metadata-div\\" class=\\"white-popup mfp-with-anim mfp-hide\\"\u003e";
@@ -1186,7 +1186,7 @@ trait JellyStatHomepageItem
                     
                     html += "</div>";
                     
-                    // Add metadata popup elements (Organizr style) using sanitized ID
+                    // Add metadata popup elements (Londerland style) using sanitized ID
                     // Include a hidden anchor to trigger Magnific Popup, matching Emby/Jellyfin implementation
                     html += "\u003ca class=\\"inline-popups " + sanitizedId + " hidden\\" href=\\"#" + sanitizedId + "-metadata-div\\" data-effect=\\"mfp-zoom-out\\"\u003e\u003c/a\u003e";
                     html += "\u003cdiv id=\\"" + sanitizedId + "-metadata-div\\" class=\\"white-popup mfp-with-anim mfp-hide\\"\u003e";
@@ -1275,7 +1275,7 @@ trait JellyStatHomepageItem
             }
         });
         
-        // JellyStat metadata popups are handled by Organizr\'s built-in metadata-get click handler
+        // JellyStat metadata popups are handled by Londerland\'s built-in metadata-get click handler
         // The handler will call api/v2/homepage/jellystat/metadata with the data-key value
         
         </script>

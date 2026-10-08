@@ -2,7 +2,7 @@
 
 // Shared OpenAPI schemas (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
@@ -70,7 +70,7 @@ use OpenApi\Attributes as OA;
 						new OA\Property(
 							type: 'string',
 							example: '2.0.650',
-							property: 'organizr_version',
+							property: 'londerland_version',
 						),
 					],
 					type: 'object',
@@ -270,8 +270,8 @@ use OpenApi\Attributes as OA;
 						properties: [
 							new OA\Property(
 								type: 'string',
-								example: 'causefx@organizr.app',
-								property: 'causefx',
+								example: 'user@example.com',
+								property: 'username',
 							),
 						],
 					),
@@ -291,8 +291,8 @@ use OpenApi\Attributes as OA;
 		new OA\Property(
 			description: 'config item name',
 			type: 'string',
-			example: 'v2-master',
-			property: 'branch',
+			example: 'My Dashboard',
+			property: 'title',
 		),
 		new OA\Property(
 			type: 'boolean',

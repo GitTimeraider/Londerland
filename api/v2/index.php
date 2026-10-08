@@ -62,11 +62,11 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 $app->setBasePath(getBasePath());
 $app->add(function ($request, $handler) {
-	// add the organizr to your request as [READ-ONLY]
-	$Organizr = new Organizr();
-	$request = $request->withAttribute('Organizr', $Organizr);
+	// add the londerland to your request as [READ-ONLY]
+	$Londerland = new Londerland();
+	$request = $request->withAttribute('Londerland', $Londerland);
 	// set custom error handler
-	set_error_handler([$Organizr, 'setAPIErrorResponse']);
+	set_error_handler([$Londerland, 'setAPIErrorResponse']);
 	return $handler->handle($request);
 });
 //$app->add(new Lowercase());

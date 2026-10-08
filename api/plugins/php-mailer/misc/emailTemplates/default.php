@@ -850,7 +850,7 @@ $email = '
                                                                     <tr>
                                                                         <td class="mcnImageContent" valign="top" style="padding-right: 9px; padding-left: 9px; padding-top: 0; padding-bottom: 0; text-align:center;">
 
-                                                                            <img align="center" alt="" src="' . $this->config['PHPMAILER-logo'] . '" width="564" style="max-width:700px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
+                                                                            <img align="center" alt="" src="' . $this->_phpMailerPluginLogo() . '" width="564" style="max-width:700px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
 
                                                                         </td>
                                                                     </tr>

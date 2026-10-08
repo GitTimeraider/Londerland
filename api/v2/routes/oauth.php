@@ -1,9 +1,9 @@
 <?php
 $app->get('/oauth/trakt', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->traktOAuth();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->traktOAuth();
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));

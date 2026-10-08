@@ -1,7 +1,7 @@
 {
-  "name": "organizr-frontend",
+  "name": "londerland-frontend",
   "private": true,
-  "description": "Frontend libraries for Organizr. Run `npm ci && npm run build` to populate assets/vendor and the minified CSS/JS.",
+  "description": "Frontend libraries for Londerland. Run `npm ci && npm run build` to populate assets/vendor and the minified CSS/JS.",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "build": "node scripts/build-frontend.mjs"

@@ -62,8 +62,8 @@ function chatLaunch(){
 				});
 			// check if the user is subscribed to the above channel
 			channel.bind('pusher:subscription_succeeded', function(members) {
-				organizrConsole('Plugin Function','Chat Websocket Connected!');
-				organizrConsole('Plugin Function','Connecting to Organizr Chat DB');
+				londerlandConsole('Plugin Function','Chat Websocket Connected!');
+				londerlandConsole('Plugin Function','Connecting to Londerland Chat DB');
 				getMessagesAndUsers(activeInfo.settings.homepage.refresh["CHAT-userRefreshTimeout"], true);
 			});
 			/*jslint browser: true*/
@@ -95,10 +95,10 @@ $('body').on('click', '.custom-send-button', function(e) {
 	var message = $('.chat-input-send').val();
 	// Validate Name field
 	if (message !== '') {
-		organizrAPI2('POST','api/v2/plugins/chat/message',{ message : message }).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/chat/message',{ message : message }).done(function(data) {
 			// Nada yet
 		}).fail(function(xhr) {
-			console.error("Organizr Function: API Connection Failed");
+			console.error("Londerland Function: API Connection Failed");
 		});
 		// Clear the message input field
 		$('.chat-input-send').val('');
@@ -155,7 +155,7 @@ function chatEntry(){
 }
 function getMessagesAndUsers(timeout, initial = false){
 	var timeout = (typeof timeout !== 'undefined') ? timeout : activeInfo.settings.homepage.refresh["CHAT-userRefreshTimeout"];
-	organizrAPI2('GET','api/v2/plugins/chat/message').done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/chat/message').done(function(data) {
 		var response = data.response;
 		if(initial == true){
 			$.each(response.data, function (i, v){
@@ -164,7 +164,7 @@ function getMessagesAndUsers(timeout, initial = false){
 		}
 		$('.chatonline').html(formatUsers(response.data));
 	}).fail(function(xhr) {
-		console.error("Organizr Function: API Connection Failed");
+		console.error("Londerland Function: API Connection Failed");
 	});
 	var timeoutTitle = 'ChatUserList';
 	if(typeof timeouts[timeoutTitle] !== 'undefined'){ clearTimeout(timeouts[timeoutTitle]); }

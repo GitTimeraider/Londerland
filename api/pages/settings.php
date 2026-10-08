@@ -1,28 +1,23 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings';
-function get_page_settings($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings';
+function get_page_settings($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
-	$Organizr->setLoggerChannel('Organizr');
-	$Organizr->logger->notice('Accessed admin settings page');
-	$systemMenus = $Organizr->systemMenuLists();
-	return $Organizr->pluginFiles('js', true) . '
+	$Londerland->setLoggerChannel('Londerland');
+	$Londerland->logger->notice('Accessed admin settings page');
+	$systemMenus = $Londerland->systemMenuLists();
+	return $Londerland->pluginFiles('js', true) . '
 <script>
 	(function() {
-		updateCheck();
 		authDebugCheck();
-		sponsorLoad();
-		newsLoad();
-		checkCommitLoad();
-		backersLoad();
 		[].slice.call(document.querySelectorAll(\'.sttabs-main-settings-div\')).forEach(function(el) {
 			new CBPFWTabs(el);
 		});
@@ -31,7 +26,7 @@ function get_page_settings($Organizr)
 <div class="container-fluid">
 	<div class="row bg-title">
 		<div class="col-xl-3 col-lg-4 col-md-4 col-12">
-			<h4 class="page-title" lang="en">Organizr Settings</h4>
+			<h4 class="page-title" lang="en">Londerland Settings</h4>
 		</div>
 		<div class="col-xl-9 col-md-8 col-lg-8 col-12">
 			<ol id="settingsBreadcrumb" class="breadcrumb">
@@ -86,37 +81,6 @@ function get_page_settings($Organizr)
 								<h2 lang="en">Loading...</h2>
 								<div class="clearfix"></div>
 							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-customize-settings">
-								<h2 lang="en">Loading...</h2>
-								<div class="clearfix"></div>
-							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-customize-marketplace">
-								<div class="card bg-org card-info">
-									<div class="card-header">
-										<span lang="en">Theme Marketplace</span>
-									</div>
-									<div class="card-wrapper collapse show" aria-expanded="true">
-										<div class="table-responsive">
-											<table class="table table-hover manage-u-table">
-												<thead>
-													<tr>
-														<th width="70" class="text-center" lang="en">THEME</th>
-														<th></th>
-														<th lang="en">CATEGORY</th>
-														<th lang="en">STATUS</th>
-														<th lang="en" style="text-align:center">INFO</th>
-														<th lang="en" style="text-align:center">INSTALL</th>
-														<th lang="en" style="text-align:center">DELETE</th>
-													</tr>
-												</thead>
-												<tbody id="manageThemeTable">
-													<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>
-												</tbody>
-											</table>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 					</section>
 					<! -- USER MANAGEMENT -->
@@ -133,7 +97,7 @@ function get_page_settings($Organizr)
 								<div class="clearfix"></div>
 							</div>
 							<div role="tabpanel" class="tab-pane fade" id="settings-user-import-users">
-								' . $Organizr->importUserButtons() . '
+								' . $Londerland->importUserButtons() . '
 								<div class="clearfix"></div>
 							</div>
 						</div>
@@ -161,35 +125,6 @@ function get_page_settings($Organizr)
 								<h2 lang="en">Loading...</h2>
 								<div class="clearfix"></div>
 							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-plugins-settings">
-								<h2 lang="en">Loading...</h2>
-								<div class="clearfix"></div>
-							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-plugins-marketplace">
-								<div class="card bg-org card-info">
-									<div class="card-header">
-										<span lang="en">Plugin Marketplace</span>
-									</div>
-									<div class="card-wrapper collapse show" aria-expanded="true">
-										<div class="table-responsive">
-											<table class="table table-hover manage-u-table">
-												<thead>
-													<tr>
-														<th width="70" class="text-center" lang="en">PLUGIN</th>
-														<th></th>
-														<th lang="en">CATEGORY</th>
-														<th lang="en">STATUS</th>
-														<th lang="en" style="text-align:center">INFO</th>
-														<th lang="en" style="text-align:center">INSTALL</th>
-														<th lang="en" style="text-align:center">DELETE</th>
-													</tr>
-												</thead>
-												<tbody id="managePluginTable"><td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td></tbody>
-											</table>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 					</section>
 					<! -- SYSTEM SETTINGS -->
@@ -215,174 +150,36 @@ function get_page_settings($Organizr)
 							</div>
 							<div role="tabpanel" class="tab-pane fade active show" id="settings-settings-about">
 								<div class="row">
-									<div class="col-xl-12">
-										<div class="card card-default">
-											<div class="card-header bg-org p-t-10 p-b-10">
-												<span class="float-start m-t-5">
-													<img class="lazyload loginTitle" data-src="plugins/images/organizr/logo-no-border.png"> &nbsp;
-													<span class="text-uppercase fw300" lang="en">Organizr News</span>
-												</span>
-												<div class="clearfix"></div>
-											</div>
-											<div class="card-wrapper p-b-0 collapse show bg-org">
-												<div id="organizrNewsPanel"></div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="row">
 									<div class="col-xl-6 col-md-12 col-lg-6">
 										<div class="card bg-org">
 											<div class="p-30">
 												<div class="row">
-													<div class="col-12"><img src="plugins/images/organizr/logo-wide.png" alt="organizr" class="img-fluid"></div>
+													<div class="col-12"><img src="plugins/images/londerland/logo-wide.png" alt="Londerland" class="img-fluid"></div>
 												</div>
 											</div>
 											<hr class="m-t-10">
-											<div class="p-20 text-center">
-												<p lang="en">Below you will find all the links for everything that has to do with Organizr</p>
+											<div class="p-20">
+												<p lang="en">Londerland brings all of your web applications together on one page, behind a single login.</p>
+												<p class="m-b-0"><small class="text-muted" lang="en">Free software under the GNU General Public License v3.0.</small></p>
 											</div>
-											<hr>
-											<ul class="dp-table profile-social-icons">
-												<li><a href="https://organizr.app" target="_blank"><i class="mdi mdi-web mdi-24px"></i></a></li>
-												<li><a href="https://reddit.com/r/organizr" target="_blank"><i class="mdi mdi-reddit mdi-24px"></i></a></li>
-												<li><a href="https://organizr.app/discord" target="_blank"><i class="fa-brands fa-discord" style="font-size: 24px"></i></a></li>
-												<li><a href="https://github.com/causefx/organizr" target="_blank"><i class="mdi mdi-github mdi-24px"></i></a></li>
-											</ul>
-											<hr>
-											<a href="https://poeditor.com/join/project/T6l68hksTE" target="_blank">
-												<div class="white-box bg-org">
-													<h4 lang="en">Want to help translate?</h4>
-													<p lang="en">Head on over to POEditor and help us translate Organizr into your language</p>
-													<p lang="en">I will try and import new strings every Friday</p>
-												</div>
-											</a>
-											
 										</div>
 									</div>
 									<div class="col-xl-6 col-md-12 col-lg-6">
 										<div class="white-box bg-org">
 											<h3 class="box-title" lang="en">Information</h3>
 											<ul class="feeds">
-												<li><div class="bg-info"><i class="mdi mdi-webpack mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Organizr Version</span> ' . $Organizr->version . '</li>
-												<li><div class="bg-info"><i class="mdi mdi-github mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Organizr Branch</span><a href="https://github.com/causefx/Organizr/commits/' . $Organizr->config['branch'] . '" target="_blank"> ' . $Organizr->config['branch'] . '</a></li>
-												<li><div class="bg-info"><i class="mdi mdi-database mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Database Driver</span> ' . $Organizr->config['driver'] . '&nbsp;<code><i class="fa fa-arrow-right"></i></code>&nbsp;<small>' . $Organizr->config['dbName'] . '</small></li>
-												' . $Organizr->settingsDocker() . $Organizr->settingsPathChecks() . '
+												<li><div class="bg-info"><i class="mdi mdi-webpack mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Londerland Version</span> ' . $Londerland->version . '</li>
+												<li><div class="bg-info"><i class="mdi mdi-database mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Database Driver</span> ' . $Londerland->config['driver'] . '&nbsp;<code><i class="fa fa-arrow-right"></i></code>&nbsp;<small>' . $Londerland->config['dbName'] . '</small></li>
+												' . $Londerland->settingsDocker() . $Londerland->settingsPathChecks() . '
 												<hr class="m-t-10">
 												<li><div class="bg-info"><i class="mdi mdi-language-php mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">PHP Version</span> ' . phpversion() . '</li>
 												<li><div class="bg-info"><i class="mdi mdi-package-variant-closed mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Webserver Version</span> ' . $_SERVER['SERVER_SOFTWARE'] . '</li>
 												<hr class="m-t-10">
-												<li><div class="bg-info"><i class="mdi mdi-card-account-details mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">License</span> ' . ucwords($Organizr->config['license']) . '</li>
+												<li><div class="bg-info"><i class="mdi mdi-card-account-details mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">License</span> ' . ucwords($Londerland->config['license']) . '</li>
 											</ul>
 										</div>
 									</div>
 								</div>
-								<div class="row">
-									<div class="col-xl-12">
-										<div class="card card-default">
-											<div class="card-header bg-org p-t-10 p-b-10">
-												<span class="float-start m-t-5"><span lang="en">Sponsors</span></span>
-												<div class="clearfix"></div>
-											</div>
-											<div class="card-wrapper p-b-0 collapse show bg-org">
-												<div id="sponsorList" class="owl-carousel owl-theme sponsor-items"></div>
-												<div id="sponsorListModals"></div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-xl-12">
-										<div class="card card-default">
-											<div class="card-header bg-org p-t-10 p-b-10">
-												<span class="float-start m-t-5"><span lang="en">Backers</span></span>
-												<div class="clearfix"></div>
-											</div>
-											<div class="card-wrapper p-b-0 collapse show bg-org">
-												<div id="backersList" class="owl-carousel owl-theme backers-items"></div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="clearfix"></div>
-							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-settings-donate">
-								<div class="col-xl-12">
-									<div class="white-box bg-org">
-										<ul class="nav nav-tabs tabs customtab">
-											<li class="tab active">
-												<a href="#donate-github" data-bs-toggle="tab" aria-expanded="true"> <span class=""><i class="fa fa-github text-warning"></i></span> <span class="hidden-xs" lang="en">Github Sponsor</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-paypal" data-bs-toggle="tab" aria-expanded="true"> <span class=""><i class="fa fa-paypal text-info"></i></span> <span class="hidden-xs" lang="en">PayPal</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-square" data-bs-toggle="tab" aria-expanded="false"> <span class=""><i class="mdi mdi-cash mdi-18px text-success"></i></span> <span class="hidden-xs" lang="en">Square Cash</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-crypto" data-bs-toggle="tab" aria-expanded="false"> <span class=""><i class="mdi mdi-circle-multiple mdi-18px text-info"></i></span> <span class="hidden-xs" lang="en">Cryptos</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-patreon" data-bs-toggle="tab" aria-expanded="false"> <span class=""><i class="mdi mdi-account-multiple mdi-18px text-danger"></i></span> <span class="hidden-xs" lang="en">Patreon</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-open-collective" data-bs-toggle="tab" aria-expanded="false"> <span class=""><i class="fa fa-circle-o-notch text-primary"></i></span> <span class="hidden-xs" lang="en">Open Collective</span> </a>
-											</li>
-											<li class="tab">
-												<a href="#donate-ads" data-bs-toggle="tab" aria-expanded="false"> <span class=""><i class="mdi mdi-google mdi-18px text-danger"></i></span> <span class="hidden-xs" lang="en">Google Ads</span> </a>
-											</li>
-										</ul>
-										<div class="tab-content">
-											<div class="tab-pane active" id="donate-github">
-												<blockquote lang="en">Want to show support on Github?  Sponsor me :)<br/><span lang="en">Please click the button to continue.</span></blockquote>
-												<button onclick="window.open(\'https://github.com/sponsors/causefx\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-											<div class="tab-pane" id="donate-paypal">
-												<blockquote lang="en">I have chosen to go with PayPal Pools so everyone can see how much people have donated.<br/><span lang="en">Please click the button to continue.</span></blockquote>
-												<button onclick="window.open(\'https://paypal.me/pools/c/83JNaMBESR\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-											<div class="tab-pane" id="donate-square">
-												<blockquote lang="en">If you use the Square Cash App, you can donate with that if you like.<br/><span lang="en">Please click the button to continue.</span></blockquote>
-												<button onclick="window.open(\'https://cash.me/$CauseFX\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-											<div class="tab-pane" id="donate-crypto">
-												<blockquote lang="en">Want to donate a small amount of Crypto?.<br/>Please use the QR Code or Wallet ID.</blockquote>
-												<div class="col-xl-4 col-12">
-													<div class="lazyload qr-code" data-src="plugins/images/Bitcoin_QR_code.png"></div>
-													<div class="clearfix"></div>
-													<code>18dNtPKgor6pV5DJhYNqFxLJJ2BKugo4K9</code>
-												</div>
-												<div class="col-xl-4 col-12">
-													<div class="lazyload qr-code" data-src="plugins/images/Litecoin_QR_code.png"></div>
-													<div class="clearfix"></div>
-													<code>LejRxt8huhFGpVrp7TM43VSstrzKGxf8Cj</code>
-												</div>
-												<div class="col-xl-4 col-12">
-													<div class="lazyload qr-code" data-src="plugins/images/Ethereum_QR_code.png"></div>
-													<div class="clearfix"></div>
-													<code>0x605b678761af62C02Fe0fA86A99053D666dF5d6f</code>
-												</div>
-												<div class="clearfix"></div>
-											</div>
-											<div class="tab-pane" id="donate-patreon">
-												<blockquote lang="en">Need specialized support or just want to support Organizr?  If so head to Patreon...<br/><span lang="en">Please click the button to continue.</span></blockquote>
-												<button onclick="window.open(\'https://www.patreon.com/join/organizr?\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-											<div class="tab-pane" id="donate-open-collective">
-												<blockquote lang="en">Need specialized support or just want to support Organizr?  If so head to Open Collective...<br/><span lang="en">Please click the button to continue.</span></blockquote>
-												<button onclick="window.open(\'https://opencollective.com/organizr\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-											<div class="tab-pane" id="donate-ads">
-												<blockquote lang="en">Money not an option?  No problem.  Show some love to this Google Ad below:</blockquote>
-												 <button onclick="window.open(\'https://organizr.app/ads/google.html\', \'_blank\')" class="btn btn-primary btn-rounded waves-effect waves-light" type="button"><span class="btn-label"><i class="fa fa-link"></i></span><span lang="en">Continue To Website</span></button>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="clearfix"></div>
-							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-settings-updates">
-								<div id="githubVersions"></div>
 								<div class="clearfix"></div>
 							</div>
 						</div>
@@ -396,11 +193,6 @@ function get_page_settings($Organizr)
 	<!--./row-->
 </div>
 <!-- /.container-fluid -->
-<form id="about-theme-form" class="mfp-hide white-popup-block mfp-with-anim">
-	<h2 id="about-theme-title">Loading...</h2>
-	<div class="clearfix"></div>
-	<div id="about-theme-body" class=""></div>
-</form>
 <div class="modal fade" id="editHomepageItemDiv" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-fullscreen"><div class="modal-content bg-org"><div class="modal-body p-0" id="editHomepageItem"></div></div></div></div>
 ';
 }

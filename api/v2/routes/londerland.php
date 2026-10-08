@@ -1,11 +1,11 @@
 <?php
-$app->get('/organizr/{page}[/{var1}[/{var2}]]', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$_GET['organizr'] = true;
+$app->get('/londerland/{page}[/{var1}[/{var2}]]', function ($request, $response, $args) {
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$_GET['londerland'] = true;
 	$_GET['vars'] = $args;
 	$page = null;
-	if ($Organizr->checkRoute($request)) {
-		$page = $Organizr->getPage($args['page']);
+	if ($Londerland->checkRoute($request)) {
+		$page = $Londerland->getPage($args['page']);
 	}
 	if ($page) {
 		$response->getBody()->write($page);

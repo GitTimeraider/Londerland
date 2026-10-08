@@ -16,8 +16,14 @@ $GLOBALS['plugins']['PHP Mailer'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-class PhpMailer extends Organizr
+class PhpMailer extends Londerland
 {
+	public function _phpMailerPluginLogo()
+	{
+		// No logo URL set: use the logo shipped with this installation
+		return $this->config['PHPMAILER-logo'] !== '' ? $this->config['PHPMAILER-logo'] : rtrim($this->getServerPath(true), '/') . '/plugins/images/londerland/logo-wide.png';
+	}
+
 	public function _phpMailerPluginGetEmails()
 	{
 		$type = null;
@@ -196,7 +202,7 @@ class PhpMailer extends Organizr
 		$bcc = isset($emailInfo['bcc']) ? $emailInfo['bcc'] : null;
 		$subject = isset($emailInfo['subject']) ? $emailInfo['subject'] : null;
 		$body = isset($emailInfo['body']) ? $emailInfo['body'] : null;
-		$username = isset($emailInfo['user']) ? $emailInfo['user'] : 'Organizr User';
+		$username = isset($emailInfo['user']) ? $emailInfo['user'] : 'Londerland User';
 		$data = [
 			'to' => $to,
 			'cc' => $cc,
@@ -368,6 +374,7 @@ class PhpMailer extends Organizr
 					'label' => 'WAN Logo URL',
 					'value' => $this->config['PHPMAILER-logo'],
 					'placeholder' => 'Full URL',
+					'help' => 'Leave empty to use the logo of this installation',
 				],
 				[
 					'type' => 'switch',

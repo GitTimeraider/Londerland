@@ -2,7 +2,7 @@
 
 // OpenAPI documentation for the routes in api/v2/routes/categories.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 

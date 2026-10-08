@@ -89,7 +89,7 @@ trait JackettHomepageItem
 			return false;
 		}
 		$apiURL = $this->qualifyURL($this->config['jackettURL']);
-		$endpoint = $apiURL . '/api/v2.0/indexers/all/results?apikey=' . $this->config['jackettToken'] . '&Query=this-is-just-a-test-for-organizr';
+		$endpoint = $apiURL . '/api/v2.0/indexers/all/results?apikey=' . $this->config['jackettToken'] . '&Query=this-is-just-a-test-for-londerland';
 		try {
 			$headers = [];
 			$options = $this->requestOptions($apiURL, 120, $this->config['jackettDisableCertCheck'], $this->config['jackettUseCustomCertificate']);

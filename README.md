@@ -1,146 +1,163 @@
-![OrganizrHeader](https://github.com/causefx/Organizr/raw/v2-develop/plugins/images/organizr/logo-wide.png)
+<p align="center"><img src="plugins/images/londerland/logo-wide.png" alt="Londerland" width="420"></p>
 
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/causefx/Organizr.svg)](http://isitmaintained.com/project/causefx/Organizr "Percentage of issues still open")
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/causefx/Organizr.svg)](http://isitmaintained.com/project/causefx/Organizr "Average time to resolve an issue")
-[![GitHub stars](https://img.shields.io/github/stars/causefx/Organizr.svg)](https://github.com/causefx/Organizr/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/causefx/Organizr.svg)](https://github.com/causefx/Organizr/network)
-[![Docker pulls](https://img.shields.io/docker/pulls/organizr/organizr.svg)](https://hub.docker.com/r/organizr/organizr)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/causefx)
-[![Beerpay](https://beerpay.io/causefx/Organizr/badge.svg?style=beer-square)](https://beerpay.io/causefx/Organizr)
-[![Beerpay](https://beerpay.io/causefx/Organizr/make-wish.svg?style=flat-square)](https://beerpay.io/causefx/Organizr?focus=wish)
+**Londerland** puts all of your self-hosted web apps on one page, behind one login.
+Add your services (Sonarr, Radarr, Plex, Home Assistant, a router page, anything with a web interface) as tabs,
+choose who may see which tab, and open them all from a single place instead of remembering IP addresses and ports.
 
-![OrganizrAbout](https://user-images.githubusercontent.com/16184466/53614282-a91e9e00-3b96-11e9-9b3e-d249775ecaa1.png)
+## Features
 
-Do you have quite a bit of services running on your computer or server? Do you have a lot of bookmarks or have to memorize a bunch of ip's and ports? Well, Organizr is here to help with that. Organizr allows you to setup "Tabs" that will be loaded all in one webpage. You can then work on your server with ease. Want to give users access to some Tabs? No problem, just enable user support and have them make an account. Want guests to be able to visit too? Enable Guest support for those tabs.
+- **Tabs** for every web app, shown inside Londerland (iFrame) or opened in a new window.
+- **Users and groups**: decide per tab which group may open it; guests can get their own tabs.
+- **Homepage** with live items for Plex, Emby, Jellyfin, Sonarr, Radarr, Lidarr, SABnzbd, qBittorrent, Deluge, Transmission, Ombi, Overseerr, Tautulli, a calendar and more.
+- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel), with optional two-factor authentication.
+- **Single sign-on** for supported apps, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth) using `api/v2/auth`.
+- **AI Chat** for logged in users with any OpenAI-compatible server, including web search and image generation ([details below](#ai-chat)).
+- **Plugins**: invites, e-mail (PHPMailer), health checks, speed test, chat, bookmarks and more.
+- **Look and feel**: themes, colours, your own logo and title, custom CSS and JavaScript, login page and splash screen.
+- **Backups** on a schedule, a log viewer, an image manager and a built-in API with documentation (`/docs`).
+- Works on phones and tablets, and in many languages.
 
-![OrganizrInfo](https://user-images.githubusercontent.com/16184466/53614285-a9b73480-3b96-11e9-835e-9fadd045582b.png)
+## Install with Docker
 
-- PHP 7.2+
-- [Official Site](https://organizr.app) - Will be refreshed soon!
-- [Official Discord](https://organizr.app/discord)
+The image is built by this repository and published to the GitHub Container Registry as
+`ghcr.io/gittimeraider/londerland:latest`.
+Everything Londerland needs is inside the image: the container downloads nothing when it is built or when it starts.
 
-- [See Wiki](https://docs.organizr.app/) - Will be updated soon!
-- [Docker](https://hub.docker.com/r/organizr/organizr)
-
-![OrganizrGallery](https://user-images.githubusercontent.com/16184466/53614284-a9b73480-3b96-11e9-9bea-d7a30b294267.png)
-
-<img src="https://user-images.githubusercontent.com/16184466/53615855-35cc5a80-3b9d-11e9-882b-f09f3eb18173.png" width="23%"></img>
-<img src="https://user-images.githubusercontent.com/16184466/53615856-35cc5a80-3b9d-11e9-8428-1f2ae05da2c9.png" width="23%"></img>
-<img src="https://user-images.githubusercontent.com/16184466/53615857-35cc5a80-3b9d-11e9-82bf-91987c529e72.png" width="23%"></img>
-<img src="https://user-images.githubusercontent.com/16184466/53615858-35cc5a80-3b9d-11e9-8149-01a7fcd9160a.png" width="23%"></img>
-
-[![OrganizrOverview](https://img.youtube.com/vi/LZL4smFB6wU/0.jpg)](https://www.youtube.com/watch?v=LZL4smFB6wU)
-
-![OrganizrFeat](https://user-images.githubusercontent.com/16184466/53614283-a9b73480-3b96-11e9-90ef-6e752e067884.png)
-
-- 'Forgot Password' support [receive an email with your new password, prerequisites: mail server setup]
-- Additional language support
-- Custom tabs for your services
-- Customise the top bar by adding your own site logo or site name
-- Enable or disable iFrame for your tabs
-- Fail2ban support ([see wiki](https://docs.organizr.app/features/fail2ban-integration))
-- Fullscreen Support
-- Gravatar Support
-- Keyboard shortcut support (Check help tab in settings)
-- Login with Plex/Emby/LDAP or sFTP credentials
-- Mobile support
-- Multiple login support
-- Nginx Auth_Request support ([see wiki](https://docs.organizr.app/features/server-authentication))
-- Organizr login log viewer
-- Personalise any theme: Customise the look and feel of Organizr with access to the colour palette
-- Pin/Unpin sidebar
-- Protect new user account creation with registration password
-- Quick access tabs (access your tabs quickly e.g. www.example.com/#Sonarr)
-- Set default page on launch
-- Theme-able
-- Unlimited User Groups
-- Upload new icons with ease
-- User management support: Create, delete and promote users from the user management console
-- Many more...
-
-![OrganizrFeatReq](https://user-images.githubusercontent.com/16184466/53614286-a9b73480-3b96-11e9-8495-4944b85b1313.png)
-
-[![Feature Requests]](https://vote.organizr.app/)
-
-### Self-contained image (ghcr.io)
-
-This repository builds its own image with `.github/workflows/docker.yml` and publishes it to `ghcr.io/gittimeraider/organizr`.
-Everything (PHP extensions, Composer dependencies, fonts, cron) is baked into the image at build time, so the container does not download anything when it starts.
-Frontend libraries (Bootstrap 5, jQuery 4, Font Awesome 7 and the rest) are installed from `package.json` with npm during the image build and served from `assets/vendor`.
-Running from a git checkout without Docker? Run `npm ci && npm run build` in the repository folder first; it creates `assets/vendor` and the minified CSS/JS.
-
-Two ready-to-use examples are in the repository root:
+Ready-to-use examples are in the repository root:
 
 - [`docker-compose.yml`](docker-compose.yml) for Docker Compose
 - [`docker-run.sh`](docker-run.sh) for plain `docker run`
 
-**Docker Compose** (save as `docker-compose.yml` in an empty folder, then run `docker compose up -d` in that folder):
+### Docker Compose
 
-```yaml
-services:
-  organizr:
-    image: ghcr.io/gittimeraider/organizr:latest
-    container_name: organizr
-    ports:
-      - "80:80"
-    environment:
-      - TZ=Etc/UTC
-    volumes:
-      - ./organizr-data:/var/www/html/data
-    restart: unless-stopped
-```
+Run these commands in a terminal on your Docker host (for example an SSH session), in an empty folder:
 
-**docker run** (run in the folder where the `organizr-data` folder should be created):
+1. Create the data folder and give it to the user the container will run as (here user `99`, group `100`):
+
+   ```bash
+   mkdir -p londerland-data
+   sudo chown -R 99:100 londerland-data
+   ```
+
+2. Save this as `docker-compose.yml` in the same folder:
+
+   ```yaml
+   services:
+     londerland:
+       image: ghcr.io/gittimeraider/londerland:latest
+       container_name: londerland
+       user: "99:100"
+       security_opt:
+         - no-new-privileges:true
+       ports:
+         - "80:80"
+       environment:
+         - TZ=Etc/UTC
+       volumes:
+         - ./londerland-data:/var/www/html/data
+       restart: unless-stopped
+   ```
+
+3. Start it:
+
+   ```bash
+   docker compose up -d
+   ```
+
+### docker run
+
+In a terminal on your Docker host, in the folder where the `londerland-data` folder should be:
 
 ```bash
+mkdir -p londerland-data
+sudo chown -R 99:100 londerland-data
+
 docker run -d \
-  --name organizr \
+  --name londerland \
+  --user 99:100 \
+  --security-opt=no-new-privileges:true \
   -p 80:80 \
   -e TZ=Etc/UTC \
-  -v "$(pwd)/organizr-data:/var/www/html/data" \
+  -v "$(pwd)/londerland-data:/var/www/html/data" \
   --restart unless-stopped \
-  ghcr.io/gittimeraider/organizr:latest
+  ghcr.io/gittimeraider/londerland:latest
 ```
 
-Then open `http://<your-server-ip>` in a browser to start the setup wizard.
+### First start
 
-In the setup wizard, set the database location to a folder inside the volume, for example `/var/www/html/data/db/`.
+Open `http://<your-server-ip>` in a browser. The setup wizard starts. In the database step, use a folder inside the data volume,
+for example `/var/www/html/data/db/`, so the database is kept when the container is replaced.
 
-![OrganizrDocker](https://user-images.githubusercontent.com/16184466/53667702-fcdcc600-3c2e-11e9-8828-860e531e8096.png)
-
-[![Repository](https://img.shields.io/github/stars/organizr/docker-organizr?color=402885&style=for-the-badge&logo=github&logoColor=41add3&)](https://github.com/Organizr/docker-organizr)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/organizr/docker-organizr/Build%20Container?color=402885&style=for-the-badge&logo=github&logoColor=41add3)](https://github.com/organizr/docker-organizr/actions?query=workflow%3A%22Build+Container%22)
-[![Docker Pulls](https://img.shields.io/docker/pulls/organizr/organizr?color=402885&style=for-the-badge&logo=docker&logoColor=41add3)](https://hub.docker.com/r/organizr/organizr/)
-
-##### Settings
+### Settings
 
 | Setting | Example | What it does |
 |---|---|---|
-| `-p` / `ports` | `80:80` | `<port on your machine>:<port in the container>`. Use `8080:80` to reach Organizr on port 8080 instead. |
-| `-e TZ` / `environment` | `TZ=Europe/Amsterdam` | Timezone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
-| `-v` / `volumes` | `./organizr-data:/var/www/html/data` | Where your settings, database, logs and uploaded images are kept. Keep this folder to keep your setup across updates. |
+| `--user` / `user:` | `99:100` | The user and group the container runs as. Everything in the data folder gets this owner. Leave it out to run as root (see below). |
+| `--security-opt` / `security_opt:` | `no-new-privileges:true` | Stops processes in the container from gaining extra rights. Works with and without `--user`. |
+| `-p` / `ports:` | `8080:80` | `<port on your machine>:<port in the container>`. |
+| `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
+| `-e LONDERLAND_PORT` | `8080` | The port Londerland listens on **inside** the container (default `80`). Only needed with `--network host`, rootless Docker or Docker older than 20.10; then also change the right side of `-p`. |
+| `-v` / `volumes:` | `./londerland-data:/var/www/html/data` | Your settings, database, logs, backups and uploaded images. Keep this folder to keep your setup. |
 
-The image also has a built-in health check, so `docker ps` shows whether Organizr is `healthy`.
+**Running as a user (`--user`)**: the data folder on your host must belong to that user before the container starts
+(`sudo chown -R 99:100 londerland-data`). If it does not, the container stops and its log (`docker logs londerland`) tells you the
+exact `chown` command to run. Nothing in the container needs root in this mode.
 
-##### Updating
+**Running as root (no `--user`)**: at start the container gives the data folder to its own web user (`www-data`, uid 33),
+and the web server and scheduled jobs run as that user.
 
-- Docker Compose: `docker compose pull && docker compose up -d`
-- docker run: `docker pull ghcr.io/gittimeraider/organizr:latest`, then `docker rm -f organizr`, then run the `docker run` command again. Your data stays in the `organizr-data` folder.
+The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
 
-##### Info
+### Updating
 
-- Shell access whilst the container is running: `docker exec -it organizr /bin/bash`
-- To monitor the logs of the container in realtime: `docker logs -f organizr`
+Londerland is updated by replacing the container with a newer image; your data stays in the `londerland-data` folder.
 
-![OrganizrSponsor](https://user-images.githubusercontent.com/16184466/53614287-a9b73480-3b96-11e9-9c8e-e32b4ae20c0d.png)
+- Docker Compose (in the folder with `docker-compose.yml`): `docker compose pull && docker compose up -d`
+- docker run: `docker pull ghcr.io/gittimeraider/londerland:latest`, then `docker rm -f londerland`, then run the `docker run` command again.
 
-### AI Chat
+### Useful commands
 
-Organizr has a built-in AI chat for logged in users. It works with any server that speaks the OpenAI API (`/v1/chat/completions`): OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, OpenRouter, vLLM, LocalAI and others.
+- Logs: `docker logs -f londerland`
+- A shell inside the running container: `docker exec -it londerland /bin/bash`
+
+### Moving from Organizr
+
+Londerland is based on Organizr and can take over an existing Organizr data folder:
+
+1. Stop the Organizr container and make a copy of its `data` folder (the folder that holds `config/config.php`).
+2. Start Londerland with that copy as its data folder (see above; with `--user`, `chown` the copy first).
+3. Log in again. Londerland converts the configuration once and keeps the original file as `data/config/config.before-londerland.php`.
+
+Things that change for existing setups:
+
+- Everybody has to log in once more, because the login cookies have new names.
+- Reverse proxy authentication sends `X-Londerland-User`, `X-Londerland-Email` and `X-Londerland-Group` instead of the old `X-Organizr-*` headers, and the `organizr-auth` route is now `londerland-auth`. Update your proxy configuration if you use them.
+- Plugins and themes downloaded from the Organizr marketplace are not supported. The marketplaces and the in-app updater are gone; update by pulling a new image.
+
+## Run without Docker
+
+You need PHP 8.5 with the `pdo_sqlite`, `sqlite3`, `curl`, `zip`, `ldap`, `mbstring` and `openssl` extensions, a web server
+(Apache with `mod_rewrite`, or Nginx), Composer and Node.js.
+
+In a terminal, in the repository folder:
+
+```bash
+composer install --no-dev --working-dir=api
+npm ci && npm run build
+```
+
+`npm run build` copies the frontend libraries to `assets/vendor` and creates the minified CSS/JS.
+Point the web server at the repository folder and make the `data` folder writable for the web server user.
+Run `php cron.php` every minute (for example with cron) for scheduled jobs such as backups.
+
+## AI Chat
+
+Londerland has a built-in AI chat for logged in users. It works with any server that speaks the OpenAI API (`/v1/chat/completions`):
+OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, OpenRouter, vLLM, LocalAI and others.
 
 **Setting it up (as admin):**
 
-1. In Organizr, open **Settings > Plugins > Inactive** and enable **AI Chat**.
+1. In Londerland, open **Settings > Plugins > Inactive** and enable **AI Chat**.
 2. Open **Settings > Plugins > Active**, click the settings icon of **AI Chat** and fill in:
    - **Connection:** the API Base URL up to and including `/v1` (for example `https://api.openai.com/v1`, `https://api.anthropic.com/v1/` or `http://ollama:11434/v1`) and the API key (leave it empty for servers without one).
    - **Models:** the default model, and optionally which models users may pick (`*` works as a wildcard) or extra model IDs the server does not list.
@@ -150,12 +167,12 @@ Organizr has a built-in AI chat for logged in users. It works with any server th
    - **Uploads:** whether users may add images and files, and the size limit.
 3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
 
-**Using it:** logged in users get a large **AI** chat bubble in the bottom right corner of every Organizr page. The chat offers:
+**Using it:** logged in users get a large **AI** chat bubble in the bottom right corner of every Londerland page. The chat offers:
 
 - Answers that appear while they are written, with a stop button.
 - Markdown with highlighted code blocks.
 - A model picker per chat, and a star to make the current model your default.
-- Image uploads for vision models, plus text, code and PDF files, which are sent as text. You can attach files with the paperclip button, by dragging them into the chat, or by pasting.
+- Image uploads for vision models, plus text, code and PDF files, which are sent as text. Attach files with the paperclip button, by dragging them into the chat, or by pasting.
 - Chat history with search, pin, rename, export (Markdown or JSON), delete and delete all.
 - Editing a question, answering again, and copying.
 - Personal instructions sent with every chat.
@@ -164,36 +181,13 @@ Organizr has a built-in AI chat for logged in users. It works with any server th
 - **Image** button: your message becomes a picture, shown in the chat with a download button. "Answer again" creates a new version.
 - A full-screen layout on phones.
 
-The API key stays on the Organizr server and is never sent to browsers. Chats and uploads are stored per user (uploads in `data/aichat`, readable only through Organizr's API).
+The API key stays on the Londerland server and is never sent to browsers. Chats and uploads are stored per user
+(uploads in `data/aichat`, readable only through Londerland's API).
 
-### Seedboxes.cc 
+## License
 
-[![Seedboxes.cc](https://user-images.githubusercontent.com/16184466/154811062-201be154-6868-4a24-ade6-a26278935415.png)](https://www.seedboxes.cc)
+Londerland is free software under the [GNU General Public License v3.0](LICENSE).
 
-### BrowserStack for allowing us to use their platform for testing
-
-[![BrowserStack](https://avatars2.githubusercontent.com/u/1119453?s=200&v=4g)](https://www.browserstack.com)
-
-### This project is supported by
-
-<img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="200px"></img>
-
-## Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://tronflix.app"><img src="https://avatars.githubusercontent.com/u/22502007?v=4?s=100" width="100px;" alt="Chris Yocum"/><br /><sub><b>Chris Yocum</b></sub></a><br /><a href="#test-tronyx" title="Tests">⚠️</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://roxedus.dev"><img src="https://avatars.githubusercontent.com/u/7110194?v=4?s=100" width="100px;" alt="Roxedus"/><br /><sub><b>Roxedus</b></sub></a><br /><a href="#test-Roxedus" title="Tests">⚠️</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/HalianElf"><img src="https://avatars.githubusercontent.com/u/28244771?v=4?s=100" width="100px;" alt="HalianElf"/><br /><sub><b>HalianElf</b></sub></a><br /><a href="#test-HalianElf" title="Tests">⚠️</a></td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END --
+It is a modified version of Organizr (GPL-3.0), renamed and changed in 2026:
+new Docker image, frontend libraries, AI Chat, non-root container support, and removal of the marketplaces, updater and
+donation features. The original copyright notices are kept as the license requires.

@@ -1,8 +1,8 @@
 <?php
 $app->get('/database/journal', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->getJournalMode();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->getJournalMode();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -10,9 +10,9 @@ $app->get('/database/journal', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->put('/database/journal/{option}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->setJournalMode($args['option']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->setJournalMode($args['option']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
