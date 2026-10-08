@@ -352,3 +352,12 @@ if (window.Dropzone) {
 $(document).on('shown.bs.tab', function (e) {
 	$(e.target).closest('li').addClass('active').siblings('li').removeClass('active');
 });
+// ...and the menus are built with li.active, which Bootstrap 5 does not see: it would not hide the pane that was
+// shown first, which then stays above every other pane. Hide the other active panes of the group ourselves.
+$(document).on('show.bs.tab', function (e) {
+	const selector = e.target.getAttribute('data-bs-target') || e.target.getAttribute('href') || '';
+	const pane = selector.charAt(0) === '#' ? document.getElementById(selector.slice(1)) : null;
+	if (pane) {
+		$(pane).siblings('.tab-pane.active').removeClass('active show');
+	}
+});
