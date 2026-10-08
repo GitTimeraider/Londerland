@@ -733,6 +733,11 @@ function swapBodyClass(id) {
   $("body").attr("data-active-tab-id", tabInfo.id);
   $("body").addClass("active-tab-" + tabInfo.name);
   $("body").addClass("active-tab-" + tabInfo.id);
+  // Only website (iframe) tabs can be opened in a new browser tab; Londerland's own pages are API addresses
+  $(".open-in-new-tab").toggleClass("disabled-action", !isIframeTab(tabInfo));
+}
+function isIframeTab(tabInfo) {
+  return tabInfo.type === 1 || tabInfo.type === "1" || tabInfo.type === "iframe";
 }
 function editPageTitle(title) {
   document.title = title + " - " + activeInfo.appearance.title;
@@ -1184,8 +1189,10 @@ function openInNewBrowserTab() {
     );
     return false;
   }
-  let url = tabInfo.access_url;
-  window.open(url, "_blank");
+  if (!isIframeTab(tabInfo)) {
+    return false;
+  }
+  window.open(tabInfo.access_url, "_blank", "noopener");
 }
 function findTab(query, term = "id") {
   let tabInfo = activeInfo.tabs.filter((tab) => tab[term] == query);

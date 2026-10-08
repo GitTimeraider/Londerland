@@ -82,8 +82,8 @@ $Londerland = new Londerland(true);
                                 class="ti-reload"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light" onclick="closeCurrentTab(event);"> <i
                                 class="ti-close"></i></a></li>
-                <li class=""><a class="dropdown-toggle waves-effect waves-light" onclick="openInNewBrowserTab();"> <i
-                                class="ti-arrow-top-right"></i></a></li>
+                <li class=""><a class="dropdown-toggle waves-effect waves-light open-in-new-tab" onclick="openInNewBrowserTab();" title="Open in a new browser tab"> <i
+                                class="ti-new-window"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light hidden" onclick="splashMenu();"> <i
                                 class="ti-layout-grid2"></i></a></li>
             </ul>
