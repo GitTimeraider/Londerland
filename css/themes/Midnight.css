@@ -399,3 +399,76 @@ a.text-info:hover {
 .customvtab .tabs-vertical li.active a:hover {
   border-right-color: #3d9cf0;
 }
+
+/* Text: brighter than the dark style's grey */
+:root {
+  --bs-body-color: #c9d4ea;
+  --bs-body-color-rgb: 201, 212, 234;
+}
+body,
+.get-code,
+.nav-tabs > li > a,
+.pagination > li > a, .pagination > li > span,
+.pager li > a, .pager li > span,
+.drop-title,
+.card .card-header .card-title,
+.card-default .card-body, .card-white .card-body,
+.card-default .card-action a, .card-white .card-action a,
+.card-default .card-action a:hover, .card-white .card-action a:hover,
+.card-default .card-footer, .card-white .card-footer,
+.full-panel-default .card-header,
+.full-panel-default .card-body,
+.full-panel-default .card-footer,
+.full-panel-default a,
+.common-list li a,
+.checkbox label::after,
+.myadmin-dd .dd-list .dd-item button,
+ul.common li a,
+.mega-dropdown-menu > li > ul > li > a,
+.message-center .mail-contnet .mail-desc,
+.message-center .mail-contnet .time,
+.inbox-center a,
+.vtabs .tabs-vertical li a,
+.customvtab .tabs-vertical li.active a, .customvtab .tabs-vertical li.active a:focus, .customvtab .tabs-vertical li.active a:hover,
+.nav-pills > li > a,
+.percent,
+.icon-list-demo div,
+.icon-list-demo div:hover,
+.mails a,
+.right-sidebar .rpanel-title span:hover,
+.chatonline li a span,
+.visited li a,
+.nav-pills-rounded li a,
+ul.side-icon-text > li a,
+ul.wallet-list li a,
+.weather-with-bg .wt-counter li a,
+.no-bg-addon .form-control:focus + .input-group-text,
+ul.select-row-icon li a,
+.glyphs.character-mapping li,
+.tabs-style-bar nav ul li a,
+.tabs-style-iconbox nav ul li a,
+.tabs-style-underline nav a,
+.tabs-style-linetriangle nav a span,
+.tabs-style-iconfall nav a,
+.tabs-style-linemove nav a,
+.tabs-style-line nav a,
+.tabs-style-circle nav a,
+.tabs-style-linebox nav a,
+.tabs-style-flip nav a,
+a.dt-button:hover:not(.disabled), button.dt-button:hover:not(.disabled), div.dt-button:hover:not(.disabled),
+.list-style-none li a,
+.chat-main-box .chat-right-aside .send-chat-box .custom-send .cst-icon,
+.el-element-overlay .el-card-item .el-card-content a,
+.floating-labels label,
+.pro-detail h5 a,
+.ct-label,
+.bg-title h4,
+.btn-secondary, .chat-list .chat-text h4, .dropdown-menu > li > a, .dropdown-menu > li > a:focus, .dropdown-menu > li > a:hover, .flot-text, .footer, .form-control, .h1 .small, .h1 small, .h2 .small, .h2 small, .h3 .small, .h3 small, .h4 .small, .h4 small, .h5 .small, .h5 small, .h6 .small, .h6 small, .form-text, .input-group-text, .text-muted, a.list-group-item:focus, a.list-group-item:hover, button.list-group-item:focus, button.list-group-item:hover, h1 .small, h1 small, h2 .small, h2 small, h3 .small, h3 small, h4 .small, h4 small, h5 .small, h5 small, h6 .small, h6 small, tbody, th {
+  color: #c9d4ea;
+}
+.text-dark,
+.mail-list .list-group-item.active,
+.message-center .unread .mail-contnet .mail-desc, .message-center .unread .mail-contnet h5,
+.dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button, .dataTables_wrapper .dataTables_processing, .dd-handle, .footable.breakpoint > tbody > tr > td > span.footable-toggle, pre {
+  color: #c9d4ea !important;
+}
