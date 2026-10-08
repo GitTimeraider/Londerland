@@ -6620,19 +6620,15 @@ public function youtubeSearch($query)
 			$this->setAPIResponse('error', 'No query supplied', 422);
 			return false;
 		}
-		$keys = array(
-			'AIzaSyBsdt8nLJRMTwOq5PY5A5GLZ2q7scgn01w',
-			'AIzaSyD-8SHutB60GCcSM8q_Fle38rJUV7ujd8k',
-			'AIzaSyBzOpVBT6VII-b-8gWD0MOEosGg4hyhCsQ',
-			'AIzaSyBKnRe1P8fpfBHgooJpmT0WOsrdUtZ4cpk'
-		);
-		$randomKeyIndex = array_rand($keys);
-		$key = $keys[$randomKeyIndex];
-		$apikey = ($this->config['youtubeAPI'] !== '') ? $this->config['youtubeAPI'] : $key;
+		$apikey = $this->config['youtubeAPI'] ?? '';
+		if ($apikey === '') {
+			$this->setAPIResponse('error', 'No YouTube API key configured', 422);
+			return false;
+		}
 		$results = false;
 		// Ensure query is URL-encoded to avoid API errors
 		$safeQuery = urlencode($query . ' official trailer');
-		$url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q={$safeQuery}&maxResults=1&type=video&videoDuration=short&key={$apikey}";
+		$url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q={$safeQuery}&maxResults=1&type=video&videoDuration=short&key=" . urlencode($apikey);
 		$response = \WpOrg\Requests\Requests::get($url);
 		if ($response->success) {
 			$results = json_decode($response->body, true);
