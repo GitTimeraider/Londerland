@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true alt="Londerland" width="420"></p>
+<p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true" alt="Londerland" width="420"></p>
 
 **Londerland** puts all of your self-hosted web apps on one page, behind one login.
 Add your services (Sonarr, Radarr, Plex, Home Assistant, a router page, anything with a web interface) as tabs,

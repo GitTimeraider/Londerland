@@ -588,6 +588,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   margin-top: 4px;
 }
 .aichat-hint {
+  margin-left: 6px;
   color: var(--aichat-muted);
   font-size: 11px;
 }
@@ -632,7 +633,6 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   align-items: center;
   gap: 5px;
   height: 30px;
-  margin-left: 2px;
   padding: 0 10px;
   color: var(--aichat-muted);
   background: transparent;
@@ -653,7 +653,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
 }
 
 /* Status while searching or creating an image */
