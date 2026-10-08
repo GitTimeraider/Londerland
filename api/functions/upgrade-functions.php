@@ -115,6 +115,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.1';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -482,6 +490,9 @@ trait UpgradeFunctions
 			case '2.2.0':
 				$this->upgradeTabImagesToLonderland();
 				break;
+			case '2.2.1':
+				$this->removeInheritedApiKeys();
+				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
 		$this->setAPIResponse('success', 'Ran update function for version: ' . $version, 200);
@@ -641,6 +652,16 @@ trait UpgradeFunctions
 			),
 		];
 		return $this->processQueries($response);
+	}
+
+	public function removeInheritedApiKeys()
+	{
+		// Older configs hold the Breezometer key of the original project's account (stored here as a hash);
+		// admins now enter their own key in the Weather-Air homepage item
+		if (hash('sha256', (string)($this->config['breezometerToken'] ?? '')) === '3615196e80b833d1b118c46f66b3d09fc7ff610454cc7696e4f642d8c7793c03') {
+			$this->updateConfig(['breezometerToken' => '']);
+		}
+		return true;
 	}
 
 	public function upgradeTabImagesToLonderland()

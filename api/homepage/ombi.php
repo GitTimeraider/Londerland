@@ -275,9 +275,9 @@ trait OmbiHomepageItem
 				$this->setAPIResponse('error', 'User does not have Auth Cookie', 500);
 				return false;
 			}
-			//https://api.themoviedb.org/3/movie/157336?api_key=83cf4ee97bb728eeaf9d4a54e64356a1
+			//https://api.themoviedb.org/3/movie/157336?api_key=<key>
 			// Lets check if it exists inside Ombi first... but since I can't search with ID - i have to query title from id
-			$tmdbResponse = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/' . $type . '/' . $id . '?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
+			$tmdbResponse = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/' . $type . '/' . $id . '?api_key=' . urlencode($this->config['tmdbApiKey']), [], $options);
 			if ($tmdbResponse->success) {
 				$details = json_decode($tmdbResponse->body, true);
 				if (count($details) > 0) {
@@ -285,7 +285,7 @@ trait OmbiHomepageItem
 						case 'tv':
 							$title = $details['name'];
 							$idType = 'theTvDbId';
-							$tmdbResponseID = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/tv/' . $id . '/external_ids?api_key=83cf4ee97bb728eeaf9d4a54e64356a1', [], $options);
+							$tmdbResponseID = \WpOrg\Requests\Requests::get('https://api.themoviedb.org/3/tv/' . $id . '/external_ids?api_key=' . urlencode($this->config['tmdbApiKey']), [], $options);
 							if ($tmdbResponseID->success) {
 								$detailsID = json_decode($tmdbResponseID->body, true);
 								if (count($detailsID) > 0) {
