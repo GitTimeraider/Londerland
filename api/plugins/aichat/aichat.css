@@ -881,6 +881,15 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
     max-width: 320px;
     box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5);
   }
+  /* Dims the chat while the history is open; tapping it closes the history */
+  .aichat-panel:not(.aichat-sidebar-hidden) .aichat-main::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
   .aichat-model-wrap .ts-wrapper {
     min-width: 130px;
     max-width: 170px;

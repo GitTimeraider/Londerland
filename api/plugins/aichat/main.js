@@ -1220,6 +1220,12 @@
 		$panel.on('click', '.aichat-toggle-sidebar', function () {
 			$panel.toggleClass('aichat-sidebar-hidden');
 		});
+		// On phones the history covers the chat: a tap on the dimmed chat (the backdrop of .aichat-main) closes it
+		$panel.on('click', '.aichat-main', function (e) {
+			if (e.target === this && window.innerWidth < 768) {
+				$panel.addClass('aichat-sidebar-hidden');
+			}
+		});
 		$panel.on('click', '.aichat-new', function () {
 			if (!state.controller) {
 				showWelcome();
