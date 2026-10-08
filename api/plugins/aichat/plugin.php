@@ -28,6 +28,9 @@ class AiChat extends Londerland
 	private const IMAGE_TYPES = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp'];
 	// Cap on extracted text per file so one big upload cannot blow up the request
 	private const MAX_FILE_TEXT = 200000;
+	// fetch_url: largest download and how much page text the model gets per call
+	private const MAX_FETCH_BYTES = 5242880;
+	private const MAX_PAGE_TEXT = 20000;
 	private const NEW_CHAT_TITLE = 'New chat';
 
 	/* ===================== access & setup ===================== */
@@ -394,6 +397,20 @@ class AiChat extends Londerland
 					'label' => 'Model May Search by Itself',
 					'help' => 'Offers a web_search tool, so models with tool calling can search whenever they need to, also without the globe button. Needs a Search Provider above (not Off).' . ($this->config['AICHAT-searchAuto'] && !$this->_aiChatSearchEnabled() ? ' WARNING: the Search Provider is Off, so the model gets no search tool now.' : ''),
 					'value' => $this->config['AICHAT-searchAuto']
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-fetchAuto',
+					'label' => 'Model May Read Web Pages',
+					'help' => 'Offers a fetch_url tool, so models with tool calling can open a link (one the user pasted or a search result) and read the page. Works without a Search Provider.',
+					'value' => $this->config['AICHAT-fetchAuto']
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-fetchAllowPrivate',
+					'label' => 'Allow Reading Local Addresses',
+					'help' => 'Off = pages on localhost and private networks (192.168.x.x, 10.x.x.x, Docker networks, ...) are refused, so nobody can make the chat read your internal services. Only turn on if every chat user may see those.',
+					'value' => $this->config['AICHAT-fetchAllowPrivate']
 				),
 				array(
 					'type' => 'button',
@@ -1300,6 +1317,188 @@ class AiChat extends Londerland
 		return implode("\n\n", $lines);
 	}
 
+	/* ===================== reading web pages ===================== */
+
+	/**
+	 * IP addresses a host name points to (or the address itself when the host is one)
+	 */
+	private function _aiChatResolveHost($host)
+	{
+		$host = trim($host, '[]');
+		if (filter_var($host, FILTER_VALIDATE_IP)) {
+			return [$host];
+		}
+		$ips = [];
+		foreach (@dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $record) {
+			$ips[] = $record['ip'] ?? ($record['ipv6'] ?? null);
+		}
+		$ips = array_merge($ips, @gethostbynamel($host) ?: []);
+		return array_values(array_unique(array_filter($ips)));
+	}
+
+	private function _aiChatPublicIp($ip)
+	{
+		// IPv4 addresses written as IPv6 (::ffff:10.0.0.1) are checked as IPv4
+		if (stripos($ip, '::ffff:') === 0 && filter_var(substr($ip, 7), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+			$ip = substr($ip, 7);
+		}
+		if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+			return false;
+		}
+		// Ranges PHP does not count as private or reserved: carrier-grade NAT and IPv6 unique local / link local
+		$packed = inet_pton($ip);
+		if (strlen($packed) === 4) {
+			return !(ord($packed[0]) === 100 && (ord($packed[1]) & 0xC0) === 64);
+		}
+		return !((ord($packed[0]) & 0xFE) === 0xFC || (ord($packed[0]) === 0xFE && (ord($packed[1]) & 0xC0) === 0x80));
+	}
+
+	/**
+	 * Downloads a web page and returns [title, finalUrl, text]; throws RuntimeException with a message for the model
+	 */
+	private function _aiChatFetchPage($url)
+	{
+		$allowPrivate = (bool)$this->config['AICHAT-fetchAllowPrivate'];
+		// Redirects are followed by hand so every hop gets the address check
+		for ($hop = 0; $hop < 6; $hop++) {
+			$parts = parse_url($url);
+			$scheme = strtolower($parts['scheme'] ?? '');
+			$host = $parts['host'] ?? '';
+			if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+				throw new RuntimeException('Only http and https links can be read: ' . $url);
+			}
+			$port = (int)($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
+			$ips = $this->_aiChatResolveHost($host);
+			if (!$ips) {
+				throw new RuntimeException('Could not find the server ' . $host);
+			}
+			if (!$allowPrivate) {
+				foreach ($ips as $ip) {
+					if (!$this->_aiChatPublicIp($ip)) {
+						throw new RuntimeException('Reading pages on local or private addresses (' . $host . ') is turned off by the admin');
+					}
+				}
+			}
+			$body = '';
+			$tooBig = false;
+			$curl = curl_init($url);
+			curl_setopt_array($curl, [
+				CURLOPT_HTTPHEADER => ['Accept: text/html,application/xhtml+xml,text/plain,application/json,application/pdf;q=0.9,*/*;q=0.5', 'Accept-Language: en,*;q=0.5'],
+				CURLOPT_CONNECTTIMEOUT => 15,
+				CURLOPT_TIMEOUT => 30,
+				CURLOPT_SSL_VERIFYPEER => (bool)$this->config['AICHAT-verifySSL'],
+				CURLOPT_SSL_VERIFYHOST => $this->config['AICHAT-verifySSL'] ? 2 : 0,
+				CURLOPT_FOLLOWLOCATION => false,
+				CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+				CURLOPT_ENCODING => '',
+				CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Londerland AI Chat)',
+				// Connect to the address that was checked, so DNS cannot point somewhere else in between
+				CURLOPT_RESOLVE => [trim($host, '[]') . ':' . $port . ':' . (strpos($ips[0], ':') !== false ? '[' . $ips[0] . ']' : $ips[0])],
+				CURLOPT_WRITEFUNCTION => function ($curl, $chunk) use (&$body, &$tooBig) {
+					$body .= $chunk;
+					if (strlen($body) > self::MAX_FETCH_BYTES) {
+						$tooBig = true;
+						return 0;
+					}
+					return strlen($chunk);
+				},
+			]);
+			$ok = curl_exec($curl);
+			$code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+			$type = strtolower((string)curl_getinfo($curl, CURLINFO_CONTENT_TYPE));
+			$location = (string)curl_getinfo($curl, CURLINFO_REDIRECT_URL);
+			if ($ok === false && !$tooBig) {
+				throw new RuntimeException('Could not read ' . $url . ': ' . (curl_error($curl) ?: 'no answer'));
+			}
+			if ($code >= 300 && $code < 400 && $location !== '') {
+				$url = $location;
+				continue;
+			}
+			if ($code < 200 || $code >= 300) {
+				throw new RuntimeException('The page ' . $url . ' answered with HTTP ' . $code);
+			}
+			return $this->_aiChatPageText($url, $type, $body);
+		}
+		throw new RuntimeException('Too many redirects for ' . $url);
+	}
+
+	/**
+	 * Turns a downloaded page into [title, url, text]
+	 */
+	private function _aiChatPageText($url, $type, $body)
+	{
+		$isPdf = strpos($type, 'application/pdf') !== false || strncmp($body, '%PDF', 4) === 0;
+		$isHtml = !$isPdf && (strpos($type, 'html') !== false || ($type === '' && preg_match('/^\s*(<!doctype html|<html)/i', $body)));
+		if ($isPdf) {
+			try {
+				$text = (new \Smalot\PdfParser\Parser())->parseContent($body)->getText();
+			} catch (\Throwable $e) {
+				throw new RuntimeException('Could not read the PDF ' . $url . ': ' . $e->getMessage());
+			}
+			return [basename((string)parse_url($url, PHP_URL_PATH)) ?: $url, $url, trim($text)];
+		}
+		if (!$isHtml) {
+			if ($type !== '' && !preg_match('#^text/|json|xml|javascript|yaml|csv#', $type)) {
+				throw new RuntimeException('The page ' . $url . ' is not text (' . $type . ')');
+			}
+			if (!mb_check_encoding($body, 'UTF-8')) {
+				$body = mb_convert_encoding($body, 'UTF-8', 'Windows-1252');
+			}
+			return [$url, $url, trim($body)];
+		}
+		$dom = new DOMDocument();
+		libxml_use_internal_errors(true);
+		// Pages without a charset are read as UTF-8 instead of the libxml default (Latin-1)
+		$dom->loadHTML((preg_match('/<meta[^>]+charset/i', substr($body, 0, 4096)) ? '' : '<?xml encoding="UTF-8">') . $body);
+		libxml_clear_errors();
+		$xpath = new DOMXPath($dom);
+		$title = trim(preg_replace('/\s+/', ' ', (string)($xpath->query('//title')->item(0)->textContent ?? ''))) ?: $url;
+		foreach (iterator_to_array($xpath->query('//script|//style|//noscript|//template|//svg|//iframe|//form|//nav|//header|//footer|//aside|//*[@hidden]|//*[@aria-hidden="true"]')) as $node) {
+			$node->parentNode->removeChild($node);
+		}
+		// The main content when the page marks it, otherwise the whole body
+		$root = $xpath->query('//main')->item(0) ?: ($xpath->query('//article')->item(0) ?: ($xpath->query('//body')->item(0) ?: $dom->documentElement));
+		$text = $root ? $this->_aiChatNodeText($root) : '';
+		$text = preg_replace("/[ \t]+\n/", "\n", $text);
+		$text = trim(preg_replace("/\n{3,}/", "\n\n", $text));
+		return [mb_substr($title, 0, 200), $url, $text];
+	}
+
+	// Plain text of an HTML element, keeping headings, list items, paragraphs and table rows on their own lines
+	private function _aiChatNodeText($node)
+	{
+		if ($node->nodeType === XML_TEXT_NODE) {
+			return preg_replace('/\s+/', ' ', $node->textContent);
+		}
+		if ($node->nodeType !== XML_ELEMENT_NODE) {
+			return '';
+		}
+		$name = strtolower($node->nodeName);
+		if ($name === 'br') {
+			return "\n";
+		}
+		if ($name === 'pre') {
+			return "\n```\n" . rtrim($node->textContent) . "\n```\n";
+		}
+		$text = '';
+		foreach ($node->childNodes as $child) {
+			$text .= $this->_aiChatNodeText($child);
+		}
+		if (preg_match('/^h([1-6])$/', $name, $level)) {
+			return "\n\n" . str_repeat('#', (int)$level[1]) . ' ' . trim($text) . "\n\n";
+		}
+		if ($name === 'li') {
+			return "\n- " . trim($text);
+		}
+		if (in_array($name, ['td', 'th'], true)) {
+			return trim($text) . ' | ';
+		}
+		if (in_array($name, ['p', 'div', 'section', 'article', 'main', 'ul', 'ol', 'table', 'tr', 'blockquote', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'details', 'summary'], true)) {
+			return "\n" . trim($text) . "\n";
+		}
+		return $text;
+	}
+
 	/* ===================== image generation ===================== */
 
 	public function _aiChatImagesEnabled()
@@ -1382,6 +1581,16 @@ class AiChat extends Londerland
 				'name' => 'web_search',
 				'description' => 'Search the web for current or specific information. Use it for recent events, facts you are unsure about, prices, versions and documentation.',
 				'parameters' => ['type' => 'object', 'properties' => ['query' => ['type' => 'string', 'description' => 'Search engine query']], 'required' => ['query']],
+			]];
+		}
+		if ($this->config['AICHAT-fetchAuto']) {
+			$tools[] = ['type' => 'function', 'function' => [
+				'name' => 'fetch_url',
+				'description' => 'Open a web page and read its text. Use it when the user gives a link, and to read a search result in full when its snippet is not enough. Long pages come in parts: call again with the offset given at the end to read further.',
+				'parameters' => ['type' => 'object', 'properties' => [
+					'url' => ['type' => 'string', 'description' => 'Full http or https address of the page'],
+					'offset' => ['type' => 'integer', 'description' => 'Character position to continue reading from (default 0)'],
+				], 'required' => ['url']],
 			]];
 		}
 		if ($this->_aiChatImagesEnabled() && $this->config['AICHAT-imageAuto']) {
@@ -1696,6 +1905,41 @@ class AiChat extends Londerland
 				$sources = array_merge($sources, $results);
 				$this->_aiChatSendEvent(['type' => 'sources', 'sources' => $sources, 'query' => $query]);
 				return $text;
+			case 'fetch_url':
+				$url = trim((string)($arguments['url'] ?? ''));
+				if ($url === '' || !$this->config['AICHAT-fetchAuto']) {
+					return 'Reading web pages is not available.';
+				}
+				if (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
+					$url = 'https://' . $url;
+				}
+				$offset = max(0, (int)($arguments['offset'] ?? 0));
+				$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Reading ' . (parse_url($url, PHP_URL_HOST) ?: $url)]);
+				try {
+					[$title, $finalUrl, $text] = $this->_aiChatFetchPage($url);
+				} catch (RuntimeException $e) {
+					return $e->getMessage();
+				}
+				if ($text === '') {
+					return 'The page ' . $finalUrl . ' has no readable text (it may need JavaScript or a login).';
+				}
+				$length = mb_strlen($text);
+				$part = mb_substr($text, $offset, self::MAX_PAGE_TEXT);
+				// The same page read again (next part) keeps its citation number
+				$number = null;
+				foreach ($sources as $index => $source) {
+					if ($source['url'] === $finalUrl) {
+						$number = $index + 1;
+					}
+				}
+				if ($number === null) {
+					$sources[] = ['title' => $title, 'url' => $finalUrl, 'snippet' => mb_substr(trim(preg_replace('/\s+/', ' ', $text)), 0, 300)];
+					$number = count($sources);
+					$this->_aiChatSendEvent(['type' => 'sources', 'sources' => $sources]);
+				}
+				$end = $offset + mb_strlen($part);
+				$more = $end < $length ? "\n\n[Page text shortened: characters " . $offset . '-' . $end . ' of ' . $length . '. Call fetch_url with offset ' . $end . ' to read further.]' : '';
+				return '[' . $number . '] ' . $title . "\nURL: " . $finalUrl . "\n\n" . ($part !== '' ? $part : '(nothing after this offset)') . $more . "\n\nCite this page inline as [" . $number . '].';
 			case 'generate_image':
 				$prompt = trim((string)($arguments['prompt'] ?? ''));
 				if ($prompt === '' || !$this->_aiChatImagesEnabled()) {
