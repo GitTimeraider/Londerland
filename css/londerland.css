@@ -6529,6 +6529,9 @@ td.mouse-grab.sort-tabs-handle {
 /* ===== Top bar and sidebar keep their float layout (Bootstrap 5 turns .navbar and .nav into flex rows) ===== */
 .navbar.navbar-static-top {
   display: block;
+  /* the slide-in animation leaves a transform, which makes the top bar its own stacking layer; keep it (and the
+     user menu dropping out of it) above the page content but below the sidebar (1001) */
+  z-index: 1000;
   --bs-navbar-padding-x: 0;
   --bs-navbar-padding-y: 0;
 }
