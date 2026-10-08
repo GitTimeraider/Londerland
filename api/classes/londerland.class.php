@@ -2246,6 +2246,7 @@ class Londerland
 		return [
 			'Top Bar' => [
 				$this->settingsOption('input', 'logo', ['label' => 'Logo URL']),
+				$this->settingsOption('input', 'aboutLogo', ['label' => 'About Page Logo URL', 'placeholder' => 'plugins/images/londerland/logo-wide.png', 'help' => 'Logo shown under Settings > System Settings > About. Empty = the Londerland logo. Images uploaded with the Image Manager are in data/userTabs/']),
 				$this->settingsOption('input', 'title', ['label' => 'Londerland Title']),
 				$this->settingsOption('switch', 'useLogo', ['label' => 'Use Logo instead of Title', 'help' => 'Also sets the title of your site']),
 				$this->settingsOption('input', 'description', ['label' => 'Meta Description', 'help' => 'Used to set the description for SEO meta tags']),
@@ -2515,7 +2516,7 @@ class Londerland
 				$this->settingsOption('switch', 'hideRegistration', ['label' => 'Hide Registration', 'help' => 'Enable this to hide the Registration button on the login screen']),
 				$this->settingsOption('number', 'rememberMeDays', ['label' => 'Remember Me Length', 'help' => 'Number of days cookies and tokens will be valid for', 'attr' => 'min="1"']),
 				$this->settingsOption('switch', 'rememberMe', ['label' => 'Remember Me', 'help' => 'Default status of Remember Me button on login screen']),
-				$this->settingsOption('multiple-url', 'localIPList', ['label' => 'Override Local IP or Subnet', 'help' => 'IPv4 only at the moment - This will set your login as local if your IP falls within the From and To']),
+				$this->settingsOption('multiple-url', 'localIPList', ['label' => 'Override Local IP or Subnet', 'placeholder' => 'e.g. 192.168.1.0/24', 'help' => 'IPv4 only. Visitors from these addresses count as local. Type an entry and press Enter, one per address, subnet or range: 192.168.1.20, 192.168.1.0/24 or 192.168.1.10-192.168.1.50']),
 				$this->settingsOption('input', 'wanDomain', ['label' => 'WAN Domain', 'placeholder' => 'only domain and tld - i.e. domain.com', 'help' => 'Enter domain if you wish to be forwarded to a local address - Local Address filled out on next item']),
 				$this->settingsOption('url', 'localAddress', ['label' => 'Local Address', 'placeholder' => 'http://home.local', 'help' => 'Full local address of londerland install - i.e. http://home.local or http://192.168.0.100']),
 				$this->settingsOption('switch', 'enableLocalAddressForward', ['label' => 'Enable Local Address Forward', 'help' => 'Enables the local address forward if on local address and accessed from WAN Domain']),

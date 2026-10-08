@@ -510,30 +510,40 @@ trait NormalFunctions
 		}
 	}
 
+	/**
+	 * One IPv4 entry as a from/to range: an address (192.168.1.20), a subnet (192.168.1.0/24)
+	 * or a range (192.168.1.10-192.168.1.50). False when it is none of these.
+	 */
 	public function convertIPToRange($ip)
 	{
-		$ip = trim($ip);
-		if (strpos($ip, '/') !== false) {
-			$explodeIP = explode('/', $ip);
-			$prefix = $explodeIP[1];
-			$start_ip = $explodeIP[0];
-			$explodeStart = explode('.', $start_ip);
-			if (count($explodeStart) == 4) {
-				$explodeStart[3] = $prefix == 32 ? $explodeStart[3] : 0;
-				$start_ip = implode('.', $explodeStart);
+		$ip = trim((string)$ip);
+		$isIPv4 = function ($value) {
+			return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+		};
+		if (strpos($ip, '-') !== false) {
+			[$from, $to] = array_map('trim', explode('-', $ip, 2));
+			if (!$isIPv4($from) || !$isIPv4($to)) {
+				return false;
 			}
-			$ip_count = 1 << (32 - $prefix);
-			$start_ip_long = long2ip(ip2long($start_ip));
-			$last_ip_long = long2ip(ip2long($start_ip) + $ip_count - 1);
-		} elseif (substr_count($ip, '.') == 3) {
-			$start_ip_long = long2ip(ip2long($ip));
-			$last_ip_long = long2ip(ip2long($ip));
+			$low = min(ip2long($from), ip2long($to));
+			$high = max(ip2long($from), ip2long($to));
+		} elseif (strpos($ip, '/') !== false) {
+			[$base, $prefix] = array_map('trim', explode('/', $ip, 2));
+			if (!$isIPv4($base) || !ctype_digit($prefix) || (int)$prefix > 32) {
+				return false;
+			}
+			// the network address is the base with the host bits cleared, whatever was typed after them
+			$mask = (int)$prefix === 0 ? 0 : ((0xFFFFFFFF << (32 - (int)$prefix)) & 0xFFFFFFFF);
+			$low = ip2long($base) & $mask;
+			$high = $low | (~$mask & 0xFFFFFFFF);
+		} elseif ($isIPv4($ip)) {
+			$low = $high = ip2long($ip);
 		} else {
 			return false;
 		}
 		return [
-			'from' => $start_ip_long,
-			'to' => $last_ip_long
+			'from' => long2ip($low),
+			'to' => long2ip($high)
 		];
 	}
 
