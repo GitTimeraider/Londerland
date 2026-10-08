@@ -2309,11 +2309,11 @@ class Londerland
 					']
 				),
 			],
-			'FavIcon' => [
+			'Favicon' => [
 				$this->settingsOption('html', null, ['label' => 'Instructions', 'override' => 12, 'html' => '
 					<div class="card card-default">
 						<div class="card-header">
-							<a href="https://realfavicongenerator.net/" target="_blank"><span class="badge text-bg-info m-l-5">Visit FavIcon Site</span></a>
+							<a href="https://realfavicongenerator.net/" target="_blank"><span class="badge text-bg-info m-l-5">Visit Favicon Site</span></a>
 						</div>
 						<div class="card-wrapper collapse show">
 							<div class="card-body">
@@ -2332,7 +2332,7 @@ class Londerland
 					</div>
 					']
 				),
-				$this->settingsOption('code-editor', 'favIcon', ['label' => 'Fav Icon Code', 'mode' => 'html']),
+				$this->settingsOption('code-editor', 'favIcon', ['label' => 'Favicon Code', 'mode' => 'html']),
 			],
 			'Custom CSS' => [
 				$this->settingsOption('code-editor', 'customCss', ['label' => 'Custom CSS', 'mode' => 'css']),
