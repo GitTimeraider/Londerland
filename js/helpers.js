@@ -192,6 +192,7 @@ function initColorPickers(selector, options = {}) {
 			default: this.value || null,
 			defaultRepresentation: 'HEXA',
 			comparison: false,
+			swatches: options.swatches || null,
 			components: {
 				preview: true,
 				opacity: true,

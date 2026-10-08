@@ -414,6 +414,25 @@ class AiChat extends Londerland
 					'value' => $this->config['AICHAT-maxUploadMB-include'],
 					'placeholder' => '20'
 				),
+			),
+			'Chat Button' => array(
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-launcherLabel-include',
+					'label' => 'Button Name',
+					'value' => $this->config['AICHAT-launcherLabel-include'],
+					'placeholder' => 'AI',
+					'help' => 'Short name shown under the icon of the chat button (up to about 8 characters fit).'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-launcherColor-include',
+					'label' => 'Button Color',
+					'value' => $this->config['AICHAT-launcherColor-include'],
+					'class' => 'aichat-color-picker',
+					'placeholder' => '#2cabe3',
+					'help' => 'Any colour code, e.g. #b39ddb (light purple) or #5e35b1 (dark purple). Empty = default blue. The text turns dark on light colours.'
+				),
 			)
 		);
 	}
