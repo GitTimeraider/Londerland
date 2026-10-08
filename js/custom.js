@@ -422,9 +422,9 @@ $(document).on("click", ".open-close", function () {
 });
 //EDIT GROUP GET ID
 $(document).on("click", ".editGroupButton", function () {
-    $('#edit-group-form [name=group]').val($(this).parent().parent().attr("data-group"));
-    $('#edit-group-form [name=id]').val($(this).parent().parent().attr("data-id"));
-    $('#edit-group-form [name=image]').val($(this).parent().parent().attr("data-image"));
+    $('#edit-group-form [name=group]').val($(this).closest('[data-id]').attr("data-group"));
+    $('#edit-group-form [name=id]').val($(this).closest('[data-id]').attr("data-id"));
+    $('#edit-group-form [name=image]').val($(this).closest('[data-id]').attr("data-image"));
 });
 //EDIT GROUP
 $(document).on("click", ".editGroup", function () {
@@ -460,7 +460,7 @@ $(document).on("click", ".editGroup", function () {
 });
 //CHANGE DEFAULT GROUP
 $(document).on("click", ".changeDefaultGroup", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildGroupManagement );
 	londerlandAPI2('PUT','api/v2/groups/' + id, {"default":1},true).done(function(data) {
@@ -479,7 +479,7 @@ $(document).on("click", ".changeDefaultGroup", function () {
 $(document).on("click", ".deleteUserGroup", function () {
 	var el = $(this);
     Swal.fire({
-        title: window.lang.translate('Delete ')+el.parent().parent().attr("data-group")+'?',
+        title: window.lang.translate('Delete ')+el.closest('[data-id]').attr("data-group")+'?',
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -488,7 +488,7 @@ $(document).on("click", ".deleteUserGroup", function () {
     }).then(function(result) {
         let willDelete = result.isConfirmed;
         if (willDelete) {
-	        var id = el.parent().parent().attr("data-id");
+	        var id = el.closest('[data-id]').attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildGroupManagement );
 	        londerlandAPI2('DELETE','api/v2/groups/' + id, null,true).done(function(data) {
@@ -562,9 +562,9 @@ $(document).on("click", ".addNewUser", function () {
 });
 //EDIT GROUP GET ID
 $(document).on("click", ".editUserButton", function () {
-    $('#edit-user-form [name=username]').val($(this).parent().parent().attr("data-username"));
-    $('#edit-user-form [name=id]').val($(this).parent().parent().attr("data-id"));
-    $('#edit-user-form [name=email]').val($(this).parent().parent().attr("data-email"));
+    $('#edit-user-form [name=username]').val($(this).closest('[data-id]').attr("data-username"));
+    $('#edit-user-form [name=id]').val($(this).closest('[data-id]').attr("data-id"));
+    $('#edit-user-form [name=email]').val($(this).closest('[data-id]').attr("data-email"));
 });
 //EDIT GROUP
 $(document).on("click", ".editUserAdmin", function () {
@@ -601,7 +601,7 @@ $(document).on("click", ".editUserAdmin", function () {
 // CHANGE USER GROUP
 $(document).on("change", ".userGroupSelect", function () {
 
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var groupId = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
@@ -622,7 +622,7 @@ $(document).on("change", ".userGroupSelect", function () {
 $(document).on("click", ".deleteUser", function () {
     var user = $(this);
     Swal.fire({
-        title: window.lang.translate('Delete ')+user.parent().parent().attr("data-username")+'?',
+        title: window.lang.translate('Delete ')+user.closest('[data-id]').attr("data-username")+'?',
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -631,7 +631,7 @@ $(document).on("click", ".deleteUser", function () {
     }).then(function(result) {
         let willDelete = result.isConfirmed;
         if (willDelete) {
-	        var id = user.parent().parent().attr("data-id");
+	        var id = user.closest('[data-id]').attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildUserManagement );
 	        londerlandAPI2('DELETE','api/v2/users/' + id, null,true).done(function(data) {
@@ -645,7 +645,7 @@ $(document).on("click", ".deleteUser", function () {
 });
 // CHANGE TAB GROUP MIN
 $(document).on("change", ".tabGroupSelectMax", function (event) {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"group_id_max":groupID},true).done(function(data) {
@@ -662,7 +662,7 @@ $(document).on("change", ".tabGroupSelectMax", function (event) {
 });
 // CHANGE TAB GROUP MAX
 $(document).on("change", ".tabGroupSelectMin", function (event) {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"group_id":groupID},true).done(function(data) {
@@ -679,7 +679,7 @@ $(document).on("change", ".tabGroupSelectMin", function (event) {
 });
 // CHANGE TAB CATEGORY
 $(document).on("change", ".tabCategorySelect", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var categoryID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
@@ -696,7 +696,7 @@ $(document).on("change", ".tabCategorySelect", function () {
 });
 // CHANGE TAB TYPE
 $(document).on("change", ".tabTypeSelect", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var type = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"type":type},true).done(function(data) {
@@ -713,7 +713,7 @@ $(document).on("change", ".tabTypeSelect", function () {
 });
 // CHANGE ENABLED TAB
 $(document).on("change", ".enabledSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"enabled":enabled},true).done(function(data) {
@@ -730,7 +730,7 @@ $(document).on("change", ".enabledSwitch", function () {
 });
 // CHANGE SPLASH TAB
 $(document).on("change", ".splashSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var splash = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"splash":splash},true).done(function(data) {
@@ -747,7 +747,7 @@ $(document).on("change", ".splashSwitch", function () {
 });
 // CHANGE SPLASH TAB
 $(document).on("change", ".pingSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var ping = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"ping":ping},true).done(function(data) {
@@ -764,7 +764,7 @@ $(document).on("change", ".pingSwitch", function () {
 });
 // CHANGE PRELOAD TAB
 $(document).on("change", ".preloadSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var preload = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"preload":preload},true).done(function(data) {
@@ -781,7 +781,7 @@ $(document).on("change", ".preloadSwitch", function () {
 });
 // CHANGE ADD TO ADMIN TAB
 $(document).on("change", ".addToAdminSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var data = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"add_to_admin":data},true).done(function(data) {
@@ -798,7 +798,7 @@ $(document).on("change", ".addToAdminSwitch", function () {
 });
 // CHANGE DEFAULT TAB
 $(document).on("change", ".defaultSwitch", function () {
-	var id = $(this).parent().parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/tabs/' + id, {"default":1},true).done(function(data) {
 		try {
@@ -816,7 +816,7 @@ $(document).on("change", ".defaultSwitch", function () {
 $(document).on("click", ".deleteTab", function () {
     var tab = $(this);
     Swal.fire({
-        title: window.lang.translate('Delete ') + tab.parent().parent().attr("data-name") + '?',
+        title: window.lang.translate('Delete ') + tab.closest('[data-id]').attr("data-name") + '?',
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -825,7 +825,7 @@ $(document).on("click", ".deleteTab", function () {
     }).then(function(result) {
         let willDelete = result.isConfirmed;
         if (willDelete) {
-	        var id = tab.parent().parent().attr("data-id");
+	        var id = tab.closest('[data-id]').attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildTabEditor );
 	        londerlandAPI2('DELETE','api/v2/tabs/' + id, null,true).done(function(data) {
@@ -977,7 +977,7 @@ $(document).on("click", ".addNewCategory", function () {
 $(document).on("click", ".deleteCategory", function () {
     var category = $(this);
     Swal.fire({
-        title: window.lang.translate('Delete ')+category.parent().parent().attr("data-name")+'?',
+        title: window.lang.translate('Delete ')+category.closest('[data-id]').attr("data-name")+'?',
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -986,7 +986,7 @@ $(document).on("click", ".deleteCategory", function () {
     }).then(function(result) {
         let willDelete = result.isConfirmed;
         if (willDelete) {
-	        var id = category.parent().parent().attr("data-id");
+	        var id = category.closest('[data-id]').attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildCategoryEditor );
 	        londerlandAPI2('DELETE','api/v2/categories/' + id, null,true).done(function(data) {
@@ -1000,9 +1000,9 @@ $(document).on("click", ".deleteCategory", function () {
 });
 //EDIT CATEGORY GET ID
 $(document).on("click", ".editCategoryButton", function () {
-    $('#edit-category-form [name=category]').val($(this).parent().parent().attr("data-name"));
-    $('#edit-category-form [name=image]').val($(this).parent().parent().attr("data-image"));
-    $('#edit-category-form [name=id]').val($(this).parent().parent().attr("data-id"));
+    $('#edit-category-form [name=category]').val($(this).closest('[data-id]').attr("data-name"));
+    $('#edit-category-form [name=image]').val($(this).closest('[data-id]').attr("data-image"));
+    $('#edit-category-form [name=id]').val($(this).closest('[data-id]').attr("data-id"));
 });
 //EDIT CATEGORY
 $(document).on("click", ".editCategory", function () {
@@ -1040,7 +1040,7 @@ $(document).on("click", ".editCategory", function () {
 });
 //CHANGE DEFAULT CATEGORY
 $(document).on("click", ".changeDefaultCategory", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildCategoryEditor );
 	londerlandAPI2('PUT','api/v2/categories/' + id, {"default":1},true).done(function(data) {
@@ -1555,7 +1555,7 @@ $(document).on("click", ".showPassword", function () {
     $(this).find('.passwordToggle').toggleClass('fa-eye').toggleClass('fa-eye-slash');
 });
 $(document).on("click", ".emailUser", function () {
-    var email = $(this).parent().parent().attr('data-email');
+    var email = $(this).closest('[data-id]').attr('data-email');
     if(activeInfo.plugins["PHPMAILER-enabled"] == true){
         $('.emailModal').click();
         $('#sendEmailToInput').val(email);

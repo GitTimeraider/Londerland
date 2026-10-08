@@ -181,7 +181,7 @@ function newBookmarkTabForm(){
 
 // CHANGE ENABLED TAB
 $(document).on("change", ".bookmarkEnabledSwitch", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"enabled":enabled},true).done(function(data) {
@@ -198,7 +198,7 @@ $(document).on("change", ".bookmarkEnabledSwitch", function () {
 });
 // CHANGE TAB GROUP
 $(document).on("change", ".bookmarkTabGroupSelect", function (event) {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	londerlandAPI2('PUT','api/v2/plugins/bookmark/tabs/' + id, {"group_id":groupID},true).done(function(data) {
@@ -215,7 +215,7 @@ $(document).on("change", ".bookmarkTabGroupSelect", function (event) {
 });
 // CHANGE TAB CATEGORY
 $(document).on("change", ".bookmarkTabCategorySelect", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var categoryID = $(this).find("option:selected").val();
 	console.log("CategoryID: " + categoryID);
 	var callbacks = $.Callbacks();
@@ -235,7 +235,7 @@ $(document).on("change", ".bookmarkTabCategorySelect", function () {
 $(document).on("click", ".bookmarkDeleteTab", function () {
 	var tab = $(this);
 	Swal.fire({
-		title: window.lang.translate('Delete ') + tab.parent().parent().attr("data-name") + '?',
+		title: window.lang.translate('Delete ') + tab.closest('[data-id]').attr("data-name") + '?',
 		icon: "warning",
 		showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -244,7 +244,7 @@ $(document).on("click", ".bookmarkDeleteTab", function () {
 	}).then(function(result) {
         let willDelete = result.isConfirmed;
 		if (willDelete) {
-			var id = tab.parent().parent().attr("data-id");
+			var id = tab.closest('[data-id]').attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkTabEditor );
 			londerlandAPI2('DELETE','api/v2/plugins/bookmark/tabs/' + id, null,true).done(function(data) {
@@ -561,7 +561,7 @@ $(document).on("click", ".addNewBookmarkCategory", function () {
 $(document).on("click", ".deleteBookmarkCategory", function () {
 	var category = $(this);
 	Swal.fire({
-		title: window.lang.translate('Delete ')+category.parent().parent().attr("data-name")+'?',
+		title: window.lang.translate('Delete ')+category.closest('[data-id]').attr("data-name")+'?',
 		icon: "warning",
 		showCancelButton: true,
         cancelButtonText: window.lang.translate('No'),
@@ -570,7 +570,7 @@ $(document).on("click", ".deleteBookmarkCategory", function () {
 	}).then(function(result) {
         let willDelete = result.isConfirmed;
 		if (willDelete) {
-			var id = category.parent().parent().attr("data-id");
+			var id = category.closest('[data-id]').attr("data-id");
 			var callbacks = $.Callbacks();
 			callbacks.add( buildBookmarkCategoryEditor );
 			londerlandAPI2('DELETE','api/v2/plugins/bookmark/categories/' + id, null,true).done(function(data) {
@@ -584,8 +584,8 @@ $(document).on("click", ".deleteBookmarkCategory", function () {
 });
 //EDIT CATEGORY GET ID
 $(document).on("click", ".editBookmarkCategoryButton", function () {
-	$('#edit-bookmark-category-form [name=category]').val($(this).parent().parent().attr("data-name"));
-	$('#edit-bookmark-category-form [name=id]').val($(this).parent().parent().attr("data-id"));
+	$('#edit-bookmark-category-form [name=category]').val($(this).closest('[data-id]').attr("data-name"));
+	$('#edit-bookmark-category-form [name=id]').val($(this).closest('[data-id]').attr("data-id"));
 });
 //EDIT CATEGORY
 $(document).on("click", ".editBookmarkCategory", function () {
@@ -619,7 +619,7 @@ $(document).on("click", ".editBookmarkCategory", function () {
 });
 //CHANGE DEFAULT CATEGORY
 $(document).on("click", ".changeDefaultBookmarkCategory", function () {
-	var id = $(this).parent().parent().attr("data-id");
+	var id = $(this).closest('[data-id]').attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildBookmarkCategoryEditor );
 	londerlandAPI2('PUT','api/v2/plugins/bookmark/categories/' + id, {"default":1},true).done(function(data) {
