@@ -1881,6 +1881,27 @@ class Londerland
 		return $this->processQueries($response);
 	}
 
+	/**
+	 * Settings > System Settings > Main > Default Tab per Group: one tab choice per group (config defaultTabGroup-<id>).
+	 * A group without a choice, or whose tab its users cannot open, uses the default tab of the Tab Editor.
+	 */
+	public function defaultTabPerGroupSettings()
+	{
+		$tabs = $this->processQueries([['function' => 'fetchAll', 'query' => 'SELECT `id`, `name` FROM tabs WHERE `enabled` = 1 ORDER BY `order` ASC']]) ?: [];
+		$options = [['name' => 'Default tab (Tab Editor)', 'value' => '']];
+		foreach ($tabs as $tab) {
+			$options[] = ['name' => $tab['name'], 'value' => (string)$tab['id']];
+		}
+		$settings = [
+			$this->settingsOption('html', null, ['override' => 12, 'label' => 'Default Tab per Group', 'html' => '<p lang="en">The tab a group opens with. When a user cannot open the chosen tab, Londerland uses the default tab of the Tab Editor, and when that is not available either, the first tab in the user\'s side menu.</p>']),
+		];
+		foreach ($this->groupSelect() as $group) {
+			$name = 'defaultTabGroup-' . (int)$group['value'];
+			$settings[] = $this->settingsOption('select', $name, ['label' => $group['name'], 'options' => $options, 'value' => (string)($this->config[$name] ?? '')]);
+		}
+		return $settings;
+	}
+
 	public function getAllTabs()
 	{
 		$response = [
@@ -2535,6 +2556,7 @@ class Londerland
 				$this->settingsOption('switch', 'authProxyOverrideLogout', ['label' => 'Override Logout', 'help' => 'Enable option to set custom Logout URL for Auth Proxy']),
 				$this->settingsOption('input', 'authProxyLogoutURL', ['label' => 'Logout URL', 'help' => 'Logout URL to redirect user for Auth Proxy']),
 			],
+			'Default Tab per Group' => $this->defaultTabPerGroupSettings(),
 			'Ping' => [
 				$this->settingsOption('auth', 'pingAuth'),
 				$this->settingsOption('auth', 'pingAuthMessage', ['label' => 'Minimum Authentication for Message and Sound']),
@@ -4606,6 +4628,7 @@ class Londerland
 				'authDebug' => $this->config['authDebug'],
 				'minimalLoginScreen' => $this->config['minimalLoginScreen'],
 				'unsortedTabs' => $this->config['unsortedTabs'],
+				'groupDefaultTab' => (string)($this->config['defaultTabGroup-' . (int)($this->user['groupID'] ?? 999)] ?? ''),
 				'authType' => $this->config['authType'],
 				'authBackend' => $this->config['authBackend'],
 				'newMessageSound' => (isset($this->config['CHAT-newMessageSound-include'])) ? $this->config['CHAT-newMessageSound-include'] : '',
