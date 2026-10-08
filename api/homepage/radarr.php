@@ -84,7 +84,7 @@ trait RadarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['radarrDisableCertCheck'], $this->config['radarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
 				$results = $downloader->getRootFolder();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -177,7 +177,7 @@ trait RadarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], $this->config['homepageRadarrQueueRefresh'], $this->config['radarrDisableCertCheck'], $this->config['radarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
 				$results = $downloader->getQueue();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -215,7 +215,7 @@ trait RadarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], $this->config['homepageRadarrQueueRefresh'], $this->config['radarrDisableCertCheck'], $this->config['radarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'radarr', null, null, $options);
 				$results = $downloader->getCalendar($startDate, $endDate, $this->config['radarrUnmonitored']);
 				$result = json_decode($results, true);
 				if (is_array($result) || is_object($result)) {

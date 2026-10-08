@@ -2,13 +2,13 @@
 
 // OpenAPI documentation for the routes in api/v2/routes/pages.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
 	name: 'page',
-	description: 'HTML for Organizr Pages',
+	description: 'HTML for Londerland Pages',
 )]
 #[OA\Schema(
 	schema: 'get-html',
@@ -30,7 +30,7 @@ use OpenApi\Attributes as OA;
 				new OA\Property(
 					description: 'data from api',
 					type: 'string',
-					example: '\\r\\n\\u003Cscript\\u003E\\r\\n    (function() {\\r\\n        updateCheck();\\r\\n        authDebugCheck();\\r\\n        sponsorLoad();\\r\\n        newsLoad();\\r\\n        checkCommitLoad();\\r\\n        [].slice.call(document.querySelectorAll(\'.sttabs-main-settings-div\')).forEach(function(el) {\\r\\n            new CBPFWTabs(el);\\r\\n        });\\r\\n    })();\\r\\n\\u003C/script\\u003E\\r\\n',
+					example: '\\r\\n\\u003Cscript\\u003E\\r\\n    (function() {\\r\\n        authDebugCheck();\\r\\n        [].slice.call(document.querySelectorAll(\'.sttabs-main-settings-div\')).forEach(function(el) {\\r\\n            new CBPFWTabs(el);\\r\\n        });\\r\\n    })();\\r\\n\\u003C/script\\u003E\\r\\n',
 					property: 'data',
 				),
 			],
@@ -45,7 +45,7 @@ use OpenApi\Attributes as OA;
 	tags: [
 		'page',
 	],
-	summary: 'Get HTML for Organizr Pages',
+	summary: 'Get HTML for Londerland Pages',
 	parameters: [
 		new OA\Parameter(
 			name: 'page',
@@ -81,7 +81,7 @@ use OpenApi\Attributes as OA;
 	tags: [
 		'page',
 	],
-	summary: 'Get list of all Organizr Pages',
+	summary: 'Get list of all Londerland Pages',
 	responses: [
 		new OA\Response(
 			response: '200',

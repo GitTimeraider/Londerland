@@ -1,5 +1,5 @@
-// Copies the frontend libraries Organizr loads from node_modules into assets/vendor
-// and minifies Organizr's own stylesheets and scripts. Run with: npm ci && npm run build
+// Copies the frontend libraries Londerland loads from node_modules into assets/vendor
+// and minifies Londerland's own stylesheets and scripts. Run with: npm ci && npm run build
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -74,10 +74,10 @@ const assets = [
 	['@highlightjs/cdn-assets/styles/default.min.css', 'highlightjs/default.min.css'],
 ];
 
-// Organizr's own files: [source, minified output]
+// Londerland's own files: [source, minified output]
 const ownFiles = [
 	['css/dark.css', 'css/dark.min.css'],
-	['css/organizr.css', 'css/organizr.min.css'],
+	['css/londerland.css', 'css/londerland.min.css'],
 	['js/custom.js', 'js/custom.min.js'],
 ];
 
@@ -133,4 +133,4 @@ const iconSets = pickerSets.map((set) => {
 });
 writeFileSync(join(vendor, 'icons.json'), JSON.stringify(iconSets));
 
-console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Organizr files, ${mdiAliases.size} icon aliases`);
+console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Londerland files, ${mdiAliases.size} icon aliases`);

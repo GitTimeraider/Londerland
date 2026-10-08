@@ -1,11 +1,11 @@
 <?php
-$GLOBALS['organizrPages'][] = 'lockscreen';
-function get_page_lockscreen($Organizr)
+$GLOBALS['londerlandPages'][] = 'lockscreen';
+function get_page_lockscreen($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
 	return '
@@ -17,8 +17,8 @@ function get_page_lockscreen($Organizr)
       <form class="form-horizontal form-material" id="form-lockscreen" onsubmit="return false;">
         <div class="form-group">
           <div class="col-12 text-center">
-            <div class="user-thumb text-center"> <img alt="thumbnail" class="rounded-circle" width="100" src="' . $Organizr->user['image'] . '">
-              <h3>' . $Organizr->user['username'] . '</h3>
+            <div class="user-thumb text-center"> <img alt="thumbnail" class="rounded-circle" width="100" src="' . $Londerland->user['image'] . '">
+              <h3>' . $Londerland->user['username'] . '</h3>
             </div>
           </div>
         </div>

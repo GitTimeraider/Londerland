@@ -1,8 +1,8 @@
 <?php
 $app->get('/image', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getImages();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getImages();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,9 +11,9 @@ $app->get('/image', function ($request, $response, $args) {
 	
 });
 $app->get('/image/select', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getImagesSelect();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getImagesSelect();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -22,9 +22,9 @@ $app->get('/image/select', function ($request, $response, $args) {
 	
 });
 $app->delete('/image/{image}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->removeImage($args['image']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->removeImage($args['image']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -33,9 +33,9 @@ $app->delete('/image/{image}', function ($request, $response, $args) {
 	
 });
 $app->post('/image', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$Organizr->uploadImage();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$Londerland->uploadImage();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

@@ -48,7 +48,7 @@ function inviteLaunch(){
 			menuList = `<li><a class="inline-popups inviteModal" href="#invite-area" data-effect="mfp-zoom-out"><i class="fa fa-ticket fa-fw"></i> <span lang="en">Use Invite Code</span></a></li>`;
 		}
 		$('.append-menu').after(menuList);
-		$('.organizr-area').after(htmlDOM);
+		$('.londerland-area').after(htmlDOM);
 		pageLoad();
 		getInvite();
 	}
@@ -68,7 +68,7 @@ function joinPlex(){
 		message('Invite Error',' Please Enter Password',activeInfo.settings.notifications.position,'#FFF','warning','5000');
 	}
 	if(email.val() !== '' && username.val() !== '' && password.val() !== ''){
-		organizrAPI2('POST','api/v2/plex/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
+		londerlandAPI2('POST','api/v2/plex/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-plex-no').toggleClass('hidden');
@@ -80,7 +80,7 @@ function joinPlex(){
 				message('Invite Error',' '+response.message,activeInfo.settings.notifications.position,'#FFF','warning','5000');
 			}
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Plex Signup Error');
+			LonderlandApiError(xhr, 'Plex Signup Error');
 		});
 	}
 }
@@ -100,7 +100,7 @@ function joinEmby(){
 		message('Invite Error',' Please Enter Password',activeInfo.settings.notifications.position,'#FFF','warning','5000');
 	}
 	if(email.val() !== '' && username.val() !== '' && password.val() !== ''){
-		organizrAPI2('POST','api/v2/emby/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
+		londerlandAPI2('POST','api/v2/emby/register',{username:username.val(), email:email.val(), password:password.val()}).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-emby-no').toggleClass('hidden');
@@ -112,7 +112,7 @@ function joinEmby(){
 				message('Invite Error',' '+response.message,activeInfo.settings.notifications.position,'#FFF','warning','5000');
 			}
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Emby Signup Error');
+			LonderlandApiError(xhr, 'Emby Signup Error');
 		});
 	}
 }
@@ -152,7 +152,7 @@ function hasPlexUsername(){
 			usedby:username.val()
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-plex-yes').toggleClass('hidden');
@@ -165,7 +165,7 @@ function hasPlexUsername(){
 			}
 			ajaxloader();;
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr);
+			LonderlandApiError(xhr);
 			ajaxloader();
 		});
 	}
@@ -181,7 +181,7 @@ function hasEmbyUsername(){
 			usedby:username.val()
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/invites/' + code,post).done(function(data) {
 			var response = data.response;
 			if(response.result === 'success'){
 				$('.invite-step-3-emby-yes').toggleClass('hidden');
@@ -194,7 +194,7 @@ function hasEmbyUsername(){
 			}
 			ajaxloader();;
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr);
+			LonderlandApiError(xhr);
 			ajaxloader();
 		});
 	}
@@ -202,7 +202,7 @@ function hasEmbyUsername(){
 function verifyInvite(){
 	var code = $('#inviteCodeInput').val().toUpperCase();
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('GET','api/v2/plugins/invites/'+code).done(function(data) {
+	londerlandAPI2('GET','api/v2/plugins/invites/'+code).done(function(data) {
 		var response = data.response;
 		if(response.result === 'success'){
 			$('.invite-step-1').toggleClass('hidden');
@@ -215,7 +215,7 @@ function verifyInvite(){
 		}
 		ajaxloader();;
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 		ajaxloader();
 	});
 }
@@ -253,13 +253,13 @@ function createNewInvite(){
 			username:username.val(),
 		};
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('POST','api/v2/plugins/invites',post).done(function(data) {
+		londerlandAPI2('POST','api/v2/plugins/invites',post).done(function(data) {
 			var response = data.response;
 			$.magnificPopup.close();
 			ajaxloader();
 			message('Invite',' Invite Created',activeInfo.settings.notifications.position,'#FFF','success','5000');
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr);
+			LonderlandApiError(xhr);
 			ajaxloader();
 			message('Invite Error',' An Error Occured',activeInfo.settings.notifications.position,'#FFF','error','5000');
 		});
@@ -268,14 +268,14 @@ function createNewInvite(){
 }
 function deleteInvite(code, id){
 	ajaxloader(".content-wrap","in");
-	organizrAPI2('DELETE','api/v2/plugins/invites/' + code).done(function(data) {
+	londerlandAPI2('DELETE','api/v2/plugins/invites/' + code).done(function(data) {
 		var response = data.response;
 		$('#inviteItem-'+id).remove();
 		//$.magnificPopup.close();
 		ajaxloader();
 		message('Invite',' Invite Deleted',activeInfo.settings.notifications.position,'#FFF','success','5000');
 	}).fail(function(xhr) {
-		console.error("Organizr Function: API Connection Failed");
+		console.error("Londerland Function: API Connection Failed");
 		ajaxloader();
 		message('Invite Error',' An Error Occured',activeInfo.settings.notifications.position,'#FFF','error','5000');
 	});
@@ -316,7 +316,7 @@ $(document).on('click', '.inviteModal', function() {
 	var htmlDOM = '';
 	if (activeInfo.user.loggedin === true && activeInfo.user.groupID <= activeInfo.plugins.includes["INVITES-Auth-include"]) {
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('GET','api/v2/plugins/invites').done(function(data) {
+		londerlandAPI2('GET','api/v2/plugins/invites').done(function(data) {
 			var response = data.response;
 			var htmlDOM = '';
 			htmlDOM = `
@@ -357,7 +357,7 @@ $(document).on('click', '.inviteModal', function() {
 				$('.deleteButton').hide();
 			}
 		}).fail(function(xhr) {
-			console.error("Organizr Function: API Connection Failed");
+			console.error("Londerland Function: API Connection Failed");
 		});
 		ajaxloader();
 	}else if (activeInfo.user.loggedin === false){

@@ -288,7 +288,7 @@ trait EmbyLiveTVTrackerHomepageItem
             }
 
             function homepageEmbyLiveTVTrackerStats() {
-                return organizrAPI2("GET", "api/v2/homepage/embyLiveTVTracker/stats")
+                return londerlandAPI2("GET", "api/v2/homepage/embyLiveTVTracker/stats")
                 .done(function(data) {
                     console.log("Stats response received:", data);
                     if (data && data.response && data.response.result === "success" && data.response.data) {
@@ -321,7 +321,7 @@ trait EmbyLiveTVTrackerHomepageItem
 
             function homepageEmbyLiveTVTrackerActivity() {
                 console.log("Activity function called - making API request...");
-                return organizrAPI2("GET", "api/v2/homepage/embyLiveTVTracker/activity?days=' . ($daysShown ?: 7) . '\u0026limit=' . ($maxItems ?: 10) . '")
+                return londerlandAPI2("GET", "api/v2/homepage/embyLiveTVTracker/activity?days=' . ($daysShown ?: 7) . '\u0026limit=' . ($maxItems ?: 10) . '")
                 .done(function(data) {
                     console.log("Activity response received:", data);
                     console.log("Response structure check:", {

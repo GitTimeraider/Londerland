@@ -33,7 +33,7 @@ $email = '
  				<tbody>
  					<tr>
  						<td align="center" style="vertical-align: top; padding-bottom:30px;"><a href="javascript:void(0)" target="_blank"><br>
- 						<img alt="admin Responsive web app kit" src="' . $this->config['PHPMAILER-logo'] . '" style="border:none;width: 100%;"></a></td>
+ 						<img alt="admin Responsive web app kit" src="' . $this->_phpMailerPluginLogo() . '" style="border:none;width: 100%;"></a></td>
  					</tr>
  				</tbody>
  			</table>

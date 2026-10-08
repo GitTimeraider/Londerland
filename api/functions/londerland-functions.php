@@ -1,11 +1,7 @@
 <?php
 
-trait OrganizrFunctions
+trait LonderlandFunctions
 {
-	public function docs($path): string
-	{
-		return 'https://organizr.gitbook.io/organizr/' . $path;
-	}
 
 	public function loadResources($files = [], $rootPath = '')
 	{
@@ -297,20 +293,6 @@ trait OrganizrFunctions
 		return $sounds;
 	}
 
-	public function getBranches()
-	{
-		return array(
-			array(
-				'name' => 'Develop',
-				'value' => 'v2-develop'
-			),
-			array(
-				'name' => 'Master',
-				'value' => 'v2-master'
-			)
-		);
-	}
-
 	public function getSettingsTabs()
 	{
 		return array(
@@ -345,11 +327,11 @@ trait OrganizrFunctions
 	{
 		return array(
 			array(
-				'name' => 'Organizr DB',
+				'name' => 'Londerland DB',
 				'value' => 'internal'
 			),
 			array(
-				'name' => 'Organizr DB + Backend',
+				'name' => 'Londerland DB + Backend',
 				'value' => 'both'
 			),
 			array(
@@ -385,7 +367,7 @@ trait OrganizrFunctions
 			'value' => false,
 			'disabled' => true
 		);
-		foreach (array_filter(get_class_methods('Organizr'), function ($v) {
+		foreach (array_filter(get_class_methods('Londerland'), function ($v) {
 			return strpos($v, 'plugin_auth_') === 0;
 		}) as $value) {
 			$name = str_replace('plugin_auth_', '', $value);
@@ -654,7 +636,7 @@ trait OrganizrFunctions
 		return ($buttons) ? '
 		<div class="card">
             <div class="card-header bg-org" id="plex-login-heading" role="tab">
-            	<a class="card-title" data-bs-toggle="collapse" href="#plex-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="organizr-login-collapse">
+            	<a class="card-title" data-bs-toggle="collapse" href="#plex-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="londerland-login-collapse">
 	                <img class="lazyload loginTitle" data-src="plugins/images/tabs/plex.png"> &nbsp;
                     <span class="text-uppercase fw300" lang="en">Login with Plex</span>
             	</a>
@@ -717,7 +699,7 @@ trait OrganizrFunctions
 
 	public function settingsDocker()
 	{
-		$type = ($this->docker) ? 'Official Docker' : 'Native';
+		$type = ($this->docker) ? 'Docker' : 'Native';
 		return '<li><div class="bg-info"><i class="mdi mdi-flag mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Install Type</span> ' . $type . '</li>';
 	}
 
@@ -726,7 +708,7 @@ trait OrganizrFunctions
 		$paths = $this->pathsWritable($this->paths);
 		$items = '';
 		$type = (array_search(false, $paths)) ? 'Not Writable' : 'Writable';
-		$result = '<li class="mouse" onclick="toggleWritableFolders();"><div class="bg-info"><i class="mdi mdi-folder mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Organizr Paths</span> ' . $type . '</li>';
+		$result = '<li class="mouse" onclick="toggleWritableFolders();"><div class="bg-info"><i class="mdi mdi-folder mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Londerland Paths</span> ' . $type . '</li>';
 		foreach ($paths as $k => $v) {
 			$items .= '<li class="folders-writable hidden"><div class="bg-primary"><i class="mdi mdi-folder mdi-24px text-white"></i></div><a tabindex="0" type="button" class="btn btn-secondary btn-outline popover-info float-end clipboard" lang="en" data-bs-container="body" title="" data-bs-toggle="popover" data-bs-placement="left" data-content="' . $v['path'] . '" data-bs-title="File Path" data-clipboard-text="' . $v['path'] . '">' . $k . '</a> ' . (($v['writable']) ? 'Writable' : 'Not Writable') . '</li>';
 		}
@@ -842,10 +824,10 @@ trait OrganizrFunctions
 				$options = array_merge($options, $extras);
 			}
 		}
-		return array_merge($options, array('useragent' => 'organizr/' . $this->version, 'connect_timeout' => 5));
+		return array_merge($options, array('useragent' => 'londerland/' . $this->version, 'connect_timeout' => 5));
 	}
 
-	public function showHTML(string $title = 'Organizr Alert', string $notice = '', bool $autoClose = false)
+	public function showHTML(string $title = 'Londerland Alert', string $notice = '', bool $autoClose = false)
 	{
 		$close = $autoClose ? 'onLoad="setTimeout(\'closemyself()\',3000);"' : '';
 		$closeMessage = $autoClose ? '<p><sup>(This window will close automatically)</sup></p>' : '';

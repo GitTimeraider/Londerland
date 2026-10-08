@@ -11,23 +11,23 @@ use Monolog\Processor\WebProcessor;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Writes Organizr's JSON log lines (one object per line, read back by LogFunctions::readLog).
+ * Writes Londerland's JSON log lines (one object per line, read back by LogFunctions::readLog).
  * Exceptions may be passed as the message; they are logged as their class name with an "errors" block.
  */
-class OrganizrLogger extends Logger
+class LonderlandLogger extends Logger
 {
-	private const ERRORS_KEY = '_organizr_errors';
+	private const ERRORS_KEY = '_londerland_errors';
 	private string $username;
 
 	public function __construct(string $channel, string $username, string $file, int $maxFiles, Level $level, ?SlackWebhookHandler $slackHandler = null)
 	{
 		$this->username = $username !== '' ? $username : Uuid::uuid4()->toString();
-		$formatter = new OrganizrLogFormatter();
+		$formatter = new LonderlandLogFormatter();
 		$fileHandler = new RotatingFileHandler($file, $maxFiles, $level);
 		$fileHandler->setFormatter($formatter);
 		$handlers = [$fileHandler];
 		$processors = [
-			new IntrospectionProcessor($level, ['OrganizrLogger']),
+			new IntrospectionProcessor($level, ['LonderlandLogger']),
 			function (LogRecord $record): LogRecord {
 				$record->extra['trace_id'] = $this->username;
 				$record->extra['created_time'] = microtime(true);
@@ -128,13 +128,13 @@ class OrganizrLogger extends Logger
 	}
 }
 
-class OrganizrLogFormatter extends JsonFormatter
+class LonderlandLogFormatter extends JsonFormatter
 {
 	public function format(LogRecord $record): string
 	{
 		$context = $record->context;
-		$errors = $context[OrganizrLogger::errorsKey()] ?? null;
-		unset($context[OrganizrLogger::errorsKey()]);
+		$errors = $context[LonderlandLogger::errorsKey()] ?? null;
+		unset($context[LonderlandLogger::errorsKey()]);
 		$formatted = [
 			'log_level' => $record->level->getName(),
 			'message' => $record->message,

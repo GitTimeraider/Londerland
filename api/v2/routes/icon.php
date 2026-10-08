@@ -1,8 +1,8 @@
 <?php
 $app->get('/icon', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getIcons();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getIcons();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

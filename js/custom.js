@@ -74,7 +74,7 @@ $(document).ready(function () {
     body.trigger("resize");
     //Increment the idle time counter every minute.
     var idleInterval = setInterval(timerIncrement, 60000); // 1 minute
-    hasCookie = (getCookie('organizrToken')) ? true : false;
+    hasCookie = (getCookie('londerlandToken')) ? true : false;
     //Zero the idle timer on mouse movement.
     $(this).mousemove(function (e) {
         idleTime = 0;
@@ -136,7 +136,7 @@ $(document).ready(function () {
 });
 function pageLoad(){
     "use strict";
-    //Start Organizr
+    //Start Londerland
     $(function () {
         if($('#preloader:visible').length == 1){
             $("#preloader").fadeOut();
@@ -272,9 +272,6 @@ $(document).on("click", "#leave-registration", function(e) {
     $("#loginform").slideDown();
 
 });
-$(document).on("click", ".updateNow", function(e) {
-    updateNow();
-});
 $(document).on("click", ".show-login", function(e) {
     buildLogin();
 });
@@ -297,7 +294,7 @@ function doneTypingMediaSearch () {
             break;
         default:
     }
-    organizrAPI2('GET','api/v2/homepage/'+server+'/search/' + query).done(function(data) {
+    londerlandAPI2('GET','api/v2/homepage/'+server+'/search/' + query).done(function(data) {
 	    try {
 		    let response = data.response;
 		    $('.mediaSearch-div').html(buildMediaResults(response.data,server,query));
@@ -305,10 +302,10 @@ function doneTypingMediaSearch () {
 			    $('.resultBox-inside').css({ height: '100%', 'overflow-y': 'auto' });
 		    }
 	    }catch(e) {
-		    organizrCatchError(e,data);
+		    londerlandCatchError(e,data);
 	    }
     }).fail(function(xhr) {
-	    OrganizrApiError(xhr, 'API Error');
+	    LonderlandApiError(xhr, 'API Error');
     })
 }
 $(document).on("click", ".login-button", function(e) {
@@ -334,7 +331,7 @@ $(document).on("click", ".login-button", function(e) {
             }
         });
         var post = $('#loginform').serializeToJSON();
-        organizrAPI2('POST', 'api/v2/login', post).done(function (data) {
+        londerlandAPI2('POST', 'api/v2/login', post).done(function (data) {
             local('set','message','Welcome|Login Successful|success');
 	        local('r','loggingIn');
 	        location.reload();
@@ -366,10 +363,10 @@ $(document).on("click", ".login-button", function(e) {
 	            	break;
 	            default:
 		            message('Login Error', 'API Connection Failed', activeInfo.settings.notifications.position, '#FFF', 'error', '10000');
-		            console.error("Organizr Function: API Connection Failed");
+		            console.error("Londerland Function: API Connection Failed");
             }
 	        message('Login Error', xhr.responseJSON.response.message, activeInfo.settings.notifications.position, '#FFF', 'warning', '10000');
-	        console.error("Organizr Function: " + xhr.responseJSON.response.message);
+	        console.error("Londerland Function: " + xhr.responseJSON.response.message);
             local('r','loggingIn');
         });
     }
@@ -383,22 +380,22 @@ $(document).on("click", ".unlockButton", function(e) {
 	    message('Password cannot be blank', '', activeInfo.settings.notifications.position, '#FFF', 'error', '5000');
     	return false;
     }
-    organizrAPI2('POST','api/v2/users/unlock',post).done(function(data) {
+    londerlandAPI2('POST','api/v2/users/unlock',post).done(function(data) {
         let html = data.response;
         location.reload();
     }).fail(function(xhr) {
-	    OrganizrApiError(xhr, 'API Error');
+	    LonderlandApiError(xhr, 'API Error');
     });
 });
 $(document).on("click", ".register-button", function(e) {
     e.preventDefault;
     var post = $( '#registerForm' ).serializeToJSON();
     console.log(post)
-    organizrAPI2('POST','api/v2/users/register',post).done(function(data) {
+    londerlandAPI2('POST','api/v2/users/register',post).done(function(data) {
         let html = data.response;
 		location.reload();
     }).fail(function(xhr) {
-	    OrganizrApiError(xhr, 'API Error');
+	    LonderlandApiError(xhr, 'API Error');
     });
 });
 $(document).on("click", ".reset-button", function(e) {
@@ -409,12 +406,12 @@ $(document).on("click", ".reset-button", function(e) {
 	        email:email
         };
 	    message('Submitting request...','',activeInfo.settings.notifications.position,'#FFF','info','10000');
-        organizrAPI2('POST','api/v2/users/recover',post).done(function(data) {
+        londerlandAPI2('POST','api/v2/users/recover',post).done(function(data) {
             var html = data.response;
             message('Recover Password',html.message,activeInfo.settings.notifications.position,'#FFF','success','10000');
             $('#leave-recover').trigger('click');
         }).fail(function(xhr) {
-	        OrganizrApiError(xhr, 'API Error');
+	        LonderlandApiError(xhr, 'API Error');
         });
     }else{
         message('Recover Error','Enter Email',activeInfo.settings.notifications.position,'#FFF','warning','10000');
@@ -446,19 +443,19 @@ $(document).on("click", ".editGroup", function () {
 		return false;
 	}
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('PUT','api/v2/groups/' + info.id,info,true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/groups/' + info.id,info,true).done(function(data) {
 		try {
 			var response = data.response;
 			clearSelect('.groupIconImageList, .groupIconIconList');
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message(response.message,'',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 		clearForm('#edit-group-form');
 		$.magnificPopup.close();
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 //CHANGE DEFAULT GROUP
@@ -466,16 +463,16 @@ $(document).on("click", ".changeDefaultGroup", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('PUT','api/v2/groups/' + id, {"default":1},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/groups/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 			message(response.message,'',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 //DELETE GROUP
@@ -494,15 +491,15 @@ $(document).on("click", ".deleteUserGroup", function () {
 	        var id = el.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildGroupManagement );
-	        organizrAPI2('DELETE','api/v2/groups/' + id, null,true).done(function(data) {
+	        londerlandAPI2('DELETE','api/v2/groups/' + id, null,true).done(function(data) {
 		        try {
 			        message('Group Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			        if(callbacks){ callbacks.fire(); }
 		        }catch(e) {
-			        organizrCatchError(e,data);
+			        londerlandCatchError(e,data);
 		        }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'API Error');
+		        LonderlandApiError(xhr, 'API Error');
 	        });
         }
     });
@@ -522,7 +519,7 @@ $(document).on("click", ".addNewGroup", function () {
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildGroupManagement );
-	organizrAPI2('POST','api/v2/groups',info,true).done(function(data) {
+	londerlandAPI2('POST','api/v2/groups',info,true).done(function(data) {
 		try {
 			var response = data.response;
 			clearSelect('.groupIconImageList, .groupIconIconList');
@@ -531,10 +528,10 @@ $(document).on("click", ".addNewGroup", function () {
 			clearForm('#new-group-form');
 			$.magnificPopup.close();
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 // ADD USER
@@ -548,11 +545,11 @@ $(document).on("click", ".addNewUser", function () {
 	console.log(userInfo)
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('POST','api/v2/users', userInfo,true).done(function(data) {
+	londerlandAPI2('POST','api/v2/users', userInfo,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('User Created',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
@@ -560,7 +557,7 @@ $(document).on("click", ".addNewUser", function () {
 		window.refreshManageUsers();
 		$.magnificPopup.close();
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 //EDIT GROUP GET ID
@@ -587,18 +584,18 @@ $(document).on("click", ".editUserAdmin", function () {
 	}
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('PUT','api/v2/users/' + userInfo.id, userInfo,true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/users/' + userInfo.id, userInfo,true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('User Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 		clearForm('#edit-user-form');
 		$.magnificPopup.close();
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 // CHANGE USER GROUP
@@ -608,16 +605,16 @@ $(document).on("change", ".userGroupSelect", function () {
 	var groupId = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
 	callbacks.add( buildUserManagement );
-	organizrAPI2('PUT','api/v2/users/' + id, {"group_id":groupId},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/users/' + id, {"group_id":groupId},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('User Group Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 // DELETE USER
@@ -637,11 +634,11 @@ $(document).on("click", ".deleteUser", function () {
 	        var id = user.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildUserManagement );
-	        organizrAPI2('DELETE','api/v2/users/' + id, null,true).done(function(data) {
+	        londerlandAPI2('DELETE','api/v2/users/' + id, null,true).done(function(data) {
 		        message('User Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'User Delete Error');
+		        LonderlandApiError(xhr, 'User Delete Error');
 	        });
         }
     });
@@ -651,16 +648,16 @@ $(document).on("change", ".tabGroupSelectMax", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id_max":groupID},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"group_id_max":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Group Max Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Group Error');
+		LonderlandApiError(xhr, 'Tab Group Error');
 	});
 });
 // CHANGE TAB GROUP MAX
@@ -668,16 +665,16 @@ $(document).on("change", ".tabGroupSelectMin", function (event) {
 	var id = $(this).parent().parent().attr("data-id");
 	var groupID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"group_id":groupID},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"group_id":groupID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Group Min Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Group Error');
+		LonderlandApiError(xhr, 'Tab Group Error');
 	});
 });
 // CHANGE TAB CATEGORY
@@ -685,16 +682,16 @@ $(document).on("change", ".tabCategorySelect", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var categoryID = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"category_id":categoryID},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Category Error');
+		LonderlandApiError(xhr, 'Tab Category Error');
 	});
 });
 // CHANGE TAB TYPE
@@ -702,16 +699,16 @@ $(document).on("change", ".tabTypeSelect", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var type = $(this).find("option:selected").val();
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"type":type},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"type":type},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Type Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Type Error');
+		LonderlandApiError(xhr, 'Tab Type Error');
 	});
 });
 // CHANGE ENABLED TAB
@@ -719,16 +716,16 @@ $(document).on("change", ".enabledSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var enabled = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"enabled":enabled},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"enabled":enabled},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Enable Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Enable Error');
+		LonderlandApiError(xhr, 'Tab Enable Error');
 	});
 });
 // CHANGE SPLASH TAB
@@ -736,16 +733,16 @@ $(document).on("change", ".splashSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var splash = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"splash":splash},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"splash":splash},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Splash Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Splash Error');
+		LonderlandApiError(xhr, 'Tab Splash Error');
 	});
 });
 // CHANGE SPLASH TAB
@@ -753,16 +750,16 @@ $(document).on("change", ".pingSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var ping = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"ping":ping},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"ping":ping},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Ping Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Ping Error');
+		LonderlandApiError(xhr, 'Tab Ping Error');
 	});
 });
 // CHANGE PRELOAD TAB
@@ -770,16 +767,16 @@ $(document).on("change", ".preloadSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var preload = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"preload":preload},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"preload":preload},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Preload Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Preload Error');
+		LonderlandApiError(xhr, 'Tab Preload Error');
 	});
 });
 // CHANGE ADD TO ADMIN TAB
@@ -787,32 +784,32 @@ $(document).on("change", ".addToAdminSwitch", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var data = $(this).prop("checked") ? 1 : 0;
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"add_to_admin":data},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"add_to_admin":data},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Tab Add To Admin Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Tab Add To Admin Error');
+		LonderlandApiError(xhr, 'Tab Add To Admin Error');
 	});
 });
 // CHANGE DEFAULT TAB
 $(document).on("change", ".defaultSwitch", function () {
 	var id = $(this).parent().parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
-	organizrAPI2('PUT','api/v2/tabs/' + id, {"default":1},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/tabs/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Default Tab Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Default Tab Error');
+		LonderlandApiError(xhr, 'Default Tab Error');
 	});
 });
 //DELETE TAB
@@ -831,11 +828,11 @@ $(document).on("click", ".deleteTab", function () {
 	        var id = tab.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildTabEditor );
-	        organizrAPI2('DELETE','api/v2/tabs/' + id, null,true).done(function(data) {
+	        londerlandAPI2('DELETE','api/v2/tabs/' + id, null,true).done(function(data) {
 		        message('Tab Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'Tab Deleted Error');
+		        LonderlandApiError(xhr, 'Tab Deleted Error');
 	        });
         }
     });
@@ -886,18 +883,18 @@ $(document).on("click", ".editTab", function () {
     if(tabInfo.id !== '' && tabInfo.tabName !== '' && tabInfo.tabImage !== ''){
 	    var callbacks = $.Callbacks();
 	    callbacks.add( buildTabEditor );
-	    organizrAPI2('PUT','api/v2/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
+	    londerlandAPI2('PUT','api/v2/tabs/' + tabInfo.id,tabInfo,true).done(function(data) {
 		    try {
 			    var response = data.response;
 		    }catch(e) {
-			    organizrCatchError(e,data);
+			    londerlandCatchError(e,data);
 		    }
 		    message('Tab Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		    if(callbacks){ callbacks.fire(); }
 		    clearForm('#edit-tab-form');
 		    $.magnificPopup.close();
 	    }).fail(function(xhr) {
-		    OrganizrApiError(xhr, 'Tab Error');
+		    LonderlandApiError(xhr, 'Tab Error');
 	    });
     }
 });
@@ -928,19 +925,19 @@ $(document).on("click", ".addNewTab", function () {
     if(tabInfo.order !== '' && tabInfo.name !== '' && (tabInfo.url !== '' || tabInfo.url_local !== '') && tabInfo.image !== '' ){
 	    var callbacks = $.Callbacks();
 	    callbacks.add( buildTabEditor );
-	    organizrAPI2('POST','api/v2/tabs',tabInfo,true).done(function(data) {
+	    londerlandAPI2('POST','api/v2/tabs',tabInfo,true).done(function(data) {
 		    try {
 			    var response = data.response;
 			    clearSelect('.tabIconImageList, .tabIconIconList');
 		    }catch(e) {
-			    organizrCatchError(e,data);
+			    londerlandCatchError(e,data);
 		    }
 		    message('Tab Created',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		    if(callbacks){ callbacks.fire(); }
 		    clearForm('#new-tab-form');
 		    $.magnificPopup.close();
 	    }).fail(function(xhr) {
-		    OrganizrApiError(xhr, 'Tab Error');
+		    LonderlandApiError(xhr, 'Tab Error');
 	    });
     }
 });
@@ -960,19 +957,19 @@ $(document).on("click", ".addNewCategory", function () {
 	if(categoryInfo.category !== '' && categoryInfo.image !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildCategoryEditor );
-		organizrAPI2('POST','api/v2/categories',categoryInfo,true).done(function(data) {
+		londerlandAPI2('POST','api/v2/categories',categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Category Added',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#new-category-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Category Error');
+			LonderlandApiError(xhr, 'Category Error');
 		});
 	}
 });
@@ -992,11 +989,11 @@ $(document).on("click", ".deleteCategory", function () {
 	        var id = category.parent().parent().attr("data-id");
 	        var callbacks = $.Callbacks();
 	        callbacks.add( buildCategoryEditor );
-	        organizrAPI2('DELETE','api/v2/categories/' + id, null,true).done(function(data) {
+	        londerlandAPI2('DELETE','api/v2/categories/' + id, null,true).done(function(data) {
 		        message('Category Deleted','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'Category Deleted Error');
+		        LonderlandApiError(xhr, 'Category Deleted Error');
 	        });
         }
     });
@@ -1025,19 +1022,19 @@ $(document).on("click", ".editCategory", function () {
 	if(categoryInfo.id !== '' && categoryInfo.category !== '' && categoryInfo.image !== ''){
 		var callbacks = $.Callbacks();
 		callbacks.add( buildCategoryEditor );
-		organizrAPI2('PUT','api/v2/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
+		londerlandAPI2('PUT','api/v2/categories/' + categoryInfo.id,categoryInfo,true).done(function(data) {
 			try {
 				var response = data.response;
 				console.log(response);
 			}catch(e) {
-				organizrCatchError(e,data);
+				londerlandCatchError(e,data);
 			}
 			message('Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			clearForm('#edit-category-form');
 			$.magnificPopup.close();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'Category Error');
+			LonderlandApiError(xhr, 'Category Error');
 		});
 	}
 });
@@ -1046,16 +1043,16 @@ $(document).on("click", ".changeDefaultCategory", function () {
 	var id = $(this).parent().parent().attr("data-id");
 	var callbacks = $.Callbacks();
 	callbacks.add( buildCategoryEditor );
-	organizrAPI2('PUT','api/v2/categories/' + id, {"default":1},true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/categories/' + id, {"default":1},true).done(function(data) {
 		try {
 			var response = data.response;
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		message('Default Category Updated',response.message,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		if(callbacks){ callbacks.fire(); }
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Default Cateogry Error');
+		LonderlandApiError(xhr, 'Default Cateogry Error');
 	});
 });
 // CHANGE CUSTOMIZE Options and CSS Save
@@ -1087,16 +1084,16 @@ $(document).on('change keydown', '.addFormTick :input', function(e) {
             var value = $(this).val();
     }
     if($(this).hasClass('themeChanger')){
-        organizrAPI2('GET','api/v2/themes').done(function(data) {
+        londerlandAPI2('GET','api/v2/themes').done(function(data) {
             try {
                 let response = data.response;
                 let path = response.data[value]['path'];
                 changeTheme(path + '/' + value);
             }catch(e) {
-                organizrCatchError(e,data);
+                londerlandCatchError(e,data);
             }
         }).fail(function(xhr) {
-            OrganizrApiError(xhr, 'Theme Preview Error');
+            LonderlandApiError(xhr, 'Theme Preview Error');
         });
 
     }
@@ -1143,20 +1140,20 @@ $(document).on("click", ".deleteImage", function () {
                 api:'api/v2/image/' + image.attr("data-image-name-ext"),
                 messageTitle:'',
                 messageBody:window.lang.translate('Deleted Image')+': '+image.attr("data-image-name"),
-                error:'Organizr Function: User API Connection Failed'
+                error:'Londerland Function: User API Connection Failed'
             };
             var callbacks = $.Callbacks();
             callbacks.add( buildImageManagerView );
-	        organizrAPI2('DELETE',post.api,'',true).done(function(data) {
+	        londerlandAPI2('DELETE',post.api,'',true).done(function(data) {
 		        try {
 			        var response = data.response;
 		        }catch(e) {
-			        organizrCatchError(e,data);
+			        londerlandCatchError(e,data);
 		        }
 		        message(post.messageTitle,post.messageBody,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		        if(callbacks){ callbacks.fire(); }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'Image Error');
+		        LonderlandApiError(xhr, 'Image Error');
 	        });
         }
     });
@@ -1173,17 +1170,17 @@ $(document).on('click', '.enablePlugin', function() {
 	callbacks.add( ajaxloader );
 	let data = {};
 	data[pluginConfigValue] = 'true';
-	organizrAPI2('PUT','api/v2/config', data,true).done(function(data) {
+	londerlandAPI2('PUT','api/v2/config', data,true).done(function(data) {
 		try {
 			message('Plugin Enabled','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			if(callbacks){ callbacks.fire(); }
 			buildPlugins('disabled');
 			//buildPlugins('enabled');
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'Plugin Error');
+		LonderlandApiError(xhr, 'Plugin Error');
 		ajaxloader();
 	});
 });
@@ -1206,16 +1203,16 @@ $(document).on('click', '.disablePlugin', function() {
 	        callbacks.add( ajaxloader );
 	        var data = {};
 	        data[pluginConfigValue] = 'false';
-	        organizrAPI2('PUT','api/v2/config', data,true).done(function(data) {
+	        londerlandAPI2('PUT','api/v2/config', data,true).done(function(data) {
 		        try {
 			        message('Plugin Disabled','',activeInfo.settings.notifications.position,"#FFF","success","5000");
 			        if(callbacks){ callbacks.fire(); }
 			        buildPlugins('enabled');
 		        }catch(e) {
-			        organizrCatchError(e,data);
+			        londerlandCatchError(e,data);
 		        }
 	        }).fail(function(xhr) {
-		        OrganizrApiError(xhr, 'Plugin Error');
+		        LonderlandApiError(xhr, 'Plugin Error');
 		        ajaxloader();
 	        });
         }
@@ -1241,11 +1238,11 @@ $(document).on("click", ".testPath", function () {
     if (typeof path == 'undefined' || path == '') {
         message('Path Error',' Please enter a path for DB',activeInfo.settings.notifications.position,'#FFF','warning','10000');
     }else{
-        organizrAPI2('POST','api/v2/test/path',{path:path}).done(function(data) {
+        londerlandAPI2('POST','api/v2/test/path',{path:path}).done(function(data) {
             var html = data.response;
             message('Path',' Path is good to go',activeInfo.settings.notifications.position,'#FFF','success','10000');
         }).fail(function(xhr) {
-	        OrganizrApiError(xhr, 'API Error');
+	        LonderlandApiError(xhr, 'API Error');
         });
     }
 });
@@ -1367,7 +1364,7 @@ $(document).on("click", ".metadata-get", function(e) {
 
     }
     ajaxloader(".content-wrap","in");
-    organizrAPI2('POST','api/v2/homepage/'+source+'/metadata',{key:key}).done(function(data) {
+    londerlandAPI2('POST','api/v2/homepage/'+source+'/metadata',{key:key}).done(function(data) {
         let response = data.response;
         // Determine effective source for icon/button (e.g., emby/jellyfin) when coming from jellystat
         let effectiveSource = source;
@@ -1400,7 +1397,7 @@ $(document).on("click", ".metadata-get", function(e) {
 	    ajaxloader();
 	    $("#preloader").fadeOut();
     }).fail(function(xhr) {
-	    OrganizrApiError(xhr, 'API Error');
+	    LonderlandApiError(xhr, 'API Error');
 	    ajaxloader();
 	    $("#preloader").fadeOut();
     });
@@ -1422,11 +1419,11 @@ $(document).on("click", ".downloader", function(e) {
 			return false;
 	}
 	messageSingle('Sending command to downloader', '', activeInfo.settings.notifications.position, '#FFF', 'info', '2500');
-    organizrAPI2('POST',api,{target:target}).done(function(data) {
+    londerlandAPI2('POST',api,{target:target}).done(function(data) {
         homepageDownloader(source);
 	    messageSingle('Successful', '', activeInfo.settings.notifications.position, '#FFF', 'success', '2500');
     }).fail(function(xhr) {
-	    OrganizrApiError(xhr, 'API Error');
+	    LonderlandApiError(xhr, 'API Error');
     });
 });
 // test tab
@@ -1439,7 +1436,7 @@ $(document).on("click", ".testTab", function () {
         var post = {
             url:input.val()
         };
-        organizrAPI2('POST','api/v2/test/iframe',post).done(function(data) {
+        londerlandAPI2('POST','api/v2/test/iframe',post).done(function(data) {
             let html = data.response;
             $('.tabTestMessage.alert-success').removeClass('hidden');
             $('.tabTestMessage.alert-danger').addClass('hidden');
@@ -1447,7 +1444,7 @@ $(document).on("click", ".testTab", function () {
 		        $('.tabTestMessage.alert-success').addClass('hidden');
 	        	}, 5000);
         }).fail(function(xhr) {
-	        OrganizrApiError(xhr, 'API Error');
+	        LonderlandApiError(xhr, 'API Error');
 	        $('.tabTestMessage.alert-danger').removeClass('hidden');
 	        $('.tabTestMessage.alert-success').addClass('hidden');
 	        setTimeout(function(){
@@ -1467,7 +1464,7 @@ $(document).on("click", ".testEditTab", function () {
             url:input.val()
         };
 	    message('Checking URL now...','',activeInfo.settings.notifications.position,'#FFF','info','5000');
-        organizrAPI2('POST','api/v2/test/iframe',post).done(function(data) {
+        londerlandAPI2('POST','api/v2/test/iframe',post).done(function(data) {
             let html = data.response;
             $('.tabEditTestMessage.alert-success').removeClass('hidden');
             $('.tabEditTestMessage.alert-danger').addClass('hidden');
@@ -1475,7 +1472,7 @@ $(document).on("click", ".testEditTab", function () {
 		        $('.tabEditTestMessage.alert-success').addClass('hidden');
 	        }, 5000);
         }).fail(function(xhr) {
-	        OrganizrApiError(xhr, 'API Error');
+	        LonderlandApiError(xhr, 'API Error');
 	        $('.tabEditTestMessage.alert-danger').removeClass('hidden');
 	        $('.tabEditTestMessage.alert-success').addClass('hidden');
 	        setTimeout(function(){
@@ -1487,28 +1484,28 @@ $(document).on("click", ".testEditTab", function () {
 // new api key
 $(document).on("click", ".newAPIKey", function () {
 	let newCode = generateCode();
-    $('#settings-main-form [name=organizrAPI]').val(newCode).change().parent().find('.clipboard').attr('data-clipboard-text',newCode);
+    $('#settings-main-form [name=londerlandAPI]').val(newCode).change().parent().find('.clipboard').attr('data-clipboard-text',newCode);
 });
 // purge log
 $(document).on("click", ".purgeLog", function () {
-    let logId = $('.choose-organizr-log option:selected').attr('data-id');
+    let logId = $('.choose-londerland-log option:selected').attr('data-id');
     if(logId){
 	    let post = {
 		    api:'api/v2/log/' + logId,
 		    messageTitle:'',
 		    messageBody:window.lang.translate('Deleted Log'),
-		    error:'Organizr Function: User API Connection Failed'
+		    error:'Londerland Function: User API Connection Failed'
 	    };
-	    organizrAPI2('DELETE',post.api,'',true).done(function(data) {
+	    londerlandAPI2('DELETE',post.api,'',true).done(function(data) {
 		    loadSettingsPage2('api/v2/page/settings_settings_logs','#settings-settings-logs','Log Viewer');
 		    try {
 			    let response = data.response;
 			    message(post.messageTitle,post.messageBody,activeInfo.settings.notifications.position,"#FFF","success","5000");
 		    }catch(e) {
-			    organizrCatchError(e,data);
+			    londerlandCatchError(e,data);
 		    }
 	    }).fail(function(xhr) {
-		    OrganizrApiError(xhr, 'API Error');
+		    LonderlandApiError(xhr, 'API Error');
 	    });
     }else{
 	    message('','Could not get Log Id',activeInfo.settings.notifications.position,'#FFF','warning','5000');
@@ -1529,14 +1526,14 @@ $(document).on("click", ".delete-backup", function () {
 			api:'api/v2/backup/' + filename,
 			messageTitle:'',
 			messageBody:window.lang.translate('Deleted Backup')+': '+filename,
-			error:'Organizr Function: Backup API Connection Failed'
+			error:'Londerland Function: Backup API Connection Failed'
 		};
-		organizrAPI2('DELETE',post.api,'',true).done(function(data) {
+		londerlandAPI2('DELETE',post.api,'',true).done(function(data) {
 			message(post.messageTitle,post.messageBody,activeInfo.settings.notifications.position,"#FFF","success","5000");
-			getOrganizrBackups();
+			getLonderlandBackups();
 			$('#settings-settings-backup').unblock();
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr, 'API Error');
+			LonderlandApiError(xhr, 'API Error');
 			$('#settings-settings-backup').unblock();
 		});
 	}
@@ -1709,11 +1706,11 @@ $(document).on('click', ".help-modal", function(){
                 {title:"Name", body:"The text that will be displayed for that certain tab"},
                 {title:"Category", body:"Each Tab is assigned a Category, the default is unsorted.  You may create new categories on the Category settings tab"},
                 {title:"Group", body:"The lowest Group that will have access to this tab"},
-                {title:"Type", body:"Internal is for Organizr pages<br/>iFrame is for all others<br/>New Window is for items to open in a new window"},
+                {title:"Type", body:"Internal is for Londerland pages<br/>iFrame is for all others<br/>New Window is for items to open in a new window"},
                 {title:"Default", body:"You can choose one tab to be the first opened tab on page load"},
                 {title:"Active", body:"Either mark a tab as active or inactive"},
                 {title:"Splash", body:"Toggle this to add the tab to the Splash Page on page load"},
-                {title:"Ping", body:"Enable Organizr to ping the status of the local URL of this tab"},
+                {title:"Ping", body:"Enable Londerland to ping the status of the local URL of this tab"},
                 {title:"Preload", body:"Toggle this tab to loaded in the background on page load"},
             ];
             body = buildAccordion(items);
@@ -1748,7 +1745,7 @@ $(document).on('click', ".showMoreHealth", function(){
 });
 //IP INFO
 $(document).on('click', ".ipInfo", function(){
-	organizrAPI2('GET','api/v2/ip/'+$(this).text()).done(function(data) {
+	londerlandAPI2('GET','api/v2/ip/'+$(this).text()).done(function(data) {
 		try {
 			let response = data.response.data;
 			var region = (typeof response.region == 'undefined') ? ' N/A' : response.region;
@@ -1785,10 +1782,10 @@ $(document).on('click', ".ipInfo", function(){
 				customClass: { popup: 'bg-org' }
 			});
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 	});
 });
 // set active for group list
@@ -1865,11 +1862,11 @@ $(document).on('click', '[id$=-settings-button]', function() {
 	let prefix = $(el).attr('data-config-prefix');
 	if(bind == 'true' && api !== 'false' && prefix !== 'false'){
 		ajaxloader(".content-wrap","in");
-		organizrAPI2('GET',api).done(function(data) {
+		londerlandAPI2('GET',api).done(function(data) {
 			var response = data.response;
 			$('#'+prefix+'-settings-items').html(buildFormGroup(response.data));
 		}).fail(function(xhr) {
-			OrganizrApiError(xhr);
+			LonderlandApiError(xhr);
 		});
 		ajaxloader();
 	}
@@ -1937,7 +1934,7 @@ $(document).on('click', '.log-details', function() {
 	let activateClipboard = $(this).attr('data-clipboard');
 	let el = $(this);
 	el.find('i').toggleClass('fa fa-lg fa-spin mdi-reload');
-	organizrAPI2('GET','api/v2/log/all/'+trace).done(function(data) {
+	londerlandAPI2('GET','api/v2/log/all/'+trace).done(function(data) {
 		try {
 			let response = data.response;
 			if(activateClipboard){
@@ -1946,18 +1943,18 @@ $(document).on('click', '.log-details', function() {
 				formatLogDetails(response.data);
 			}
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 		el.find('i').toggleClass('fa fa-lg fa-spin mdi-reload');
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr, 'API Error');
+		LonderlandApiError(xhr, 'API Error');
 		el.find('i').toggleClass('fa fa-lg fa-spin mdi-reload');
 	})
 });
 
-// Choose Log choose-organizr-log
-$(document).on("change", ".choose-organizr-log", function () {
-	organizrLogTable.ajax.url($(this).val()).load();
+// Choose Log choose-londerland-log
+$(document).on("change", ".choose-londerland-log", function () {
+	londerlandLogTable.ajax.url($(this).val()).load();
 });
 
 // Test cron
@@ -1981,7 +1978,7 @@ $(document).on('click', '.toggle-donation-history', function() {
         let info = '';
         let el = $(this);
         el.find('i').toggleClass('fa-lg fa-spin ti-reload');
-        organizrAPI2('GET','api/v2/homepage/donate').done(function(data) {
+        londerlandAPI2('GET','api/v2/homepage/donate').done(function(data) {
             try {
                 let response = data.response;
                 if(response.data){
@@ -1997,13 +1994,13 @@ $(document).on('click', '.toggle-donation-history', function() {
                 }
             }catch(e) {
                 info = 'An error occurred';
-                organizrCatchError(e,data);
+                londerlandCatchError(e,data);
             }
             let html = '<div class="white-box"><h3 class="box-title" lang="en">Recent Donations</h3>'+info+'</div>';
             $('.donation-history').html(html);
             el.find('i').toggleClass('fa-lg fa-spin ti-reload');
         }).fail(function(xhr) {
-            OrganizrApiError(xhr, 'API Error');
+            LonderlandApiError(xhr, 'API Error');
             el.find('i').toggleClass('fa-lg fa-spin ti-reload');
         })
     }else{

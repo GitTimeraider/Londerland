@@ -7,12 +7,12 @@ return array(
 	'PHPMAILER-smtpHostAuth' => true,
 	'PHPMAILER-smtpHostUsername' => '',
 	'PHPMAILER-smtpHostPassword' => '',
-	'PHPMAILER-smtpHostSenderName' => 'Organizr',
-	'PHPMAILER-smtpHostSenderEmail' => 'no-reply@Organizr.tld',
+	'PHPMAILER-smtpHostSenderName' => 'Londerland',
+	'PHPMAILER-smtpHostSenderEmail' => 'no-reply@example.com',
 	'PHPMAILER-smtpHostType' => 'tls',
 	'PHPMAILER-domain' => '',
 	'PHPMAILER-template' => 'default',
-	'PHPMAILER-logo' => 'https://raw.githubusercontent.com/causefx/Organizr/v2-develop/plugins/images/organizr/logo-wide.png',
+	'PHPMAILER-logo' => '',
 	'PHPMAILER-emailTemplateReset' => '
 	<h2>Hey there {user}!</h2><br />
 	Looks like you forgot your password.  Well, I got you...  Here is your new password: {password}<br />

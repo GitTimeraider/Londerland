@@ -2,13 +2,13 @@
 
 // OpenAPI documentation for the routes in api/v2/routes/root.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
 #[OA\Get(
 	path: '/api/v2/status',
-	summary: 'Query Organizr API to perform a Status Check',
+	summary: 'Query Londerland API to perform a Status Check',
 	responses: [
 		new OA\Response(
 			response: '200',

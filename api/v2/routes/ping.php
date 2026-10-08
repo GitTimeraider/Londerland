@@ -1,6 +1,6 @@
 <?php
 $app->get('/ping', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$GLOBALS['api']['response']['data'] = 'pong';
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -8,16 +8,16 @@ $app->get('/ping', function ($request, $response, $args) {
 	
 });
 $app->post('/ping', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$GLOBALS['api']['response']['data'] = $Organizr->ping($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$GLOBALS['api']['response']['data'] = $Londerland->ping($Londerland->apiData($request));
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
 		->withHeader('Content-Type', 'application/json;charset=UTF-8')
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->get('/ping/{ping}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$GLOBALS['api']['response']['data'] = $Organizr->ping(array('list' => $args['ping']));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$GLOBALS['api']['response']['data'] = $Londerland->ping(array('list' => $args['ping']));
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
 		->withHeader('Content-Type', 'application/json;charset=UTF-8')

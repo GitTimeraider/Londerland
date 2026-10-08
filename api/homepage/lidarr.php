@@ -74,7 +74,7 @@ trait LidarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['lidarrDisableCertCheck'], $this->config['lidarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
 				$results = $downloader->getRootFolder();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -148,7 +148,7 @@ trait LidarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['lidarrDisableCertCheck'], $this->config['lidarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
 				$results = $downloader->getQueue();
 				$downloadList = json_decode($results, true);
 				if (is_array($downloadList) || is_object($downloadList)) {
@@ -185,7 +185,7 @@ trait LidarrHomepageItem
 		foreach ($list as $key => $value) {
 			try {
 				$options = $this->requestOptions($value['url'], null, $this->config['lidarrDisableCertCheck'], $this->config['lidarrUseCustomCertificate']);
-				$downloader = new OrganizrArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
+				$downloader = new LonderlandArrClient($value['url'], $value['token'], 'lidarr', null, null, $options);
 				$results = $downloader->getCalendar($startDate, $endDate);
 				$result = json_decode($results, true);
 				if (is_array($result) || is_object($result)) {

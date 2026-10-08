@@ -1,9 +1,9 @@
 <?php
-$GLOBALS['organizrPages'][] = 'tabs';
-function get_page_tabs($Organizr)
+$GLOBALS['londerlandPages'][] = 'tabs';
+function get_page_tabs($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
 	return '
 <script>

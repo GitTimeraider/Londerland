@@ -1,8 +1,8 @@
 <?php
 $app->post('/emby/register', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$Organizr->embyJoinAPI($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$Londerland->embyJoinAPI($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

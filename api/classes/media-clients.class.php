@@ -4,7 +4,7 @@
  * Minimal API clients for the Sonarr/Radarr/Lidarr, SickRage and CouchPotato homepage items.
  * Each method returns the raw JSON response body.
  */
-abstract class OrganizrMediaClient
+abstract class LonderlandMediaClient
 {
 	protected string $url;
 	protected string $apiKey;
@@ -34,7 +34,7 @@ abstract class OrganizrMediaClient
 	}
 }
 
-class OrganizrArrClient extends OrganizrMediaClient
+class LonderlandArrClient extends LonderlandMediaClient
 {
 	private string $type;
 
@@ -108,7 +108,7 @@ class OrganizrArrClient extends OrganizrMediaClient
 	}
 }
 
-class OrganizrSickRageClient extends OrganizrMediaClient
+class LonderlandSickRageClient extends LonderlandMediaClient
 {
 	public function future($sort = 'date', $type = 'missed|today|soon|later', $paused = null)
 	{
@@ -139,7 +139,7 @@ class OrganizrSickRageClient extends OrganizrMediaClient
 	}
 }
 
-class OrganizrCouchPotatoClient extends OrganizrMediaClient
+class LonderlandCouchPotatoClient extends LonderlandMediaClient
 {
 	public function getMediaList(array $params = [])
 	{

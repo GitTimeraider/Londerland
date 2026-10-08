@@ -1,8 +1,8 @@
 <?php
 $app->get('/tabs', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getAllTabs();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getAllTabs();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,9 +11,9 @@ $app->get('/tabs', function ($request, $response, $args) {
 	
 });
 $app->get('/tabs/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getTabByIdCheckUser($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getTabByIdCheckUser($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -22,10 +22,10 @@ $app->get('/tabs/{id}', function ($request, $response, $args) {
 	
 });
 $app->post('/tabs', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->addTab($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->addTab($Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -35,10 +35,10 @@ $app->post('/tabs', function ($request, $response, $args) {
 	
 });
 $app->put('/tabs', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->updateTabOrder($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->updateTabOrder($Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -47,10 +47,10 @@ $app->put('/tabs', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->put('/tabs/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->updateTab($args['id'], $Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->updateTab($args['id'], $Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -59,10 +59,10 @@ $app->put('/tabs/{id}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->delete('/tabs/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->deleteTab($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->deleteTab($args['id']);
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));

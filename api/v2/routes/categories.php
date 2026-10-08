@@ -1,8 +1,8 @@
 <?php
 $app->get('/categories', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getAllTabs();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getAllTabs();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,10 +11,10 @@ $app->get('/categories', function ($request, $response, $args) {
 	
 });
 $app->post('/categories', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->addCategory($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->addCategory($Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -24,10 +24,10 @@ $app->post('/categories', function ($request, $response, $args) {
 	
 });
 $app->put('/categories', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->updateCategoryOrder($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->updateCategoryOrder($Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -36,10 +36,10 @@ $app->put('/categories', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->put('/categories/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->updateCategory($args['id'], $Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->updateCategory($args['id'], $Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -48,10 +48,10 @@ $app->put('/categories/{id}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->delete('/categories/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->deleteCategory($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->deleteCategory($args['id']);
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));

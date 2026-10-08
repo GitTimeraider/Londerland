@@ -18,9 +18,9 @@ $GLOBALS['plugins']['Bookmark'] = array( // Plugin Name
 );
 
 // Logo image under Public Domain from https://openclipart.org/detail/182527/open-book
-class Bookmark extends Organizr
+class Bookmark extends Londerland
 {
-	public function _bookmarkGetOrganizrTabInfo()
+	public function _bookmarkGetLonderlandTabInfo()
 	{
 		$response = [
 			array(
@@ -35,9 +35,9 @@ class Bookmark extends Organizr
 		return $this->processQueries($response);
 	}
 
-	public function _bookmarkGetOrganizrTabGroupId()
+	public function _bookmarkGetLonderlandTabGroupId()
 	{
-		$tab = $this->_bookmarkGetOrganizrTabInfo();
+		$tab = $this->_bookmarkGetLonderlandTabInfo();
 		if ($tab) {
 			return $tab['group_id'];
 		} else {
@@ -148,7 +148,7 @@ class Bookmark extends Organizr
 							<div class="card-wrapper collapse show" aria-expanded="true">
 								<div class="card-body">
 									<ul class="list-icons">
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Add tab that points to <i>api/v2/plugins/bookmark/page</i> and set it\'s type to <i>Organizr</i>.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Add tab that points to <i>api/v2/plugins/bookmark/page</i> and set it\'s type to <i>Londerland</i>.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Create Bookmark categories in the new area in <i>Tab Editor</i>.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Create Bookmark tabs in the new area in <i>Tab Editor</i>.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Open your custom Bookmark page via menu.</span></li>

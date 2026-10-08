@@ -1,20 +1,20 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_template';
-function get_page_settings_template($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_template';
+function get_page_settings_template($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
 	/*
 	 * Take this out if you dont care if DB as been created
 	 */
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
 	/*
 	 * Take this out if you dont want to be for admin only
 	 */
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
 	return '

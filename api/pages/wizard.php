@@ -1,11 +1,11 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_wizard';
-function get_page_wizard($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_wizard';
+function get_page_wizard($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	$suggestedDirectory = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $Organizr->random_ascii_string(10) . DIRECTORY_SEPARATOR;
+	$suggestedDirectory = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $Londerland->random_ascii_string(10) . DIRECTORY_SEPARATOR;
 	$mysqliDisabled = extension_loaded('mysqli') ? '' : 'disabled';
 	$mysqliLabel = extension_loaded('mysqli') ? '' : ' [PHP module not installed]';
 	return '
@@ -78,12 +78,12 @@ function get_page_wizard($Organizr)
             message("Submitting Wizard");
             $(".white-box").block({ message: "<h3><i class=\"fa fa-close\"></i> Submitting Wizard Data...</h3>" });
             const post = $("#validation").serializeToJSON();
-            organizrAPI2("POST", "api/v2/wizard", post).done(function() {
+            londerlandAPI2("POST", "api/v2/wizard", post).done(function() {
                 message("Wizard Data accepted");
                 $(".white-box").unblock();
                 location.reload();
             }).fail(function(xhr) {
-                OrganizrApiError(xhr, "API Error");
+                LonderlandApiError(xhr, "API Error");
                 $(".white-box").unblock();
             });
         }
@@ -122,15 +122,15 @@ function get_page_wizard($Organizr)
         $(document).on("click", ".wizard-test-database-connection", function() {
             message("Checking Connection","",activeInfo.settings.notifications.position,"#FFF","info","10000");
 			let post = $( \'#validation\' ).serializeToJSON();
-			organizrAPI2(\'POST\',\'api/v2/test/database\',post).done(function(data) {
+			londerlandAPI2(\'POST\',\'api/v2/test/database\',post).done(function(data) {
 				try {
 					let response = data.response;
 					messageSingle(response.message,"",activeInfo.settings.notifications.position,"#FFF","success","10000");
 				}catch(e) {
-					organizrCatchError(e,data);
+					londerlandCatchError(e,data);
 				}
 			}).fail(function(xhr) {
-				OrganizrApiError(xhr, "API Error");
+				LonderlandApiError(xhr, "API Error");
 			})
 		});
 		$(document).on("click", ".database-driver-selector", function () {
@@ -160,7 +160,7 @@ function get_page_wizard($Organizr)
 <div class="container-fluid">
     <div class="row bg-title">
         <div class="col-xl-3 col-lg-4 col-md-4 col-12">
-            <h4 class="page-title">Organizr Setup Wizard</h4>
+            <h4 class="page-title">Londerland Setup Wizard</h4>
         </div>
         <!-- /.col-xl-12 -->
     </div>
@@ -258,7 +258,7 @@ function get_page_wizard($Organizr)
                                         <div class="card-body">
                                             <p lang="en">The Hash Key will be used to decrypt all passwords etc... on the server. [User-Generated]</p>
                                             <p lang="en">The Registration Password will lockout the registration field with this password. [User-Generated]</p>
-                                            <p lang="en">The API Key will be used for all calls to organizr for the UI. [Auto-Generated]</p>
+                                            <p lang="en">The API Key will be used for all calls to londerland for the UI. [Auto-Generated]</p>
                                         </div>
                                     </div>
                                 </div>

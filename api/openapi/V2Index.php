@@ -2,26 +2,22 @@
 
 // OpenAPI documentation for the routes in api/v2/index.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
 #[OA\Info(
-	title: 'Organizr API',
-	description: 'Organizr - Accept no others',
+	title: 'Londerland API',
+	description: 'Londerland - all your web apps in one place',
 	version: '2.0',
 )]
 #[OA\Server(
 	url: \API_HOST,
-	description: 'This Organizr Install',
-)]
-#[OA\Server(
-	url: 'https://demo.organizr.app',
-	description: 'Organizr Demo API',
+	description: 'This Londerland Install',
 )]
 #[OA\Server(
 	url: '{schema}://{hostPath}',
-	description: 'Custom Organizr API',
+	description: 'Custom Londerland API',
 	variables: [
 		new OA\ServerVariable(
 			serverVariable: 'schema',
@@ -34,7 +30,7 @@ use OpenApi\Attributes as OA;
 		new OA\ServerVariable(
 			serverVariable: 'hostPath',
 			default: 'localhost',
-			description: 'Your Organizr URL',
+			description: 'Your Londerland URL',
 		),
 	],
 )]

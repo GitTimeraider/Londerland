@@ -1,4 +1,4 @@
-/* Organizr palette for Bootstrap 5 components (they read these variables instead of fixed colours) */
+/* Londerland palette for Bootstrap 5 components (they read these variables instead of fixed colours) */
 :root,
 [data-bs-theme=dark] {
   --bs-primary: #707cd2;
@@ -200,8 +200,8 @@
 .fc-popover.fc-more-popover {
   position: fixed;
 }
-.organizr-area,
-.organizr-area-right {
+.londerland-area,
+.londerland-area-right {
   height: 100%;
   position: absolute;
   width: 100%;
@@ -614,20 +614,6 @@ img.lazyload.tabImages {
   height: 150px;
   width: 150px;
   top: 37px;
-  position: relative;
-}
-.recent-sponsor {
-  background-position: center;
-  background-size: cover;
-  height: 150px;
-  width: 150px;
-  position: relative;
-}
-#backersList .recent-sponsor {
-  background-position: center;
-  background-size: cover;
-  height: 75px;
-  width: 75px;
   position: relative;
 }
 .recent-poster {
@@ -1329,15 +1315,6 @@ span.homepage-text {
   opacity: 0.5;
 }
 
-.qr-code {
-  display: block;
-  width: 100%;
-  height: 380px;
-  background-size: contain;
-  margin: auto;
-  background-repeat: no-repeat;
-}
-
 .btn-link,
 a {
   color: #2cabe3;
@@ -1645,13 +1622,13 @@ input.has-success {
 ul.nav.customtab.nav-tabs.nav-low-margin {
   margin: -25px -25px 0px -25px !important;
 }
-#menu-Organizr-Support i {
+#menu-Londerland-Support i {
   color: #c62828;
 }
 #menu-GitHub-Repo i {
   color: #2cabe3;
 }
-#menu-Organizr-Docs i {
+#menu-Londerland-Docs i {
   color: #707cd2;
 }
 #menu-Feature-Request i {
@@ -6134,12 +6111,12 @@ td.mouse-grab.sort-tabs-handle {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url("../../plugins/images/organizr/logo-purple-square.png")
+  background: url("../../plugins/images/londerland/logo-purple-square.png")
     no-repeat center center;
   background-size: auto 100%;
 }
 
-/* ===== Bootstrap 3 helpers still used by Organizr markup (same breakpoints as before) ===== */
+/* ===== Bootstrap 3 helpers still used by Londerland markup (same breakpoints as before) ===== */
 .hidden {
   display: none !important;
 }

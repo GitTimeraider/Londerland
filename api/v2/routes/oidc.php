@@ -20,12 +20,12 @@ if (session_status() === PHP_SESSION_NONE) {
  * Get enabled OIDC providers (public endpoint)
  */
 $app->get('/oidc/providers', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	$providers = $Organizr->getEnabledOIDCProviders();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	$providers = $Londerland->getEnabledOIDCProviders();
 	$result = [];
 	foreach ($providers as $provider => $config) {
 		$result[$provider] = [
-			'name' => $Organizr->config[$config['configPrefix'] . 'Name'] ?? ucfirst($provider),
+			'name' => $Londerland->config[$config['configPrefix'] . 'Name'] ?? ucfirst($provider),
 			'enabled' => true,
 		];
 	}
@@ -40,10 +40,10 @@ $app->get('/oidc/providers', function ($request, $response, $args) {
  * Initiate OIDC authorization flow
  */
 $app->get('/oidc/{provider}/authorize', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$provider = $args['provider'] ?? '';
 	// This will redirect to the provider, exit happens in initiateOIDCFlow
-	$Organizr->initiateOIDCFlow($provider);
+	$Londerland->initiateOIDCFlow($provider);
 	// If we get here, there was an error
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -55,7 +55,7 @@ $app->get('/oidc/{provider}/authorize', function ($request, $response, $args) {
  * OIDC callback handler
  */
 $app->get('/oidc/{provider}/callback', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$provider = $args['provider'] ?? '';
 	$params = $request->getQueryParams();
 	$code = $params['code'] ?? null;
@@ -64,20 +64,20 @@ $app->get('/oidc/{provider}/callback', function ($request, $response, $args) {
 	$errorDescription = $params['error_description'] ?? 'Unknown error';
 	// Handle error from provider
 	if ($error) {
-		$Organizr->outputOIDCCallbackError($errorDescription);
+		$Londerland->outputOIDCCallbackError($errorDescription);
 		return $response;
 	}
 	// Validate required parameters
 	if (!$code || !$state) {
-		$Organizr->outputOIDCCallbackError('Missing code or state parameter');
+		$Londerland->outputOIDCCallbackError('Missing code or state parameter');
 		return $response;
 	}
 	// Process callback
-	$user = $Organizr->processOIDCCallback($provider, $code, $state);
+	$user = $Londerland->processOIDCCallback($provider, $code, $state);
 	if ($user) {
-		$Organizr->outputOIDCCallbackSuccess($user['username']);
+		$Londerland->outputOIDCCallbackSuccess($user['username']);
 	} else {
-		$Organizr->outputOIDCCallbackError($GLOBALS['api']['response']['message'] ?? 'Authentication failed');
+		$Londerland->outputOIDCCallbackError($GLOBALS['api']['response']['message'] ?? 'Authentication failed');
 	}
 	return $response;
 });
@@ -86,11 +86,11 @@ $app->get('/oidc/{provider}/callback', function ($request, $response, $args) {
  * Test OIDC provider connection (admin only)
  */
 $app->get('/oidc/{provider}/test', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
 			$provider = $args['provider'] ?? '';
-			$Organizr->testOIDCConnection($provider);
+			$Londerland->testOIDCConnection($provider);
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));

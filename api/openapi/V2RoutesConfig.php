@@ -2,20 +2,20 @@
 
 // OpenAPI documentation for the routes in api/v2/routes/config.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
 	name: 'config',
-	description: 'Organizr Configuration Items',
+	description: 'Londerland Configuration Items',
 )]
 #[OA\Get(
 	path: '/api/v2/config',
 	tags: [
 		'config',
 	],
-	summary: 'Get Organizr Coniguration Items',
+	summary: 'Get Londerland Coniguration Items',
 	responses: [
 		new OA\Response(
 			response: '200',
@@ -40,7 +40,7 @@ use OpenApi\Attributes as OA;
 	tags: [
 		'config',
 	],
-	summary: 'Get Organizr Coniguration Item',
+	summary: 'Get Londerland Coniguration Item',
 	parameters: [
 		new OA\Parameter(
 			name: 'item',
@@ -77,7 +77,7 @@ use OpenApi\Attributes as OA;
 	tags: [
 		'config',
 	],
-	summary: 'Search Organizr Coniguration Items',
+	summary: 'Search Londerland Coniguration Items',
 	parameters: [
 		new OA\Parameter(
 			name: 'term',
@@ -114,7 +114,7 @@ use OpenApi\Attributes as OA;
 	tags: [
 		'config',
 	],
-	summary: 'Update Organizr Coniguration Item(s)',
+	summary: 'Update Londerland Coniguration Item(s)',
 	requestBody: new OA\RequestBody(
 		description: 'Success',
 		required: true,

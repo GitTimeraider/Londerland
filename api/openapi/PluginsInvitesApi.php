@@ -2,7 +2,7 @@
 
 // OpenAPI documentation for the routes in api/plugins/invites/api.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
@@ -49,12 +49,12 @@ use OpenApi\Attributes as OA;
 							),
 							new OA\Property(
 								type: 'string',
-								example: 'causefX@organizr.app',
+								example: 'user@example.com',
 								property: 'email',
 							),
 							new OA\Property(
 								type: 'string',
-								example: 'causefx',
+								example: 'username',
 								property: 'username',
 							),
 							new OA\Property(
@@ -64,7 +64,7 @@ use OpenApi\Attributes as OA;
 							),
 							new OA\Property(
 								type: 'string',
-								example: 'causefx',
+								example: 'username',
 								property: 'usedby',
 							),
 							new OA\Property(

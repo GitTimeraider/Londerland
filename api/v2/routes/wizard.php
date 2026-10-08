@@ -1,8 +1,8 @@
 <?php
 $app->post('/wizard', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->wizardConfig($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->wizardConfig($Londerland->apiData($request));
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response

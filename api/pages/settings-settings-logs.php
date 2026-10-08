@@ -1,31 +1,31 @@
 <?php
-$GLOBALS['organizrPages'][] = 'settings_settings_logs';
-function get_page_settings_settings_logs($Organizr)
+$GLOBALS['londerlandPages'][] = 'settings_settings_logs';
+function get_page_settings_settings_logs($Londerland)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
-	if (!$Organizr->qualifyRequest(1, true)) {
+	if (!$Londerland->qualifyRequest(1, true)) {
 		return false;
 	}
-	$logsDropdown = $Organizr->buildLogDropdown();
-	$filterDropdown = $Organizr->buildFilterDropdown();
+	$logsDropdown = $Londerland->buildLogDropdown();
+	$filterDropdown = $Londerland->buildFilterDropdown();
 	return '
 	<div class="btn-group m-b-20 float-start">' . $logsDropdown . '</div>
 	<button class="btn btn-danger waves-effect waves-light float-end purgeLog" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Purge Log"><i class="fa fa-trash"></i></button>
 	<button onclick="shortcut(\'log-settings\')" class="btn btn-inverse waves-effect waves-light float-end m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Log Settings"><i class="fa fa-cog"></i></button>
 	<button onclick="exportLogs()" class="btn btn-success waves-effect waves-light float-end m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Export Logs"><i class="fa fa-download"></i></button>
-	<button onclick="organizrLogTable.clear().draw().ajax.reload(null, false)" class="btn btn-info waves-effect waves-light float-end reloadLog m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Reload Log"><i class="fa fa-refresh"></i></button>
-	<button onclick="toggleKillOrganizrLiveUpdate(' . $Organizr->config['logLiveUpdateRefresh'] . ');" class="btn btn-primary waves-effect waves-light float-end organizr-log-live-update m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Live Update"><i class="fa fa-clock-o"></i></button>
+	<button onclick="londerlandLogTable.clear().draw().ajax.reload(null, false)" class="btn btn-info waves-effect waves-light float-end reloadLog m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Reload Log"><i class="fa fa-refresh"></i></button>
+	<button onclick="toggleKillLonderlandLiveUpdate(' . $Londerland->config['logLiveUpdateRefresh'] . ');" class="btn btn-primary waves-effect waves-light float-end londerland-log-live-update m-r-5" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-title="Live Update"><i class="fa fa-clock-o"></i></button>
 	' . $filterDropdown . '
 	<div class="clearfix"></div>
 	<div class="white-box bg-org logTable orgLogDiv">
-		<h3 class="box-title m-b-0" lang="en">Organizr Logs</h3>
+		<h3 class="box-title m-b-0" lang="en">Londerland Logs</h3>
 		<div class="table-responsive">
-			<table id="organizrLogTable" class="table table-striped compact nowrap">
+			<table id="londerlandLogTable" class="table table-striped compact nowrap">
 				<thead>
 					<tr>
 						<th lang="en">Date</th>
@@ -43,12 +43,12 @@ function get_page_settings_settings_logs($Organizr)
 	</div>
 	<!-- /.container-fluid -->
 	<script>
-	clearTimeout(timeouts[\'organizr-log\']);
+	clearTimeout(timeouts[\'londerland-log\']);
 	$.fn.dataTable.ext.errMode = "none";
-	var organizrLogTable = $("#organizrLogTable")
+	var londerlandLogTable = $("#londerlandLogTable")
 	.on("error.dt", function(e, settings, techNote, message) {
 		console.log("An error has been reported by DataTables: ", message);
-		organizrLogTable.draw();
+		londerlandLogTable.draw();
 	})
 	.DataTable({
 		"ajax": {
@@ -58,7 +58,7 @@ function get_page_settings_settings_logs($Organizr)
 			}
 		},
 		"deferRender": true,
-		"pageLength": ' . (int)$Organizr->config['logPageSize'] . ',
+		"pageLength": ' . (int)$Londerland->config['logPageSize'] . ',
 		"columns": [{
 			data: "datetime",
 			render: function(data, type, row) {

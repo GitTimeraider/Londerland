@@ -16,7 +16,7 @@ $GLOBALS['plugins']['ShuckStop'] = [ // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 ];
 
-class ShuckStop extends Organizr
+class ShuckStop extends Londerland
 {
 	public function _shuckStopPluginGetSettings()
 	{
@@ -64,7 +64,8 @@ class ShuckStop extends Organizr
 					$this->config['SHUCKSTOP-20']
 				)
 			) {
-				$file = $this->root . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'shuck-stop' . DIRECTORY_SEPARATOR . 'drives.json';
+				// Kept in the data folder, the program folder may be read-only
+				$file = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'shuck-stop-drives.json';
 				$hasFile = file_exists($file);
 				$json = null;
 				if ($hasFile && filesize($file) > 0) {

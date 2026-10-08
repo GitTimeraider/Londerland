@@ -15,7 +15,6 @@ trait HealthChecksHomepageItem
 			return $homepageInformation;
 		}
 		$homepageSettings = [
-			'docs' => $this->docs('features/homepage/healthchecks-homepage-item'),
 			'debug' => true,
 			'settings' => [
 				'Enable' => [

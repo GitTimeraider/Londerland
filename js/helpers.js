@@ -246,7 +246,7 @@ function tomSelectRenderer(format) {
 	};
 }
 
-// Searchable single select fed page by page from an Organizr API list endpoint (replaces Select2 ajax pickers)
+// Searchable single select fed page by page from an Londerland API list endpoint (replaces Select2 ajax pickers)
 function initRemoteChooser(selector, url, format, placeholder) {
 	$(selector).each(function () {
 		if (this.tomselect) {
@@ -324,7 +324,7 @@ function clearSelect(selector) {
 	});
 }
 
-// Browser details from Bowser 2 in the shape Organizr used with Bowser 1
+// Browser details from Bowser 2 in the shape Londerland used with Bowser 1
 const browserInfo = (function () {
 	const parsed = bowser.parse(navigator.userAgent);
 	return {
@@ -347,7 +347,7 @@ if (window.Dropzone) {
 	Dropzone.autoDiscover = false;
 }
 
-// Organizr's theme styles active tabs as li.active (Bootstrap 3); Bootstrap 5 marks the link instead
+// Londerland's theme styles active tabs as li.active (Bootstrap 3); Bootstrap 5 marks the link instead
 $(document).on('shown.bs.tab', function (e) {
 	$(e.target).closest('li').addClass('active').siblings('li').removeClass('active');
 });

@@ -1,11 +1,11 @@
 <?php
-$GLOBALS['organizrPages'][] = 'homepage';
-function get_page_homepage($Organizr = null)
+$GLOBALS['londerlandPages'][] = 'homepage';
+function get_page_homepage($Londerland = null)
 {
-	if (!$Organizr) {
-		$Organizr = new Organizr();
+	if (!$Londerland) {
+		$Londerland = new Londerland();
 	}
-	if ((!$Organizr->hasDB())) {
+	if ((!$Londerland->hasDB())) {
 		return false;
 	}
 	return '
@@ -16,11 +16,11 @@ function get_page_homepage($Organizr = null)
     if (!calendarElement || typeof FullCalendar === "undefined") {
         return;
     }
-    // FullCalendar 7 view names for the views stored in Organizr\'s settings
+    // FullCalendar 7 view names for the views stored in Londerland\'s settings
     var calendarViews = { month: "dayGridMonth", basicWeek: "dayGridWeek", basicDay: "dayGridDay", list: "listUpcoming" };
-    var dayMaxEvents = ' . (int)$Organizr->config['calendarLimit'] . ';
-    window.organizrCalendar = new FullCalendar.Calendar(calendarElement, {
-        locale: "' . $Organizr->config['calendarLocale'] . '",
+    var dayMaxEvents = ' . (int)$Londerland->config['calendarLimit'] . ';
+    window.londerlandCalendar = new FullCalendar.Calendar(calendarElement, {
+        locale: "' . $Londerland->config['calendarLocale'] . '",
         buttons: {
             filterCalendar: {
                 text: window.lang.translate("Filter"),
@@ -35,9 +35,9 @@ function get_page_homepage($Organizr = null)
                 }
             }
         },
-        initialView: (activeInfo.mobile) ? "listUpcoming" : (calendarViews["' . $Organizr->config['calendarDefault'] . '"] || "dayGridMonth"),
-        firstDay: ' . (int)$Organizr->config['calendarFirstDay'] . ',
-        eventTimeFormat: calendarTimeFormat("' . $Organizr->config['calendarTimeFormat'] . '"),
+        initialView: (activeInfo.mobile) ? "listUpcoming" : (calendarViews["' . $Londerland->config['calendarDefault'] . '"] || "dayGridMonth"),
+        firstDay: ' . (int)$Londerland->config['calendarFirstDay'] . ',
+        eventTimeFormat: calendarTimeFormat("' . $Londerland->config['calendarTimeFormat'] . '"),
         headerToolbar: {
             left: "prev,next,today",
             center: "title",
@@ -55,12 +55,12 @@ function get_page_homepage($Organizr = null)
         selectable: false,
         height: "auto"
     });
-    organizrCalendar.render();
+    londerlandCalendar.render();
 })();
 $(".homepage-loading-box").fadeOut(5000);
 </script>
 <div class="container-fluid p-t-30" id="homepage-items">
-    ' . $Organizr->buildHomepage() . '
+    ' . $Londerland->buildHomepage() . '
 </div>
 <div id="open-youtube" class="white-popup mfp-with-anim mfp-hide">
     <div class="col-lg-8 offset-lg-2 youtube-div">  </div>

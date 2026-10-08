@@ -8,7 +8,7 @@
 //
 $(document).on('click', '#HEALTHCHECKS-settings-button', function() {
     ajaxloader(".content-wrap","in");
-    organizrAPI2('GET','api/v2/plugins/healthchecks/settings').done(function(data) {
+    londerlandAPI2('GET','api/v2/plugins/healthchecks/settings').done(function(data) {
         var response = data.response;
         $('#HEALTHCHECKS-settings-items').html(buildFormGroup(response.data));
         var elAddButtonStart = $('#HEALTHCHECKS-settings-page [id*="Services"] .row.start');
@@ -22,14 +22,14 @@ $(document).on('click', '#HEALTHCHECKS-settings-button', function() {
             }
         })
     }).fail(function(xhr) {
-        console.error("Organizr Function: API Connection Failed");
+        console.error("Londerland Function: API Connection Failed");
     });
     ajaxloader();
 });
 $(document).on('click', '.importNewHCService', function() {
 	messageSingle('',' Grabbing checks...',activeInfo.settings.notifications.position,'#FFF','info','10000');
 	var apiUrl = 'api/v2/homepage/healthchecks';
-	organizrAPI2('GET',apiUrl).done(function(data) {
+	londerlandAPI2('GET',apiUrl).done(function(data) {
 		try {
 			let response = data.response;
 			if(response.data !== null){
@@ -78,10 +78,10 @@ $(document).on('click', '.importNewHCService', function() {
 				}
 			}
 		}catch(e) {
-			organizrCatchError(e,data);
+			londerlandCatchError(e,data);
 		}
 	}).fail(function(xhr) {
-		OrganizrApiError(xhr);
+		LonderlandApiError(xhr);
 	});
 });
 $(document).on('click', '.addNewHCService', function() {

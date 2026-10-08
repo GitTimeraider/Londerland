@@ -115,7 +115,7 @@ function speedTestLaunch(){
 			</div>
 			`;
 			$('.append-menu').after(menuList);
-			$('.organizr-area').after(htmlDOM);
+			$('.londerland-area').after(htmlDOM);
 			pageLoad();
 		}
 	}

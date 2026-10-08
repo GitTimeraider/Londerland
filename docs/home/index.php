@@ -83,12 +83,12 @@
         allow-spec-url-load="false"
         allow-spec-file-load="false"
 >
-    <img src="../../plugins/images/organizr/logo.png" style="height: 50px" slot="logo">
+    <img src="../../plugins/images/londerland/logo.png" style="height: 50px" slot="logo">
     <div style="display:flex; margin:10px; justify-content:center;flex-wrap: wrap;" slot="logo">
         <button class="btn read-button" onclick="changeRenderStyle()">Change View</button>
     </div>
     <span class="img-container" slot="nav-logo">
-			<img src="../../plugins/images/organizr/logo-wide.png" style="width: 300px">
+			<img src="../../plugins/images/londerland/logo-wide.png" style="width: 300px">
 		</span>
     <div slot="nav-logo" style="width:100%; display: flex; flex-direction:column;">
         <div style="display: flex;justify-content: center; margin: 2px 0">
@@ -97,8 +97,8 @@
     </div>
 </rapi-doc>
 <script>
-    // RapiDoc resolves relative spec URLs from the site root, so pass the absolute address of docs/api.json
-    getRapiDoc().setAttribute("spec-url", new URL("../api.json", location.href).href);
+    // RapiDoc resolves relative spec URLs from the site root, so pass the absolute address of the generated spec
+    getRapiDoc().setAttribute("spec-url", new URL("../index.php?spec", location.href).href);
 </script>
 <script type="module" src="../../assets/vendor/rapidoc/rapidoc-min.js"></script>
 </body>

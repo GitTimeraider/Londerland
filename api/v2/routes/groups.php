@@ -1,8 +1,8 @@
 <?php
 $app->get('/groups', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getAllGroups();
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getAllGroups();
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -11,9 +11,9 @@ $app->get('/groups', function ($request, $response, $args) {
 	
 });
 $app->get('/groups/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Organizr->getGroupById($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getGroupById($args['id']);
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
 	return $response
@@ -22,10 +22,10 @@ $app->get('/groups/{id}', function ($request, $response, $args) {
 	
 });
 $app->post('/groups', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->addGroup($Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->addGroup($Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -35,10 +35,10 @@ $app->post('/groups', function ($request, $response, $args) {
 	
 });
 $app->put('/groups/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->updateGroup($args['id'], $Organizr->apiData($request));
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->updateGroup($args['id'], $Londerland->apiData($request));
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));
@@ -47,10 +47,10 @@ $app->put('/groups/{id}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 });
 $app->delete('/groups/{id}', function ($request, $response, $args) {
-	$Organizr = ($request->getAttribute('Organizr')) ?? new Organizr();
-	if ($Organizr->checkRoute($request)) {
-		if ($Organizr->qualifyRequest(1, true)) {
-			$Organizr->deleteGroup($args['id']);
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->checkRoute($request)) {
+		if ($Londerland->qualifyRequest(1, true)) {
+			$Londerland->deleteGroup($args['id']);
 		}
 	}
 	$response->getBody()->write(jsonE($GLOBALS['api']));

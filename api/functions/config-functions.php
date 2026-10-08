@@ -10,7 +10,7 @@ trait ConfigFunctions
 			foreach ($configItems as $configItem => $configItemValue) {
 				if (stripos($configItem, $term) !== false) {
 					$results[$configItem] = $configItemValue;
-					if ($configItem == 'organizrHash') {
+					if ($configItem == 'londerlandHash') {
 						$results[$configItem] = '***Secure***';
 					}
 				}
@@ -20,7 +20,7 @@ trait ConfigFunctions
 		}
 		if (isset($this->config[$item])) {
 			$configItem = $this->config[$item];
-			if ($item == 'organizrHash') {
+			if ($item == 'londerlandHash') {
 				$configItem = '***Secure***';
 			}
 			$this->setAPIResponse('success', 'The value for ' . $item, 200, $configItem);
@@ -37,12 +37,12 @@ trait ConfigFunctions
 		/*
 		foreach ($configItems as $configItem => $configItemValue) {
 			// should we keep this to filter more items?
-			if ($configItem == 'organizrHash') {
+			if ($configItem == 'londerlandHash') {
 				$configItems[$configItem] = '***Secure***';
 			}
 		}
 		*/
-		$configItems['organizrHash'] = '***Secure***';
+		$configItems['londerlandHash'] = '***Secure***';
 		$this->setAPIResponse('success', null, 200, $configItems);
 		return $configItems;
 		

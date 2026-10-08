@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "Londerland",
+    "short_name": "Londerland",
     "icons": [
         {
             "src": "android-chrome-36x36.png",
@@ -48,7 +48,7 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
+    "theme_color": "#6366f1",
+    "background_color": "#1f2937",
     "display": "standalone"
 }

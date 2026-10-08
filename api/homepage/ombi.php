@@ -25,7 +25,7 @@ trait OmbiHomepageItem
 				'Connection' => [
 					$this->settingsOption('url', 'ombiURL'),
 					$this->settingsOption('token', 'ombiToken'),
-					$this->settingsOption('username', 'ombiFallbackUser', ['label' => 'Ombi Fallback User', 'help' => 'Organizr will request an Ombi User Token based off of this user credentials']),
+					$this->settingsOption('username', 'ombiFallbackUser', ['label' => 'Ombi Fallback User', 'help' => 'Londerland will request an Ombi User Token based off of this user credentials']),
 					$this->settingsOption('password', 'ombiFallbackPassword', ['label' => 'Ombi Fallback Password',]),
 					$this->settingsOption('disable-cert-check', 'ombiDisableCertCheck'),
 					$this->settingsOption('use-custom-certificate', 'ombiUseCustomCertificate'),

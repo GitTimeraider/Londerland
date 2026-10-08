@@ -27,7 +27,7 @@ trait OptionsFunction
 				$this->setUserOptionsVariable();
 				$settingMerge = [
 					'type' => 'select',
-					'label' => 'Organizr User',
+					'label' => 'Londerland User',
 					'options' => $this->userOptions
 				];
 				break;
@@ -120,7 +120,7 @@ trait OptionsFunction
 				$path = $this->root . DIRECTORY_SEPARATOR . 'cron.php';
 				$server = $this->serverIP();
 				$installInstruction = ($this->docker) ?
-					'<p lang="en">No action needed.  Organizr\'s docker image comes with the Cron job built-in</p>' :
+					'<p lang="en">No action needed.  The Londerland Docker image runs scheduled jobs by itself</p>' :
 					'<p lang="en">Setup a Cron job so it\'s call will originate from either the server\'s IP address or a local IP address.  Please use the following information to set up the Cron Job correctly.</p>
 					<h5>Cron Information</h5>
 					<ul class="list-icons">
@@ -142,7 +142,7 @@ trait OptionsFunction
 							<div class="col-xl-12">
 								<div class="card card-info">
 									<div class="card-header">
-										<span lang="en">Organizr Enable Cron Instructions</span>
+										<span lang="en">Londerland Enable Cron Instructions</span>
 									</div>
 									<div class="card-wrapper collapse show" aria-expanded="true">
 										<div class="card-body">

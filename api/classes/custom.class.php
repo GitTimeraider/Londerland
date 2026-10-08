@@ -1,6 +1,6 @@
 <?php
 
-class OrganizrDigestAuth extends \WpOrg\Requests\Auth\Basic
+class LonderlandDigestAuth extends \WpOrg\Requests\Auth\Basic
 {
 	
 	/**

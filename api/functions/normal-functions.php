@@ -737,27 +737,28 @@ trait NormalFunctions
 	}
 }
 
+// CA certificates for checking HTTPS connections: the bundle of the operating system
+// (kept up to date with the Docker image), otherwise the copy that ships in api/functions/cert
+function caBundlePath()
+{
+	$candidates = [
+		openssl_get_cert_locations()['default_cert_file'] ?? '',
+		'/etc/ssl/certs/ca-certificates.crt',
+		'/etc/pki/tls/certs/ca-bundle.crt',
+		'/etc/ssl/cert.pem',
+	];
+	foreach ($candidates as $path) {
+		if ($path !== '' && is_readable($path) && filesize($path) > 0) {
+			return $path;
+		}
+	}
+	return __DIR__ . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert-initial.pem';
+}
+
 // Leave for deluge class
 function getCert()
 {
-	$url = 'http://curl.haxx.se/ca/cacert.pem';
-	$file = __DIR__ . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert.pem';
-	$file2 = __DIR__ . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert-initial.pem';
-	$useCert = (file_exists($file)) ? $file : $file2;
-	$context = stream_context_create(
-		array(
-			'ssl' => array(
-				'verify_peer' => true,
-				'cafile' => $useCert
-			)
-		)
-	);
-	if (!file_exists($file)) {
-		file_put_contents($file, fopen($url, 'r', false, $context));
-	} elseif (file_exists($file) && time() - 2592000 > filemtime($file)) {
-		file_put_contents($file, fopen($url, 'r', false, $context));
-	}
-	return $file;
+	return caBundlePath();
 }
 
 // Leave for deluge class

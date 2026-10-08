@@ -35,7 +35,7 @@ $app->get('/plugins/aichat/test/search', function ($request, $response, $args) {
 		if (!$AiChat->_aiChatSearchEnabled()) {
 			$AiChat->setAPIResponse('error', 'Choose and save a search provider first', 409);
 		} else {
-			[$results, $error] = $AiChat->_aiChatWebSearch($request->getQueryParams()['q'] ?? 'Organizr homelab dashboard');
+			[$results, $error] = $AiChat->_aiChatWebSearch($request->getQueryParams()['q'] ?? 'Londerland homelab dashboard');
 			if ($error) {
 				$AiChat->setAPIResponse('error', $error, 502);
 			} else {

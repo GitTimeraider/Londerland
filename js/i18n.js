@@ -1,5 +1,5 @@
 /*
- * Organizr translations (replaces jquery-lang).
+ * Londerland translations (replaces jquery-lang).
  *
  * Elements carrying lang="en" have their own text nodes and their title/alt/placeholder/href
  * attributes (plus the value of button-like inputs) translated into the current language.
@@ -15,7 +15,7 @@ class Lang {
 		this._loading = {};
 		this._originals = new WeakMap();
 		this.attrList = ['title', 'alt', 'placeholder', 'href'];
-		this.cookieName = 'organizrLanguage';
+		this.cookieName = 'londerlandLanguage';
 		this.cookieExpiry = 365;
 		this.cookiePath = '/';
 	}

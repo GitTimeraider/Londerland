@@ -2,7 +2,7 @@
 
 // OpenAPI documentation for the routes in api/v2/routes/plex.php (collected by docs/index.php)
 
-namespace Organizr\OpenApi;
+namespace Londerland\OpenApi;
 
 use OpenApi\Attributes as OA;
 
@@ -14,12 +14,12 @@ use OpenApi\Attributes as OA;
 	properties: [
 		new OA\Property(
 			type: 'string',
-			example: 'causefx',
+			example: 'username',
 			property: 'username',
 		),
 		new OA\Property(
 			type: 'string',
-			example: 'causefx@organizr.app',
+			example: 'user@example.com',
 			property: 'email',
 		),
 		new OA\Property(

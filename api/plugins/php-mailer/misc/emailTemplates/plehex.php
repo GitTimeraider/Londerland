@@ -127,7 +127,7 @@ $email = '
 						<tbody>
 							<tr>
 								<td align="center" class="header" valign="top">
-									<a href="' . $this->getServerPath(true) . '" rel="noopener noreferrer"><img border="0" src="' . $this->config['PHPMAILER-logo'] . '" style="display: block;" width="50%"></a>
+									<a href="' . $this->getServerPath(true) . '" rel="noopener noreferrer"><img border="0" src="' . $this->_phpMailerPluginLogo() . '" style="display: block;" width="50%"></a>
 								</td>
 							</tr>
 						</tbody>
