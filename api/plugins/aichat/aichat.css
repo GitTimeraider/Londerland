@@ -23,7 +23,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 5px;
   width: 68px;
   height: 68px;
   padding: 0;
@@ -36,9 +36,30 @@
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
+/* "AI" as the icon; the close icon replaces it while the chat is open */
+.aichat-launcher-icon {
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  transform: translateX(2px);
+}
 .aichat-launcher i {
+  display: none;
   font-size: 26px;
   line-height: 1;
+}
+.aichat-launcher[aria-expanded="true"] i {
+  display: block;
+}
+.aichat-launcher[aria-expanded="true"] .aichat-launcher-icon {
+  display: none;
+}
+.aichat-launcher-noname .aichat-launcher-label {
+  display: none;
+}
+.aichat-launcher-noname .aichat-launcher-icon {
+  font-size: 25px;
 }
 .aichat-launcher-label {
   /* the name sits where the bubble rounds off on the left: keep it narrow and nudge it towards the square corner */
