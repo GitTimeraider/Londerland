@@ -12,7 +12,8 @@
 		chat: null, // { id, title, model, pinned, messages: [] }
 		models: [],
 		defaultModel: null,
-		prefs: { default_model: null, system_prompt: '', send_on_enter: true },
+		prefs: { default_model: null, system_prompt: '', send_on_enter: true, web_tools: true },
+		webTools: false, // admin lets the model use the web by itself; the Web button turns it off and on per user
 		pending: [], // attachments waiting to be sent: { id, name, mime, kind, uploading, localUrl }
 		controller: null, // AbortController of the running answer
 		search: '',
@@ -232,6 +233,17 @@
 		return !!provider && provider !== 'none';
 	}
 
+	// The Web button only shows when the admin allows the model to use the web by itself
+	function updateWebButton() {
+		const on = state.prefs.web_tools !== false;
+		$panel
+			.find('.aichat-toggle-web')
+			.toggle(state.webTools)
+			.toggleClass('active', on)
+			.attr('aria-pressed', String(on))
+			.attr('title', on ? t('The AI may search and read web pages by itself. Click to turn off') : t('The AI does not use the web by itself. Click to turn on'));
+	}
+
 	function imagesAvailable() {
 		return activeInfo.plugins.includes['AICHAT-images-include'] === true;
 	}
@@ -312,6 +324,7 @@
 									${uploads ? `<button type="button" class="aichat-icon-btn aichat-attach" title="${escapeHtml(t('Add images or files'))}"><i class="fa fa-paperclip"></i></button>
 									<input type="file" class="aichat-file" multiple hidden>` : ''}
 									${searchAvailable() ? `<button type="button" class="aichat-tool-toggle aichat-toggle-search" aria-pressed="false" title="${escapeHtml(t('Search the web before answering'))}"><i class="fa fa-globe"></i><span>${escapeHtml(t('Search'))}</span></button>` : ''}
+									<button type="button" class="aichat-tool-toggle aichat-toggle-web" aria-pressed="true" style="display: none" title="${escapeHtml(t('Let the AI search and read web pages by itself when it needs to'))}"><i class="fa fa-compass"></i><span>${escapeHtml(t('Web'))}</span></button>
 									${imagesAvailable() ? `<button type="button" class="aichat-tool-toggle aichat-toggle-image" aria-pressed="false" title="${escapeHtml(t('Create an image from your message'))}"><i class="fa fa-image"></i><span>${escapeHtml(t('Image'))}</span></button>` : ''}
 									<span class="aichat-hint"></span>
 								</div>
@@ -368,6 +381,8 @@
 			state.models = data.models;
 			state.defaultModel = data.defaultModel;
 			state.prefs = data.prefs;
+			state.webTools = !!data.webTools;
+			updateWebButton();
 			buildModelSelect();
 			updateHint();
 			await refreshChats();
@@ -1297,6 +1312,18 @@
 			} else {
 				send();
 			}
+		});
+		$panel.on('click', '.aichat-toggle-web', async function () {
+			const previous = state.prefs.web_tools !== false;
+			state.prefs.web_tools = !previous;
+			updateWebButton();
+			try {
+				state.prefs = (await api('PUT', 'prefs', { web_tools: state.prefs.web_tools })).data;
+			} catch (error) {
+				state.prefs.web_tools = previous;
+				notify(error.message);
+			}
+			updateWebButton();
 		});
 		$panel.on('click', '.aichat-toggle-search, .aichat-toggle-image', function () {
 			const isSearch = $(this).hasClass('aichat-toggle-search');

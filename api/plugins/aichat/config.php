@@ -27,9 +27,8 @@ return array(
 	'AICHAT-searchUrl' => '',
 	'AICHAT-searchApiKey' => '',
 	'AICHAT-searchResults' => '5',
+	// Model may use the web by itself: fetch_url (read a page) always, web_search too when a Search Provider is set
 	'AICHAT-searchAuto' => false,
-	// fetch_url tool: the model may open a web page (a pasted link or a search result) and read its text
-	'AICHAT-fetchAuto' => false,
 	// Off = pages on private/local addresses (192.168.x, 10.x, localhost, ...) are refused
 	'AICHAT-fetchAllowPrivate' => false,
 	// Image generation through an OpenAI-compatible /images/generations endpoint

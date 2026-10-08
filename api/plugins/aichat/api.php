@@ -54,6 +54,7 @@ $app->get('/plugins/aichat/models', function ($request, $response, $args) {
 				'models' => $models['models'],
 				'defaultModel' => trim($AiChat->config['AICHAT-defaultModel']) ?: null,
 				'prefs' => $AiChat->_aiChatGetPrefs(),
+				'webTools' => (bool)$AiChat->config['AICHAT-searchAuto'],
 			];
 		}
 	}
