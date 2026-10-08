@@ -77,6 +77,7 @@ const assets = [
 // Londerland's own files: [source, minified output]
 const ownFiles = [
 	['css/dark.css', 'css/dark.min.css'],
+	['css/light.css', 'css/light.min.css'],
 	['css/londerland.css', 'css/londerland.min.css'],
 	['js/custom.js', 'js/custom.min.js'],
 ];

@@ -200,6 +200,7 @@ node_modules/
 assets/vendor/
 # generated from the matching non-minified file by scripts/build-frontend.mjs
 css/dark.min.css
+css/light.min.css
 css/londerland.min.css
 js/custom.min.js
 dev-data/

@@ -38,7 +38,7 @@ $Londerland = new Londerland(true);
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet">
-    <link id="style" href="css/dark.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link id="style" href="css/<?php echo (($Londerland->config['style'] ?? '') === 'light') ? 'light' : 'dark'; ?>.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
 	<?php echo $Londerland->setTheme(); ?>
