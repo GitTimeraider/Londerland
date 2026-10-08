@@ -2594,6 +2594,54 @@ function updateUserInformation() {
       });
   }
 }
+// Avatar dialog (Manage Users and Account Settings): a web address or an image path; empty = Gravatar
+function changeUserAvatar(id, current, done = null) {
+  current = $("<textarea>").html(current || "").text();
+  Swal.fire({
+    title: window.lang.translate("Change Avatar"),
+    html:
+      '<img class="rounded-circle mb-3 avatar-preview" width="100" height="100" style="object-fit: cover" alt="">' +
+      '<input class="form-control avatar-url" placeholder="https://... or data/userTabs/me.png">' +
+      '<p class="text-muted small mt-2 mb-0">' +
+      window.lang.translate("A web address of an image, or an image uploaded under Settings > Image Manager (data/userTabs/file-name.png). Leave empty to use the Gravatar of the email address.") +
+      "</p>",
+    customClass: { popup: "bg-org" },
+    showCancelButton: true,
+    confirmButtonText: window.lang.translate("Save"),
+    cancelButtonText: window.lang.translate("Cancel"),
+    didOpen: function (popup) {
+      const $input = $(popup).find(".avatar-url").val(current);
+      const $preview = $(popup).find(".avatar-preview").attr("src", current);
+      $input.on("input", function () {
+        const value = this.value.trim();
+        $preview.attr("src", /^(https?:\/\/|data\/|plugins\/images\/)/i.test(value) ? value : current);
+      });
+      $input.trigger("focus");
+    },
+    preConfirm: function () {
+      return $(Swal.getPopup()).find(".avatar-url").val().trim();
+    },
+  }).then(function (result) {
+    if (!result.isConfirmed) {
+      return;
+    }
+    londerlandAPI2("PUT", "api/v2/users/" + id, { image: result.value }, true)
+      .done(function (data) {
+        const image = (data.response.data && data.response.data.image) || result.value;
+        if (id == activeInfo.user.userID) {
+          activeInfo.user.image = image;
+          $(".profile-image, .dw-user-box .u-img img, .user-pro > a > img, .account-avatar").attr("src", image);
+        }
+        if (done) {
+          done(image);
+        }
+        message("User Updated", window.lang.translate("Avatar changed"), activeInfo.settings.notifications.position, "#FFF", "success", "5000");
+      })
+      .fail(function (xhr) {
+        LonderlandApiError(xhr, "Avatar");
+      });
+  });
+}
 function twoFA(action, type, secret = null) {
   switch (action) {
     case "activate":
@@ -2987,6 +3035,17 @@ function accountManager(user) {
                                                     </div>
                                                     <div class="card-wrapper collapse" aria-expanded="true">
                                                         <div class="card-body bg-org p-0 p-t-10">
+                                                            <div class="col-lg-12">
+                                                                <div class="form-group">
+                                                                    <label class="form-label" lang="en">Avatar</label>
+                                                                    <div class="d-flex align-items-center gap-3">
+                                                                        <img class="rounded-circle account-avatar" width="60" height="60" style="object-fit: cover" alt="" src="` +
+      activeInfo.user.image +
+      `">
+                                                                        <button type="button" class="btn btn-info btn-sm" onclick="changeUserAvatar(activeInfo.user.userID, activeInfo.user.image)"><i class="fa fa-image me-1"></i> <span lang="en">Change</span></button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                             <div class="col-lg-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label" lang="en">Username</label>

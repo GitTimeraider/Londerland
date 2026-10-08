@@ -6057,7 +6057,16 @@ class Londerland
 			$array['password'] = password_hash($array['password'], PASSWORD_BCRYPT);
 		}
 		if (array_key_exists('image', $array)) {
-			$array['image'] = $this->sanitizeUserString($array['image']);
+			// Avatar: a web address or an image inside Londerland (e.g. uploaded with the Image Manager); empty = Gravatar
+			$image = trim((string)$array['image']);
+			if ($image === '') {
+				$array['image'] = $this->gravatar($array['email'] ?? $user['email']);
+			} elseif (preg_match('/^(https?:\/\/|data\/|plugins\/images\/)/i', $image)) {
+				$array['image'] = $this->sanitizeUserString($image);
+			} else {
+				$this->setAPIResponse('error', 'Avatar must be a web address (http:// or https://) or an image path such as data/userTabs/me.png', 422);
+				return false;
+			}
 		}
 		if (array_key_exists('register_date', $array)) {
 			$this->setAPIResponse('error', 'Cannot update register date', 409);
@@ -6074,7 +6083,7 @@ class Londerland
 				)
 			),
 		];
-		$this->setAPIResponse(null, 'User info updated');
+		$this->setAPIResponse(null, 'User info updated', null, array_key_exists('image', $array) ? ['image' => $array['image']] : null);
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('Updated User Info for [' . $user['username'] . ']');
 		return $this->processQueries($response);
