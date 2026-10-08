@@ -401,52 +401,49 @@ function ajaxloader(element = null, action = "out") {
       $(".ajaxloader").remove();
   }
 }
-function getDefault(id) {
-  let tabInfo = findTab(id);
-  if (!tabInfo) {
-    if (getHash() === false) {
-      londerlandConsole("Get Default", "No Tab Info Found... Id: " + id, "error");
-      londerlandConsole(
-        "Get Default",
-        "Trying to load next tab in cycle",
-        "error"
-      );
-      loadNextTab(true);
-      return false;
+// Tabs this user can open: the ones in their menu (enabled and allowed for their group)
+function isOpenableTab(tabInfo) {
+  return !!tabInfo && typeof tabInformation[tabInfo.id] !== "undefined";
+}
+// Tab to start with when the address names none (or one this user cannot open): the group's default tab, then the
+// default tab of the Tab Editor, then the first tab of the user's menu. Tabs that open a new window are skipped.
+function startTabId(defaultId) {
+  const startable = (tabInfo) => isOpenableTab(tabInfo) && tabInfo.type != 2;
+  for (const candidate of [activeInfo.settings.misc.groupDefaultTab, defaultId]) {
+    if (candidate !== null && typeof candidate !== "undefined" && candidate !== "") {
+      const tabInfo = findTab(candidate);
+      if (startable(tabInfo)) {
+        return tabInfo.id;
+      }
     }
   }
-  if (
-    getHash() === false ||
-    (getHash() === "LonderlandLogin" && activeInfo.user.loggedin)
-  ) {
-    if (tabInfo) {
-      switchTab(id);
-    } else {
-      $(".allTabsList").first().children().click();
-    }
-  } else if (getHash() == "LonderlandLogin") {
+  const first = $("#side-menu .allTabsList")
+    .toArray()
+    .map((li) => findTab($(li).attr("data-tab-id")))
+    .find(startable);
+  return first ? first.id : null;
+}
+function getDefault(id) {
+  const hash = getHash();
+  if (hash === "LonderlandLogin" && !activeInfo.user.loggedin) {
     loadNextTab(true);
-  } else {
-    let hashTab = getHash();
-    let hashType = isNaN(hashTab) ? "name" : "id";
-    let tabInfo = findTab(hashTab, hashType);
-    if (!tabInfo) {
-      londerlandConsole(
-        "Get Hash",
-        "No Tab Info Found... Hash: " + hashTab,
-        "error"
-      );
-      switchTab(id);
-      return false;
-    }
-    let type = tabInfo.type;
-    if (typeof hashTab !== "undefined" && typeof type !== "undefined") {
+    return;
+  }
+  if (hash !== false && hash !== "LonderlandLogin") {
+    const hashTab = findTab(hash, isNaN(hash) ? "name" : "id");
+    if (isOpenableTab(hashTab)) {
       directToHash = true;
-      switchTab(tabInfo.id);
-    } else {
-      console.warn("Tab Function: " + hashTab + " is not a defined tab");
-      switchTab(id);
+      switchTab(hashTab.id);
+      return;
     }
+    londerlandConsole("Get Hash", "No Tab Info Found... Hash: " + hash, "error");
+  }
+  const start = startTabId(id);
+  if (start !== null) {
+    switchTab(start);
+  } else {
+    londerlandConsole("Get Default", "No tab to open for this user", "error");
+    loadNextTab(true);
   }
 }
 function getTabType(id) {
@@ -1090,12 +1087,12 @@ function loadNextTab(loadNextTabIfNotLoaded = false) {
     switchTab(next);
   } else {
     if (loadNextTabIfNotLoaded) {
-      if (findTab(0, "type")) {
-        var id = findTab(0, "type")["id"];
-      } else {
-        var id = findTab(1, "type")["id"];
+      const tabInfo = findTab(0, "type") || findTab(1, "type");
+      if (!tabInfo) {
+        londerlandConsole("Tab Function", "No Available Tab to open", "error");
+        return;
       }
-      tabActions(1, id);
+      tabActions(1, tabInfo.id);
     } else {
       londerlandConsole("Tab Function", "No Available Tab to open", "error");
     }
