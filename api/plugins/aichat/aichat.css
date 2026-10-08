@@ -41,7 +41,9 @@
   line-height: 1;
 }
 .aichat-launcher-label {
-  max-width: 58px;
+  /* the name sits where the bubble rounds off on the left: keep it narrow and nudge it towards the square corner */
+  max-width: 50px;
+  transform: translateX(2px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -49,6 +51,10 @@
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.05em;
+}
+.aichat-launcher-long .aichat-launcher-label {
+  font-size: 9.5px;
+  letter-spacing: 0;
 }
 .aichat-launcher:hover,
 .aichat-launcher:focus-visible {
