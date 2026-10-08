@@ -229,7 +229,6 @@ function pageLoad(){
     $('.inline-popups').magnificPopup({
       removalDelay: 500, //delay removal by X to allow out-animation
       closeOnBgClick: true,
-        showCloseBtn: false,
       //closeOnContentClick: true,
       callbacks: {
         beforeOpen: function() {

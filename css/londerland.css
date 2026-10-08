@@ -6657,3 +6657,18 @@ select.form-control:not([multiple]):not([size]) {
 .ts-dropdown .active {
   color: #fff;
 }
+/* Popups (Account Settings and others): the close button sits on the white-text card header in every theme */
+.mfp-close-btn-in .white-popup > .mfp-close {
+  color: #fff;
+  opacity: 0.8;
+}
+.mfp-close-btn-in .white-popup > .mfp-close:hover,
+.mfp-close-btn-in .white-popup > .mfp-close:focus {
+  opacity: 1;
+}
+/* Narrow screens: the card fills the width, so the close button gets its own strip above it instead of covering header buttons */
+@media (max-width: 991.98px) {
+  .mfp-close-btn-in .white-popup {
+    padding-top: 44px;
+  }
+}
