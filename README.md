@@ -5,6 +5,11 @@ one address with your own name, logo and look, where visitors see a public front
 for more. It works just as well as the private start page for your home network, but it is built to feel like a
 website, not like a wall of server tiles.
 
+### Disclaimers: 
+#### Even though guided and checked, AI is responsible for over half of the coding. 
+Also keep in mind that this software is mostly developed for personal use by myself and thus might not receive all feature requests desired and even be discontinued.
+################################################################
+
 - **Public when you want it.** Guests (visitors who are not logged in) can get their own front page and their
   own tabs, so the same address serves a public site for everyone and private pages for members.
 - **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
