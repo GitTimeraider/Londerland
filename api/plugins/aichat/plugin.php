@@ -421,8 +421,8 @@ class AiChat extends Londerland
 					'name' => 'AICHAT-launcherLabel-include',
 					'label' => 'Button Name',
 					'value' => $this->config['AICHAT-launcherLabel-include'],
-					'placeholder' => 'AI',
-					'help' => 'Short name shown under the icon of the chat button (up to about 8 characters fit).'
+					'placeholder' => 'Empty = only "AI"',
+					'help' => 'Short name shown under "AI" on the chat button (up to about 10 characters fit). Leave empty to show only "AI".'
 				),
 				array(
 					'type' => 'input',

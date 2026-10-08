@@ -233,10 +233,12 @@
 	// Name and colour of the chat button come from the plugin settings
 	function styleLauncher() {
 		const includes = activeInfo.plugins.includes;
-		const label = trim(includes['AICHAT-launcherLabel-include']) || t('AI');
+		const label = trim(includes['AICHAT-launcherLabel-include']);
 		const $launcher = $('.aichat-launcher');
 		$launcher.find('.aichat-launcher-label').text(label.slice(0, 12));
 		$launcher.toggleClass('aichat-launcher-long', label.length > 6);
+		// the button already says "AI": no name (or just "AI") shows only that, a bit larger
+		$launcher.toggleClass('aichat-launcher-noname', !label || label.toUpperCase() === 'AI');
 		const color = trim(includes['AICHAT-launcherColor-include']);
 		if (!color || !window.CSS || !CSS.supports('color', color)) {
 			return;
@@ -257,7 +259,7 @@
 		// Big chat bubble fixed in the bottom right corner of every page
 		$('body')
 			.addClass('aichat-enabled')
-			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><i class="fa fa-comment-dots"></i><span class="aichat-launcher-label"></span></button>`);
+			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><span class="aichat-launcher-icon" aria-hidden="true">AI</span><i class="fa fa-times" aria-hidden="true"></i><span class="aichat-launcher-label"></span></button>`);
 		styleLauncher();
 		$('body').append(`
 			<section class="aichat-panel" role="dialog" aria-label="${escapeHtml(t('AI Chat'))}">
@@ -344,7 +346,7 @@
 
 	async function openChat() {
 		$('body').addClass('aichat-open');
-		$('.aichat-launcher').attr({ 'aria-expanded': 'true', 'aria-label': t('Close AI Chat') }).find('i').attr('class', 'fa fa-times');
+		$('.aichat-launcher').attr({ 'aria-expanded': 'true', 'aria-label': t('Close AI Chat') });
 		if (window.innerWidth < 768) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
@@ -373,7 +375,7 @@
 
 	function closeChat() {
 		$('body').removeClass('aichat-open');
-		$('.aichat-launcher').attr({ 'aria-expanded': 'false', 'aria-label': t('Open AI Chat') }).find('i').attr('class', 'fa fa-comment-dots');
+		$('.aichat-launcher').attr({ 'aria-expanded': 'false', 'aria-label': t('Open AI Chat') });
 		$('.aichat-launcher').trigger('focus');
 	}
 
