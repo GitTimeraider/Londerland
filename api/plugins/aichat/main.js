@@ -236,6 +236,7 @@
 		const label = trim(includes['AICHAT-launcherLabel-include']) || t('AI');
 		const $launcher = $('.aichat-launcher');
 		$launcher.find('.aichat-launcher-label').text(label.slice(0, 12));
+		$launcher.toggleClass('aichat-launcher-long', label.length > 6);
 		const color = trim(includes['AICHAT-launcherColor-include']);
 		if (!color || !window.CSS || !CSS.supports('color', color)) {
 			return;
