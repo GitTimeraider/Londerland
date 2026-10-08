@@ -1,11 +1,19 @@
 name: Docker image
 
+# Changes that only touch text files (README and other Markdown, the license) do not build an image.
+# Version tags always build.
 on:
   push:
     branches: [master, develop]
     tags: ['v*']
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   pull_request:
     branches: [master, develop]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   workflow_dispatch:
 
 concurrency:
