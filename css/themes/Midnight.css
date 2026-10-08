@@ -363,7 +363,12 @@ span.select2-results {
 .nav>li>a:focus, .nav>li>a:hover {
     text-decoration: none;
     background-color: #283453;
+}/* Side menu: brighter names (the grey above blended into the dark background) */
+#side-menu li a,
+.sidebar .sidebar-head h3 {
+  color: #d0d2d8;
 }
+
 /* Accent colour */
 .card-info,
 .card-info .card-header {
@@ -471,4 +476,8 @@ a.dt-button:hover:not(.disabled), button.dt-button:hover:not(.disabled), div.dt-
 .message-center .unread .mail-contnet .mail-desc, .message-center .unread .mail-contnet h5,
 .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button, .dataTables_wrapper .dataTables_processing, .dd-handle, .footable.breakpoint > tbody > tr > td > span.footable-toggle, pre {
   color: #c9d4ea !important;
+}
+#side-menu li a,
+.sidebar .sidebar-head h3 {
+  color: #c9d4ea;
 }

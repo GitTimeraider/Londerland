@@ -1685,6 +1685,26 @@ ul.nav.customtab.nav-tabs.nav-low-margin {
   right: 20px;
   top: 17px;
 }
+/* side menu categories: the tab count and the arrow centred on the row, the count left of the arrow */
+#side-menu > li > a {
+  position: relative;
+}
+#side-menu > li > a .fa.arrow {
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+}
+#side-menu > li > a .hide-menu > .badge {
+  float: none !important;
+  position: absolute;
+  top: 50%;
+  right: 38px;
+  transform: translateY(-50%);
+}
+/* metisMenu 3 marks an open category with mm-active */
+.sidebar .mm-active > a > span > .fa.arrow:before {
+  content: "\f107";
+}
 /* NOTIFY ALTERS */
 .iziToast.success-notify > .iziToast-body .iziToast-icon {
   color: rgb(0, 255, 184);
