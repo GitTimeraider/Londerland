@@ -36,7 +36,13 @@
 		if (plugins['AICHAT-enabled'] !== true || !user.loggedin || isNaN(group) || group >= 999) {
 			return;
 		}
-		if (group > parseInt(includes['AICHAT-Auth-include'], 10)) {
+		// the server checks this too; here it only decides whether the button is shown
+		const groups = String(includes['AICHAT-groups-include'] ?? 'auto').trim();
+		const allowed =
+			groups === 'auto'
+				? group <= parseInt(includes['AICHAT-Auth-include'], 10)
+				: groups.split(',').map((id) => parseInt(id, 10)).includes(group);
+		if (!allowed) {
 			return;
 		}
 		buildDom();
