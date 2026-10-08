@@ -18,6 +18,8 @@ return [
 	'ldapType' => '1',
 	'logo' => 'plugins/images/londerland/londerland-logo-h.png',
 	'loginLogo' => 'plugins/images/londerland/londerland-logo-h.png',
+	// Settings > System Settings > About; empty = the Londerland logo
+	'aboutLogo' => '',
 	'loginWallpaper' => '',
 	'title' => 'Londerland',
 	'useLogo' => false,
