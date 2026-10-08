@@ -1075,22 +1075,34 @@ class Londerland
 
 	public function defaultThemeInformation()
 	{
+		// style: the Style (Settings > Customize > Appearance > Colors & Themes) a theme is made for
+		$themes = [
+			'Londerland' => 'dark',
+			'Blue' => 'light',
+			'Amethyst' => 'dark',
+			'Lavender' => 'light',
+			'Midnight' => 'dark',
+			'Arctic' => 'dark',
+			'Forest' => 'dark',
+			'Ember' => 'dark',
+			'Crimson' => 'dark',
+			'Mint' => 'light',
+			'Sand' => 'light',
+			'Rose' => 'light',
+		];
+		$information = [];
+		foreach ($themes as $name => $style) {
+			$information[$name] = [
+				'name' => $name,
+				'repo' => null,
+				'version' => '1.0.0',
+				'path' => 'css/themes',
+				'style' => $style
+			];
+		}
 		return [
-			'files' => ['Blue', 'Londerland'],
-			'information' => [
-				'Blue' => [
-					'name' => 'Blue',
-					'repo' => null,
-					'version' => '1.0.0',
-					'path' => 'css/themes'
-				],
-				'Londerland' => [
-					'name' => 'Londerland',
-					'repo' => null,
-					'version' => '1.0.0',
-					'path' => 'css/themes'
-				]
-			]
+			'files' => array_keys($themes),
+			'information' => $information
 		];
 	}
 
