@@ -17,10 +17,11 @@ function get_page_settings_tab_editor_categories($Londerland)
 	';
 	return '
 <script>
+// in its own scope: the page is loaded again on every visit, and a second top-level "let" would stop the whole script
+(function() {
 buildCategoryEditor();
 
-let el = document.getElementById(\'categoryEditorTable\');
-let sortable = new Sortable(el, {
+new Sortable(document.getElementById(\'categoryEditorTable\'), {
 	onUpdate: function (evt) {
 		$(\'input.order\').each(function(idx) {
 			$(this).val(idx + 1);
@@ -29,6 +30,7 @@ let sortable = new Sortable(el, {
 	},
 });
 ' . $iconSelectors . '
+})();
 </script>
 <div class="card bg-org card-info">
 	<div class="card-header">

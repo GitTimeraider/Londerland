@@ -154,7 +154,7 @@ function get_page_settings($Londerland)
 										<div class="card bg-org">
 											<div class="p-30">
 												<div class="row">
-													<div class="col-12"><img src="plugins/images/londerland/logo-wide.png" alt="Londerland" class="img-fluid"></div>
+													<div class="col-12"><img src="' . htmlspecialchars(trim($Londerland->config['aboutLogo'] ?? '') ?: 'plugins/images/londerland/logo-wide.png') . '" alt="Londerland" class="img-fluid"></div>
 												</div>
 											</div>
 											<hr class="m-t-10">
