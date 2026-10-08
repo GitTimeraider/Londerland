@@ -8,7 +8,8 @@
 # Everything Londerland needs is inside the image; the container downloads nothing when it starts.
 
 # The container runs as user 99, group 100. The data folder must belong to that user.
-# Remove the --user line (and this chown) to run as root instead.
+# Remove the --user line (and this chown) to run as root instead; then also add
+#   --cap-add=CHOWN --cap-add=DAC_READ_SEARCH --cap-add=SETUID --cap-add=SETGID
 mkdir -p londerland-data
 [ "$(stat -c %u:%g londerland-data)" = "99:100" ] || sudo chown -R 99:100 londerland-data
 
@@ -16,6 +17,7 @@ docker run -d \
   --name londerland \
   --user 99:100 \
   --security-opt=no-new-privileges:true \
+  --cap-drop=ALL \
   -p 80:80 \
   -e TZ=Etc/UTC \
   -v "$(pwd)/londerland-data:/var/www/html/data" \
