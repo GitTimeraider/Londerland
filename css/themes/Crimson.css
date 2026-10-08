@@ -364,6 +364,8 @@ span.select2-results {
     text-decoration: none;
     background-color: #3b2b2e;
 }
+
+
 /* Accent colour */
 .card-info,
 .card-info .card-header {
@@ -402,8 +404,8 @@ a.text-info:hover {
 
 /* Text: brighter than the dark style's grey */
 :root {
-  --bs-body-color: #e4d3d5;
-  --bs-body-color-rgb: 228, 211, 213;
+  --bs-body-color: #f4eaeb;
+  --bs-body-color-rgb: 244, 234, 235;
 }
 body,
 .get-code,
@@ -464,11 +466,15 @@ a.dt-button:hover:not(.disabled), button.dt-button:hover:not(.disabled), div.dt-
 .ct-label,
 .bg-title h4,
 .btn-secondary, .chat-list .chat-text h4, .dropdown-menu > li > a, .dropdown-menu > li > a:focus, .dropdown-menu > li > a:hover, .flot-text, .footer, .form-control, .h1 .small, .h1 small, .h2 .small, .h2 small, .h3 .small, .h3 small, .h4 .small, .h4 small, .h5 .small, .h5 small, .h6 .small, .h6 small, .form-text, .input-group-text, .text-muted, a.list-group-item:focus, a.list-group-item:hover, button.list-group-item:focus, button.list-group-item:hover, h1 .small, h1 small, h2 .small, h2 small, h3 .small, h3 small, h4 .small, h4 small, h5 .small, h5 small, h6 .small, h6 small, tbody, th {
-  color: #e4d3d5;
+  color: #f4eaeb;
 }
 .text-dark,
 .mail-list .list-group-item.active,
 .message-center .unread .mail-contnet .mail-desc, .message-center .unread .mail-contnet h5,
 .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button, .dataTables_wrapper .dataTables_processing, .dd-handle, .footable.breakpoint > tbody > tr > td > span.footable-toggle, pre {
-  color: #e4d3d5 !important;
+  color: #f4eaeb !important;
+}
+#side-menu li a,
+.sidebar .sidebar-head h3 {
+  color: #f4eaeb;
 }

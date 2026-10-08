@@ -3169,7 +3169,7 @@ function userMenu(user) {
       user.data.user.username +
       `<span class="fa arrow"></span></span>
 			</a>
-			<ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+			<ul class="nav nav-second-level mm-collapse" aria-expanded="false">
 				<li class="append-menu"><a class="inline-popups" href="#account-area" data-effect="mfp-zoom-out"><i class="ti-settings fa-fw"></i> <span lang="en">Account Settings</span></a></li>
 				<li><a href="javascript:void(0)" onclick="lock();"><i class="ti-lock fa-fw"></i> <span lang="en">Lock Screen</span></a></li>
 				${showDebug}
@@ -3213,7 +3213,7 @@ function userMenu(user) {
       user.data.user.username +
       `<span class="fa arrow"></span></span>
 			</a>
-			<ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+			<ul class="nav nav-second-level mm-collapse" aria-expanded="false">
 				<li class="append-menu"><a href="javascript:void(0)" class="show-login"><i class="fa fa-sign-in fa-fw"></i> <span lang="en">Login/Register</span></a></li>
 			</ul>
 		</li>
@@ -3274,11 +3274,12 @@ function menuExtras(active) {
 }
 function categoryProcess(arrayItems) {
   var menuList = "";
+  // metisMenu 3 only knows its own classes: mm-collapse/mm-show on the list, mm-active on the open category
   let categoryIn = activeInfo.settings.misc.expandCategoriesByDefault
-    ? "show"
+    ? "mm-show"
     : "";
   let categoryActive = activeInfo.settings.misc.expandCategoriesByDefault
-    ? "active"
+    ? "active mm-active"
     : "";
   let categoryExpanded = activeInfo.settings.misc.expandCategoriesByDefault
     ? "true"
@@ -3305,7 +3306,7 @@ function categoryProcess(arrayItems) {
           `</span></span><div class="menu-category-ping" data-good="0" data-bad="0"></div></a>
 						<ul class="nav nav-second-level category-` +
           v.category_id +
-          ` collapse ` +
+          ` mm-collapse ` +
           categoryIn +
           `" aria-expanded="` +
           categoryExpanded +
@@ -3507,10 +3508,6 @@ function tabProcess(arrayItems) {
     });
     $("#side-menu").metisMenu({
       toggle: activeInfo.settings.misc.autoCollapseCategories,
-      activeClass: "active",
-      collapseClass: "collapse",
-      collapseInClass: "show",
-      collapsingClass: "collapsing",
     });
     getDefault(defaultTabId);
   } else {
