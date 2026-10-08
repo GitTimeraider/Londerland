@@ -6551,6 +6551,19 @@ td.mouse-grab.sort-tabs-handle {
 .navbar-top-links > li > a {
   display: block;
 }
+/* the Bootstrap 3 nav rule below would add 10px above and below, which pushed the icons below the logo text */
+.nav.navbar-top-links > li > a {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* centre the side menu's hamburger on the 40px top bar (same header height, the margin moves below it) */
+.sidebar .sidebar-head h3 {
+  margin: 0 0 20px;
+}
+.navbar-top-links .open-in-new-tab.disabled-action {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .dropdown-toggle:not([data-bs-toggle])::after {
   display: none;
 }
