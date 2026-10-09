@@ -5586,10 +5586,14 @@ function changeTheme(theme) {
   );
 }
 function changeStyle(style) {
-  //$("#preloader").fadeIn();
-  $("#style").attr({
-    href: "css/" + style + ".min.css?v=" + activeInfo.version,
-  });
+  // The server already sends the right stylesheet; swapping in the same file again drops it while it downloads
+  // again, which makes the whole page jump (layout shift)
+  const current = ($("#style").attr("href") || "").split("?")[0];
+  if (current !== "css/" + style + ".min.css") {
+    $("#style").attr({
+      href: "css/" + style + ".min.css?v=" + activeInfo.version,
+    });
+  }
   //$("#preloader").fadeOut();
   console.info(
     "%c Style %c ".concat(style, " "),
@@ -10090,6 +10094,8 @@ function homepageCalendar(timeout) {
     .done(function (data) {
       try {
         let response = data.response;
+        // The calendar is made once FullCalendar is loaded (see the homepage page); wait for the same load
+        londerlandLoadLibrary("fullcalendar").then(function () {
         if (typeof londerlandCalendar !== "undefined") {
           londerlandCalendar.batchRendering(function () {
             londerlandCalendar.getEventSources().forEach(function (source) {
@@ -10105,6 +10111,7 @@ function homepageCalendar(timeout) {
           });
           applyCalendarFilter();
         }
+        });
       } catch (e) {
         londerlandCatchError(e, data);
       }

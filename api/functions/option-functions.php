@@ -393,6 +393,7 @@ trait OptionsFunction
 					<textarea data-changed="false" class="form-control hidden ' . $name . 'Textarea" name="' . $name . '" data-type="textbox" autocomplete="new-password">' . $this->config[$name] . '</textarea>
 					<div id="' . $name . 'Editor" style="height:300px">' . htmlentities($this->config[$name]) . '</div>
 					<script>
+						londerlandLoadLibrary("ace").then(function () {
 						' . str_replace('-', '', $name) . ' = ace.edit("' . $name . 'Editor");
 						' . str_replace('-', '', $name) . '.session.setMode("' . $mode . '");
 						' . str_replace('-', '', $name) . '.setTheme("ace/theme/idle_fingers");
@@ -401,6 +402,7 @@ trait OptionsFunction
 							$(".' . $name . 'Textarea").val(' . str_replace('-', '', $name) . '.getValue());
 							$(".' . $name . 'Textarea").trigger("change");
                         });
+						});
 					</script>
 					'
 				];

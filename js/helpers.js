@@ -361,3 +361,52 @@ $(document).on('show.bs.tab', function (e) {
 		$(pane).siblings('.tab-pane.active').removeClass('active show');
 	}
 });
+
+// Big libraries that only a few pages use (code editor, e-mail editor, user table, calendar) are not part of the
+// page load; they are fetched the first time a page asks for them. Returns a Promise; later calls reuse it.
+const londerlandLibraries = {
+	ace: { js: ['assets/vendor/ace/ace.js'], css: [] },
+	tinymce: { js: ['assets/vendor/tinymce/tinymce.min.js'], css: [] },
+	tabulator: { js: ['assets/vendor/tabulator/tabulator.min.js'], css: ['assets/vendor/tabulator/tabulator_bootstrap5.min.css'] },
+	fullcalendar: {
+		js: ['assets/vendor/fullcalendar/fullcalendar.global.min.js', 'assets/vendor/fullcalendar/theme-classic.global.js', 'assets/vendor/fullcalendar/locales-all.global.js'],
+		css: ['assets/vendor/fullcalendar/skeleton.css', 'assets/vendor/fullcalendar/theme.css', 'assets/vendor/fullcalendar/palette.css'],
+	},
+};
+const londerlandLibraryLoads = {};
+function londerlandLoadLibrary(name) {
+	if (!londerlandLibraryLoads[name]) {
+		const library = londerlandLibraries[name];
+		// Stylesheets go before the theme stylesheet, where they used to be, so the theme still overrides them
+		const themeStyle = document.getElementById('style');
+		library.css.forEach(function (href) {
+			if (!document.querySelector('link[href="' + href + '"]')) {
+				const link = document.createElement('link');
+				link.rel = 'stylesheet';
+				link.href = href;
+				document.head.insertBefore(link, themeStyle);
+			}
+		});
+		// Scripts one after the other: later files of a library expect the earlier ones
+		londerlandLibraryLoads[name] = library.js.reduce(function (previous, src) {
+			return previous.then(function () {
+				return new Promise(function (resolve, reject) {
+					const script = document.createElement('script');
+					script.src = src;
+					script.onload = resolve;
+					script.onerror = function () {
+						reject(new Error('Could not load ' + src));
+					};
+					document.head.appendChild(script);
+				});
+			});
+		}, Promise.resolve());
+		londerlandLibraryLoads[name].catch(function (error) {
+			// Allow a new try (for example after a network hiccup)
+			delete londerlandLibraryLoads[name];
+			console.error(error);
+		});
+	}
+	return londerlandLibraryLoads[name];
+}
+

@@ -1812,13 +1812,15 @@ $(document).on('click', 'li a[aria-controls="Custom data"]', function() {
         aceEditor.resize();
     }
 
-    jsonEditor = ace.edit("netdataCustomTextAce");
-    jsonEditor.session.setMode("ace/mode/javascript");
-    jsonEditor.setTheme("ace/theme/idle_fingers");
-    jsonEditor.setShowPrintMargin(false);
-    jsonEditor.session.on('change', function(delta) {
-        $('#netdataCustomText').val(jsonEditor.getValue());
-        $('#customize-appearance-form-save').removeClass('hidden');
+    londerlandLoadLibrary('ace').then(function() {
+        jsonEditor = ace.edit("netdataCustomTextAce");
+        jsonEditor.session.setMode("ace/mode/javascript");
+        jsonEditor.setTheme("ace/theme/idle_fingers");
+        jsonEditor.setShowPrintMargin(false);
+        jsonEditor.session.on('change', function(delta) {
+            $('#netdataCustomText').val(jsonEditor.getValue());
+            $('#customize-appearance-form-save').removeClass('hidden');
+        });
     });
 });
 $(document).on('click', '.imageManagerItem', function() {

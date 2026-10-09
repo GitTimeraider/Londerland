@@ -13,9 +13,11 @@ function get_page_homepage($Londerland = null)
 (function () {
     "use strict";
     var calendarElement = document.getElementById("calendar");
-    if (!calendarElement || typeof FullCalendar === "undefined") {
+    if (!calendarElement) {
         return;
     }
+    // FullCalendar is loaded the first time a homepage with a calendar is shown
+    londerlandLoadLibrary("fullcalendar").then(function () {
     // FullCalendar 7 view names for the views stored in Londerland\'s settings
     var calendarViews = { month: "dayGridMonth", basicWeek: "dayGridWeek", basicDay: "dayGridDay", list: "listUpcoming" };
     var dayMaxEvents = ' . (int)$Londerland->config['calendarLimit'] . ';
@@ -56,6 +58,7 @@ function get_page_homepage($Londerland = null)
         height: "auto"
     });
     londerlandCalendar.render();
+    });
 })();
 $(".homepage-loading-box").fadeOut(5000);
 </script>

@@ -80,6 +80,14 @@ const ownFiles = [
 	['css/light.css', 'css/light.min.css'],
 	['css/londerland.css', 'css/londerland.min.css'],
 	['js/custom.js', 'js/custom.min.js'],
+	['js/functions.js', 'js/functions.min.js'],
+	['js/helpers.js', 'js/helpers.min.js'],
+	['js/i18n.js', 'js/i18n.min.js'],
+];
+
+// Vendor files that are only published unminified: [copied file inside assets/vendor, minified output]
+const vendorMinify = [
+	['fullcalendar/fullcalendar.global.js', 'fullcalendar/fullcalendar.global.min.js'],
 ];
 
 rmSync(vendor, { recursive: true, force: true });
@@ -90,6 +98,11 @@ for (const [from, to] of assets) {
 	}
 	mkdirSync(dirname(join(vendor, to)), { recursive: true });
 	cpSync(source, join(vendor, to), { recursive: true });
+}
+
+for (const [from, to] of vendorMinify) {
+	const result = await esbuild.transform(readFileSync(join(vendor, from), 'utf8'), { loader: 'js', minify: true, legalComments: 'inline' });
+	writeFileSync(join(vendor, to), result.code);
 }
 
 for (const [from, to] of ownFiles) {

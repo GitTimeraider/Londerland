@@ -18,6 +18,10 @@ $Londerland = new Londerland(true);
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="application-name" content="<?php echo $Londerland->config['title']; ?>">
     <meta name="apple-mobile-web-app-title" content="<?php echo $Londerland->config['title']; ?>">
+    <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon) -->
+    <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="css/fonts/rubik/files/rubik-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/v4-shims.min.css" rel="stylesheet">
@@ -25,19 +29,16 @@ $Londerland = new Londerland(true);
     <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css" rel="stylesheet">
     <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
     <link href="assets/vendor/metismenu/metisMenu.min.css" rel="stylesheet">
-    <link href="assets/vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="assets/vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
-    <link href="assets/vendor/dropzone/dropzone.css" rel="stylesheet">
-    <link href="assets/vendor/fullcalendar/skeleton.css" rel="stylesheet">
-    <link href="assets/vendor/fullcalendar/theme.css" rel="stylesheet">
-    <link href="assets/vendor/fullcalendar/palette.css" rel="stylesheet">
-    <link href="assets/vendor/pickr/nano.min.css" rel="stylesheet">
-    <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet">
-    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-    <link href="assets/vendor/tabulator/tabulator_bootstrap5.min.css" rel="stylesheet">
+    <!-- Styles of parts that only appear after start-up (tables, pop-ups, uploads, pickers, notifications) load without holding up the first paint -->
+    <link href="assets/vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/magnific-popup/magnific-popup.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/dropzone/dropzone.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/pickr/nano.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
-    <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet">
-    <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet">
+    <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link id="style" href="css/<?php echo (($Londerland->config['style'] ?? '') === 'light') ? 'light' : 'dark'; ?>.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
@@ -182,7 +183,6 @@ $Londerland = new Londerland(true);
 <script src="assets/vendor/js-cookie/js.cookie.min.js"></script>
 <script src="assets/vendor/arrive/arrive.min.js"></script>
 <script src="assets/vendor/vanilla-lazyload/lazyload.min.js"></script>
-<script src="assets/vendor/ace/ace.js"></script>
 <script src="assets/vendor/datatables/dataTables.min.js"></script>
 <script src="assets/vendor/datatables/dataTables.bootstrap5.min.js"></script>
 <script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
@@ -192,21 +192,16 @@ $Londerland = new Londerland(true);
 <script src="assets/vendor/pickr/pickr.min.js"></script>
 <script src="assets/vendor/dropzone/dropzone-min.js"></script>
 <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-<script src="assets/vendor/fullcalendar/fullcalendar.global.js"></script>
-<script src="assets/vendor/fullcalendar/theme-classic.global.js"></script>
-<script src="assets/vendor/fullcalendar/locales-all.global.js"></script>
 <script src="assets/vendor/tom-select/tom-select.complete.min.js"></script>
-<script src="assets/vendor/tinymce/tinymce.min.js"></script>
 <script src="assets/vendor/tinykeys/tinykeys.umd.js"></script>
 <script src="assets/vendor/easy-pie-chart/jquery.easypiechart.min.js"></script>
-<script src="assets/vendor/tabulator/tabulator.min.js"></script>
 <script src="assets/vendor/gaugejs/gauge.min.js"></script>
 <script src="assets/vendor/sortablejs/Sortable.min.js"></script>
 <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js"></script>
 <script src="assets/vendor/pusher-js/pusher.min.js"></script>
-<script src="js/i18n.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/helpers.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/functions.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/custom.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script id="custom-theme-javascript"></script>
 <script id="custom-javascript"></script>
