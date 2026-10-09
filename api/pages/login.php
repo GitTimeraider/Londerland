@@ -72,9 +72,11 @@ if(activeInfo.settings.login.rememberMe){
 								<div class="card-body">
 									<div class="input-group" style="width: 100%;">
 										<div class="input-group-text hidden-xs"><i class="ti-lock"></i></div>
-										<input type="text" class="form-control tfa-input" name="tfaCode" placeholder="Code" data-lpignore="true" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="6" spellcheck="false" autofocus="">
+										<input type="text" class="form-control tfa-input" name="tfaCode" placeholder="Code" data-lpignore="true" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="9" spellcheck="false" autofocus="">
 									</div>
+									<input type="hidden" name="tfaBypassRequest" value="">
 									<button class="btn btn-warning btn-lg w-100 text-uppercase waves-effect waves-light login-button m-t-10" type="submit" lang="en">Login</button>
+									<p class="text-muted m-t-10 m-b-0"><small><span lang="en">Lost your authenticator?</span> <a href="javascript:void(0)" class="tfa-bypass-request text-muted" style="text-decoration: underline" lang="en">Get a one-time code from your admin</a></small></p>
 								</div>
 							</div>
 						</div>
