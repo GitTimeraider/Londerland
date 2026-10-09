@@ -517,6 +517,13 @@ function closeSideMenu() {
 }
 function removeMenuActive() {
   $("#side-menu a").removeClass("active");
+  syncCategoryActive();
+}
+// An open category is highlighted like the open tab: its link gets the theme's .active look
+function syncCategoryActive() {
+  $("#side-menu > li.allGroupsList").each(function () {
+    $(this).children("a").toggleClass("active", $(this).hasClass("mm-active"));
+  });
 }
 function swapDisplay(type, split) {
   let extra = split ? "-right" : "";
@@ -2939,6 +2946,13 @@ function tabProcess(arrayItems) {
     $("#side-menu").metisMenu({
       toggle: activeInfo.settings.misc.autoCollapseCategories,
     });
+    $("#side-menu").on("show.metisMenu hide.metisMenu", function (e) {
+      $(e.target)
+        .parent("li.allGroupsList")
+        .children("a")
+        .toggleClass("active", e.type === "show");
+    });
+    syncCategoryActive();
     getDefault(defaultTabId);
   } else {
     noTabs(arrayItems);
