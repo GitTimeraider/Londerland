@@ -120,6 +120,16 @@
   }
 }
 
+/* the side menu opens 280px wide on hover instead of 240px, leaving room for longer tab and category names;
+   phones (below 768px) keep their 240px slide-in menu */
+@media (min-width: 768px) {
+  .sidebar:hover,
+  .sidebar:hover .sidebar-head,
+  #side-menu li a {
+    width: 280px;
+  }
+}
+
 @media screen and (min-width: 768px) {
   #page-wrapper.sidebar-hidden {
     margin-left: 0;
