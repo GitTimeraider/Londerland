@@ -182,6 +182,13 @@
 }
 #side-menu .fa-fw {
   width: 30px !important;
+  margin-right: 12px;
+}
+/* Image icons fill their whole box, unlike font glyphs, so scale them to the
+   glyph size; the text column stays aligned with font icons */
+#side-menu img.fa-fw {
+  height: 24px;
+  object-fit: contain;
 }
 .sidebar:hover #side-menu .user-pro ul li a {
   padding-left: 30px;
