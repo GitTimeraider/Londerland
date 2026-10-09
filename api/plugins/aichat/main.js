@@ -37,12 +37,16 @@
 		if (plugins['AICHAT-enabled'] !== true || !user.loggedin || isNaN(group) || group >= 999) {
 			return;
 		}
-		// the server checks this too; here it only decides whether the button is shown
+		// the server checks this too; here it only decides whether the button is shown. A group's own switch under
+		// Groups decides; before it was ever saved, the older group list does
+		const access = includes['AICHAT-groupAccess-' + group + '-include'];
 		const groups = String(includes['AICHAT-groups-include'] ?? 'auto').trim();
 		const allowed =
-			groups === 'auto'
-				? group <= parseInt(includes['AICHAT-Auth-include'], 10)
-				: groups.split(',').map((id) => parseInt(id, 10)).includes(group);
+			access !== undefined && access !== ''
+				? access === true || access === 'true' || access === 1 || access === '1'
+				: groups === 'auto'
+					? group <= parseInt(includes['AICHAT-Auth-include'], 10)
+					: groups.split(',').map((id) => parseInt(id, 10)).includes(group);
 		if (!allowed) {
 			return;
 		}
