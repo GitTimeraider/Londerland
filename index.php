@@ -22,6 +22,7 @@ $Londerland = new Londerland(true);
         // Ask for the start-up data now, while the scripts below are still downloading; launch() picks it up
         window.londerlandLaunchRequest = window.fetch ? fetch('api/v2/launch', {credentials: 'same-origin', headers: {'Accept': 'application/json'}}) : null;
     </script>
+	<?php echo $Londerland->startTabPreconnect(); ?>
     <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon) -->
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
