@@ -3032,9 +3032,12 @@ function accountManager(user) {
 						<div class="card card-info m-0">
 							<div class="card-header">
 								<span lang="en">Account Information</span>
-								<div class="btn-group float-end">
-									<button class="btn btn-info waves-effect waves-light" type="button" onclick="updateUserInformation();">
+								<div class="float-end d-flex gap-2">
+									<button class="btn btn-info waves-effect waves-light" type="button" onclick="updateUserInformation();" title="Save">
 										<i class="fa fa-save"></i>
+									</button>
+									<button class="btn btn-outline-light waves-effect waves-light account-area-close" type="button" onclick="$.magnificPopup.close();" title="Close" aria-label="Close">
+										<i class="fa fa-times"></i>
 									</button>
 								</div>
 							</div>
