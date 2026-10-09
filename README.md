@@ -5,36 +5,34 @@ While guided and checked, AI is responsible for half of the coding. Development 
 __________________________________
 
 **Londerland** is a self-hosted web portal you can put on the internet as your own website:
-one address with your own name, logo and look, where visitors see a public front page and members log in
+one address with your own name, logo and look, where visitors see public pages and members log in
 for more. It works just as well as the private start page for your home network, but it is built to feel like a
 website, not like a wall of server tiles.
 
-- **Public when you want it.** Guests (visitors who are not logged in) can get their own front page and their
-  own tabs, so the same address serves a public site for everyone and private pages for members.
+- **Public when you want it.** Guests (visitors who are not logged in) get their own tabs and their own start page,
+  so the same address serves a public site for everyone and private pages for members.
 - **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
-  and favicon, a theme and colurs, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
-- **Pages, not just links.** The front page is built from blocks such as up to eight Custom HTML sections (any HTML you like),
-  a calendar, weather and bookmarks. Tabs show any web page inside the site or open it in a new window.
-- **Members and groups.** Invite members by e-mail; every tab and front page block is shown only to the
-  groups you choose.
+  and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
+- **Pages, not just links.** Every tab shows a web page inside the site, or opens it in a new window, and each group
+  can have its own start tab.
+- **Members and groups.** Invite members by e-mail; every tab is shown only to the groups you choose.
 - **AI Chat** for logged in members, with any OpenAI-compatible server.
 
 ## Features
 
-- **Front page** made of blocks that you order yourself: Custom HTML, calendar (also iCal feeds), weather, bookmarks,
-  health checks, speed test and more, each visible to guests or only to chosen groups.
-- **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, with a start tab per group.
+- **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, sorted into categories,
+  with a start tab per group.
 - **Visitors and members**: guest access, local accounts, invites and e-mail (PHPMailer), groups that decide who sees what,
   login lockout after failed attempts and e-mails about new device logins.
 - **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
-  with optional two-factor authentication.
+  with optional two-factor authentication, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth)
+  using `api/v2/auth`.
+- **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
 - **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
-- **Works on phones and tablets**, and in many languages.
+- **Plugins**: bookmarks, chat, invites, e-mail, health checks and speed test.
+- **Works on phones and tablets.**
 - **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
-- **Integrations** if you also run it at home: live front page blocks for apps such as Plex, Jellyfin, Sonarr, Radarr,
-  qBittorrent or Pi-hole, single sign-on for supported apps, and reverse proxy authentication
-  (Nginx `auth_request`, Traefik/Caddy forward auth) using `api/v2/auth`.
 
 ## Using it as a public website
 
@@ -42,9 +40,8 @@ website, not like a wall of server tiles.
 2. Put it behind a reverse proxy with HTTPS (for example Nginx Proxy Manager, Caddy or Traefik) and point your domain at it.
    Do not expose the container's port to the internet without HTTPS.
 3. In Londerland, open **Settings > Customize** and set the title, description, logo, favicon, theme and login page.
-4. Add front page blocks under **Settings > Homepage Items** (for example **Custom HTML** for your own text and layout)
-   and set who may see each block to **Guest** for the public part.
-5. For tabs visitors should see, set the group under **Settings > Tab Editor** to **Guest**. Everything else stays for members only.
+4. Add the pages visitors should see as tabs under **Settings > Tab Editor** and set their group to **Guest**.
+   Mark one of them as the default tab: that is the page visitors land on. Everything else stays for members only.
 
 ## Install with Docker
 
@@ -128,7 +125,7 @@ for example `/var/www/html/data/db/`, so the database is kept when the container
 | `--security-opt` / `security_opt:` | `no-new-privileges:true` | Stops processes in the container from gaining extra rights. Works with and without `--user`. |
 | `--cap-drop` / `cap_drop:` | `ALL` | Removes all Linux capabilities. Works as it is with `--user`; as root, add back the four listed below. |
 | `-p` / `ports:` | `8080:80` | `<port on your machine>:<port in the container>`. |
-| `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
+| `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
 | `-e LONDERLAND_PORT` | `8080` | The port Londerland listens on **inside** the container (default `80`). Only needed with `--network host`, rootless Docker or Docker older than 20.10; then also change the right side of `-p`. |
 | `-e LONDERLAND_LOGIN_ALLOWED_IPS` | `192.168.1.0/24,10.8.0.0/24` | Only these IPs and subnets (IPv4 or IPv6, comma separated) may log in. See [Login only from your own networks](#login-only-from-your-own-networks). Not set = login from anywhere. |
 | `-e LONDERLAND_TRUSTED_PROXIES` | `172.18.0.0/16` | Your reverse proxy's IP or subnet. Only from these addresses is the `X-Forwarded-For` header believed. |

@@ -131,6 +131,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.3';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -504,6 +512,9 @@ trait UpgradeFunctions
 			case '2.2.2':
 				$this->removeOIDCFromAuthService();
 				break;
+			case '2.2.3':
+				$this->removeHomepage();
+				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
 		$this->setAPIResponse('success', 'Ran update function for version: ' . $version, 200);
@@ -512,6 +523,26 @@ trait UpgradeFunctions
 
 	// OIDC logins used to write "oidc::<provider>" into auth_service, the column that holds the 2FA setting,
 	// so password logins of those accounts asked for a 2FA code that never existed
+	// The homepage was removed: drop its tab (so the menu does not link to a page that no longer exists)
+	// and the settings of the homepage items and their app connections from config.php
+	public function removeHomepage()
+	{
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['DELETE FROM tabs WHERE url = %s', 'api/v2/page/homepage']
+		]]);
+		$defaults = $this->loadConfig($this->defaultConfigPath);
+		$pattern = '/homepage|calendar|sonarr|radarr|lidarr|sabnzbd|nzbget|qbit|torrent|deluge|pihole|adguard|unifi|netdata|octoprint|weather|jackett|prowlarr|tmdb|trakt|monitorr|uptime|prompage|speedtest|jellystat|donate|youtube|couchpotato|sickrage|jdownloader|transmission|customhtml|mediasearch|requestservice|watchstats|socks|^(ombi|overseerr)Refresh$/i';
+		$remove = array_filter(array_keys($this->config), function ($key) use ($defaults, $pattern) {
+			// plugin settings (PREFIX-name) are not part of the defaults and stay
+			return !array_key_exists($key, $defaults) && strpos($key, '-') === false && preg_match($pattern, $key);
+		});
+		if ($remove) {
+			$this->removeConfigItem(array_values($remove));
+		}
+		$this->setLoggerChannel('Upgrade')->info('Removed the Homepage tab and ' . count($remove) . ' homepage settings');
+	}
+
 	public function removeOIDCFromAuthService()
 	{
 		$this->processQueries([[

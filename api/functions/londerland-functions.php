@@ -419,115 +419,6 @@ trait LonderlandFunctions
 		return ($buttons !== '') ? $buttons : $emptyButtons;
 	}
 
-	public function getHomepageMediaImage()
-	{
-		$refresh = false;
-		$cacheDirectory = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
-		if (!file_exists($cacheDirectory)) {
-			mkdir($cacheDirectory, 0777, true);
-		}
-		@$image_url = $_GET['img'];
-		@$key = $_GET['key'];
-		@$image_height = $_GET['height'];
-		@$image_width = $_GET['width'];
-		@$source = $_GET['source'];
-		@$itemType = $_GET['type'];
-		if (strpos($key, '$') !== false) {
-			$key = explode('$', $key)[0];
-			$refresh = true;
-		}
-		switch ($source) {
-			case 'plex':
-				$plexAddress = $this->qualifyURL($this->config['plexURL']);
-				$image_src = $plexAddress . '/photo/:/transcode?height=' . $image_height . '&width=' . $image_width . '&upscale=1&url=' . $image_url . '&X-Plex-Token=' . $this->config['plexToken'];
-				break;
-			case 'emby':
-				$embyAddress = $this->qualifyURL($this->config['embyURL']);
-				$imgParams = array();
-				if (isset($_GET['height'])) {
-					$imgParams['height'] = 'maxHeight=' . $_GET['height'];
-				}
-				if (isset($_GET['width'])) {
-					$imgParams['width'] = 'maxWidth=' . $_GET['width'];
-				}
-				$image_src = $embyAddress . '/Items/' . $image_url . '/Images/' . $itemType . '?' . implode('&', $imgParams);
-				break;
-			case 'jellyfin':
-				$jellyfinAddress = $this->qualifyURL($this->config['jellyfinURL']);
-				$imgParams = array();
-				if (isset($_GET['height'])) {
-					$imgParams['height'] = 'maxHeight=' . $_GET['height'];
-				}
-				if (isset($_GET['width'])) {
-					$imgParams['width'] = 'maxWidth=' . $_GET['width'];
-				}
-				$image_src = $jellyfinAddress . '/Items/' . $image_url . '/Images/' . $itemType . '?' . implode('&', $imgParams);
-				break;
-			default:
-				# code...
-				break;
-		}
-		if (strpos($key, '-') !== false) {
-			$noImage = 'no-' . explode('-', $key)[1] . '.png';
-		} else {
-			$noImage = 'no-np.png';
-		}
-		$noImage = $this->root . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'homepage' . DIRECTORY_SEPARATOR . $noImage;
-		if (isset($image_url) && isset($image_height) && isset($image_width) && isset($image_src)) {
-			$cachefile = $cacheDirectory . $key . '.jpg';
-			$cachetime = 604800;
-			// Serve from the cache if it is younger than $cachetime
-			if (file_exists($cachefile) && (time() - $cachetime < filemtime($cachefile)) && $refresh == false) {
-				header('Content-type: image/jpeg');
-				if (filesize($cachefile) > 0) {
-					@readfile($cachefile);
-				} else {
-					@readfile($noImage);
-				}
-				exit;
-			}
-			$options = array('verify' => false);
-			$response = \WpOrg\Requests\Requests::get($image_src, array(), $options);
-			if ($response->success) {
-				ob_start(); // Start the output buffer
-				header('Content-type: image/jpeg');
-				echo $response->body;
-				// Cache the output to a file
-				$fp = fopen($cachefile, 'wb');
-				fwrite($fp, ob_get_contents());
-				fclose($fp);
-				ob_end_flush(); // Send the output to the browser
-				die();
-			} else {
-				header('Content-type: image/jpeg');
-				@readfile($noImage);
-			}
-		} else {
-			header('Content-type: image/jpeg');
-			@readfile($noImage);
-		}
-	}
-
-	public function cacheImage($url, $name, $extension = 'jpg')
-	{
-		$cacheDirectory = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
-		if (!file_exists($cacheDirectory)) {
-			mkdir($cacheDirectory, 0777, true);
-		}
-		$cacheFile = $cacheDirectory . $name . '.' . $extension;
-		$cacheTime = 604800;
-		$ctx = stream_context_create(array(
-			'http' => array(
-				'timeout' => 5,
-				'protocol_version' => 1.1,
-				'header' => 'Connection: close'
-			)
-		));
-		if ((file_exists($cacheFile) && (time() - $cacheTime) > filemtime($cacheFile)) || !file_exists($cacheFile)) {
-			@copy($url, $cacheFile, $ctx);
-		}
-	}
-
 	public function checkFrame($array, $url)
 	{
 		if (array_key_exists("x-frame-options", $array)) {
@@ -810,11 +701,6 @@ trait LonderlandFunctions
 				$timeout = $timeout / 1000;
 			}
 			$options = array_merge($options, array('timeout' => $timeout));
-		}
-		if ($customCertificate) {
-			if ($this->hasCustomCert()) {
-				$options = array_merge($options, array('verify' => $this->getCustomCert(), 'verifyname' => false));
-			}
 		}
 		if ($this->localURL($url, $override)) {
 			$options = array_merge($options, array('verify' => false, 'verifyname' => false));

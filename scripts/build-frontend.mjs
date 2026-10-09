@@ -43,22 +43,12 @@ const assets = [
 	['@simonwep/pickr/dist/themes/nano.min.css', 'pickr/nano.min.css'],
 	['dropzone/dist/dropzone-min.js', 'dropzone/dropzone-min.js'],
 	['dropzone/dist/dropzone.css', 'dropzone/dropzone.css'],
-	['swiper/swiper-bundle.min.js', 'swiper/swiper-bundle.min.js'],
-	['swiper/swiper-bundle.min.css', 'swiper/swiper-bundle.min.css'],
-	['fullcalendar/all/global.js', 'fullcalendar/fullcalendar.global.js'],
-	['fullcalendar/skeleton.css', 'fullcalendar/skeleton.css'],
-	['fullcalendar/themes/classic/global.js', 'fullcalendar/theme-classic.global.js'],
-	['fullcalendar/themes/classic/theme.css', 'fullcalendar/theme.css'],
-	['fullcalendar/themes/classic/palette.css', 'fullcalendar/palette.css'],
-	['fullcalendar/locales-all/global.js', 'fullcalendar/locales-all.global.js'],
 	['tom-select/dist/js/tom-select.complete.min.js', 'tom-select/tom-select.complete.min.js'],
 	['tom-select/dist/css/tom-select.bootstrap5.min.css', 'tom-select/tom-select.bootstrap5.min.css'],
 	['tinymce', 'tinymce'],
 	['tinykeys/dist/tinykeys.umd.js', 'tinykeys/tinykeys.umd.js'],
-	['easy-pie-chart/dist/jquery.easypiechart.min.js', 'easy-pie-chart/jquery.easypiechart.min.js'],
 	['tabulator-tables/dist/js/tabulator.min.js', 'tabulator/tabulator.min.js'],
 	['tabulator-tables/dist/css/tabulator_bootstrap5.min.css', 'tabulator/tabulator_bootstrap5.min.css'],
-	['gaugeJS/dist/gauge.min.js', 'gaugejs/gauge.min.js'],
 	['sortablejs/Sortable.min.js', 'sortablejs/Sortable.min.js'],
 	['overlayscrollbars/browser/overlayscrollbars.browser.es6.min.js', 'overlayscrollbars/overlayscrollbars.browser.es6.min.js'],
 	['overlayscrollbars/styles/overlayscrollbars.min.css', 'overlayscrollbars/overlayscrollbars.min.css'],
@@ -80,7 +70,11 @@ const ownFiles = [
 	['css/light.css', 'css/light.min.css'],
 	['css/londerland.css', 'css/londerland.min.css'],
 	['js/custom.js', 'js/custom.min.js'],
+	['js/functions.js', 'js/functions.min.js'],
+	['js/helpers.js', 'js/helpers.min.js'],
+	['js/i18n.js', 'js/i18n.min.js'],
 ];
+
 
 rmSync(vendor, { recursive: true, force: true });
 for (const [from, to] of assets) {

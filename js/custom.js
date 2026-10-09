@@ -277,36 +277,6 @@ $(document).on("click", ".show-login", function(e) {
 $(document).on("click", ".depenency-item", function(e) {
     alert($(this).attr('data-name'));
 });
-function doneTypingMediaSearch () {
-    var mediaSearchQuery = $('#mediaSearchQuery');
-    var query = mediaSearchQuery.val();
-    var server = mediaSearchQuery.attr('data-server');
-    if(query == '' || query == ' '){
-        return false;
-    }
-    switch (server) {
-        case 'plex':
-            var action = 'getPlexSearch';
-            break;
-        case 'emby':
-            var action = 'getEmbySearch';
-            break;
-        default:
-    }
-    londerlandAPI2('GET','api/v2/homepage/'+server+'/search/' + query).done(function(data) {
-	    try {
-		    let response = data.response;
-		    $('.mediaSearch-div').html(buildMediaResults(response.data,server,query));
-		    if(browserInfo.mobile !== true){
-			    $('.resultBox-inside').css({ height: '100%', 'overflow-y': 'auto' });
-		    }
-	    }catch(e) {
-		    londerlandCatchError(e,data);
-	    }
-    }).fail(function(xhr) {
-	    LonderlandApiError(xhr, 'API Error');
-    })
-}
 // 2FA step: ask for a one-time bypass code; the server writes it to the container log for the admin
 $(document).on("click", ".tfa-bypass-request", function(e) {
     e.preventDefault();
@@ -1258,78 +1228,10 @@ $(document).on("click", ".testPath", function () {
         });
     }
 });
-$(document).on({
-    mouseenter: function () {
-        $(this).find('.progress').toggleClass('progress-lg');
-        $(this).find('.progress').find('span').toggleClass('hidden');
-        $(this).find('.white-box').toggleClass('nowPlayingHover');
-    },
-    mouseleave: function () {
-        $(this).find('.progress').toggleClass('progress-lg');
-        $(this).find('.progress').find('span').toggleClass('hidden');
-        $(this).find('.white-box').toggleClass('nowPlayingHover');
-    }
-}, '.nowPlayingItem');
 // recent filter
-$(document).on("click", ".recent-filter li>a", function () {
-    var filter = $(this).attr('data-filter');
-    var type = $(this).attr('server-filter'); //plex or emby
-    //console.log(filter);
-    if(filter == 'all'){
-        $('.'+type+'-recent').find('.recent-item').parent().removeClass('hidden');
-    }else{
-        $('.'+type+'-recent').find('.recent-item').parent().removeClass('hidden');
-        $('.'+type+'-recent').find('.recent-item:not(.'+ filter + ')').parent().addClass('hidden');
-    }
-    refreshCarousel('.'+type+'-recent');
-});
 // request search filter
-$(document).on("click", ".filter-request-result", function () {
-    var filter = $(this).attr('data-filter');
-    if(filter == 'request-result-all'){
-        $('.request-result-item').removeClass('hidden');
-    }else{
-        $('.request-result-item').addClass('hidden');
-        $('.'+filter).removeClass('hidden');
-    }
-});
 //playlist filter
-$(document).on("click", ".playlist-filter li>a", function () {
-    var filter = $(this).attr('data-filter');
-    var button = $(this).attr('data-filter')+'-playlist';
-    var title = decodeURI($(this).attr('data-title'));
-    var type = $(this).attr('server-filter'); //plex or emby
-    $('.'+type+'-playlistTitle').html(title);
-    $('.'+type+'-playlist').addClass('hidden');
-    $('.'+filter+'-playlist').removeClass('hidden');
-    $('.playlist-next').attr('onclick','carouselChange(\''+button+'\',\'next\');');
-    $('.playlist-previous').attr('onclick','carouselChange(\''+button+'\',\'previous\');');
-
-});
 // refresh cache image
-$(document).on("click", ".refreshImage", function(e) {
-    message('',' Refreshing Image...',activeInfo.settings.notifications.position,'#FFF','success','1000');
-    e.preventDefault;
-    var original = $(this).attr('data-image');
-    var type = $(this).attr('data-type');
-    switch (type) {
-        case 'nowPlaying':
-            var orginalElement = $(this).parent().parent().parent().parent().find('.imageSource');
-            orginalElement.attr('src', original);
-            break;
-        case 'recent-item':
-            var orginalElementAlt = $(this).parent().parent().parent().find('.imageSourceAlt');
-            var orginalElement = $(this).parent().parent().parent().parent().find('.imageSource');
-            orginalElement.attr('style', 'background-image: url("'+original+'");');
-            orginalElementAlt.attr('src', original);
-            break;
-        default:
-
-    }
-    setTimeout(function(){
-        message('Image Refreshed ',' Clear Cache Please',activeInfo.settings.notifications.position,'#FFF','success','3000');
-    }, 1000);
-});
 // open tab code
 $(document).on("click", ".openTab", function(e) {
     if($(this).attr("data-open-tab") === "true") {
@@ -1350,94 +1252,8 @@ $(document).on("click", ".openTab", function(e) {
     $.magnificPopup.close();
 });
 //request click
-$(document).on("click", ".request-item", function(e) {
-    var target = $(this).attr('data-target');
-    $('#link-'+target).trigger('click');
-});
 // metadata start
-$(document).on("click", ".metadata-get", function(e) {
-    if($(e.target).hasClass('mdi-refresh')) return;
-    $("#preloader").fadeIn();
-    var key = $(this).attr('data-key');
-    var uid = $(this).attr('data-uid');
-    var source = $(this).attr('data-source');
-    switch (source) {
-        case 'plex':
-            var action = 'getPlexMetadata';
-            break;
-        case 'emby':
-        case 'jellyfin':
-            var action = 'getEmbyMetadata';
-            break;
-        case 'jellystat':
-            var action = 'getJellyStatMetadata';
-            break;
-        default:
-
-    }
-    ajaxloader(".content-wrap","in");
-    londerlandAPI2('POST','api/v2/homepage/'+source+'/metadata',{key:key}).done(function(data) {
-        let response = data.response;
-        // Determine effective source for icon/button (e.g., emby/jellyfin) when coming from jellystat
-        let effectiveSource = source;
-        try {
-            if (source === 'jellystat' && response && response.data && response.data.content && response.data.content[0]) {
-                const c = response.data.content[0];
-                if (c.tabName) {
-                    const name = String(c.tabName).toLowerCase();
-                    if (name.indexOf('emby') !== -1) {
-                        effectiveSource = 'emby';
-                    } else if (name.indexOf('jellyfin') !== -1) {
-                        effectiveSource = 'jellyfin';
-                    }
-                }
-                // Fallback inference from address if tabName did not resolve
-                if ((effectiveSource === 'jellystat' || effectiveSource === source) && c.address) {
-                    const addr = String(c.address).toLowerCase();
-                    if (addr.indexOf('jellyfin') !== -1) {
-                        effectiveSource = 'jellyfin';
-                    } else if (addr.indexOf('emby') !== -1) {
-                        effectiveSource = 'emby';
-                    }
-                }
-            }
-        } catch (e) { /* no-op */ }
-        $('.'+uid+'-metadata-info').html('');
-        $('.'+uid+'-metadata-info').html(buildMetadata(response.data, effectiveSource));
-        $('.'+uid).trigger('click');
-        initCarousel(".metadata-actors", { autoplay: true });
-	    ajaxloader();
-	    $("#preloader").fadeOut();
-    }).fail(function(xhr) {
-	    LonderlandApiError(xhr, 'API Error');
-	    ajaxloader();
-	    $("#preloader").fadeOut();
-    });
-
-
-});
 // sab play/resume
-$(document).on("click", ".downloader", function(e) {
-	$(this).find('i').attr('class', 'fa fa-spin fa-circle-o-notch');
-	let action = $(this).attr('data-action');
-	let source = $(this).attr('data-source');
-	let target = $(this).attr('data-target');
-	let api = null;
-	switch (source){
-		case 'sabnzbd':
-			api = 'api/v2/homepage/sabnzbd/queue/' + action;
-			break;
-		default:
-			return false;
-	}
-	messageSingle('Sending command to downloader', '', activeInfo.settings.notifications.position, '#FFF', 'info', '2500');
-    londerlandAPI2('POST',api,{target:target}).done(function(data) {
-        homepageDownloader(source);
-	    messageSingle('Successful', '', activeInfo.settings.notifications.position, '#FFF', 'success', '2500');
-    }).fail(function(xhr) {
-	    LonderlandApiError(xhr, 'API Error');
-    });
-});
 // test tab
 $(document).on("click", ".testTab", function () {
     var input = $('#new-tab-form-inputURLNew');
@@ -1570,53 +1386,7 @@ $(document).on("click", ".emailUser", function () {
     }
 });
 // calendar popups
-$(document).on('click', "a[class*=ID-]", function(){
-    //$("#preloader").fadeIn();
-    var details = $(this).attr('data-details');
-    var target = $(this).attr('data-target')+'-metadata-info';
-    var json = JSON.parse(details);
-    $('.'+target).html(buildCalendarMetadata(json));
-    //$("#preloader").fadeOut();
-    myLazyLoad.update();
-});
 // request filter
-$(document).on("change", ".filter-request-input", function () {
-    $('.request-item').parent().removeClass('hidden');
-    var filterArray = [];
-    $('.filter-request-input').each(function () {
-        var value = $(this).prop('checked');
-        var filter = $(this).attr('data-filter');
-        if(value == false){
-            filterArray.push('.'+filter);
-        }
-    });
-    $('.request-item').each(function () {
-        var element = $(this);
-        var string = filterArray.join(', ');
-        if(element.is(string)){
-            element.parent().addClass('hidden');
-        }
-    });
-    refreshCarousel('.request-items');
-});
-//search ombi
-var typingTimer;
-//on keyup, start the countdown
-$(document).on('keyup', '#request-input', function () {
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(doneTyping, 750);
-});
-$(document).on('keyup', '#mediaSearchQuery', function () {
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(doneTypingMediaSearch, 750);
-});
-//on keydown, clear the countdown
-$(document).on('keydown', '#request-input', function () {
-  clearTimeout(typingTimer);
-});
-$(document).on('keydown', '#mediaSearchQuery', function () {
-  clearTimeout(typingTimer);
-});
 $(document).on('keydown', 'body', function () {
     blockDev();
 });
@@ -1653,7 +1423,6 @@ tinykeys.tinykeys(window, {
     'r r': shortcut(function() { reloadCurrentTab() }),
     'c c': shortcut(function(event) { closeCurrentTab(event) }),
     's s': shortcut(function() { openSettings() }),
-    'h h': shortcut(function() { openHomepage() }),
     'f f': shortcut(function() { toggleFullScreen() }),
     'd d': shortcut(function() { toggleDebug() }),
     'Escape': shortcut(function() {
@@ -1672,11 +1441,6 @@ tinykeys.tinykeys(window, {
         var nextTab = getCurrentTab.next().children();
         nextTab.trigger("click");
     }),
-});
-$(document).on('change', "#choose-calender-filter, #choose-calender-filter-status", function (e) {
-    filter = $('#choose-calender-filter').val();
-    filterDownload = $('#choose-calender-filter-status').val();
-    applyCalendarFilter();
 });
 $(document).on('keyup', "#debug-input", function(e  ){
 	console.log(this);
@@ -1748,12 +1512,6 @@ $(document).on("keyup", "#authBackendHostPrefix-input, #authBackendHostSuffix-in
     $('#accountDN').html(newDN);
 });
 
-// homepage healthchecks
-$(document).on('click', ".showMoreHealth", function(){
-   var id = $(this).attr('data-id');
-    $('.showMoreHealthDiv-'+id).toggleClass('d-none');
-    $(this).find('.card-body').toggleClass('healthPosition');
-});
 //IP INFO
 $(document).on('click', ".ipInfo", function(){
 	londerlandAPI2('GET','api/v2/ip/'+$(this).text()).done(function(data) {
@@ -1803,68 +1561,11 @@ $(document).on('click', ".ipInfo", function(){
 $(document).on('click', '.allGroupsList', function() {
     //$(this).toggleClass('active');
 });
-// Control init of custom netdata JSON editor
-$(document).on('click', 'li a[aria-controls="Custom data"]', function() {
-    var resizeEditor = function(jsonEditor) {
-        const aceEditor = jsonEditor;
-        const newHeight = aceEditor.getSession().getScreenLength() * (aceEditor.renderer.lineHeight + aceEditor.renderer.scrollBar.getWidth());
-        aceEditor.container.style.height = newHeight + 'px';
-        aceEditor.resize();
-    }
-
-    jsonEditor = ace.edit("netdataCustomTextAce");
-    jsonEditor.session.setMode("ace/mode/javascript");
-    jsonEditor.setTheme("ace/theme/idle_fingers");
-    jsonEditor.setShowPrintMargin(false);
-    jsonEditor.session.on('change', function(delta) {
-        $('#netdataCustomText').val(jsonEditor.getValue());
-        $('#customize-appearance-form-save').removeClass('hidden');
-    });
-});
 $(document).on('click', '.imageManagerItem', function() {
 	createImageSwal($(this));
 });
 
-$(document).on('click', '.close-editHomepageItemDiv',function () {
-	//$('body').removeAttr('style');
-	//$('html').removeAttr('style');
-	closeHomepageItemModal()
-})
-
 // Trakt image fix
-$(document).on('click', '.get-tmdb-image', function() {
-	let target = $(this).attr('data-target');
-	let type = $(this).hasClass('tmdb-tv') ? 'tv' : 'movie';
-	let classList = $(this).attr('class');
-	checkMetadataDiv(target,type,classList);
-});
-
-function checkMetadataDiv(target,type,classList){
-	let classArray = classList.split(/\s+/);
-	$(classArray).each(function (i,v) {
-		if(v.includes('--')){
-			let getId = v.split('--');
-			getTmdbImages(getId[1], type).done(function(data) {
-				try {
-					let response = data;
-					let bg = 'https://image.tmdb.org/t/p/w1280';
-					if(typeof response.backdrops !== 'undefined'){
-						bg = bg + response.backdrops[0]['file_path'];
-						$('.' + target + '-metadata-info .user-bg').css('background-image' , '');
-						setTimeout(function(){
-							$('.' + target + '-metadata-info .user-bg').css('background-image' , 'url('+bg+')');
-						}, 25);
-					}
-				}catch(e) {
-					console.log('tmdb Error');
-				}
-			}).fail(function(xhr) {
-				console.log('tmdb Error');
-			});
-		}
-	});
-}
-
 // Plugins settings bind
 $(document).on('click', '[id$=-settings-button]', function() {
 	let el = $(this)[0];
@@ -1902,32 +1603,6 @@ $(document).on('click', '.nav-non-mobile li a', function() {
 	let menu = $(this).parent().parent().attr('data-dropdown');
 	$('.' + menu).val('#' + id);
 
-});
-
-// TOGGLE OVERSEERR ALL SEASONS
-$(document).on("change", ".select-all-overseerr-seasons", function () {
-	var enabled = $(this).prop("checked") ? 1 : 0;
-	$.each($('.overseerr-season'), function(i,v) {
-		let seasonEnabled = $(v).prop("checked") ? 1 : 0;
-		if(enabled !== seasonEnabled){
-			$(v).trigger('click');
-		}
-	});
-});
-
-$(document).on("change", ".overseerr-season", function () {
-	let enableButtonDisabled = true;
-	let requestedSeasons = [];
-	$.each($('.overseerr-season'), function(i,v) {
-		let seasonEnabled = $(v).prop("checked") ? 1 : 0;
-		if(seasonEnabled){
-			let seasonNumber = $(v).attr('data-seasonNumber');
-			requestedSeasons.push(seasonNumber);
-			enableButtonDisabled = false;
-		}
-	});
-	$('.submit-overseerr-seasons').attr('disabled', enableButtonDisabled);
-	$('.submit-overseerr-seasons').attr('data-seasons', requestedSeasons);
 });
 
 // Toggle Side Menu
@@ -1980,42 +1655,3 @@ $(document).on('click', '.test-folder', function() {
     testAPIConnection('folder',{'folder':folder});
 });
 
-// Toggle Homepage Donation History
-$(document).on('click', '.toggle-donation-history', function() {
-    let status = $(this).attr('data-status');
-    if(status === 'hidden'){
-        $(this).attr('data-status', 'show');
-        $('.donation-history').removeClass('hidden');
-        let info = '';
-        let el = $(this);
-        el.find('i').toggleClass('fa-lg fa-spin ti-reload');
-        londerlandAPI2('GET','api/v2/homepage/donate').done(function(data) {
-            try {
-                let response = data.response;
-                if(response.data){
-                    $.each(response.data, function(i,v) {
-                        let m = moment.tz(v.date, activeInfo.timezone);
-                        v.date = moment(m).format('LLL');
-                        let user = activeInfo.user.groupID  == 0 ? '&nbsp; <code>'+v.email+'</code>' : '';
-                        info += '<li><div class="bg-primary"><i class="fa fa-usd text-white"></i></div> '+v.date+user+'<span class="text-muted">$'+v.amount+'</span></li>'
-                    })
-                    info = '<ul class="feeds fc-scroller" style="height: 250px">' + info + '</ul>';
-                }else{
-                    info = 'No history...';
-                }
-            }catch(e) {
-                info = 'An error occurred';
-                londerlandCatchError(e,data);
-            }
-            let html = '<div class="white-box"><h3 class="box-title" lang="en">Recent Donations</h3>'+info+'</div>';
-            $('.donation-history').html(html);
-            el.find('i').toggleClass('fa-lg fa-spin ti-reload');
-        }).fail(function(xhr) {
-            LonderlandApiError(xhr, 'API Error');
-            el.find('i').toggleClass('fa-lg fa-spin ti-reload');
-        })
-    }else{
-        $(this).attr('data-status', 'hidden');
-        $('.donation-history').addClass('hidden');
-    }
-});
