@@ -187,6 +187,24 @@ Do not put the proxy's address in `LONDERLAND_LOGIN_ALLOWED_IPS`, as that would 
 After changing these variables, recreate the container: `docker compose up -d` (Compose) or `docker rm -f londerland` and the
 `docker run` command again.
 
+### OIDC is down while Auto-Redirect to OIDC is on
+
+With **Auto-Redirect to OIDC** turned on, the login page sends everyone straight to your OIDC provider (Authentik, Keycloak, ...).
+If that provider is down, nobody can reach the username/password form that way. People who are already logged in stay logged in.
+Two ways back in:
+
+1. **Add `#noredirect` to the address**, for example `https://your-site/#noredirect`. The login page then shows the normal
+   username/password form. This works best when guests have no tabs: otherwise Londerland opens the first guest tab and
+   replaces `#noredirect` in the address, so open the login right away or use option 2.
+2. **Turn the redirect off on the server** (always works). On the Docker host, run:
+
+   ```bash
+   docker exec londerland sed -i "s/'oidcAutoRedirect' => true/'oidcAutoRedirect' => false/" /var/www/html/data/config/config.php
+   ```
+
+   Reload the login page; no restart is needed. When OIDC works again, turn it back on under
+   **Settings > System Settings > SSO > OIDC Global > Auto-Redirect to OIDC**.
+
 ### Lost authenticator (2FA bypass code)
 
 If a user with two-factor authentication (Google Authenticator) loses their authenticator, they log in with their username and
