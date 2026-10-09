@@ -33,6 +33,10 @@ return [
 	'buttonTextColor' => '',
 	'buttonHoverColor' => '',
 	'buttonTextHoverColor' => '',
+	// Settings > Customize > Appearance > Fonts
+	'menuFont' => 'rubik',
+	'menuFontWeight' => 'regular',
+	'menuFontScope' => 'menu',
 	'lockScreen' => false,
 	'theme' => 'Londerland',
 	'style' => 'dark',

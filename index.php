@@ -51,6 +51,7 @@ $Londerland = new Londerland(true);
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
 	<?php echo $Londerland->setTheme(); ?>
+	<?php echo $Londerland->fontCSS(); ?>
     <style id="user-appearance"></style>
     <style id="custom-theme-css"></style>
     <style id="custom-css"></style>
