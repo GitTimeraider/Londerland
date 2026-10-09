@@ -2155,6 +2155,11 @@ class Londerland
 				$this->settingsOption('switch', 'autoExpandNavBar', ['label' => 'Auto-Expand Nav Bar']),
 				$this->settingsOption('select', 'unsortedTabs', ['label' => 'Unsorted Tab Placement', 'options' => [['name' => 'Top', 'value' => 'top'], ['name' => 'Bottom', 'value' => 'bottom']]]),
 			],
+			'Fonts' => [
+				$this->settingsOption('select', 'menuFont', ['label' => 'Font', 'help' => 'Rubik is bundled with Londerland, the others use fonts already installed on the device, so none of them add loading time. Reload the page after saving', 'options' => [['name' => 'Rubik (default)', 'value' => 'rubik'], ['name' => 'System Default', 'value' => 'system'], ['name' => 'Arial / Helvetica', 'value' => 'arial'], ['name' => 'Verdana', 'value' => 'verdana'], ['name' => 'Tahoma', 'value' => 'tahoma']]]),
+				$this->settingsOption('select', 'menuFontWeight', ['label' => 'Font Thickness', 'options' => [['name' => 'Light (original)', 'value' => 'light'], ['name' => 'Regular', 'value' => 'regular'], ['name' => 'Medium', 'value' => 'medium'], ['name' => 'Bold', 'value' => 'bold']]]),
+				$this->settingsOption('select', 'menuFontScope', ['label' => 'Apply To', 'options' => [['name' => 'Side Menu & Top Bar Title', 'value' => 'menu'], ['name' => 'Entire Interface', 'value' => 'all']]]),
+			],
 			'Login Page' => [
 				$this->settingsOption('input', 'loginLogo', ['label' => 'Login Logo URL']),
 				$this->settingsOption('multiple-url', 'loginWallpaper', ['label' => 'Login Wallpaper URL', 'help' => 'You may enter multiple URL\'s']),
@@ -2296,6 +2301,35 @@ class Londerland
 			return '<img alt="home" class="' . $class . '" src="' . htmlspecialchars($this->config['logo'] ?? '', ENT_QUOTES) . '">';
 		}
 		return htmlspecialchars($this->config['title'] ?? '', ENT_QUOTES);
+	}
+
+	// Font and thickness from Settings > Customize > Appearance > Fonts, written into <head> by index.php so the
+	// side menu and the title show in it on the first paint. Rubik is a variable font (300-900) that is already
+	// loaded, the others are fonts installed on the device, so no option downloads anything extra.
+	public function fontCSS()
+	{
+		if (!$this->hasConfig()) {
+			return '';
+		}
+		$families = [
+			'system' => 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+			'arial' => 'Arial, Helvetica, sans-serif',
+			'verdana' => 'Verdana, Geneva, sans-serif',
+			'tahoma' => 'Tahoma, "DejaVu Sans", Verdana, sans-serif',
+		];
+		$weights = ['regular' => 400, 'medium' => 500, 'bold' => 600];
+		$family = $families[$this->config['menuFont'] ?? ''] ?? null;
+		$weight = $weights[$this->config['menuFontWeight'] ?? ''] ?? null;
+		if (!$family && !$weight) {
+			return '';
+		}
+		$rules = ($family ? 'font-family: ' . $family . ';' : '') . ($weight ? 'font-weight: ' . $weight . ';' : '');
+		$css = '#side-menu li a, .sidebar .sidebar-head h3, #main-logo, #side-logo {' . $rules . '}';
+		if (($this->config['menuFontScope'] ?? '') === 'all') {
+			$css .= ':root {' . ($family ? '--bs-body-font-family: ' . $family . ';' : '') . ($weight ? '--bs-body-font-weight: ' . $weight . ';' : '') . '}';
+			$css .= 'body, h1, h2, h3, h4, h5, h6, button, input, select, textarea {' . $rules . '}';
+		}
+		return '<style id="font-appearance">' . $css . '</style>';
 	}
 
 	public function loadAppearance()
