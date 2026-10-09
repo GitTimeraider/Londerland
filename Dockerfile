@@ -1,9 +1,8 @@
-# syntax=docker/dockerfile:1
 
 # ---------------------------------------------------------------------------
 # Stage 1: install PHP dependencies from composer.lock
 # ---------------------------------------------------------------------------
-FROM composer:2.10 AS vendor
+FROM public.ecr.aws/docker/library/composer:2.10 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
@@ -19,7 +18,7 @@ RUN composer install \
 # ---------------------------------------------------------------------------
 # Stage 2: frontend libraries (package-lock.json) and minified Londerland CSS/JS
 # ---------------------------------------------------------------------------
-FROM node:26-alpine AS frontend
+FROM public.ecr.aws/docker/library/node:26-alpine AS frontend
 
 WORKDIR /build
 COPY package.json package-lock.json ./
@@ -32,7 +31,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Stage 3: runtime image (Apache + PHP), everything baked in
 # ---------------------------------------------------------------------------
-FROM php:8.5-apache
+FROM public.ecr.aws/docker/library/php:8.5-apache
 
 ARG LONDERLAND_COMMIT=unknown
 
