@@ -548,17 +548,14 @@
   z-index: 11;
 }
 
-.tabLoaded {
+/* the highlighted side menu item (the open tab, or the category opened after it) glows; tabs that are only
+   loaded in the background do not. The name uses text-shadow, as a filter would make it the containing block of
+   a category's absolutely placed arrow */
+#side-menu a.active > .fa-fw {
   -webkit-filter: drop-shadow(0px 0px 5px #2cabe4);
   filter: drop-shadow(0px 0px 5px #2cabe4);
 }
-/* the highlighted category glows like an opened tab; its name uses text-shadow, as a filter would make the
-   name the containing block of the absolutely placed arrow */
-#side-menu > li.allGroupsList > a.active > .fa-fw {
-  -webkit-filter: drop-shadow(0px 0px 5px #2cabe4);
-  filter: drop-shadow(0px 0px 5px #2cabe4);
-}
-#side-menu > li.allGroupsList > a.active > .hide-menu {
+#side-menu a.active > .hide-menu {
   text-shadow: 0 0 5px #2cabe4;
 }
 
