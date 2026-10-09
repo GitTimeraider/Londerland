@@ -136,6 +136,12 @@ function customScrollbars(selector, autoHide = 'leave') {
 // Colour pickers for text inputs (replaces ColorPickerSliders). The input keeps holding the hex value;
 // picking a colour updates it and fires "input" and "change", typing a value updates the picker.
 function initColorPickers(selector, options = {}) {
+	if (!window.Pickr) {
+		londerlandLoadLibrary('pickr').then(function () {
+			initColorPickers(selector, options);
+		});
+		return;
+	}
 	$(selector).each(function () {
 		if (this.pickr) {
 			this.pickr.setColor(this.value || null, true);
@@ -307,10 +313,6 @@ if (window.ace) {
 	ace.config.set('basePath', 'assets/vendor/ace');
 }
 
-// Dropzones are created explicitly by the pages that use them
-if (window.Dropzone) {
-	Dropzone.autoDiscover = false;
-}
 
 // Londerland's theme styles active tabs as li.active (Bootstrap 3); Bootstrap 5 marks the link instead
 $(document).on('shown.bs.tab', function (e) {
@@ -332,6 +334,11 @@ const londerlandLibraries = {
 	ace: { js: ['assets/vendor/ace/ace.js'], css: [] },
 	tinymce: { js: ['assets/vendor/tinymce/tinymce.min.js'], css: [] },
 	tabulator: { js: ['assets/vendor/tabulator/tabulator.min.js'], css: ['assets/vendor/tabulator/tabulator_bootstrap5.min.css'] },
+	pickr: { js: ['assets/vendor/pickr/pickr.min.js'], css: ['assets/vendor/pickr/nano.min.css'] },
+	dropzone: { js: ['assets/vendor/dropzone/dropzone-min.js'], css: ['assets/vendor/dropzone/dropzone.css'] },
+	datatables: { js: ['assets/vendor/datatables/dataTables.min.js', 'assets/vendor/datatables/dataTables.bootstrap5.min.js'], css: ['assets/vendor/datatables/dataTables.bootstrap5.min.css'] },
+	sortable: { js: ['assets/vendor/sortablejs/Sortable.min.js'], css: [] },
+	pusher: { js: ['assets/vendor/pusher-js/pusher.min.js'], css: [] },
 };
 const londerlandLibraryLoads = {};
 function londerlandLoadLibrary(name) {

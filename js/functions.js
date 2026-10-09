@@ -1977,7 +1977,8 @@ function buildTabEditor() {
       LonderlandApiError(xhr);
     });
 }
-function addTabSortable() {
+async function addTabSortable() {
+  await londerlandLoadLibrary("sortable");
   let el = document.getElementById("tabEditorTable");
   let tabSorter = new Sortable(el, {
     handle: ".sort-tabs-handle",
@@ -6477,8 +6478,42 @@ function updateUrlParameter(uri, key, value) {
   }
   return uri + hash;
 }
+// The start-up request index.php sent early, as a jQuery promise like londerlandConnect() returns;
+// falls back to a normal request when there is none (or it was already used)
+function londerlandLaunchConnect() {
+  let early = window.londerlandLaunchRequest;
+  window.londerlandLaunchRequest = null;
+  if (!early) {
+    return londerlandConnect("api/v2/launch");
+  }
+  let deferred = $.Deferred();
+  early
+    .then(function (response) {
+      return response.text().then(function (text) {
+        let xhr = { status: response.status, responseText: text };
+        // Like $.ajax: JSON becomes an object, anything else (such as "upgrading") stays text
+        let data = text;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {}
+        if (response.ok) {
+          deferred.resolve(data, "success", xhr);
+        } else {
+          deferred.reject(xhr, "error", response.statusText);
+        }
+      });
+    })
+    .catch(function (error) {
+      deferred.reject({ status: 0, responseText: String(error) }, "error", error);
+    })
+    .finally(function () {
+      // A request through $.ajax would have run this from ajaxComplete
+      pageLoad();
+    });
+  return deferred.promise();
+}
 function launch() {
-  londerlandConnect("api/v2/launch")
+  londerlandLaunchConnect()
     .done(function (data) {
       try {
         let json = data.response;

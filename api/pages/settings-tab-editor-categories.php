@@ -21,13 +21,15 @@ function get_page_settings_tab_editor_categories($Londerland)
 (function() {
 buildCategoryEditor();
 
-new Sortable(document.getElementById(\'categoryEditorTable\'), {
-	onUpdate: function (evt) {
-		$(\'input.order\').each(function(idx) {
-			$(this).val(idx + 1);
-		});
-		submitCategoryOrder();
-	},
+londerlandLoadLibrary(\'sortable\').then(function() {
+	new Sortable(document.getElementById(\'categoryEditorTable\'), {
+		onUpdate: function (evt) {
+			$(\'input.order\').each(function(idx) {
+				$(this).val(idx + 1);
+			});
+			submitCategoryOrder();
+		},
+	});
 });
 ' . $iconSelectors . '
 })();

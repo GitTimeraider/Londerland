@@ -14,6 +14,7 @@ function get_page_settings_image_manager($Londerland)
 	return '
 <script>
 	buildImageManagerView();
+	londerlandLoadLibrary("dropzone").then(function() {
 	new Dropzone("#new-image-form", {
 		url: "api/v2/image",
 		headers:{ "formKey": local("g","formKey") },
@@ -30,6 +31,7 @@ function get_page_settings_image_manager($Londerland)
 			$(file.previewElement).find(".dz-error-message").text(response?.response?.message ?? response);
 		});
 	  }
+	});
 	});
 </script>
 <div class="card bg-org card-info">

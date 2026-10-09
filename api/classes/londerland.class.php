@@ -2241,6 +2241,63 @@ class Londerland
 		];
 	}
 
+	// <link rel="preconnect"> to the host of the iframe tab the user will probably start with (group default tab,
+	// default tab of the Tab Editor, else the first tab), so the connection to it is ready by the time start-up
+	// opens the iframe. Picks like startTabId() in functions.js, minus the tab in the address, which only the browser knows.
+	public function startTabPreconnect()
+	{
+		try {
+			$tabs = $this->hasDB() ? ($this->getUserTabsAndCategories('tabs') ?: []) : [];
+		} catch (\Throwable $e) {
+			return '';
+		}
+		$startable = array_values(array_filter($tabs, function ($tab) {
+			return !in_array((string)$tab['type'], ['2', '3'], true);
+		}));
+		$candidates = [(string)($this->config['defaultTabGroup-' . (int)($this->user['groupID'] ?? 999)] ?? '')];
+		foreach ($startable as $tab) {
+			if ((int)$tab['default'] === 1) {
+				$candidates[] = (string)$tab['id'];
+			}
+		}
+		$start = null;
+		foreach ($candidates as $id) {
+			foreach ($startable as $tab) {
+				if ($id !== '' && (string)$tab['id'] === $id) {
+					$start = $tab;
+					break 2;
+				}
+			}
+		}
+		$start = $start ?? ($startable[0] ?? null);
+		if (!$start || !in_array((string)$start['type'], ['1', 'iframe'], true)) {
+			return '';
+		}
+		$url = parse_url((string)($start['access_url'] ?? $start['url'] ?? ''));
+		if (!isset($url['scheme'], $url['host']) || !in_array(strtolower($url['scheme']), ['http', 'https'], true)) {
+			return '';
+		}
+		$origin = strtolower($url['scheme']) . '://' . $url['host'] . (isset($url['port']) ? ':' . $url['port'] : '');
+		$ownHost = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
+		if (strtolower($url['host']) === $ownHost) {
+			return '';
+		}
+		return '<link rel="preconnect" href="' . htmlspecialchars($origin, ENT_QUOTES) . '">' . PHP_EOL;
+	}
+
+	// The logo or title in the top bar, written into the page so it shows on the first paint
+	// (loadAppearance() in functions.js draws the same once start-up has finished)
+	public function logoHTML($class)
+	{
+		if (!$this->hasConfig()) {
+			return '';
+		}
+		if ($this->config['useLogo'] ?? false) {
+			return '<img alt="home" class="' . $class . '" src="' . htmlspecialchars($this->config['logo'] ?? '', ENT_QUOTES) . '">';
+		}
+		return htmlspecialchars($this->config['title'] ?? '', ENT_QUOTES);
+	}
+
 	public function loadAppearance()
 	{
 		$appearance['logo'] = $this->config['logo'];
