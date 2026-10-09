@@ -6672,3 +6672,40 @@ select.form-control:not([multiple]):not([size]) {
     padding-top: 44px;
   }
 }
+/* Login: the box sits in the middle of the screen instead of against the right edge */
+.login-register {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+.login-register .login-sidebar {
+  position: relative;
+  right: auto;
+  width: 400px;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+}
+.login-register .login-sidebar .white-box {
+  margin-bottom: 0;
+  border-radius: inherit;
+}
+/* "Remember Me" on the left, "Forgot pwd?" on the right, with room between them */
+.login-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-bottom: 10px;
+}
+.login-options > * {
+  float: none !important;
+  margin: 0;
+}
+

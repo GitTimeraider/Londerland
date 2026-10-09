@@ -12,7 +12,7 @@ function get_page_login($Londerland)
 	if (!$Londerland->loginAllowedFromNetwork()) {
 		return '
 <section id="wrapper" class="login-register">
-	<div class="login-box login-sidebar animated slideInRight">
+	<div class="login-box login-sidebar animated fadeIn">
 		<div class="white-box">
 			' . $Londerland->logoOrText() . '
 			<div class="text-center m-t-40">
@@ -50,7 +50,7 @@ if(activeInfo.settings.login.rememberMe){
 ' . $oidcAutoRedirectScript . '
 </script>
 <section id="wrapper" class="login-register">
-	<div class="login-box login-sidebar animated slideInRight">
+	<div class="login-box login-sidebar animated fadeIn">
 		<div class="white-box">
 			<form class="form-horizontal" id="loginform" onsubmit="return false;">
 				<input id="login-attempts" class="form-control" name="loginAttempts" type="hidden">
@@ -106,7 +106,7 @@ if(activeInfo.settings.login.rememberMe){
 									</div>
 								</div>
 								<div class="form-group">
-									<div class="col-lg-12">
+									<div class="col-lg-12 login-options">
 										<div class="checkbox checkbox-primary float-start p-t-0 remember-me">
 											<input id="checkbox-login" name="remember" type="checkbox">
 											<label for="checkbox-login" lang="en">Remember Me</label>
