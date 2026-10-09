@@ -2153,6 +2153,8 @@ class Londerland
 				$this->settingsOption('switch', 'expandCategoriesByDefault', ['label' => 'Expand All Categories']),
 				$this->settingsOption('switch', 'autoCollapseCategories', ['label' => 'Auto-Collapse Categories']),
 				$this->settingsOption('switch', 'autoExpandNavBar', ['label' => 'Auto-Expand Nav Bar']),
+				$this->settingsOption('select', 'sideMenuTabSpacing', ['label' => 'Tab Spacing', 'help' => 'Space between the tabs. Reload the page after saving', 'options' => [['name' => 'Very Compact', 'value' => 'tighter'], ['name' => 'Compact', 'value' => 'tight'], ['name' => 'Default', 'value' => 'default'], ['name' => 'Spacious', 'value' => 'loose'], ['name' => 'Very Spacious', 'value' => 'looser']]]),
+				$this->settingsOption('select', 'sideMenuCategorySpacing', ['label' => 'Category Spacing', 'help' => 'Space between the categories. Reload the page after saving', 'options' => [['name' => 'Very Compact', 'value' => 'tighter'], ['name' => 'Compact', 'value' => 'tight'], ['name' => 'Default', 'value' => 'default'], ['name' => 'Spacious', 'value' => 'loose'], ['name' => 'Very Spacious', 'value' => 'looser']]]),
 				$this->settingsOption('select', 'unsortedTabs', ['label' => 'Unsorted Tab Placement', 'options' => [['name' => 'Top', 'value' => 'top'], ['name' => 'Bottom', 'value' => 'bottom']]]),
 			],
 			'Fonts' => [
@@ -2303,14 +2305,39 @@ class Londerland
 		return htmlspecialchars($this->config['title'] ?? '', ENT_QUOTES);
 	}
 
-	// Font and thickness from Settings > Customize > Appearance > Fonts, written into <head> by index.php so the
-	// side menu and the title show in it on the first paint. Rubik is a variable font (300-900) that is already
-	// loaded, the others are fonts installed on the device, so no option downloads anything extra.
-	public function fontCSS()
+	// Side menu spacing and fonts from Settings > Customize > Appearance, written into <head> by index.php so the
+	// side menu and the title show with them on the first paint
+	public function appearanceCSS()
 	{
 		if (!$this->hasConfig()) {
 			return '';
 		}
+		$css = $this->sideMenuSpacingCSS() . $this->fontCSS();
+		return $css === '' ? '' : '<style id="appearance-settings">' . $css . '</style>';
+	}
+
+	// Space above and below the side menu rows, in steps of 3px around the default (top-level rows 10px, tabs
+	// inside a category 14px)
+	private function sideMenuSpacingCSS()
+	{
+		$steps = ['tighter' => -6, 'tight' => -3, 'loose' => 3, 'looser' => 6];
+		$css = '';
+		$tabs = $steps[$this->config['sideMenuTabSpacing'] ?? ''] ?? 0;
+		if ($tabs) {
+			$css .= '#side-menu > li.allTabsList > a {padding-top: ' . (10 + $tabs) . 'px; padding-bottom: ' . (10 + $tabs) . 'px;}';
+			$css .= '#side-menu .nav-second-level li.allTabsList > a {padding-top: ' . (14 + $tabs) . 'px; padding-bottom: ' . (14 + $tabs) . 'px;}';
+		}
+		$categories = $steps[$this->config['sideMenuCategorySpacing'] ?? ''] ?? 0;
+		if ($categories) {
+			$css .= '#side-menu > li.allGroupsList > a {padding-top: ' . (10 + $categories) . 'px; padding-bottom: ' . (10 + $categories) . 'px;}';
+		}
+		return $css;
+	}
+
+	// Font and thickness from Settings > Customize > Appearance > Fonts. Rubik is a variable font (300-900) that is
+	// already loaded, the others are fonts installed on the device, so no option downloads anything extra.
+	private function fontCSS()
+	{
 		$families = [
 			'system' => 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 			'arial' => 'Arial, Helvetica, sans-serif',
@@ -2329,7 +2356,7 @@ class Londerland
 			$css .= ':root {' . ($family ? '--bs-body-font-family: ' . $family . ';' : '') . ($weight ? '--bs-body-font-weight: ' . $weight . ';' : '') . '}';
 			$css .= 'body, h1, h2, h3, h4, h5, h6, button, input, select, textarea {' . $rules . '}';
 		}
-		return '<style id="font-appearance">' . $css . '</style>';
+		return $css;
 	}
 
 	public function loadAppearance()
