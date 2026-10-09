@@ -1,9 +1,11 @@
-# syntax=docker/dockerfile:1
+# Where the official base images come from. Docker Hub by default; the image workflow switches to the same
+# images on AWS's public mirror when Docker Hub cannot be reached.
+ARG BASE_REGISTRY=docker.io/library
 
 # ---------------------------------------------------------------------------
 # Stage 1: install PHP dependencies from composer.lock
 # ---------------------------------------------------------------------------
-FROM composer:2.10 AS vendor
+FROM ${BASE_REGISTRY}/composer:2.10 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
@@ -19,7 +21,7 @@ RUN composer install \
 # ---------------------------------------------------------------------------
 # Stage 2: frontend libraries (package-lock.json) and minified Londerland CSS/JS
 # ---------------------------------------------------------------------------
-FROM node:26-alpine AS frontend
+FROM ${BASE_REGISTRY}/node:26-alpine AS frontend
 
 WORKDIR /build
 COPY package.json package-lock.json ./
@@ -32,7 +34,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Stage 3: runtime image (Apache + PHP), everything baked in
 # ---------------------------------------------------------------------------
-FROM php:8.5-apache
+FROM ${BASE_REGISTRY}/php:8.5-apache
 
 ARG LONDERLAND_COMMIT=unknown
 

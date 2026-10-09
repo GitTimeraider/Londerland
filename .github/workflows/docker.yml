@@ -44,13 +44,24 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Base images (php, node, composer) come from Docker Hub, which rate-limits anonymous pulls per runner IP
-      # (429 Too Many Requests). Logged-in pulls get their own, higher limit. Skipped when the secrets are not set.
+      # (429 Too Many Requests); logged-in pulls get their own, higher limit. Docker Hub's login server also has
+      # short outages, so the login is tried three times and a failure does not stop the job: the build then
+      # takes the same official images from AWS's public mirror. Skipped when the secrets are not set.
       - name: Log in to Docker Hub
+        id: dockerhub
         if: env.DOCKERHUB_USERNAME != ''
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        continue-on-error: true
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          for attempt in 1 2 3; do
+            if printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin; then
+              exit 0
+            fi
+            echo "::warning::Docker Hub login attempt $attempt failed"
+            sleep $((attempt * 15))
+          done
+          exit 1
 
       - id: meta
         uses: docker/metadata-action@v6
@@ -63,14 +74,38 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      # Pull requests (including Dependabot) only build for amd64 to verify the image; nothing is pushed
-      - uses: docker/build-push-action@v7
+      # Pull requests (including Dependabot) only build for amd64 to verify the image; nothing is pushed.
+      # Base images come from Docker Hub when the login worked, otherwise from AWS's public mirror.
+      - name: Build (base images from Docker Hub)
+        id: build
+        if: steps.dockerhub.outcome == 'success'
+        continue-on-error: true
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: LONDERLAND_COMMIT=${{ github.sha }}
+          build-args: |
+            LONDERLAND_COMMIT=${{ github.sha }}
+            BASE_REGISTRY=docker.io/library
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable; a real build
+      # error fails here the same way and stops the job
+      - name: Build (base images from AWS's public mirror)
+        if: steps.build.outcome != 'success'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            LONDERLAND_COMMIT=${{ github.sha }}
+            BASE_REGISTRY=public.ecr.aws/docker/library
           cache-from: type=gha
           cache-to: type=gha,mode=max
