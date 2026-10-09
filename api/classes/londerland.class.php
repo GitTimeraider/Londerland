@@ -20,6 +20,7 @@ class Londerland
 	use OIDCFunctions;
 	use OptionsFunction;
 	use LonderlandFunctions;
+	use LoginNetworkFunctions;
 	use PluginFunctions;
 	use StaticFunctions;
 	use SSOFunctions;
@@ -3002,6 +3003,9 @@ class Londerland
 
 	public function wizardConfig($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		if($this->hasConfig() && $this->hasDB()) {
 			$this->setAPIResponse('error', 'Endpoint disabled as database already exists', 401);
 			return false;
@@ -3651,6 +3655,10 @@ class Londerland
 
 	public function createToken($username, $email, $days = 1)
 	{
+		// Every way of logging in ends here, so this is the last line of defence for LONDERLAND_LOGIN_ALLOWED_IPS
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$this->setLoggerChannel('Authentication', $username);
 		$this->logger->debug('Starting token creation function');
 		$days = ($days > 365) ? 365 : $days;
@@ -3761,6 +3769,10 @@ class Londerland
 
 	public function login($array)
 	{
+		// LONDERLAND_LOGIN_ALLOWED_IPS: no login of any kind from other networks
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		// Bypass Check
 		$bypassLogin = $this->config['bypassLoginForLocal'] && $this->config['localLoginUserId'] && $this->isLocal() == true;
 		if(gettype($array) == 'array'){
@@ -4103,6 +4115,9 @@ class Londerland
 
 	public function recover($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$email = $array['email'] ?? null;
 		if (!$email) {
 			$this->setAPIResponse('error', 'Email was not supplied', 422);
@@ -4145,6 +4160,9 @@ class Londerland
 
 	public function register($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$email = $array['email'] ?? null;
 		$username = $array['username'] ?? null;
 		$password = $array['password'] ?? null;
