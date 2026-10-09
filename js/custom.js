@@ -1684,21 +1684,20 @@ $(document).on('keyup', "#debug-input", function(e  ){
         orgDebug();
     }
 });
-// settings menu open if not open
+// Settings: opening a section with nothing selected yet selects its first sub-tab, so the page is never blank
 $(document).on('click', ".sticon", function(){
     var target = $(this).attr('href');
     var menu = $(target).find('.customtab2 > li');
     if(menu.length !== 0){
-        var isActive = false;
-        $(menu).each(function (index, value) {
-            var hasClass = $(this).hasClass('active');
-            if(hasClass){
-                isActive = true;
-            }
-        });
+        // Bootstrap 5 marks the link as active, the server-rendered default (About) marks the list item
+        var isActive = $(menu).filter('.active').length > 0 || $(menu).find('a.active').length > 0;
         if(isActive == false){
-            let el = $(menu).find('a').first();
-            $(el).trigger('click');
+            // A real click, so Bootstrap shows the pane and the item's onclick loads its content;
+            // jQuery's trigger('click') does neither for links
+            var el = $(menu).find('a').get(0);
+            if(el){
+                el.click();
+            }
         }
     }
 });

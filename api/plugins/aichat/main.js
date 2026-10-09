@@ -558,11 +558,10 @@
 		setModel(preferredModel());
 		$panel.find('.aichat-title').text(t('New chat'));
 		$panel.find('.aichat-pin span').text(t('Pin'));
-		const name = escapeHtml(activeInfo.user.username || '');
 		const suggestions = [t('Explain how Docker volumes work'), t('Write a short welcome text for my homelab'), t('Help me debug a bash script'), t('Summarize the file I upload')];
 		$panel.find('.aichat-messages').html(`
 			<div class="aichat-welcome">
-				<h3>${escapeHtml(t('Hi'))} ${name}</h3>
+				<h3>${escapeHtml(t('Hi stranger'))}</h3>
 				<p>${escapeHtml(t('How can I help you today?'))}</p>
 				<div class="aichat-suggestions">${suggestions.map((text) => `<button type="button" class="aichat-suggestion">${escapeHtml(text)}</button>`).join('')}</div>
 			</div>`);
