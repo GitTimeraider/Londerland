@@ -307,6 +307,13 @@ function doneTypingMediaSearch () {
 	    LonderlandApiError(xhr, 'API Error');
     })
 }
+// 2FA step: ask for a one-time bypass code; the server writes it to the container log for the admin
+$(document).on("click", ".tfa-bypass-request", function(e) {
+    e.preventDefault();
+    $('#loginform [name=tfaBypassRequest]').val('1');
+    $('#tfa-div .login-button').trigger('click');
+    $('#loginform [name=tfaBypassRequest]').val('');
+});
 $(document).on("click", ".login-button", function(e) {
     e.preventDefault;
     var oAuthEntered = $('#oAuth-Input').val();

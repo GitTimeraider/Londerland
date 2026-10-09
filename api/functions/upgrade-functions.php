@@ -123,6 +123,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.2';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -493,10 +501,24 @@ trait UpgradeFunctions
 			case '2.2.1':
 				$this->removeInheritedApiKeys();
 				break;
+			case '2.2.2':
+				$this->removeOIDCFromAuthService();
+				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
 		$this->setAPIResponse('success', 'Ran update function for version: ' . $version, 200);
 		return true;
+	}
+
+	// OIDC logins used to write "oidc::<provider>" into auth_service, the column that holds the 2FA setting,
+	// so password logins of those accounts asked for a 2FA code that never existed
+	public function removeOIDCFromAuthService()
+	{
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE users SET', ['auth_service' => 'internal'], 'WHERE auth_service LIKE %s', 'oidc::%']
+		]]);
+		$this->setLoggerChannel('Upgrade')->info('Removed OIDC markers from the 2FA setting of users');
 	}
 
 	public function fixGroupOIDC()

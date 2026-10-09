@@ -73,7 +73,7 @@ class Londerland
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.1';
+	public $version = '2.2.2';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -1826,7 +1826,7 @@ class Londerland
 					'loggedin' => true,
 					'locked' => $user['locked'] ?? 0,
 					'tokenList' => $allTokens,
-					'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+					'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 				);
 			}
 		} else {
@@ -1865,7 +1865,7 @@ class Londerland
 				'loggedin' => true,
 				'locked' => $user['locked'] ?? 0,
 				'tokenList' => $allTokens,
-				'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+				'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 			);
 		}
 		return false;
@@ -3924,7 +3924,7 @@ class Londerland
 					}
 				}
 				// 2FA might go here
-				if ($result['auth_service'] !== 'internal' && strpos($result['auth_service'], '::') !== false) {
+				if ($this->twoFAType($result['auth_service']) !== null) {
 					$tfaProceed = true;
 					// Add check for local or not
 					if ($this->config['ignoreTFALocal'] !== false) {
@@ -3947,11 +3947,22 @@ class Londerland
 						$this->setLoggerChannel('Authentication', $username);
 						$this->logger->debug('Starting 2FA verification');
 						$TFA = explode('::', $result['auth_service']);
+						// "Get a one-time bypass code" on the 2FA step: the password was right, write a code to the container log
+						if (!empty($array['tfaBypassRequest'])) {
+							$this->createTFABypassCode($result);
+							return false;
+						}
 						// Is code with login info?
 						if ($tfaCode == '') {
 							$this->logger->debug('Sending 2FA response to login UI');
 							$this->setAPIResponse('warning', '2FA Code Needed', 422);
 							return false;
+						} elseif ($this->isTFABypassCode($tfaCode)) {
+							if (!$this->useTFABypassCode($result, $tfaCode)) {
+								$this->logger->warning('Incorrect or expired 2FA bypass code');
+								$this->setAPIResponse('error', 'Wrong or expired bypass code', 422);
+								return false;
+							}
 						} else {
 							if (!$this->verify2FA($TFA[1], $tfaCode, $TFA[0])) {
 								$this->logger->warning('Incorrect 2FA');

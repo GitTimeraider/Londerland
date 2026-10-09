@@ -12,7 +12,7 @@ function get_page_login($Londerland)
 	if (!$Londerland->loginAllowedFromNetwork()) {
 		return '
 <section id="wrapper" class="login-register">
-	<div class="login-box login-sidebar animated slideInRight">
+	<div class="login-box login-sidebar animated fadeIn">
 		<div class="white-box">
 			' . $Londerland->logoOrText() . '
 			<div class="text-center m-t-40">
@@ -50,7 +50,7 @@ if(activeInfo.settings.login.rememberMe){
 ' . $oidcAutoRedirectScript . '
 </script>
 <section id="wrapper" class="login-register">
-	<div class="login-box login-sidebar animated slideInRight">
+	<div class="login-box login-sidebar animated fadeIn">
 		<div class="white-box">
 			<form class="form-horizontal" id="loginform" onsubmit="return false;">
 				<input id="login-attempts" class="form-control" name="loginAttempts" type="hidden">
@@ -72,9 +72,11 @@ if(activeInfo.settings.login.rememberMe){
 								<div class="card-body">
 									<div class="input-group" style="width: 100%;">
 										<div class="input-group-text hidden-xs"><i class="ti-lock"></i></div>
-										<input type="text" class="form-control tfa-input" name="tfaCode" placeholder="Code" data-lpignore="true" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="6" spellcheck="false" autofocus="">
+										<input type="text" class="form-control tfa-input" name="tfaCode" placeholder="Code" data-lpignore="true" autocomplete="off" autocorrect="off" autocapitalize="off" maxlength="9" spellcheck="false" autofocus="">
 									</div>
+									<input type="hidden" name="tfaBypassRequest" value="">
 									<button class="btn btn-warning btn-lg w-100 text-uppercase waves-effect waves-light login-button m-t-10" type="submit" lang="en">Login</button>
+									<p class="text-muted m-t-10 m-b-0"><small><span lang="en">Lost your authenticator?</span> <a href="javascript:void(0)" class="tfa-bypass-request text-muted" style="text-decoration: underline" lang="en">Get a one-time code from your admin</a></small></p>
 								</div>
 							</div>
 						</div>
@@ -104,7 +106,7 @@ if(activeInfo.settings.login.rememberMe){
 									</div>
 								</div>
 								<div class="form-group">
-									<div class="col-lg-12">
+									<div class="col-lg-12 login-options">
 										<div class="checkbox checkbox-primary float-start p-t-0 remember-me">
 											<input id="checkbox-login" name="remember" type="checkbox">
 											<label for="checkbox-login" lang="en">Remember Me</label>
