@@ -8,6 +8,24 @@ function get_page_login($Londerland)
 	if ((!$Londerland->hasDB())) {
 		return false;
 	}
+	// LONDERLAND_LOGIN_ALLOWED_IPS: visitors from other networks get a notice instead of the form
+	if (!$Londerland->loginAllowedFromNetwork()) {
+		return '
+<section id="wrapper" class="login-register">
+	<div class="login-box login-sidebar animated slideInRight">
+		<div class="white-box">
+			' . $Londerland->logoOrText() . '
+			<div class="text-center m-t-40">
+				<i class="fa fa-ban fa-4x text-danger"></i>
+				<h3 class="m-t-20" lang="en">Login not allowed</h3>
+				<p class="text-muted" lang="en">Logging in is not allowed from your network.</p>
+				<p class="text-muted"><small><span lang="en">Your address</span>: ' . htmlspecialchars($Londerland->loginClientIP()) . '</small></p>
+			</div>
+		</div>
+	</div>
+</section>
+';
+	}
 	$hideLonderlandLogin = ($Londerland->checkoAuth()) ? 'collapse' : 'collapse show';
 	$hideLonderlandLoginHeader = ($Londerland->checkoAuthOnly()) ? 'hidden' : '';
 	$hideLonderlandLoginHeader2 = ($Londerland->checkoAuth()) ? '' : 'hidden';
