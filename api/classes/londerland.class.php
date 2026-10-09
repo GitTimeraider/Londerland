@@ -2316,12 +2316,12 @@ class Londerland
 		return $css === '' ? '' : '<style id="appearance-settings">' . $css . '</style>';
 	}
 
-	// Space above and below the side menu rows, in steps of 3px around the default (top-level rows 10px, tabs
-	// inside a category 14px); Very Compact takes 8px off, for 32px top-level rows. A tab's name is placed at a fixed top (.sidebar-tabName: 15px, 20px inside a
+	// Space above and below the side menu rows, in steps of 4px around the default (top-level rows 10px, tabs
+	// inside a category 14px): top-level rows are 32, 40, 48, 56 or 64px tall. A tab's name is placed at a fixed top (.sidebar-tabName: 15px, 20px inside a
 	// category), so it moves by the same step to stay level with the icon.
 	private function sideMenuSpacingCSS()
 	{
-		$steps = ['tighter' => -8, 'tight' => -3, 'loose' => 3, 'looser' => 6];
+		$steps = ['tighter' => -8, 'tight' => -4, 'loose' => 4, 'looser' => 8];
 		$css = '';
 		$tabs = $steps[$this->config['sideMenuTabSpacing'] ?? ''] ?? 0;
 		if ($tabs) {
