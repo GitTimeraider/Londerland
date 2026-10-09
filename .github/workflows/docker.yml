@@ -52,7 +52,7 @@ jobs:
       # Base images (php, node, composer) come from Docker Hub, which rate-limits anonymous pulls per runner IP
       # (429 Too Many Requests); logged-in pulls get their own, higher limit. Docker Hub's login server also has
       # short outages, so the login is tried three times and a failure does not stop the job: the build then
-      # takes the same official images from AWS's public mirror. Skipped when the secrets are not set.
+      # takes the same official images from Google's mirror of Docker Hub. Skipped when the secrets are not set.
       - name: Log in to Docker Hub
         id: dockerhub
         if: env.DOCKERHUB_USERNAME != ''
@@ -81,7 +81,8 @@ jobs:
             type=sha
 
       # Pull requests (including Dependabot) only build for amd64 to verify the image; nothing is pushed.
-      # Base images come from Docker Hub when the login worked, otherwise from AWS's public mirror.
+      # Base images come from Docker Hub when the login worked, otherwise from Google's mirror of Docker Hub
+      # (mirror.gcr.io; AWS's public mirror was tried first but rate-limits anonymous multi-platform builds).
       - name: Build (base images from Docker Hub)
         id: build
         if: steps.dockerhub.outcome == 'success'
@@ -101,7 +102,7 @@ jobs:
 
       # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable; a real build
       # error fails here the same way and stops the job
-      - name: Build (base images from AWS's public mirror)
+      - name: Build (base images from Google's mirror of Docker Hub)
         if: steps.build.outcome != 'success'
         uses: docker/build-push-action@v7
         with:
@@ -112,6 +113,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             LONDERLAND_COMMIT=${{ github.sha }}
-            BASE_REGISTRY=public.ecr.aws/docker/library
+            BASE_REGISTRY=mirror.gcr.io/library
           cache-from: type=gha
           cache-to: type=gha,mode=max

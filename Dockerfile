@@ -1,5 +1,5 @@
 # Where the official base images come from. Docker Hub by default; the image workflow switches to the same
-# images on AWS's public mirror when Docker Hub cannot be reached.
+# images on Google's mirror of Docker Hub (mirror.gcr.io/library) when Docker Hub cannot be reached.
 ARG BASE_REGISTRY=docker.io/library
 
 # ---------------------------------------------------------------------------

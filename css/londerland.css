@@ -552,6 +552,15 @@
   -webkit-filter: drop-shadow(0px 0px 5px #2cabe4);
   filter: drop-shadow(0px 0px 5px #2cabe4);
 }
+/* the highlighted category glows like an opened tab; its name uses text-shadow, as a filter would make the
+   name the containing block of the absolutely placed arrow */
+#side-menu > li.allGroupsList > a.active > .fa-fw {
+  -webkit-filter: drop-shadow(0px 0px 5px #2cabe4);
+  filter: drop-shadow(0px 0px 5px #2cabe4);
+}
+#side-menu > li.allGroupsList > a.active > .hide-menu {
+  text-shadow: 0 0 5px #2cabe4;
+}
 
 .user-bg {
   margin: -25px;
