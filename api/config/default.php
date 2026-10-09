@@ -37,6 +37,9 @@ return [
 	'menuFont' => 'rubik',
 	'menuFontWeight' => 'regular',
 	'menuFontScope' => 'menu',
+	// Settings > Customize > Appearance > Side Menu: space above and below each row
+	'sideMenuTabSpacing' => 'default',
+	'sideMenuCategorySpacing' => 'default',
 	'lockScreen' => false,
 	'theme' => 'Londerland',
 	'style' => 'dark',

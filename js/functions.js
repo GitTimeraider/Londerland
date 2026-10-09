@@ -2733,9 +2733,7 @@ function categoryProcess(arrayItems) {
           iconPrefix(v.image) +
           `<span class="hide-menu">` +
           v.category +
-          ` <span class="fa arrow"></span> <span class="badge rounded-pill text-bg-dark float-end">` +
-          v.count +
-          `</span></span><div class="menu-category-ping" data-good="0" data-bad="0"></div></a>
+          ` <span class="fa arrow"></span></span><div class="menu-category-ping" data-good="0" data-bad="0"></div></a>
 						<ul class="nav nav-second-level category-` +
           v.category_id +
           ` mm-collapse ` +
