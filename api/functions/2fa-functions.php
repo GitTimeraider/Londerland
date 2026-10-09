@@ -2,6 +2,19 @@
 
 trait TwoFAFunctions
 {
+	// 2FA types a user can turn on (Account Settings); auth_service holds "type::secret" for these, otherwise "internal"
+	private const TWO_FA_TYPES = ['google'];
+
+	/**
+	 * The 2FA type stored in a user's auth_service, or null when the user has no 2FA.
+	 * Anything else (for example "oidc::authentik", written by older versions on OIDC login) is not 2FA.
+	 */
+	public function twoFAType($authService)
+	{
+		$parts = explode('::', (string)$authService, 2);
+		return (count($parts) === 2 && $parts[1] !== '' && in_array($parts[0], self::TWO_FA_TYPES, true)) ? $parts[0] : null;
+	}
+
 	public function create2FA($type)
 	{
 		$result['type'] = $type;

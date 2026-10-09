@@ -73,7 +73,7 @@ class Londerland
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.1';
+	public $version = '2.2.2';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -1826,7 +1826,7 @@ class Londerland
 					'loggedin' => true,
 					'locked' => $user['locked'] ?? 0,
 					'tokenList' => $allTokens,
-					'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+					'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 				);
 			}
 		} else {
@@ -1865,7 +1865,7 @@ class Londerland
 				'loggedin' => true,
 				'locked' => $user['locked'] ?? 0,
 				'tokenList' => $allTokens,
-				'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+				'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 			);
 		}
 		return false;
@@ -3924,7 +3924,7 @@ class Londerland
 					}
 				}
 				// 2FA might go here
-				if ($result['auth_service'] !== 'internal' && strpos($result['auth_service'], '::') !== false) {
+				if ($this->twoFAType($result['auth_service']) !== null) {
 					$tfaProceed = true;
 					// Add check for local or not
 					if ($this->config['ignoreTFALocal'] !== false) {
