@@ -3947,11 +3947,22 @@ class Londerland
 						$this->setLoggerChannel('Authentication', $username);
 						$this->logger->debug('Starting 2FA verification');
 						$TFA = explode('::', $result['auth_service']);
+						// "Get a one-time bypass code" on the 2FA step: the password was right, write a code to the container log
+						if (!empty($array['tfaBypassRequest'])) {
+							$this->createTFABypassCode($result);
+							return false;
+						}
 						// Is code with login info?
 						if ($tfaCode == '') {
 							$this->logger->debug('Sending 2FA response to login UI');
 							$this->setAPIResponse('warning', '2FA Code Needed', 422);
 							return false;
+						} elseif ($this->isTFABypassCode($tfaCode)) {
+							if (!$this->useTFABypassCode($result, $tfaCode)) {
+								$this->logger->warning('Incorrect or expired 2FA bypass code');
+								$this->setAPIResponse('error', 'Wrong or expired bypass code', 422);
+								return false;
+							}
 						} else {
 							if (!$this->verify2FA($TFA[1], $tfaCode, $TFA[0])) {
 								$this->logger->warning('Incorrect 2FA');

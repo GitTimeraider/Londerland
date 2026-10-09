@@ -187,6 +187,19 @@ Do not put the proxy's address in `LONDERLAND_LOGIN_ALLOWED_IPS`, as that would 
 After changing these variables, recreate the container: `docker compose up -d` (Compose) or `docker rm -f londerland` and the
 `docker run` command again.
 
+### Lost authenticator (2FA bypass code)
+
+If a user with two-factor authentication (Google Authenticator) loses their authenticator, they log in with their username and
+password and click **Get a one-time code from your admin** under the 2FA field. Londerland then writes a code to the
+container log, never to the page:
+
+```bash
+docker logs londerland 2>&1 | grep "2FA bypass"
+```
+
+The user enters that code (like `ABCD-EFGH`) in the 2FA field. It works once, for 15 minutes, and does not turn 2FA off;
+the user can do that afterwards in **Account Settings**. A new code can be requested once a minute.
+
 ### Updating
 
 Londerland is updated by replacing the container with a newer image; your data stays in the `londerland-data` folder.
