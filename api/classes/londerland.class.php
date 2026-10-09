@@ -2317,7 +2317,8 @@ class Londerland
 	}
 
 	// Space above and below the side menu rows, in steps of 3px around the default (top-level rows 10px, tabs
-	// inside a category 14px)
+	// inside a category 14px). A tab's name is placed at a fixed top (.sidebar-tabName: 15px, 20px inside a
+	// category), so it moves by the same step to stay level with the icon.
 	private function sideMenuSpacingCSS()
 	{
 		$steps = ['tighter' => -6, 'tight' => -3, 'loose' => 3, 'looser' => 6];
@@ -2326,6 +2327,8 @@ class Londerland
 		if ($tabs) {
 			$css .= '#side-menu > li.allTabsList > a {padding-top: ' . (10 + $tabs) . 'px; padding-bottom: ' . (10 + $tabs) . 'px;}';
 			$css .= '#side-menu .nav-second-level li.allTabsList > a {padding-top: ' . (14 + $tabs) . 'px; padding-bottom: ' . (14 + $tabs) . 'px;}';
+			$css .= '#side-menu > li.allTabsList > a .sidebar-tabName {top: ' . (15 + $tabs) . 'px;}';
+			$css .= '#side-menu .nav-second-level li.allTabsList > a .sidebar-tabName {top: ' . (20 + $tabs) . 'px;}';
 		}
 		$categories = $steps[$this->config['sideMenuCategorySpacing'] ?? ''] ?? 0;
 		if ($categories) {
