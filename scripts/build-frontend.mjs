@@ -24,8 +24,10 @@ const assets = [
 	['metismenu/dist/metisMenu.min.js', 'metismenu/metisMenu.min.js'],
 	['metismenu/dist/metisMenu.min.css', 'metismenu/metisMenu.min.css'],
 	['moment/min/moment-with-locales.min.js', 'moment/moment-with-locales.min.js'],
-	['moment-timezone/builds/moment-timezone-with-data.min.js', 'moment/moment-timezone-with-data.min.js'],
-	['bowser/bundled.js', 'bowser/bowser.js'],
+	// time zone data for this year +/- 5 (the full history is four times bigger and only older dates need it)
+	['moment-timezone/builds/moment-timezone-with-data-10-year-range.min.js', 'moment/moment-timezone-with-data-10-year-range.min.js'],
+	// es5.js is the minified build without the polyfills that bundled.js carries for old browsers
+	['bowser/es5.js', 'bowser/bowser.min.js'],
 	['js-cookie/dist/js.cookie.min.js', 'js-cookie/js.cookie.min.js'],
 	['arrive/minified/arrive.min.js', 'arrive/arrive.min.js'],
 	['vanilla-lazyload/dist/lazyload.min.js', 'vanilla-lazyload/lazyload.min.js'],

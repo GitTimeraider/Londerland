@@ -18,26 +18,34 @@ $Londerland = new Londerland(true);
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="application-name" content="<?php echo $Londerland->config['title']; ?>">
     <meta name="apple-mobile-web-app-title" content="<?php echo $Londerland->config['title']; ?>">
+    <script>
+        // Ask for the start-up data now, while the scripts below are still downloading; launch() picks it up
+        window.londerlandLaunchRequest = window.fetch ? fetch('api/v2/launch', {credentials: 'same-origin', headers: {'Accept': 'application/json'}}) : null;
+    </script>
     <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon) -->
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="css/fonts/rubik/files/rubik-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-    <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
-    <link href="assets/vendor/fontawesome/css/v4-shims.min.css" rel="stylesheet">
-    <link href="assets/vendor/mdi/css/materialdesignicons.min.css" rel="stylesheet">
-    <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css" rel="stylesheet">
-    <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
-    <link href="assets/vendor/metismenu/metisMenu.min.css" rel="stylesheet">
-    <!-- Styles of parts that only appear after start-up (tables, pop-ups, uploads, pickers, notifications) load without holding up the first paint -->
-    <link href="assets/vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/magnific-popup/magnific-popup.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/dropzone/dropzone.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/pickr/nano.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
-    <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/bootstrap/bootstrap.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link href="assets/vendor/fontawesome/css/all.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link href="assets/vendor/fontawesome/css/v4-shims.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <!-- Icon sets that only menu items and pages built later use: fetched right away, but they do not hold up the first paint -->
+    <link href="assets/vendor/mdi/css/materialdesignicons.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="assets/vendor/mdi/css/materialdesignicons.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+        <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+        <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    </noscript>
+    <link href="assets/vendor/metismenu/metisMenu.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <!-- Styles of parts that only appear after start-up (pop-ups, selects, notifications) load without holding up the first paint;
+         colour pickers, uploads, tables and drag-and-drop sorting are fetched with their scripts by londerlandLoadLibrary() -->
+    <link href="assets/vendor/magnific-popup/magnific-popup.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
+    <link href="assets/vendor/alertifyjs/css/alertify.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/alertifyjs/css/themes/default.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
     <link id="style" href="css/<?php echo (($Londerland->config['style'] ?? '') === 'light') ? 'light' : 'dark'; ?>.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
@@ -70,7 +78,7 @@ $Londerland = new Londerland(true);
                 <!-- Logo -->
                 <a class="logo" href="javascript:void(0)">
                     <!-- Logo text image you can use text also -->
-                    <span class="hidden-xs elip" id="main-logo"></span>
+                    <span class="hidden-xs elip" id="main-logo"><?php echo $Londerland->logoHTML('dark-logo'); ?></span>
                 </a>
             </div>
             <!-- /Logo -->
@@ -121,7 +129,7 @@ $Londerland = new Londerland(true);
                         <i class="ti-close visible-xs"></i>
                     </span>
 					<?php echo $Londerland->showSideBarText(); ?>
-                    <span class="hide-menu hidden-sm hidden-md hidden-lg" id="side-logo"></span>
+                    <span class="hide-menu hidden-sm hidden-md hidden-lg" id="side-logo"><?php echo $Londerland->logoHTML('dark-logo-side'); ?></span>
                 </h3>
             </div>
             <ul class="nav" id="side-menu">
@@ -173,28 +181,21 @@ $Londerland = new Londerland(true);
 	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<script src="assets/vendor/jquery/jquery.min.js"></script>
-<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-<script src="assets/vendor/metismenu/metisMenu.min.js"></script>
-<script src="assets/vendor/moment/moment-with-locales.min.js"></script>
-<script src="assets/vendor/moment/moment-timezone-with-data.min.js"></script>
-<script src="assets/vendor/bowser/bowser.js"></script>
-<script src="assets/vendor/js-cookie/js.cookie.min.js"></script>
-<script src="assets/vendor/arrive/arrive.min.js"></script>
-<script src="assets/vendor/vanilla-lazyload/lazyload.min.js"></script>
-<script src="assets/vendor/datatables/dataTables.min.js"></script>
-<script src="assets/vendor/datatables/dataTables.bootstrap5.min.js"></script>
-<script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
-<script src="assets/vendor/sweetalert2/sweetalert2.all.min.js"></script>
-<script src="assets/vendor/alertifyjs/alertify.min.js"></script>
-<script src="assets/vendor/tinycolor2/tinycolor-min.js"></script>
-<script src="assets/vendor/pickr/pickr.min.js"></script>
-<script src="assets/vendor/dropzone/dropzone-min.js"></script>
-<script src="assets/vendor/tom-select/tom-select.complete.min.js"></script>
-<script src="assets/vendor/tinykeys/tinykeys.umd.js"></script>
-<script src="assets/vendor/sortablejs/Sortable.min.js"></script>
-<script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js"></script>
-<script src="assets/vendor/pusher-js/pusher.min.js"></script>
+<script src="assets/vendor/jquery/jquery.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/metismenu/metisMenu.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/moment/moment-with-locales.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/moment/moment-timezone-with-data-10-year-range.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/bowser/bowser.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/js-cookie/js.cookie.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/arrive/arrive.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/vanilla-lazyload/lazyload.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/sweetalert2/sweetalert2.all.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/alertifyjs/alertify.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/tom-select/tom-select.complete.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/tinykeys/tinykeys.umd.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>

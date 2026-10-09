@@ -39,32 +39,34 @@ function chatLaunch(){
 			// Enable pusher logging - don't include this in production
 			//Pusher.logToConsole = true;
 			// Add API Key & cluster here to make the connection
-			var pusher = new Pusher(activeInfo.plugins.includes["CHAT-authKey-include"], {
-				cluster: activeInfo.plugins.includes["CHAT-cluster-include"],
-				forceTLS: true
-			});
-			// Enter a unique channel you wish your users to be subscribed in.
-			var channel = pusher.subscribe('org_channel');
-			// bind the server event to get the response data and append it to the message div
-			channel.bind('my-event',
-				function(data) {
-					formatMessage(data);
-					$('.chat-list').append(formatMessage(data));
-					$('.custom-send').html('<button type="button" class="btn btn-info btn-lg custom-send-button"><i class="fa fa-paper-plane fa-2x"></i> </button>');
-					$(".chat-list").scrollTop($(".chat-list")[0].scrollHeight);
-					if($('#container-plugin-chat').hasClass('hidden')){
-						var chatSound =  new Audio(activeInfo.plugins.includes["CHAT-newMessageSound-include"]);
-						chatSound.play();
-						message(data.username,data.message,activeInfo.settings.notifications.position,"#FFF","success","20000");
-						$('.profile-image').addClass('animated loop-animation rubberBand');
-						$('.chat-counter').removeClass('hidden').html(parseInt($('.chat-counter').text()) + 1);
-					}
+			londerlandLoadLibrary('pusher').then(function() {
+				var pusher = new Pusher(activeInfo.plugins.includes["CHAT-authKey-include"], {
+					cluster: activeInfo.plugins.includes["CHAT-cluster-include"],
+					forceTLS: true
 				});
-			// check if the user is subscribed to the above channel
-			channel.bind('pusher:subscription_succeeded', function(members) {
-				londerlandConsole('Plugin Function','Chat Websocket Connected!');
-				londerlandConsole('Plugin Function','Connecting to Londerland Chat DB');
-				getMessagesAndUsers(activeInfo.settings.refresh["CHAT-userRefreshTimeout"], true);
+				// Enter a unique channel you wish your users to be subscribed in.
+				var channel = pusher.subscribe('org_channel');
+				// bind the server event to get the response data and append it to the message div
+				channel.bind('my-event',
+					function(data) {
+						formatMessage(data);
+						$('.chat-list').append(formatMessage(data));
+						$('.custom-send').html('<button type="button" class="btn btn-info btn-lg custom-send-button"><i class="fa fa-paper-plane fa-2x"></i> </button>');
+						$(".chat-list").scrollTop($(".chat-list")[0].scrollHeight);
+						if($('#container-plugin-chat').hasClass('hidden')){
+							var chatSound =  new Audio(activeInfo.plugins.includes["CHAT-newMessageSound-include"]);
+							chatSound.play();
+							message(data.username,data.message,activeInfo.settings.notifications.position,"#FFF","success","20000");
+							$('.profile-image').addClass('animated loop-animation rubberBand');
+							$('.chat-counter').removeClass('hidden').html(parseInt($('.chat-counter').text()) + 1);
+						}
+					});
+				// check if the user is subscribed to the above channel
+				channel.bind('pusher:subscription_succeeded', function(members) {
+					londerlandConsole('Plugin Function','Chat Websocket Connected!');
+					londerlandConsole('Plugin Function','Connecting to Londerland Chat DB');
+					getMessagesAndUsers(activeInfo.settings.refresh["CHAT-userRefreshTimeout"], true);
+				});
 			});
 			/*jslint browser: true*/
 			/*global $, jQuery, alert*/

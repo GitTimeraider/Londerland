@@ -2241,6 +2241,19 @@ class Londerland
 		];
 	}
 
+	// The logo or title in the top bar, written into the page so it shows on the first paint
+	// (loadAppearance() in functions.js draws the same once start-up has finished)
+	public function logoHTML($class)
+	{
+		if (!$this->hasConfig()) {
+			return '';
+		}
+		if ($this->config['useLogo'] ?? false) {
+			return '<img alt="home" class="' . $class . '" src="' . htmlspecialchars($this->config['logo'] ?? '', ENT_QUOTES) . '">';
+		}
+		return htmlspecialchars($this->config['title'] ?? '', ENT_QUOTES);
+	}
+
 	public function loadAppearance()
 	{
 		$appearance['logo'] = $this->config['logo'];
