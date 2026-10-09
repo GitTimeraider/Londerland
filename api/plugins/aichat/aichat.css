@@ -646,9 +646,25 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   color: var(--aichat-text);
 }
 .aichat-tool-toggle.active {
-  color: #fff;
-  background: color-mix(in srgb, var(--aichat-accent) 30%, transparent);
+  color: var(--aichat-user-text);
+  background: var(--aichat-accent);
   border-color: var(--aichat-accent);
+}
+.aichat-tool-toggle.active:hover {
+  color: var(--aichat-user-text);
+  background: color-mix(in srgb, var(--aichat-accent) 85%, #000);
+}
+
+/* Switches and fields in the chat settings use the accent too */
+.aichat-panel .form-check-input:checked {
+  background-color: var(--aichat-accent);
+  border-color: var(--aichat-accent);
+}
+.aichat-panel .form-check-input:focus,
+.aichat-panel .form-control:focus,
+.aichat-panel .form-select:focus {
+  border-color: var(--aichat-accent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--aichat-accent) 30%, transparent);
 }
 .aichat-composer-row > div:first-child {
   display: flex;
