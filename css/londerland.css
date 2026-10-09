@@ -6666,9 +6666,13 @@ select.form-control:not([multiple]):not([size]) {
 .mfp-close-btn-in .white-popup > .mfp-close:focus {
   opacity: 1;
 }
+/* Account Settings has its own close button in the card header, next to Save */
+#account-area > .mfp-close {
+  display: none;
+}
 /* Narrow screens: the card fills the width, so the close button gets its own strip above it instead of covering header buttons */
 @media (max-width: 991.98px) {
-  .mfp-close-btn-in .white-popup {
+  .mfp-close-btn-in .white-popup:not(#account-area) {
     padding-top: 44px;
   }
 }
