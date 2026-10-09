@@ -130,6 +130,8 @@ for example `/var/www/html/data/db/`, so the database is kept when the container
 | `-p` / `ports:` | `8080:80` | `<port on your machine>:<port in the container>`. |
 | `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
 | `-e LONDERLAND_PORT` | `8080` | The port Londerland listens on **inside** the container (default `80`). Only needed with `--network host`, rootless Docker or Docker older than 20.10; then also change the right side of `-p`. |
+| `-e LONDERLAND_LOGIN_ALLOWED_IPS` | `192.168.1.0/24,10.8.0.0/24` | Only these IPs and subnets (IPv4 or IPv6, comma separated) may log in. See [Login only from your own networks](#login-only-from-your-own-networks). Not set = login from anywhere. |
+| `-e LONDERLAND_TRUSTED_PROXIES` | `172.18.0.0/16` | Your reverse proxy's IP or subnet. Only from these addresses is the `X-Forwarded-For` header believed. |
 | `-v` / `volumes:` | `./londerland-data:/var/www/html/data` | Your settings, database, logs, backups and uploaded images. Keep this folder to keep your setup. |
 
 **Running as a user (`--user`)**: the data folder on your host must belong to that user before the container starts
@@ -153,6 +155,37 @@ Port 80 needs no capability on Docker 20.10 or newer; on older Docker, set `LOND
 If a capability is missing, the container stops and `docker logs londerland` says which ones to add.
 
 The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
+
+### Login only from your own networks
+
+Set `LONDERLAND_LOGIN_ALLOWED_IPS` to make logging in possible only from your home network, a VPN or a few fixed addresses:
+
+```yaml
+    environment:
+      - LONDERLAND_LOGIN_ALLOWED_IPS=192.168.1.0/24,10.8.0.0/24,203.0.113.7
+```
+
+Visitors from any other address see a **Login not allowed** page (with the address Londerland sees for them) instead of the
+login form. Every way of logging in is refused for them: username and password, Plex, Emby/Jellyfin, OpenID Connect,
+reverse proxy header login, registering, password recovery and the setup wizard. Pages and tabs meant for guests stay visible,
+so the public part of your site keeps working. People who are already logged in stay logged in until their login expires.
+Each refused attempt is written to Londerland's log.
+
+**Behind a reverse proxy** (Nginx Proxy Manager, Traefik, Caddy, Cloudflare Tunnel, ...), every visitor connects through the proxy,
+so Londerland only sees the proxy's address. Also set `LONDERLAND_TRUSTED_PROXIES` to the proxy's IP or Docker subnet:
+
+```yaml
+      - LONDERLAND_TRUSTED_PROXIES=172.18.0.0/16
+```
+
+Londerland then uses the visitor's address from the `X-Forwarded-For` header, but only for requests that come from those
+proxies, so nobody can get in by sending that header themselves. Find the proxy's address with
+`docker network inspect <network name>` (on the Docker host), or open the login page from outside: the blocked page shows the
+address Londerland sees. If that is your proxy's address, `LONDERLAND_TRUSTED_PROXIES` is missing or wrong.
+Do not put the proxy's address in `LONDERLAND_LOGIN_ALLOWED_IPS`, as that would allow everyone who comes through the proxy.
+
+After changing these variables, recreate the container: `docker compose up -d` (Compose) or `docker rm -f londerland` and the
+`docker run` command again.
 
 ### Updating
 
