@@ -66,10 +66,11 @@ class AiChat extends Londerland
 	}
 
 	/**
-	 * Groups chosen under Chat > Groups with AI Chat; until that is set, the Minimum Authentication group and higher.
-	 * Guests never get the chat, whatever the settings say.
+	 * Groups chosen under the former "Groups with AI Chat" list, or the Minimum Authentication group and higher before
+	 * that was set. Only a fallback now: a group's own switch under Groups (AICHAT-groupAccess-<id>-include) wins once
+	 * it has been saved.
 	 */
-	public function _aiChatAllowedGroups()
+	private function _aiChatLegacyGroups()
 	{
 		$setting = trim((string)($this->config['AICHAT-groups-include'] ?? 'auto'));
 		$groups = array_map(function ($group) {
@@ -88,9 +89,21 @@ class AiChat extends Londerland
 		}));
 	}
 
+	/**
+	 * Whether a group gets the chat: its switch under Groups, or the older group list while that switch was never
+	 * saved. Guests (999) never get the chat, whatever the settings say.
+	 */
 	private function _aiChatGroupAllowed($groupId)
 	{
-		return $groupId < 999 && in_array((int)$groupId, $this->_aiChatAllowedGroups(), true);
+		$groupId = (int)$groupId;
+		if ($groupId >= 999) {
+			return false;
+		}
+		$key = 'AICHAT-groupAccess-' . $groupId . '-include';
+		if (array_key_exists($key, $this->config) && $this->config[$key] !== '') {
+			return filter_var($this->config[$key], FILTER_VALIDATE_BOOLEAN);
+		}
+		return in_array($groupId, $this->_aiChatLegacyGroups(), true);
 	}
 
 	public function _aiChatAdminAccess($request)
@@ -202,28 +215,33 @@ class AiChat extends Londerland
 
 	public function _aiChatGetSettings()
 	{
-		// guests are never offered; values as strings so the multi-select marks the chosen ones
-		$groupOptions = [];
-		$groupModels = [];
+		// per group: AI Chat on or off (off = no chat button and no access) and the models it may use; guests are
+		// never offered
+		$groupSettings = array(array(
+			'type' => 'html',
+			'override' => 12,
+			'label' => 'Groups',
+			'html' => '<p lang="en">Turn AI Chat on or off per group. Users in a group that is off get no chat button and cannot use the chat. Guests never get it.</p><p lang="en">Models: comma separated model IDs the group may use; <code>*</code> is a wildcard (e.g. <code>gpt-4o*, llama3*</code>). Empty = every model allowed under Models.</p>'
+		));
 		foreach ($this->groupSelect() as $group) {
-			if ((int)$group['value'] >= 999) {
+			$groupId = (int)$group['value'];
+			if ($groupId >= 999) {
 				continue;
 			}
-			$groupOptions[] = ['name' => $group['name'], 'value' => (string)$group['value']];
-			$groupModels[] = array(
+			$groupSettings[] = array(
+				'type' => 'switch',
+				'name' => 'AICHAT-groupAccess-' . $groupId . '-include',
+				'label' => $group['name'] . ': AI Chat',
+				'value' => $this->_aiChatGroupAllowed($groupId)
+			);
+			$groupSettings[] = array(
 				'type' => 'input',
-				'name' => 'AICHAT-groupModels-' . (int)$group['value'],
-				'label' => $group['name'],
-				'value' => $this->config['AICHAT-groupModels-' . (int)$group['value']] ?? '',
+				'name' => 'AICHAT-groupModels-' . $groupId,
+				'label' => $group['name'] . ': Models',
+				'value' => $this->config['AICHAT-groupModels-' . $groupId] ?? '',
 				'placeholder' => 'Empty = all allowed models'
 			);
 		}
-		array_unshift($groupModels, array(
-			'type' => 'html',
-			'override' => 12,
-			'label' => 'Models per Group',
-			'html' => '<p lang="en">Comma separated model IDs a group may use; <code>*</code> is a wildcard (e.g. <code>gpt-4o*, llama3*</code>). Empty = every model allowed under Models. Only groups chosen under Chat &gt; Groups with AI Chat get the chat at all.</p>'
-		));
 		return array(
 			'custom' => '
 				<div class="row">
@@ -234,7 +252,7 @@ class AiChat extends Londerland
 								<div class="card-body">
 									<ul class="list-icons">
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Works with any server that speaks the OpenAI API (/v1/chat/completions), for example OpenAI, Anthropic (https://api.anthropic.com/v1/), Ollama (http://ollama:11434/v1), LM Studio, LiteLLM, OpenRouter, vLLM or LocalAI.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen groups get a chat button in the bottom right corner. Guests never see it.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the groups turned on under Groups get a chat button in the bottom right corner. Guests never see it.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">The API key stays on the Londerland server; browsers never receive it.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Save the settings, then use Test Connection to check the server and load its models.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Optional: set up Web Search and Images to give users a globe button (search the web first) and an image button (create a picture).</span></li>
@@ -310,16 +328,6 @@ class AiChat extends Londerland
 			),
 			'Chat' => array(
 				array(
-					'type' => 'select2',
-					'name' => 'AICHAT-groups-include',
-					'class' => 'select2-multiple',
-					'id' => 'AICHAT-groups-include-select',
-					'label' => 'Groups with AI Chat',
-					'value' => implode(',', $this->_aiChatAllowedGroups()),
-					'options' => $groupOptions,
-					'help' => 'Only users in these groups see the chat button and may use the chat. Guests never get it. Which models each group may use is set under Models per Group.'
-				),
-				array(
 					'type' => 'textbox',
 					'name' => 'AICHAT-systemPrompt',
 					'label' => 'System Prompt',
@@ -357,7 +365,7 @@ class AiChat extends Londerland
 					'value' => $this->config['AICHAT-autoTitle']
 				),
 			),
-			'Models per Group' => $groupModels,
+			'Groups' => $groupSettings,
 			'Web Search' => array(
 				array(
 					'type' => 'select',
