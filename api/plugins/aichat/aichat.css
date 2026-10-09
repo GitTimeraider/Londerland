@@ -7,7 +7,8 @@
   --aichat-text: #dfe4ec;
   --aichat-muted: #8c97a8;
   --aichat-accent: #2cabe3;
-  --aichat-user-bg: #2cabe3;
+  /* the accent follows the theme: main.js copies the colour of the theme's .btn-info (the "New chat" button) into it */
+  --aichat-user-bg: var(--aichat-accent);
   --aichat-user-text: #fff;
   --aichat-danger: #ff7676;
   --aichat-radius: 12px;
@@ -185,7 +186,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   outline: none;
 }
 .aichat-chat-item.active {
-  background: rgba(44, 171, 227, 0.18);
+  background: color-mix(in srgb, var(--aichat-accent) 18%, transparent);
 }
 .aichat-chat-item .aichat-chat-title {
   flex: 1;
@@ -298,7 +299,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
 }
 .aichat-panel .ts-dropdown .active {
   color: #fff;
-  background: rgba(44, 171, 227, 0.35);
+  background: color-mix(in srgb, var(--aichat-accent) 35%, transparent);
 }
 
 /* Messages */
@@ -617,7 +618,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: rgba(44, 171, 227, 0.25);
+  background: color-mix(in srgb, var(--aichat-accent) 25%, transparent);
   border: 2px dashed var(--aichat-accent);
   border-radius: var(--aichat-radius);
   font-size: 18px;
@@ -645,9 +646,25 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   color: var(--aichat-text);
 }
 .aichat-tool-toggle.active {
-  color: #fff;
-  background: rgba(44, 171, 227, 0.3);
+  color: var(--aichat-user-text);
+  background: var(--aichat-accent);
   border-color: var(--aichat-accent);
+}
+.aichat-tool-toggle.active:hover {
+  color: var(--aichat-user-text);
+  background: color-mix(in srgb, var(--aichat-accent) 85%, #000);
+}
+
+/* Switches and fields in the chat settings use the accent too */
+.aichat-panel .form-check-input:checked {
+  background-color: var(--aichat-accent);
+  border-color: var(--aichat-accent);
+}
+.aichat-panel .form-check-input:focus,
+.aichat-panel .form-control:focus,
+.aichat-panel .form-select:focus {
+  border-color: var(--aichat-accent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--aichat-accent) 30%, transparent);
 }
 .aichat-composer-row > div:first-child {
   display: flex;
@@ -711,7 +728,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   text-decoration: none;
 }
 .aichat-sources a:hover {
-  background: rgba(44, 171, 227, 0.18);
+  background: color-mix(in srgb, var(--aichat-accent) 18%, transparent);
 }
 .aichat-source-number,
 .aichat-cite {
@@ -722,7 +739,7 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   height: 18px;
   padding: 0 4px;
   color: #fff;
-  background: rgba(44, 171, 227, 0.55);
+  background: color-mix(in srgb, var(--aichat-accent) 55%, transparent);
   border-radius: 9px;
   font-size: 11px;
   text-decoration: none !important;
