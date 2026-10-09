@@ -248,6 +248,25 @@
 		return activeInfo.plugins.includes['AICHAT-images-include'] === true;
 	}
 
+	// The chat uses the theme's accent colour: the colour of its .btn-info buttons (like "New chat"), so it matches
+	// whatever theme is chosen. Text on the user's bubbles turns dark when that colour is light.
+	function applyThemeAccent() {
+		const probe = $('<button type="button" class="btn btn-info" tabindex="-1" aria-hidden="true"></button>')
+			.css({ position: 'absolute', left: '-9999px', top: 0 })
+			.appendTo('body');
+		const color = getComputedStyle(probe[0]).backgroundColor;
+		probe.remove();
+		const rgb = (color.match(/[\d.]+/g) || []).map(Number);
+		// no usable colour (transparent, or the theme does not style .btn-info): keep the default
+		if (rgb.length < 3 || (rgb.length > 3 && rgb[3] === 0)) {
+			return;
+		}
+		const root = document.documentElement.style;
+		root.setProperty('--aichat-accent', color);
+		const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+		root.setProperty('--aichat-user-text', lum > 0.6 ? '#1d1f26' : '#fff');
+	}
+
 	// Name and colour of the chat button come from the plugin settings
 	function styleLauncher() {
 		const includes = activeInfo.plugins.includes;
@@ -278,6 +297,7 @@
 		$('body')
 			.addClass('aichat-enabled')
 			.append(`<button type="button" class="aichat-launcher" title="${escapeHtml(t('AI Chat'))}" aria-label="${escapeHtml(t('Open AI Chat'))}" aria-expanded="false"><span class="aichat-launcher-icon" aria-hidden="true">AI</span><i class="fa fa-times" aria-hidden="true"></i><span class="aichat-launcher-label"></span></button>`);
+		applyThemeAccent();
 		styleLauncher();
 		$('body').append(`
 			<section class="aichat-panel" role="dialog" aria-label="${escapeHtml(t('AI Chat'))}">
@@ -364,6 +384,7 @@
 	/* ===================== opening ===================== */
 
 	async function openChat() {
+		applyThemeAccent();
 		$('body').addClass('aichat-open');
 		$('.aichat-launcher').attr({ 'aria-expanded': 'true', 'aria-label': t('Close AI Chat') });
 		if (window.innerWidth < 768) {
