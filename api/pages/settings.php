@@ -64,12 +64,6 @@ function get_page_settings($Londerland)
 							<div role="tabpanel" class="tab-pane fade" id="settings-tab-editor-categories">
 								<h2 lang="en">Loading...</h2>
 							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-tab-editor-homepage">
-								<h2 lang="en">Loading...</h2>
-							</div>
-							<div role="tabpanel" class="tab-pane fade" id="settings-tab-editor-homepage-order">
-								<h2 lang="en">Loading...</h2>
-							</div>
 						</div>
 					</section>
 					<! -- Customize -->
@@ -193,6 +187,5 @@ function get_page_settings($Londerland)
 	<!--./row-->
 </div>
 <!-- /.container-fluid -->
-<div class="modal fade" id="editHomepageItemDiv" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-fullscreen"><div class="modal-content bg-org"><div class="modal-body p-0" id="editHomepageItem"></div></div></div></div>
 ';
 }

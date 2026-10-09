@@ -64,7 +64,7 @@ function chatLaunch(){
 			channel.bind('pusher:subscription_succeeded', function(members) {
 				londerlandConsole('Plugin Function','Chat Websocket Connected!');
 				londerlandConsole('Plugin Function','Connecting to Londerland Chat DB');
-				getMessagesAndUsers(activeInfo.settings.homepage.refresh["CHAT-userRefreshTimeout"], true);
+				getMessagesAndUsers(activeInfo.settings.refresh["CHAT-userRefreshTimeout"], true);
 			});
 			/*jslint browser: true*/
 			/*global $, jQuery, alert*/
@@ -154,7 +154,7 @@ function chatEntry(){
 	$('.chat-counter').addClass('hidden').html('0');
 }
 function getMessagesAndUsers(timeout, initial = false){
-	var timeout = (typeof timeout !== 'undefined') ? timeout : activeInfo.settings.homepage.refresh["CHAT-userRefreshTimeout"];
+	var timeout = (typeof timeout !== 'undefined') ? timeout : activeInfo.settings.refresh["CHAT-userRefreshTimeout"];
 	londerlandAPI2('GET','api/v2/plugins/chat/message').done(function(data) {
 		var response = data.response;
 		if(initial == true){

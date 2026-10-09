@@ -123,42 +123,6 @@ function initSwitches(root = document) {
 	});
 }
 
-// Horizontally scrolling media rows (replaces Owl Carousel). Each child item is wrapped in its own
-// .swiper-slide, so code that hides an item's .parent() hides that slide.
-function initCarousel(selector, options = {}) {
-	$(selector).each(function () {
-		if (this.swiper) {
-			this.swiper.update();
-			return;
-		}
-		const container = $(this).addClass('swiper');
-		const wrapper = $('<div class="swiper-wrapper"></div>');
-		container.children().each(function () {
-			$(this).wrap('<div class="swiper-slide"></div>');
-		});
-		container.children().appendTo(wrapper);
-		wrapper.appendTo(container);
-		new Swiper(this, {
-			slidesPerView: 'auto',
-			spaceBetween: 10,
-			freeMode: true,
-			// horizontal wheel / shift+wheel scrolls the row, a normal wheel keeps scrolling the page
-			mousewheel: { forceToAxis: true },
-			autoplay: options.autoplay ? { delay: 4000, disableOnInteraction: false } : false,
-		});
-	});
-}
-
-// Re-layout carousels after their items were filtered and jump back to the start
-function refreshCarousel(selector) {
-	$(selector).each(function () {
-		if (this.swiper) {
-			this.swiper.update();
-			this.swiper.slideTo(0);
-		}
-	});
-}
-
 // Overlay scrollbars for scrollable areas; elements that already have them are left alone
 function customScrollbars(selector, autoHide = 'leave') {
 	const { OverlayScrollbars } = OverlayScrollbarsGlobal;
@@ -362,16 +326,12 @@ $(document).on('show.bs.tab', function (e) {
 	}
 });
 
-// Big libraries that only a few pages use (code editor, e-mail editor, user table, calendar) are not part of the
+// Big libraries that only a few pages use (code editor, e-mail editor, user table) are not part of the
 // page load; they are fetched the first time a page asks for them. Returns a Promise; later calls reuse it.
 const londerlandLibraries = {
 	ace: { js: ['assets/vendor/ace/ace.js'], css: [] },
 	tinymce: { js: ['assets/vendor/tinymce/tinymce.min.js'], css: [] },
 	tabulator: { js: ['assets/vendor/tabulator/tabulator.min.js'], css: ['assets/vendor/tabulator/tabulator_bootstrap5.min.css'] },
-	fullcalendar: {
-		js: ['assets/vendor/fullcalendar/fullcalendar.global.min.js', 'assets/vendor/fullcalendar/theme-classic.global.js', 'assets/vendor/fullcalendar/locales-all.global.js'],
-		css: ['assets/vendor/fullcalendar/skeleton.css', 'assets/vendor/fullcalendar/theme.css', 'assets/vendor/fullcalendar/palette.css'],
-	},
 };
 const londerlandLibraryLoads = {};
 function londerlandLoadLibrary(name) {

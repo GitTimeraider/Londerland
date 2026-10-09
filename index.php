@@ -35,7 +35,6 @@ $Londerland = new Londerland(true);
     <link href="assets/vendor/dropzone/dropzone.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/pickr/nano.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css" rel="stylesheet">
     <link href="assets/vendor/alertifyjs/css/alertify.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/alertifyjs/css/themes/default.min.css" rel="stylesheet" media="print" onload="this.media='all'">
@@ -191,11 +190,8 @@ $Londerland = new Londerland(true);
 <script src="assets/vendor/tinycolor2/tinycolor-min.js"></script>
 <script src="assets/vendor/pickr/pickr.min.js"></script>
 <script src="assets/vendor/dropzone/dropzone-min.js"></script>
-<script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
 <script src="assets/vendor/tom-select/tom-select.complete.min.js"></script>
 <script src="assets/vendor/tinykeys/tinykeys.umd.js"></script>
-<script src="assets/vendor/easy-pie-chart/jquery.easypiechart.min.js"></script>
-<script src="assets/vendor/gaugejs/gauge.min.js"></script>
 <script src="assets/vendor/sortablejs/Sortable.min.js"></script>
 <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js"></script>
 <script src="assets/vendor/pusher-js/pusher.min.js"></script>
@@ -209,7 +205,6 @@ $Londerland = new Londerland(true);
 echo $Londerland->googleTracking();
 echo $Londerland->pluginFiles('js');
 echo $Londerland->formKey();
-echo $Londerland->loadCalendarJS();
 echo $Londerland->CBPFWTabs();
 ?>
 </body>
