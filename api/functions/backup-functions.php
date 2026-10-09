@@ -14,18 +14,6 @@ trait BackupFunctions
 		return $defaultPath;
 	}
 
-	public function fileArray($files)
-	{
-		foreach ($files as $file) {
-			if (file_exists($file)) {
-				$list[] = $file;
-			}
-		}
-		if (!empty($list)) {
-			return $list;
-		}
-	}
-
 	public function deleteBackup($filename)
 	{
 		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));

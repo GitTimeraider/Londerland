@@ -739,15 +739,6 @@ class Londerland
 		}
 	}
 
-	public function printWarningsAndErrors()
-	{
-		if (isset($GLOBALS['api']['response']['exceptions'])) {
-			$this->prettyPrint($GLOBALS['api']['response']['exceptions'], true);
-		} else {
-			$this->prettyPrint('No Errors');
-		}
-	}
-
 	public function setAPIErrorResponse($number, $message, $file, $line)
 	{
 		if (!(error_reporting() & $number)) {
@@ -808,18 +799,6 @@ class Londerland
 			}
 		}
 		$this->handleError($exceptions[$number], $message, $file, $line, $type);
-	}
-
-	public function setErrorResponse($number, $message, $file, $line)
-	{
-		$error = [
-			'error' => $number,
-			'message' => $message,
-			'file' => $file,
-			'line' => $line
-		];
-		$this->handleError($number, $message, $file, $line);
-		//$this->prettyPrint($error, true);
 	}
 
 	public function handleError($number, $message, $file, $line, $type)
@@ -958,24 +937,6 @@ class Londerland
 			';
 		}
 		return null;
-	}
-
-	public function matchBrackets($text, $brackets = 's')
-	{
-		switch ($brackets) {
-			case 's':
-			case 'square':
-				$pattern = '#\[(.*?)\]#';
-				break;
-			case 'c':
-			case 'curly':
-				$pattern = '#\((.*?)\)#';
-				break;
-			default:
-				return null;
-		}
-		preg_match($pattern, $text, $match);
-		return $match[1];
 	}
 
 	public function getRootPath()
@@ -1466,12 +1427,6 @@ class Londerland
 		return $config;
 	}
 
-	public function combineConfig($array)
-	{
-		$this->config = array_merge($this->config, $array);
-		return $this->config;
-	}
-
 	public function status($action = false)
 	{
 		$status = [];
@@ -1824,17 +1779,6 @@ class Londerland
 		return false;
 	}
 
-	public function defaultUserGroup()
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => 'SELECT * FROM groups WHERE `default` = 1'
-			)
-		];
-		return $this->processQueries($response);
-	}
-
 	/**
 	 * Settings > System Settings > Main > Default Tab per Group: one tab choice per group (config defaultTabGroup-<id>).
 	 * A group without a choice, or whose tab its users cannot open, uses the default tab of the Tab Editor.
@@ -1901,21 +1845,6 @@ class Londerland
 		return $tabs;
 	}
 
-	public function getUsers()
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM users'
-			),
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM groups ORDER BY group_id ASC'
-			),
-		];
-		return $this->processQueries($response);
-	}
-
 	public function usernameTaken($username, $email, $id = null)
 	{
 		if ($id) {
@@ -1948,16 +1877,6 @@ class Londerland
 	public function cleanPageName($page)
 	{
 		return ($page) ? strtolower(str_replace(array('%20', ' ', '-', '_'), '_', $page)) : '';
-	}
-
-	public function cleanClassName($name, $char = '-')
-	{
-		return ($name) ? (str_replace(array('%20', ' ', '-', '_'), $char, strtolower($name))) : '';
-	}
-
-	public function reverseCleanClassName($name)
-	{
-		return ($name) ? (str_replace(array('%20', '-', '_'), ' ', strtolower($name))) : '';
 	}
 
 	public function getPageList()
@@ -2721,11 +2640,6 @@ class Londerland
 		return $systemMenus;
 	}
 
-	public function updateConfigMultiple($array)
-	{
-		return (bool)$this->updateConfig($array);
-	}
-
 	public function updateConfigItems($array)
 	{
 		if (!count($array)) {
@@ -2773,28 +2687,6 @@ class Londerland
 		$this->setAPIResponse('success', 'Config items updated', 200);
 		$this->setLoggerChannel('Config')->notice('Config items updated', ['items' => array_keys($updatedItems)]);
 		return (bool)$this->updateConfig($newItems);
-	}
-
-	public function updateConfigItem($array)
-	{
-		$array['value'] = $array['value'] ?? '';
-		switch ($array['value']) {
-			case 'true':
-				$array['value'] = (bool)true;
-				break;
-			case 'false':
-				$array['value'] = (bool)false;
-				break;
-		}
-		// Hash
-		if ($array['type'] == 'password') {
-			$array['value'] = $this->encrypt($array['value']);
-		}
-		$newItem = array(
-			$array['name'] => $array['value']
-		);
-		$this->config[$array['name']] = $array['value'];
-		return (bool)$this->updateConfig($newItem);
 	}
 
 	public function testWizardPath($array)
@@ -4103,25 +3995,6 @@ class Londerland
 		return $this->processQueries($response);
 	}
 
-	public function revokeToken($token = null)
-	{
-		if (!$token) {
-			$this->setAPIResponse('error', 'Token was not supplied', 422);
-			return false;
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'DELETE FROM tokens WHERE token = ?',
-					[$token]
-				)
-			),
-		];
-		$this->setAPIResponse('success', 'Token revoked', 204);
-		return $this->processQueries($response);
-	}
-
 	public function revokeTokenByIdCurrentUser($id = null)
 	{
 		if (!$id) {
@@ -4433,19 +4306,6 @@ class Londerland
 		];
 	}
 
-	public function checkLog($path)
-	{
-		if (file_exists($path)) {
-			if (filesize($path) > 500000) {
-				rename($path, $path . '[' . date('Y-m-d') . '].json');
-				return false;
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public function isApprovedRequest($method, $data)
 	{
 		$requesterToken = $this->getallheadersi()['token'] ?? ($_GET['apikey'] ?? false);
@@ -4714,19 +4574,6 @@ class Londerland
 				'function' => 'fetchSingle',
 				'query' => array(
 					'SELECT `group_id` FROM groups WHERE `default` = 1'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function getDefaultCategory()
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => array(
-					'SELECT * FROM categories WHERE `default` = 1'
 				)
 			),
 		];

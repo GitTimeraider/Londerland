@@ -252,27 +252,6 @@ trait UpgradeFunctions
 		return false;
 	}
 
-	public function createMysqliDatabase($database, $migration = false)
-	{
-		$query = [
-			array(
-				'function' => 'fetchAll',
-				'query' => array(
-					'DROP DATABASE IF EXISTS tempMigration'
-				)
-			),
-			array(
-				'function' => 'fetchAll',
-				'query' => array(
-					'CREATE DATABASE IF NOT EXISTS %n',
-					$database
-				)
-			),
-		];
-		//$query = ['CREATE DB %n', $database];
-		return $this->processQueries($query, $migration);
-	}
-
 	public function updateDB($oldVerNum = false)
 	{
 		$tempLock = $this->config['dbLocation'] . 'DBLOCK.txt';

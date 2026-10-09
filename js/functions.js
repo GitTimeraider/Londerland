@@ -40,33 +40,6 @@ $(document).ready(function () {
   local("r", "loggingIn");
 });
 /* NORMAL FUNCTIONS */
-function highlightObject(json) {
-  if (typeof json != "string") {
-    json = JSON.stringify(json, undefined, "\t");
-  }
-  json = json
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return json.replace(
-    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-    function (match) {
-      var cls = "number";
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          cls = "key";
-        } else {
-          cls = "string";
-        }
-      } else if (/true|false/.test(match)) {
-        cls = "boolean";
-      } else if (/null/.test(match)) {
-        cls = "null";
-      }
-      return '<span class="' + cls + '">' + match + "</span>";
-    }
-  );
-}
 function orgDebug() {
   let cmd = $("#debug-input").val();
   let result = "";
@@ -82,18 +55,6 @@ function orgDebug() {
     }
   } else {
   }
-}
-function getDepth(object) {
-  var level = 1;
-  for (var key in object) {
-    if (!object.hasOwnProperty(key)) continue;
-
-    if (typeof object[key] == "object") {
-      var depth = getDepth(object[key]) + 1;
-      level = Math.max(depth, level);
-    }
-  }
-  return level;
 }
 function jsonToHTML(json) {
   var html = "";
@@ -222,36 +183,12 @@ function clipboard(trigger = true, string = null) {
     clipboard.click();
   }
 }
-function getHiddenProp() {
-  var prefixes = ["webkit", "moz", "ms", "o"];
-  // if 'hidden' is natively supported just return it
-  if ("hidden" in document) return "hidden";
-  // otherwise loop over all the known prefixes until we find one
-  for (var i = 0; i < prefixes.length; i++) {
-    if (prefixes[i] + "Hidden" in document) return prefixes[i] + "Hidden";
-  }
-  // otherwise it's not supported
-  return null;
-}
-function isHidden() {
-  var prop = getHiddenProp();
-  if (!prop) return false;
-  return document[prop];
-}
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 function contains(target, pattern) {
   var value = 0;
   pattern.forEach(function (word) {
     value = value + target.includes(word);
   });
   return value === 1;
-}
-function isNumberKey(evt) {
-  var charCode = evt.which ? evt.which : event.keyCode;
-  if (charCode < 48 || charCode > 57) return false;
-  return true;
 }
 function setTabInfo(id, action, value) {
   let tabInfo = findTab(id);
@@ -420,18 +357,6 @@ function getDefault(id) {
     loadNextTab(true);
   }
 }
-function getTabType(id) {
-  let tabInfo = findTab(id);
-  if (!tabInfo) {
-    londerlandConsole(
-      "Tab Type Function",
-      "No Tab Info Found... Id: " + id,
-      "error"
-    );
-    return false;
-  }
-  return tabInfo.type;
-}
 function getHash() {
   if ($(location).attr("hash")) {
     return dirtyHash($(location).attr("hash").substr(1));
@@ -440,17 +365,6 @@ function getHash() {
 }
 function setHash(hash) {
   window.location.hash = "#" + cleanHash(hash);
-}
-function getQueryVariable(variable) {
-  var query = window.location.search.substring(1);
-  var vars = query.split("&");
-  for (var i = 0; i < vars.length; i++) {
-    var pair = vars[i].split("=");
-    if (pair[0] == variable) {
-      return pair[1];
-    }
-  }
-  return false;
 }
 function iconPrefix(source) {
   if (!source) {
@@ -585,9 +499,6 @@ function logout() {
     .fail(function (xhr) {
       LonderlandApiError(xhr, "Logout Failed");
     });
-}
-function reloadLonderland() {
-  location.reload();
 }
 function hideFrames(split = null) {
   let extra = split ? "-right" : "";
@@ -1182,25 +1093,6 @@ function tabActions(event, id, redirectURL = "") {
     }
   }
 }
-function reverseObject(object) {
-  var newObject = {};
-  var keys = [];
-  for (var key in object) {
-    keys.push(key);
-  }
-  for (var i = keys.length - 1; i >= 0; i--) {
-    var value = object[keys[i]];
-    newObject[keys[i]] = value;
-  }
-  return newObject;
-}
-function hasValue(test) {
-  if (Array.isArray(test) && test[0] !== "") {
-    return true;
-  } else {
-    return false;
-  }
-}
 function arrayContains(needle, arrhaystack) {
   return arrhaystack.indexOf(needle) > -1;
 }
@@ -1783,20 +1675,6 @@ function buildPluginsItem(array, type = "enabled") {
 
 
 // Folder/file list rendered with native <details> elements
-function buildFileTree(files) {
-  let escape = (text) => $("<div>").text(text).html();
-  return files
-    .map(
-      (folder) => `
-      <details class="file-tree">
-        <summary><i class="ti-folder m-r-5"></i>${escape(folder.text)}</summary>
-        <ul class="list-unstyled m-l-20">${(folder.nodes || [])
-          .map((file) => `<li><i class="ti-file m-r-5"></i>${escape(file.text)}</li>`)
-          .join("")}</ul>
-      </details>`
-    )
-    .join("");
-}
 function buildPlugins(status = "enabled") {
   londerlandAPI2("GET", "api/v2/plugins/" + status)
     .done(function (data) {
@@ -4000,40 +3878,6 @@ function buildLonderlandBackups(array) {
   $("#backup-total-size").html(array.total_size);
   return list;
 }
-function countdown(remaining) {
-  if (remaining === 0) {
-    local("set", "message", "Londerland Update|Update Successful|update");
-    location.reload(true);
-  }
-  $("#update-seconds").text(remaining);
-  setTimeout(function () {
-    countdown(remaining - 1);
-  }, 1000);
-}
-function settingsAPI2(post, callbacks = null, asyncValue = true) {
-  londerlandAPI2("POST", post.api, post.data, asyncValue)
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        londerlandCatchError(e, data);
-      }
-      message(
-        post.messageTitle,
-        post.messageBody,
-        activeInfo.settings.notifications.position,
-        "#FFF",
-        "success",
-        "5000"
-      );
-      if (callbacks) {
-        callbacks.fire();
-      }
-    })
-    .fail(function (xhr) {
-      console.error(post.error);
-    });
-}
 $.xhrPool.abortAll = function (url) {
   $(this).each(function (i, jqXHR) {
     //  cycle through list of recorded connection
@@ -4176,59 +4020,6 @@ function loadInternal(id, split = null) {
       LonderlandApiError(xhr);
     });
 }
-function loadInternalOriginal(url, tabName) {
-  londerlandAPI("get", url)
-    .done(function (data) {
-      try {
-        var html = JSON.parse(data);
-      } catch (e) {
-        londerlandCatchError(e, data);
-      }
-      $("#internal-" + tabName).html(html.data);
-    })
-    .fail(function (xhr) {
-      LonderlandApiError(xhr);
-    });
-}
-function loadSettingsPage(api, element, londerlandFn) {
-  londerlandAPI("get", api)
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        londerlandCatchError(e, data);
-      }
-      londerlandConsole("Londerland Function", "Loading " + londerlandFn);
-      $(element).html(response.data);
-    })
-    .fail(function (xhr) {
-      LonderlandApiError(xhr);
-    });
-}
-function settingsAPI(post, callbacks = null, asyncValue = true) {
-  londerlandAPI("POST", post.api, post, asyncValue)
-    .done(function (data) {
-      try {
-        var response = JSON.parse(data);
-      } catch (e) {
-        londerlandCatchError(e, data);
-      }
-      message(
-        post.messageTitle,
-        post.messageBody,
-        activeInfo.settings.notifications.position,
-        "#FFF",
-        "success",
-        "5000"
-      );
-      if (callbacks) {
-        callbacks.fire();
-      }
-    })
-    .fail(function (xhr) {
-      console.error(post.error);
-    });
-}
 function londerlandAPI(type, path, data = null, asyncValue = true) {
   var timeout = 10000;
   switch (path) {
@@ -4271,11 +4062,6 @@ function londerlandAPI(type, path, data = null, asyncValue = true) {
     default:
       console.warn("Londerland API: Method Not Supported");
   }
-}
-function allIcons() {
-  return $.ajax({
-    url: "js/icons.json",
-  });
 }
 function londerlandConnect(path) {
   return $.ajax({
@@ -4920,12 +4706,6 @@ function checkMessage() {
     );
   }
 }
-function setError(error) {
-  local("set", "error", error);
-  var url = window.location.href.split("?")[0];
-  url = url.split("#")[0];
-  window.location.href = url + "?error";
-}
 function buildErrorPage(error) {
   var description = "";
   var message = "";
@@ -5135,11 +4915,6 @@ function testAPIConnection(service, data = "") {
     .fail(function (xhr) {
       LonderlandApiError(xhr, "API Error");
     });
-}
-function pad(n, width, z) {
-  z = z || "0";
-  n = n + "";
-  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 // Thanks Swifty!
 function PopupCenter(url, title, w, h) {
@@ -5949,34 +5724,6 @@ function orgErrorCode(code) {
     default:
   }
 }
-function clickPath(type, path = null) {
-  switch (type) {
-    case "c":
-    case "custom":
-      if (path !== null) {
-        if (typeof path == "object") {
-          $.each(path, function (i, v) {
-            $(v).trigger("click");
-          });
-        } else {
-          $(path).trigger("click");
-        }
-      } else {
-        return null;
-      }
-      break;
-    case "update":
-      $("#settings-main-system-settings-anchor").trigger("click");
-      $("#settings-settings-updates-anchor").trigger("click");
-      break;
-    case "sso":
-      $("#settings-main-system-settings-anchor").trigger("click");
-      $("#settings-settings-sso-anchor").trigger("click");
-      break;
-    default:
-      return null;
-  }
-}
 function toggleWritableFolders() {
   $(".folders-writable").toggleClass("hidden");
 }
@@ -6235,101 +5982,6 @@ function showLDAPLoginTest() {
   });
 }
 
-function showPlexTokenForm(selector = null) {
-  var div =
-    `
-		<form id="get-plex-token-form">
-		    <h1 lang="en">Get Plex Token</h1>
-		    <div class="card plexTokenHeader">
-		        <div class="card-header plexTokenMessage" lang="en">Enter Plex Details</div>
-		    </div>
-		    <fieldset style="border:0;">
-		        <div class="form-group">
-		            <label class="form-label" for="plex-token-form-username" lang="en">Plex Username</label>
-		            <input type="text" class="form-control" id="plex-token-form-username" name="username" required="" autofocus>
-		        </div>
-		        <div class="form-group">
-		            <label class="form-label" for="plex-token-form-password" lang="en">Plex Password</label>
-		            <input type="password" class="form-control" id="plex-token-form-password" name="password"  required="">
-		        </div>
-		        <div class="form-group">
-		            <label class="form-label" for="plex-token-form-tfa" lang="en">Plex 2FA (if applicable)</label>
-		            <input type="text" class="form-control" id="plex-token-form-tfa" name="tfa" >
-		        </div>
-		    </fieldset>
-		    <button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none" onclick="getPlexToken('` +
-    selector +
-    `')" type="button"><span class="btn-label"><i class="fa fa-ticket"></i></span><span lang="en">Grab It</span></button>
-		    <div class="clearfix"></div>
-		</form>
-	`;
-  Swal.fire({
-    html: createElementFromHTML(div),
-    showConfirmButton: false,
-    customClass: { popup: "bg-org" },
-  });
-}
-function getPlexToken(selector) {
-  $(".plexTokenMessage").text("Grabbing Token");
-  $(".plexTokenHeader")
-    .addClass("card-info")
-    .removeClass("card-warning")
-    .removeClass("card-danger");
-  var plex_username = $("#get-plex-token-form [name=username]").val().trim();
-  var plex_password = $("#get-plex-token-form [name=password]").val().trim();
-  var plex_tfa = $("#get-plex-token-form [name=tfa]").val().trim();
-  if (plex_password !== "" && plex_password !== "") {
-    $.ajax({
-      type: "POST",
-      headers: {
-        "X-Plex-Product": "Londerland",
-        "X-Plex-Version": "2.0",
-        "X-Plex-Client-Identifier": "01010101-10101010",
-      },
-      url: "https://plex.tv/users/sign_in.json",
-      data: {
-        "user[login]": plex_username,
-        "user[password]": plex_password + plex_tfa,
-        force: true,
-      },
-      cache: false,
-      async: true,
-      complete: function (xhr, status) {
-        var result = JSON.parse(xhr.responseText);
-        if (xhr.status === 201) {
-          $(".plexTokenMessage").text(xhr.statusText);
-          $(".plexTokenHeader")
-            .addClass("card-success")
-            .removeClass("card-info")
-            .removeClass("card-warning")
-            .removeClass("card-danger");
-          $(selector).val(result.user.authToken);
-          $(selector).change();
-          messageSingle(
-            "Token created",
-            "Please save...",
-            activeInfo.settings.notifications.position,
-            "#FFF",
-            "success",
-            "5000"
-          );
-        } else {
-          $(".plexTokenMessage").text(xhr.statusText);
-          $(".plexTokenHeader")
-            .addClass("card-danger")
-            .removeClass("card-info")
-            .removeClass("card-warning");
-        }
-      },
-    });
-  } else {
-    $(".plexTokenMessage").text("Enter Username and Password");
-    $(".plexTokenHeader")
-      .addClass("card-warning")
-      .removeClass("card-info")
-      .removeClass("card-danger");
-  }
-}
 function showPlexMachineForm(selector = null) {
   var div = `
 		<form id="get-plex-machine-form">
@@ -6483,12 +6135,6 @@ function oAuthLoginNeededCheck(type = "OAuth") {
 function ipInfoSpan(ip) {
   return '<span class="ipInfo mouse">' + ip + "</span>";
 }
-function jsFriendlyJSONStringify(s) {
-  return JSON.stringify(s)
-    .replace("'", "")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
-}
 function exportLogs() {
   const query = "api/v2/log/0?filter=NONE&pageSize=1000&offset=0";
   $.get(query, function (data) {
@@ -6610,118 +6256,6 @@ function checkToken(activate = false) {
     }
   }
 }
-function objDiff(obj1, obj2) {
-  // Make sure an object to compare is provided
-  if (!obj2 || Object.prototype.toString.call(obj2) !== "[object Object]") {
-    return obj1;
-  }
-
-  //
-  // Variables
-  //
-
-  var diffs = {};
-  var key;
-
-  //
-  // Methods
-  //
-
-  /**
-   * Check if two arrays are equal
-   * @param  {Array}   arr1 The first array
-   * @param  {Array}   arr2 The second array
-   * @return {Boolean}      If true, both arrays are equal
-   */
-  var arraysMatch = function (arr1, arr2) {
-    // Check if the arrays are the same length
-    if (arr1.length !== arr2.length) return false;
-
-    // Check if all items exist and are in the same order
-    for (var i = 0; i < arr1.length; i++) {
-      if (arr1[i] !== arr2[i]) return false;
-    }
-
-    // Otherwise, return true
-    return true;
-  };
-
-  /**
-   * Compare two items and push non-matches to object
-   * @param  {*}      item1 The first item
-   * @param  {*}      item2 The second item
-   * @param  {String} key   The key in our object
-   */
-  var compare = function (item1, item2, key) {
-    // Get the object type
-    var type1 = Object.prototype.toString.call(item1);
-    var type2 = Object.prototype.toString.call(item2);
-
-    // If type2 is undefined it has been removed
-    if (type2 === "[object Undefined]") {
-      diffs[key] = null;
-      return;
-    }
-
-    // If items are different types
-    if (type1 !== type2) {
-      diffs[key] = item2;
-      return;
-    }
-
-    // If an object, compare recursively
-    if (type1 === "[object Object]") {
-      var objDifference = objDiff(item1, item2);
-      if (Object.keys(objDifference).length > 1) {
-        diffs[key] = objDifference;
-      }
-      return;
-    }
-
-    // If an array, compare
-    if (type1 === "[object Array]") {
-      if (!arraysMatch(item1, item2)) {
-        diffs[key] = item2;
-      }
-      return;
-    }
-
-    // Else if it's a function, convert to a string and compare
-    // Otherwise, just compare
-    if (type1 === "[object Function]") {
-      if (item1.toString() !== item2.toString()) {
-        diffs[key] = item2;
-      }
-    } else {
-      if (item1 !== item2) {
-        diffs[key] = item2;
-      }
-    }
-  };
-
-  //
-  // Compare our objects
-  //
-
-  // Loop through the first object
-  for (key in obj1) {
-    if (obj1.hasOwnProperty(key)) {
-      compare(obj1[key], obj2[key], key);
-    }
-  }
-
-  // Loop through the second object and find missing items
-  for (key in obj2) {
-    if (obj2.hasOwnProperty(key)) {
-      if (!obj1[key] && obj1[key] !== obj2[key]) {
-        diffs[key] = obj2[key];
-      }
-    }
-  }
-
-  // Return the object of differences
-  return diffs;
-}
 function londerlandConsole(subject, msg, type = "info") {
   let color;
   switch (type) {
@@ -6782,38 +6316,6 @@ function LonderlandApiError(xhr, secondaryMessage = null) {
   return false;
 }
 
-function loadJavascript(script = null, defer = false) {
-  if (script) {
-    londerlandConsole("JS Loader", script);
-    londerlandConsole("JS Loader", "Checking if script is loaded...");
-    let loaded = $('script[src="' + script + '"]').length;
-    if (!loaded) {
-      londerlandConsole("JS Loader", "Script is NOT loaded... Loading now...");
-      let head = document.getElementsByTagName("head")[0];
-      let scriptEl = document.createElement("script");
-      scriptEl.type = "text/javascript";
-      scriptEl.src = script;
-      scriptEl.defer = false;
-      head.appendChild(scriptEl);
-    } else {
-      londerlandConsole("JS Loader", "Script already loaded");
-    }
-  }
-}
-
-function tabShit() {}
-
-function msToTime(s) {
-  let pad = (n, z = 2) => ("00" + n).slice(-z);
-  let hours = pad((s / 3.6e6) | 0) !== "00" ? pad((s / 3.6e6) | 0) + ":" : "";
-  let mins = pad(((s % 3.6e6) / 6e4) | 0) + ":";
-  let secs = pad(((s % 6e4) / 1000) | 0);
-  let ms = pad(s % 1000, 3);
-  if (ms >= "500") {
-    secs = pad(parseFloat(secs) + 1, 2);
-  }
-  return hours + mins + secs;
-}
 function clickSettingsTab() {
   let tabs = $(".allTabsList");
   $.each(tabs, function (i, v) {

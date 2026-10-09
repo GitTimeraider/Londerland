@@ -2,19 +2,6 @@
 
 trait OptionsFunction
 {
-	public function settingsOptionGroup($options = [])
-	{
-		$settings = [];
-		foreach ($options as $option) {
-			$optionType = $option[0] ? $option[0] : false;
-			$optionName = $option[1] ? $option[1] : null;
-			$optionExtras = $option[2] ? $option[2] : [];
-			$setting = $this->settingsOption($optionType, $optionName, $optionExtras);
-			array_push($settings, $setting);
-		}
-		return $settings;
-	}
-
 	public function settingsOption($type, $name = null, $extras = null)
 	{
 		$type = strtolower(str_replace('-', '', $type));
@@ -277,42 +264,6 @@ trait OptionsFunction
 			}
 		}
 		return $setting;
-	}
-
-	public function getIframeTabs($url = "")
-	{
-		if (!empty($url)) {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						"SELECT * FROM tabs WHERE `enabled`='1' AND `type`='1' AND `group_id`>=? AND (`url` = '" . $url . "' OR `url_local` = '" . $url . "') ORDER BY `order` ASC",
-						$this->getUserLevel(),
-					)
-				)
-			];
-		} else {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						"SELECT * FROM tabs WHERE `enabled`='1' AND `type`='1' AND `group_id`>=? ORDER BY `order` ASC",
-						$this->getUserLevel()
-					)
-				)
-			];
-		}
-		$formattedValues[] = [
-			'name' => 'Open in New Window',
-			'value' => ''
-		];
-		foreach ($this->processQueries($response) as $result) {
-			$formattedValues[] = [
-				'name' => $result['name'],
-				'value' => $result['id']
-			];
-		}
-		return $formattedValues;
 	}
 
 	public function makeOptionsFromValues($values = null, $appendBlank = null, $blankLabel = null)
