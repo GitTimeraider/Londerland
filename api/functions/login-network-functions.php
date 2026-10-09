@@ -21,11 +21,6 @@ trait LoginNetworkFunctions
 		return array_values(array_filter(preg_split('/[\s,;]+/', trim((string)$value))));
 	}
 
-	public function loginNetworkRestricted()
-	{
-		return count($this->loginNetworkList('LONDERLAND_LOGIN_ALLOWED_IPS')) > 0;
-	}
-
 	/**
 	 * true when $ip is inside $network: a single address or a subnet like 192.168.1.0/24 or fd00::/8
 	 */

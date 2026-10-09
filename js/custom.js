@@ -1032,19 +1032,6 @@ $(document).on("click", ".changeDefaultCategory", function () {
 	});
 });
 // CHANGE CUSTOMIZE Options and CSS Save
-$(document).on("click", ".saveCss", function () {
-    $('.cssTextarea').val(cssEditor.getValue()).trigger('change');
-});
-$(document).on("click", ".saveThemeCss", function () {
-    $('.cssThemeTextarea').val(cssThemeEditor.getValue()).trigger('change');
-});
-$(document).on("click", ".saveJava", function () {
-    $('.javaTextarea').val(javaEditor.getValue()).trigger('change');
-});
-$(document).on("click", ".saveThemeJava", function () {
-    $('.javaThemeTextarea').val(javaThemeEditor.getValue()).trigger('change');
-});
-
 $(document).on('change keydown', '.addFormTick :input', function(e) {
     $(this).attr('data-changed', true);
     $(this).closest('.form-group').addClass('has-success');
@@ -1233,24 +1220,6 @@ $(document).on("click", ".testPath", function () {
 //playlist filter
 // refresh cache image
 // open tab code
-$(document).on("click", ".openTab", function(e) {
-    if($(this).attr("data-open-tab") === "true") {
-        var tabName = $(this).attr("data-tab-name");
-        var container = $("#container-"+tabName);
-        var activeFrame = container.children('iframe');
-        if(activeFrame.length === 1){
-            $('#menu-'+tabName+' a').trigger("click");
-            activeFrame.attr("src", $(this).attr("data-url"));
-        }else{
-            container.attr("data-url", $(this).attr("data-url"));
-            $('#menu-'+tabName+' a').trigger("click");
-        }
-    }else{
-        var source = $(this).attr("data-url");
-        window.open(source, '_blank');
-    }
-    $.magnificPopup.close();
-});
 //request click
 // metadata start
 // sab play/resume
@@ -1392,24 +1361,6 @@ $(document).on('keydown', 'body', function () {
 });
 /* ===== Open-Close Right Sidebar ===== */
 
-$(document).on("click", ".right-side-toggle", function () {
-    $(".right-sidebar").slideDown(50).toggleClass("shw-rside");
-    $(".fxhdr").on("click", function () {
-        $("body").toggleClass("fix-header"); /* Fix Header JS */
-    });
-    $(".fxsdr").on("click", function () {
-        $("body").toggleClass("fix-sidebar"); /* Fix Sidebar JS */
-    });
-
-    /* ===== Service Panel JS ===== */
-
-    var fxhdr = $('.fxhdr');
-    if ($("body").hasClass("fix-header")) {
-        fxhdr.attr('checked', true);
-    } else {
-        fxhdr.attr('checked', false);
-    }
-});
 // Keyboard shortcuts (ignored while typing in a form field)
 function shortcut(handler) {
     return function(event) {

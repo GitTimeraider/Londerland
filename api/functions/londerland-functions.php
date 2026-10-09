@@ -28,11 +28,6 @@ trait LonderlandFunctions
 		return ($file !== '') ? '<link href="' . $rootPath . $file . '?v=' . trim($this->fileHash) . '" rel="stylesheet">' . "\n" : '';
 	}
 
-	public function loadJavascriptFile($file)
-	{
-		return '<script>loadJavascript("' . $file . '?v=' . trim($this->fileHash) . '");' . "</script>\n";
-	}
-
 	public function embyJoinAPI($array)
 	{
 		$username = ($array['username']) ?? null;
@@ -168,14 +163,6 @@ trait LonderlandFunctions
 		return (json_encode($policy));
 	}
 
-	public function checkHostPrefix($s)
-	{
-		if (empty($s)) {
-			return $s;
-		}
-		return (substr($s, -1, 1) == '\\') ? $s : $s . '\\';
-	}
-
 	public function approvedFileExtension($filename, $type = 'image')
 	{
 		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
@@ -249,30 +236,6 @@ trait LonderlandFunctions
 			$allIcons[] = $item['path'] . $item['name'];
 		}
 		return $allIcons;
-	}
-
-	public function imageSelect($form)
-	{
-		$i = 1;
-		$images = $this->getImages();
-		$return = '<select class="form-control tabIconImageList" id="' . $form . '-chooseImage" name="chooseImage"><option lang="en">Select or type Icon</option>';
-		foreach ($images as $image) {
-			$i++;
-			$return .= '<option value="' . $image . '">' . basename($image) . '</option>';
-		}
-		return $return . '</select>';
-	}
-
-	public function getThemes()
-	{
-		$themes = array();
-		foreach (glob(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'themes' . DIRECTORY_SEPARATOR . "*.css") as $filename) {
-			$themes[] = array(
-				'name' => preg_replace('/\\.[^.\\s]{3,4}$/', '', basename($filename)),
-				'value' => preg_replace('/\\.[^.\\s]{3,4}$/', '', basename($filename))
-			);
-		}
-		return $themes;
 	}
 
 	public function getSounds()
