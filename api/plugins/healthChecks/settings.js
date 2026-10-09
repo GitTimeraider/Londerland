@@ -28,7 +28,7 @@ $(document).on('click', '#HEALTHCHECKS-settings-button', function() {
 });
 $(document).on('click', '.importNewHCService', function() {
 	messageSingle('',' Grabbing checks...',activeInfo.settings.notifications.position,'#FFF','info','10000');
-	var apiUrl = 'api/v2/homepage/healthchecks';
+	var apiUrl = 'api/v2/plugins/healthchecks/import';
 	londerlandAPI2('GET',apiUrl).done(function(data) {
 		try {
 			let response = data.response;

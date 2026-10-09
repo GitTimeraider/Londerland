@@ -29,33 +29,5 @@ $app->get('/settings/sso', function ($request, $response, $args) {
 		->withHeader('Content-Type', 'application/json;charset=UTF-8')
 		->withStatus($GLOBALS['responseCode']);
 });
-$app->get('/settings/homepage', function ($request, $response, $args) {
-	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
-	if ($Londerland->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Londerland->getSettingsHomepage();
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->get('/settings/homepage/{item}', function ($request, $response, $args) {
-	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
-	if ($Londerland->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Londerland->getSettingsHomepageItem($args['item']);
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->get('/settings/homepage/{item}/debug', function ($request, $response, $args) {
-	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
-	if ($Londerland->qualifyRequest(1, true)) {
-		$GLOBALS['api']['response']['data'] = $Londerland->getSettingsHomepageItemDebug($args['item']);
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
+
+

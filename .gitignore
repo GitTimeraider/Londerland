@@ -213,5 +213,8 @@ css/dark.min.css
 css/light.min.css
 css/londerland.min.css
 js/custom.min.js
+js/functions.min.js
+js/helpers.min.js
+js/i18n.min.js
 dev-data/
 server.log

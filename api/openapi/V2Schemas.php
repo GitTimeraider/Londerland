@@ -299,11 +299,6 @@ use OpenApi\Attributes as OA;
 			example: false,
 			property: 'hideRegistration',
 		),
-		new OA\Property(
-			type: 'string',
-			example: '1',
-			property: 'homepageUnifiAuth',
-		),
 	],
 	type: 'object',
 )]

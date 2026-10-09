@@ -13,7 +13,7 @@ function get_page_settings_user_manage_users($Londerland)
 	}
 	return '
 <script>
-	$(function() {
+	$(function() { londerlandLoadLibrary("tabulator").then(function() {
 		let groups = {};
 		const lockedValues = {0: window.lang.translate("No"), 1: window.lang.translate("Yes")};
 		const userError = function(title) {
@@ -135,7 +135,7 @@ function get_page_settings_user_manage_users($Londerland)
 		$("#pageLength").on("change", function() {
 			window.manageUsersTable.setPageSize(parseInt(this.value, 10));
 		});
-	});
+	}); });
 </script>
 <div class="card bg-org card-info">
 	<div class="card-header">

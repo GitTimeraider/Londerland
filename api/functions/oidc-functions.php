@@ -557,26 +557,6 @@ trait OIDCFunctions
 	}
 
 	/**
-	 * Get OIDC logout URL
-	 */
-	public function getOIDCLogoutUrl($provider)
-	{
-		$config = $this->getOIDCProviderConfig($provider);
-		if (!$config || !$config['supportsEndSession']) {
-			return null;
-		}
-		$discovery = $this->getOIDCDiscovery($provider);
-		if (!$discovery || empty($discovery['end_session_endpoint'])) {
-			return null;
-		}
-		$params = [
-			'client_id' => $config['clientId'],
-			'post_logout_redirect_uri' => $this->getServerPath(),
-		];
-		return $discovery['end_session_endpoint'] . '?' . http_build_query($params);
-	}
-
-	/**
 	 * Check if auto-redirect to OIDC is enabled
 	 */
 	public function shouldAutoRedirectToOIDC()

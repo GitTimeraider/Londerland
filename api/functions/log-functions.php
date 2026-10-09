@@ -415,20 +415,6 @@ trait LogFunctions
 		}
 	}
 
-	public function logArray($context)
-	{
-		if (!is_array($context)) {
-			if (is_string($context)) {
-				return ['data' => $context];
-			} else {
-				$context = (string)$context;
-				return ['data' => $context];
-			}
-		} else {
-			return $context;
-		}
-	}
-
 	function buildLogDropdown()
 	{
 		$logs = $this->getLogFiles();

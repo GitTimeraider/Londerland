@@ -123,42 +123,6 @@ function initSwitches(root = document) {
 	});
 }
 
-// Horizontally scrolling media rows (replaces Owl Carousel). Each child item is wrapped in its own
-// .swiper-slide, so code that hides an item's .parent() hides that slide.
-function initCarousel(selector, options = {}) {
-	$(selector).each(function () {
-		if (this.swiper) {
-			this.swiper.update();
-			return;
-		}
-		const container = $(this).addClass('swiper');
-		const wrapper = $('<div class="swiper-wrapper"></div>');
-		container.children().each(function () {
-			$(this).wrap('<div class="swiper-slide"></div>');
-		});
-		container.children().appendTo(wrapper);
-		wrapper.appendTo(container);
-		new Swiper(this, {
-			slidesPerView: 'auto',
-			spaceBetween: 10,
-			freeMode: true,
-			// horizontal wheel / shift+wheel scrolls the row, a normal wheel keeps scrolling the page
-			mousewheel: { forceToAxis: true },
-			autoplay: options.autoplay ? { delay: 4000, disableOnInteraction: false } : false,
-		});
-	});
-}
-
-// Re-layout carousels after their items were filtered and jump back to the start
-function refreshCarousel(selector) {
-	$(selector).each(function () {
-		if (this.swiper) {
-			this.swiper.update();
-			this.swiper.slideTo(0);
-		}
-	});
-}
-
 // Overlay scrollbars for scrollable areas; elements that already have them are left alone
 function customScrollbars(selector, autoHide = 'leave') {
 	const { OverlayScrollbars } = OverlayScrollbarsGlobal;
@@ -361,3 +325,48 @@ $(document).on('show.bs.tab', function (e) {
 		$(pane).siblings('.tab-pane.active').removeClass('active show');
 	}
 });
+
+// Big libraries that only a few pages use (code editor, e-mail editor, user table) are not part of the
+// page load; they are fetched the first time a page asks for them. Returns a Promise; later calls reuse it.
+const londerlandLibraries = {
+	ace: { js: ['assets/vendor/ace/ace.js'], css: [] },
+	tinymce: { js: ['assets/vendor/tinymce/tinymce.min.js'], css: [] },
+	tabulator: { js: ['assets/vendor/tabulator/tabulator.min.js'], css: ['assets/vendor/tabulator/tabulator_bootstrap5.min.css'] },
+};
+const londerlandLibraryLoads = {};
+function londerlandLoadLibrary(name) {
+	if (!londerlandLibraryLoads[name]) {
+		const library = londerlandLibraries[name];
+		// Stylesheets go before the theme stylesheet, where they used to be, so the theme still overrides them
+		const themeStyle = document.getElementById('style');
+		library.css.forEach(function (href) {
+			if (!document.querySelector('link[href="' + href + '"]')) {
+				const link = document.createElement('link');
+				link.rel = 'stylesheet';
+				link.href = href;
+				document.head.insertBefore(link, themeStyle);
+			}
+		});
+		// Scripts one after the other: later files of a library expect the earlier ones
+		londerlandLibraryLoads[name] = library.js.reduce(function (previous, src) {
+			return previous.then(function () {
+				return new Promise(function (resolve, reject) {
+					const script = document.createElement('script');
+					script.src = src;
+					script.onload = resolve;
+					script.onerror = function () {
+						reject(new Error('Could not load ' + src));
+					};
+					document.head.appendChild(script);
+				});
+			});
+		}, Promise.resolve());
+		londerlandLibraryLoads[name].catch(function (error) {
+			// Allow a new try (for example after a network hiccup)
+			delete londerlandLibraryLoads[name];
+			console.error(error);
+		});
+	}
+	return londerlandLibraryLoads[name];
+}
+
