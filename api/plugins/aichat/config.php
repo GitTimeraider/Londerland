@@ -8,6 +8,7 @@ return array(
 	'AICHAT-groups-include' => 'auto',
 	'AICHAT-uploads-include' => true,
 	'AICHAT-maxUploadMB-include' => '20',
+	'AICHAT-imageMaxSide-include' => '2048',
 	// Chat button: name under the icon and colour (empty = theme colour)
 	'AICHAT-launcherLabel-include' => 'AI',
 	'AICHAT-launcherColor-include' => '',

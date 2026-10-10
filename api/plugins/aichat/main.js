@@ -1071,12 +1071,80 @@
 		updateSendState();
 	}
 
+	// Largest image file sent on: Claude refuses images over 10 MB once base64 encoded (4/3 of the file size)
+	const MAX_IMAGE_BYTES = 7 * 1024 * 1024;
+
+	function canvasBlob(canvas, type, quality) {
+		return new Promise(function (resolve) {
+			canvas.toBlob(resolve, type, quality);
+		});
+	}
+
+	/**
+	 * Makes a photo or screenshot smaller before upload: the longest side at most "Max Image Size (pixels)" and the
+	 * file under MAX_IMAGE_BYTES. Smaller images upload faster and cost fewer tokens. GIFs (maybe animated) and images
+	 * that are already small enough are left as they are; so is anything the browser cannot draw.
+	 */
+	async function shrinkImage(file) {
+		const setting = parseInt(activeInfo.plugins.includes['AICHAT-imageMaxSide-include'], 10);
+		const maxSide = isNaN(setting) ? 2048 : setting;
+		if (!/^image\/(png|jpeg|webp)$/.test(file.type) || typeof createImageBitmap !== 'function') {
+			return file;
+		}
+		let bitmap;
+		try {
+			bitmap = await createImageBitmap(file);
+		} catch (e) {
+			return file;
+		}
+		const scale = maxSide > 0 ? Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height)) : 1;
+		if (scale === 1 && file.size <= MAX_IMAGE_BYTES) {
+			bitmap.close();
+			return file;
+		}
+		const canvas = document.createElement('canvas');
+		canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+		canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+		const context = canvas.getContext('2d');
+		// screenshots stay PNG (sharp text) when that is small enough; otherwise JPEG, which has no transparency, so
+		// transparent parts become white instead of black
+		let blob = null;
+		if (file.type === 'image/png') {
+			context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+			blob = await canvasBlob(canvas, 'image/png');
+		}
+		// JPEG at falling quality; still too large (a huge photo with "0" as max size) = a quarter fewer pixels per try
+		for (let attempt = 0; attempt < 6 && (!blob || blob.size > (blob.type === 'image/png' ? MAX_IMAGE_BYTES / 2 : MAX_IMAGE_BYTES)); attempt++) {
+			if (attempt > 0) {
+				canvas.width = Math.max(1, Math.round(canvas.width * 0.75));
+				canvas.height = Math.max(1, Math.round(canvas.height * 0.75));
+			}
+			context.fillStyle = '#fff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+			for (const quality of [0.9, 0.8, 0.7]) {
+				blob = await canvasBlob(canvas, 'image/jpeg', quality);
+				if (!blob || blob.size <= MAX_IMAGE_BYTES) {
+					break;
+				}
+			}
+		}
+		bitmap.close();
+		if (!blob || blob.size >= file.size) {
+			// could not do better than the original (the server leaves out images that are too large)
+			return file;
+		}
+		const name = (file.name || 'pasted-image.png').replace(/\.[^.]*$/, '') + (blob.type === 'image/png' ? '.png' : '.jpg');
+		return new File([blob], name, { type: blob.type });
+	}
+
 	function addFiles(fileList) {
 		if (activeInfo.plugins.includes['AICHAT-uploads-include'] === false) {
 			return;
 		}
 		const maxBytes = (parseInt(activeInfo.plugins.includes['AICHAT-maxUploadMB-include'], 10) || 20) * 1024 * 1024;
-		Array.from(fileList).forEach(function (file) {
+		Array.from(fileList).forEach(async function (file) {
+			file = await shrinkImage(file);
 			if (file.size > maxBytes) {
 				notify(file.name + ': ' + t('file is too large'));
 				return;
