@@ -2907,11 +2907,18 @@ function tabProcess(arrayItems) {
           case 1:
           case "1":
           case "iframe":
-            iFrameList = buildFrameContainer(v.id);
-            $(iFrameList).appendTo($(".iFrame-listing"));
+            if ($("#container-" + v.id).length) {
+              // index.php already created the start tab's iframe (startTabFrame): keep it, like a preloaded tab
+              $("#menu-" + v.id + " a")
+                .children()
+                .addClass("tabLoaded");
+            } else {
+              iFrameList = buildFrameContainer(v.id);
+              $(iFrameList).appendTo($(".iFrame-listing"));
+            }
             iFrameList = buildFrameContainer(v.id, true);
             $(iFrameList).appendTo($(".iFrame-listing-right"));
-            if (v.preload) {
+            if (v.preload && !$("#container-" + v.id).hasClass("loaded")) {
               var newTab = $("#container-" + v.id);
               londerlandConsole(
                 "Tab Function",
