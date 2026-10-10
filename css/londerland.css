@@ -202,18 +202,18 @@
 .modal-backdrop {
   z-index: 1049;
 }
+/* Every icon gets the same 30x30 box, so rows are equally tall whether the
+   icon is a glyph, a letter or an image */
 #side-menu .fa-fw {
   width: 30px !important;
+  height: 30px;
+  line-height: 30px;
   margin-right: 12px;
 }
 /* Image icons fill their whole box, unlike font glyphs, so scale them to the
-   glyph size; the text column stays aligned with font icons. The 2px above and
-   below give them the 28px height of a font icon, so rows with either kind of
-   icon are equally tall */
+   glyph size; the text column stays aligned with font icons */
 #side-menu img.fa-fw {
-  height: 24px;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  padding: 3px 0;
   object-fit: contain;
 }
 .sidebar:hover #side-menu .user-pro ul li a {
