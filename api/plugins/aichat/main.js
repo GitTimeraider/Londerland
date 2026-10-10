@@ -679,6 +679,18 @@
 		updateSendState();
 	}
 
+	// Word, Excel, PowerPoint and OpenDocument files (their text is sent to the model)
+	const DOCUMENT_EXTENSIONS = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp'];
+
+	function fileExtension(name) {
+		return (String(name || '').match(/\.([^.]+)$/) || ['', ''])[1].toLowerCase();
+	}
+
+	function documentIcon(name) {
+		const extension = fileExtension(name);
+		return extension === 'xlsx' || extension === 'ods' ? 'fa-file-excel-o' : extension === 'pptx' || extension === 'odp' ? 'fa-file-powerpoint-o' : 'fa-file-word-o';
+	}
+
 	function attachmentHtml(attachment, removable) {
 		const name = escapeHtml(attachment.name);
 		const remove = removable ? `<button type="button" class="aichat-attachment-remove" data-id="${escapeHtml(attachment.localId || attachment.id)}" title="${escapeHtml(t('Remove'))}">&times;</button>` : '';
@@ -688,7 +700,7 @@
 			const open = attachment.id ? ` href="${fileUrl(attachment.id)}" target="_blank" rel="noopener"` : '';
 			return `<a class="aichat-attachment image${uploading}"${open} title="${name}"><img src="${escapeHtml(src)}" alt="${name}">${remove}</a>`;
 		}
-		const icon = attachment.kind === 'pdf' ? 'fa-file-pdf-o' : 'fa-file-text-o';
+		const icon = attachment.kind === 'pdf' ? 'fa-file-pdf-o' : attachment.kind === 'document' ? documentIcon(attachment.name) : 'fa-file-text-o';
 		const open = attachment.id ? ` href="${fileUrl(attachment.id)}"` : '';
 		const spinner = attachment.uploading ? '<i class="fa fa-spinner fa-spin"></i>' : `<i class="fa ${icon}"></i>`;
 		return `<a class="aichat-attachment${uploading}"${open} title="${name}">${spinner}<span>${name}</span>${attachment.size ? `<small class="text-muted">${formatSize(attachment.size)}</small>` : ''}${remove}</a>`;
@@ -1153,7 +1165,7 @@
 				localId: 'local-' + Math.random().toString(36).slice(2),
 				name: file.name || 'pasted-image.png',
 				size: file.size,
-				kind: file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'text',
+				kind: file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : DOCUMENT_EXTENSIONS.includes(fileExtension(file.name)) ? 'document' : 'text',
 				uploading: true,
 				localUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
 			};
