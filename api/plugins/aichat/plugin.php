@@ -28,6 +28,9 @@ class AiChat extends Londerland
 	private const IMAGE_TYPES = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp'];
 	// Cap on extracted text per file so one big upload cannot blow up the request
 	private const MAX_FILE_TEXT = 200000;
+	// Largest image sent to the model: Claude refuses images over 10 MB once base64 encoded (4/3 of the file size).
+	// The browser shrinks uploads below this; older or other uploads above it are left out with a note
+	private const MAX_IMAGE_BYTES = 7340032;
 	// fetch_url: largest download and how much page text the model gets per call
 	private const MAX_FETCH_BYTES = 5242880;
 	private const MAX_PAGE_TEXT = 20000;
@@ -515,6 +518,14 @@ class AiChat extends Londerland
 					'label' => 'Max Upload Size (MB)',
 					'value' => $this->config['AICHAT-maxUploadMB-include'],
 					'placeholder' => '20'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-imageMaxSide-include',
+					'label' => 'Max Image Size (pixels)',
+					'value' => $this->config['AICHAT-imageMaxSide-include'],
+					'placeholder' => '2000',
+					'help' => 'Images are made smaller in the browser before upload so their longest side is at most this, and recompressed if needed to stay under 7 MB (Claude refuses images over 10 MB). Smaller images use fewer tokens: newer Claude models see up to 2576 pixels, older ones up to 1568, and once a request holds more than 20 images Claude refuses any image over 2000 pixels. 0 = only recompress images that are too large.'
 				),
 			),
 			'Chat Button' => array(
@@ -1199,7 +1210,9 @@ class AiChat extends Londerland
 						$text .= "\n\n[Attachment " . $attachment['name'] . ' is no longer available]';
 						continue;
 					}
-					if ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image') {
+					if ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image' && filesize($file['fullPath']) > self::MAX_IMAGE_BYTES) {
+						$text .= "\n\n[Image " . $attachment['name'] . ' was left out: it is larger than the AI server accepts]';
+					} elseif ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image') {
 						$parts[] = ['type' => 'image_url', 'image_url' => ['url' => 'data:' . $file['mime'] . ';base64,' . base64_encode(file_get_contents($file['fullPath']))]];
 					} else {
 						$text .= "\n\n<file name=\"" . $file['name'] . "\">\n" . $this->_aiChatFileText($file) . "\n</file>";
