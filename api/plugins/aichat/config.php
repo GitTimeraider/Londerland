@@ -20,6 +20,8 @@ return array(
 	'AICHAT-temperature' => '',
 	'AICHAT-maxTokens' => '',
 	'AICHAT-contextMessages' => '40',
+	'AICHAT-dropMessages' => '20',
+	'AICHAT-summarizeDropped' => true,
 	'AICHAT-autoTitle' => true,
 	'AICHAT-requestTimeout' => '300',
 	'AICHAT-verifySSL' => true,
