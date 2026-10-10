@@ -120,13 +120,25 @@
   }
 }
 
-/* the side menu opens 280px wide on hover instead of 240px, leaving room for longer tab and category names;
-   phones (below 768px) keep their 240px slide-in menu */
+/* the side menu opens 280px wide (on hover) instead of 240px, leaving room for longer tab and category names */
 @media (min-width: 768px) {
   .sidebar:hover,
   .sidebar:hover .sidebar-head,
   #side-menu li a {
     width: 280px;
+  }
+}
+/* phones: the slide-in menu is 280px wide too (at most 85% of the screen), and tabs inside a category are always
+   indented 30px like on desktop; before, the indent came only from :hover, which a tap sets and closing the menu
+   clears, so after reopening the tabs lined up with the categories */
+@media (max-width: 767px) {
+  .show-sidebar .sidebar,
+  .show-sidebar .sidebar .sidebar-head,
+  #side-menu li a {
+    width: min(280px, 85vw);
+  }
+  #side-menu .nav-second-level li a {
+    padding-left: 30px;
   }
 }
 
