@@ -136,7 +136,9 @@ class AiChat extends Londerland
 				`model`	TEXT,
 				`pinned`	INTEGER DEFAULT 0,
 				`created`	DATETIME,
-				`updated`	DATETIME
+				`updated`	DATETIME,
+				`summary`	LONGTEXT,
+				`summary_until`	INTEGER DEFAULT 0
 			);',
 			'AICHAT-messages' => 'CREATE TABLE `AICHAT-messages` (
 				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -174,6 +176,13 @@ class AiChat extends Londerland
 		// Tables from the first version of the plugin have no meta column yet
 		if (!$this->_aiChatColumnExists('AICHAT-messages', 'meta')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-messages` ADD `meta` LONGTEXT']]);
+		}
+		// Summary of the messages no longer sent to the model, up to and including message summary_until
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'summary')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `summary` LONGTEXT']]);
+		}
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'summary_until')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `summary_until` INTEGER DEFAULT 0']]);
 		}
 		if (!$this->_aiChatColumnExists('AICHAT-prefs', 'web_tools')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-prefs` ADD `web_tools` INTEGER DEFAULT 1']]);
@@ -355,7 +364,22 @@ class AiChat extends Londerland
 					'label' => 'Messages Sent as Context',
 					'value' => $this->config['AICHAT-contextMessages'],
 					'placeholder' => '40',
-					'help' => 'How many earlier messages of a chat are sent along with each question.'
+					'help' => 'The most earlier messages of a chat sent along with each question. When a chat goes past this, its oldest messages are dropped, a block at a time (see below).'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-dropMessages',
+					'label' => 'Messages Dropped at Once',
+					'value' => $this->config['AICHAT-dropMessages'],
+					'placeholder' => '20',
+					'help' => 'How many of the oldest messages are dropped together once the number above is reached; at most that number. Dropping a block at a time keeps the start of what the model gets the same for many questions, which servers with prompt caching charge less for. Higher = fewer summaries and more caching, but the model sees fewer messages on average.'
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-summarizeDropped',
+					'label' => 'Summarize Dropped Messages',
+					'help' => 'The model writes a short summary of the dropped messages, which is sent along instead, so it still knows what was discussed earlier. Costs one extra request each time messages are dropped. Off = dropped messages are forgotten.',
+					'value' => $this->config['AICHAT-summarizeDropped']
 				),
 				array(
 					'type' => 'switch',
@@ -1040,26 +1064,120 @@ class AiChat extends Londerland
 	/* ===================== conversation ===================== */
 
 	/**
-	 * Builds the OpenAI "messages" array: system prompts, then the latest messages with their attachments
+	 * The summary of older messages and the messages sent along with a question. Once a chat has more than "Messages
+	 * Sent as Context" messages, the oldest are dropped "Messages Dropped at Once" at a time and, if switched on, folded
+	 * into the summary. Dropping a block at a time keeps the start of the request the same for many questions, which
+	 * servers with prompt caching charge less for. Returns [summary, messages].
 	 */
-	private function _aiChatBuildMessages($chatId)
+	private function _aiChatHistory($chatId, $model)
+	{
+		$chat = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT `summary`, `summary_until` FROM `AICHAT-chats` WHERE `id` = ?', (int)$chatId]
+		]]) ?: [];
+		// with summaries off, a summary made before is not sent anymore either
+		$summary = $this->config['AICHAT-summarizeDropped'] ? trim((string)($chat['summary'] ?? '')) : '';
+		$until = (int)($chat['summary_until'] ?? 0);
+		$history = array_values(array_filter($this->_aiChatMessages($chatId), function ($message) use ($until) {
+			return (int)$message['id'] > $until && in_array($message['role'], ['user', 'assistant'], true);
+		}));
+		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
+		if (count($history) <= $limit) {
+			return [$summary, $history];
+		}
+		$block = min($limit, max(1, (int)$this->config['AICHAT-dropMessages'] ?: 20));
+		$count = (int)ceil((count($history) - $limit) / $block) * $block;
+		// the kept messages start with a question, not an answer
+		while ($count < count($history) - 1 && $history[$count]['role'] !== 'user') {
+			$count++;
+		}
+		$dropped = array_slice($history, 0, $count);
+		if ($this->config['AICHAT-summarizeDropped']) {
+			$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Summarizing older messages...']);
+			$newSummary = $this->_aiChatSummarize($summary, $dropped, $model);
+			if ($newSummary === null) {
+				// nothing is dropped until a summary works (tried again with the next question); until then the
+				// latest messages go along as before
+				return [$summary, array_slice($history, -$limit)];
+			}
+			$summary = $newSummary;
+		}
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE [AICHAT-chats] SET', ['summary' => $summary !== '' ? $summary : null, 'summary_until' => (int)end($dropped)['id']], 'WHERE `id` = ?', (int)$chatId]
+		]]);
+		return [$summary, array_slice($history, $count)];
+	}
+
+	/**
+	 * Asks the chat model to fold messages into the summary so far; null when that fails
+	 */
+	private function _aiChatSummarize($summary, $messages, $model)
+	{
+		$conversation = '';
+		foreach ($messages as $message) {
+			$text = trim((string)$message['content']);
+			if (mb_strlen($text) > 3000) {
+				$text = mb_substr($text, 0, 3000) . ' [...]';
+			}
+			$names = array_map(function ($attachment) {
+				return $attachment['prompt'] ?? $attachment['name'];
+			}, json_decode($message['attachments'] ?: '[]', true) ?: []);
+			if ($names) {
+				$text .= "\n[" . ($message['role'] === 'user' ? 'Attached: ' : 'Images created: ') . implode(', ', $names) . ']';
+			}
+			$conversation .= strtoupper($message['role']) . ': ' . trim($text) . "\n\n";
+		}
+		[$code, $body, $error] = $this->_aiChatRequest('POST', 'chat/completions', [
+			'model' => $model,
+			'messages' => [
+				['role' => 'system', 'content' => 'You keep a running summary of a conversation between a USER and an AI ASSISTANT. Combine the summary so far and the new messages into one updated summary. Keep what is needed to carry on the conversation: facts about the user and their setup, decisions, preferences, the names of files, commands and code that matter, and open questions. Leave out small talk. At most 300 words, in the language of the conversation. Answer with the summary only.'],
+				['role' => 'user', 'content' => ($summary !== '' ? "Summary so far:\n" . $summary . "\n\n" : '') . "New messages:\n\n" . $conversation],
+			],
+			'max_tokens' => 2000,
+		], max(30, (int)$this->config['AICHAT-requestTimeout']));
+		$text = $body['choices'][0]['message']['content'] ?? null;
+		// some reasoning models wrap their thinking in <think> tags
+		$text = is_string($text) ? trim(preg_replace('/<think>.*?<\/think>/s', '', $text)) : '';
+		if ($error || $text === '') {
+			$this->setLoggerChannel('AI Chat')->warning('Could not summarize older messages: ' . ($error ?: 'empty answer'), ['model' => $model]);
+			return null;
+		}
+		return mb_substr($text, 0, 8000);
+	}
+
+	/**
+	 * A send that removes stored messages (edit, regenerate) from message $fromId on makes the summary wrong if it
+	 * covered them; it is then made again from the start
+	 */
+	private function _aiChatResetSummary($chatId, $fromId)
+	{
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE [AICHAT-chats] SET', ['summary' => null, 'summary_until' => 0], 'WHERE `id` = ? AND `summary_until` >= ?', (int)$chatId, (int)$fromId]
+		]]);
+	}
+
+	/**
+	 * Builds the OpenAI "messages" array: system prompts and the summary of older messages, then the latest messages
+	 * with their attachments
+	 */
+	private function _aiChatBuildMessages($chatId, $model)
 	{
 		$messages = [];
+		[$summary, $history] = $this->_aiChatHistory($chatId, $model);
 		$system = trim($this->config['AICHAT-systemPrompt']);
 		$personal = trim($this->_aiChatGetPrefs()['system_prompt'] ?? '');
 		if ($personal !== '') {
 			$system = trim($system . "\n\n" . 'Instructions from the user ' . $this->user['username'] . ":\n" . $personal);
 		}
+		if ($summary !== '') {
+			$system = trim($system . "\n\n" . "Summary of the earlier part of this conversation (those messages are no longer shown to you):\n" . $summary);
+		}
 		if ($system !== '') {
 			$messages[] = ['role' => 'system', 'content' => $system];
 		}
-		$history = $this->_aiChatMessages($chatId);
-		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
-		$history = array_slice($history, -$limit);
 		foreach ($history as $message) {
-			if (!in_array($message['role'], ['user', 'assistant'], true)) {
-				continue;
-			}
 			$attachments = json_decode($message['attachments'] ?: '[]', true) ?: [];
 			if ($message['role'] === 'user' && $attachments) {
 				$parts = [];
@@ -1137,6 +1255,7 @@ class AiChat extends Londerland
 				throw new InvalidArgumentException('There is no question to answer again');
 			}
 			$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` = ? AND `id` > ?', $chatId, $lastUser]]]);
+			$this->_aiChatResetSummary($chatId, $lastUser + 1);
 			return null;
 		}
 		$content = trim((string)($data['content'] ?? ''));
@@ -1153,6 +1272,7 @@ class AiChat extends Londerland
 		if (!empty($data['editFrom'])) {
 			// Editing a question removes it and everything after it
 			$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` = ? AND `id` >= ?', $chatId, (int)$data['editFrom']]]]);
+			$this->_aiChatResetSummary($chatId, (int)$data['editFrom']);
 		}
 		$message = $this->_aiChatInsertMessage($chatId, 'user', $content, $attachments);
 		if (!empty($data['editFrom'])) {
@@ -1798,7 +1918,7 @@ class AiChat extends Londerland
 			exit;
 		}
 
-		$messages = $this->_aiChatBuildMessages($chatId);
+		$messages = $this->_aiChatBuildMessages($chatId, $model);
 		$sources = [];
 		$searches = [];
 		if ($searchMode) {
