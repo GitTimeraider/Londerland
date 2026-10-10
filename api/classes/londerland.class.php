@@ -54,6 +54,8 @@ class Londerland
 	public $warnings;
 	public $errors;
 	public bool $loggerSetup = false;
+	// startIframeTab(), looked up once per request (false: not looked up yet)
+	private $startIframeTab = false;
 	public LonderlandLogger $logger;
 
 	public function __construct($checkForUpdates = false)
@@ -2251,12 +2253,23 @@ class Londerland
 	// <link rel="preconnect"> to the host of the iframe tab the user will probably start with (group default tab,
 	// default tab of the Tab Editor, else the first tab), so the connection to it is ready by the time start-up
 	// opens the iframe. Picks like startTabId() in functions.js, minus the tab in the address, which only the browser knows.
-	public function startTabPreconnect()
+	// The iframe tab the user will probably start with: the group's default tab, then the default tab of the Tab Editor,
+	// then the first tab (the same choice as startTabId() in functions.js). Null when that is not an iframe tab with a
+	// http(s) address.
+	private function startIframeTab()
+	{
+		if ($this->startIframeTab === false) {
+			$this->startIframeTab = $this->findStartIframeTab();
+		}
+		return $this->startIframeTab;
+	}
+
+	private function findStartIframeTab()
 	{
 		try {
 			$tabs = $this->hasDB() ? ($this->getUserTabsAndCategories('tabs') ?: []) : [];
 		} catch (\Throwable $e) {
-			return '';
+			return null;
 		}
 		$startable = array_values(array_filter($tabs, function ($tab) {
 			return !in_array((string)$tab['type'], ['2', '3'], true);
@@ -2278,18 +2291,75 @@ class Londerland
 		}
 		$start = $start ?? ($startable[0] ?? null);
 		if (!$start || !in_array((string)$start['type'], ['1', 'iframe'], true)) {
-			return '';
+			return null;
 		}
 		$url = parse_url((string)($start['access_url'] ?? $start['url'] ?? ''));
 		if (!isset($url['scheme'], $url['host']) || !in_array(strtolower($url['scheme']), ['http', 'https'], true)) {
+			return null;
+		}
+		return $start;
+	}
+
+	// The start tab's iframe is only created once start-up has finished; until then the browser has not looked up or
+	// connected to its host. A preconnect gets DNS, TCP and TLS done early. Tabs on the page's own host need none.
+	public function startTabPreconnect()
+	{
+		$start = $this->startIframeTab();
+		if (!$start) {
 			return '';
 		}
+		$url = parse_url((string)($start['access_url'] ?? $start['url']));
 		$origin = strtolower($url['scheme']) . '://' . $url['host'] . (isset($url['port']) ? ':' . $url['port'] : '');
 		$ownHost = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
 		if (strtolower($url['host']) === $ownHost) {
 			return '';
 		}
 		return '<link rel="preconnect" href="' . htmlspecialchars($origin, ENT_QUOTES) . '">' . PHP_EOL;
+	}
+
+	// Creates the start tab's iframe while the page is still loading, so the site in it loads at the same time as
+	// Londerland's own scripts instead of after them. It stays hidden until start-up opens the tab; tabProcess() in
+	// functions.js keeps it instead of creating a second one. Skipped when the address names another tab (#name).
+	public function startTabFrame()
+	{
+		$start = $this->startIframeTab();
+		if (!$start) {
+			return '';
+		}
+		$sandbox = str_replace(',', ' ', (string)($this->config['sandbox'] ?? ''));
+		$allow = str_replace(',', '; ', (string)($this->config['iframeAllow'] ?? ''));
+		$tab = json_encode([
+			'id' => (string)$start['id'],
+			'name' => (string)$start['name'],
+			'url' => (string)($start['access_url'] ?? $start['url']),
+			'sandbox' => $sandbox,
+			'allow' => $allow,
+		], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
+		return <<<HTML
+<script>
+    (function (tab) {
+        // the same tab names as setHash() in functions.js writes into the address
+        var hash = location.hash.slice(1);
+        if (hash !== '' && hash !== tab.id && hash !== encodeURI(tab.name).split('%20').join('-')) {
+            return;
+        }
+        var container = document.createElement('div');
+        container.id = 'container-' + tab.id;
+        container.className = 'frame-container frame-' + tab.id + ' hidden loaded';
+        var frame = document.createElement('iframe');
+        if (tab.allow) frame.setAttribute('allow', tab.allow);
+        if (tab.sandbox) frame.setAttribute('sandbox', tab.sandbox);
+        frame.setAttribute('frameborder', '0');
+        frame.setAttribute('scrolling', 'auto');
+        frame.id = 'frame-' + tab.id;
+        frame.className = 'iframe';
+        frame.src = tab.url;
+        container.appendChild(frame);
+        document.querySelector('.iFrame-listing').appendChild(container);
+    })($tab);
+</script>
+
+HTML;
 	}
 
 	// The logo or title in the top bar, written into the page so it shows on the first paint

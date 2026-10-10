@@ -154,6 +154,7 @@ $Londerland = new Londerland(true);
         <div class="internal-listing p-0 hidden"></div>
         <div class="iFrame-listing p-0 hidden"></div>
     </div>
+	<?php echo $Londerland->startTabFrame(); ?>
     <div class="splitRight hidden" id="page-wrapper-right">
         <div class="londerland-area-right"></div>
         <div class="plugin-listing-right p-0 hidden"></div>
