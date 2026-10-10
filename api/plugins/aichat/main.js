@@ -137,13 +137,25 @@
 		if (!window.marked || !window.DOMPurify) {
 			return '<p>' + escapeHtml(text).replace(/\n/g, '<br>') + '</p>';
 		}
-		const html = window.marked.parse(text || '', { gfm: true, breaks: true });
+		const options = { gfm: true, breaks: true };
+		const tokens = window.marked.lexer(text || '', options);
+		// the rendered HTML only keeps the first word of a code block's info string ("bash filename=backup.sh"), so
+		// collect the full ones; they come in the same order as the code blocks in the HTML
+		const infos = [];
+		window.marked.walkTokens(tokens, function (token) {
+			if (token.type === 'code') {
+				infos.push(token.lang || '');
+			}
+		});
+		const html = window.marked.parser(tokens, options);
 		const clean = window.DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
 		const $html = $('<div>').html(clean);
 		$html.find('a').attr({ target: '_blank', rel: 'noopener noreferrer' });
-		$html.find('pre > code').each(function () {
+		$html.find('pre > code').each(function (index) {
 			const code = this;
-			const language = (code.className.match(/language-([\w+#.-]+)/) || [])[1] || '';
+			const info = infos[index] || '';
+			const language = (info.match(/^[\w+#-]+/) || [''])[0];
+			const fileName = codeFileName(info, language, $(code).parent().prev('p').text());
 			if (window.hljs) {
 				try {
 					if (language && window.hljs.getLanguage(language)) {
@@ -160,13 +172,63 @@
 			const $wrap = $('<div class="aichat-code"></div>');
 			$wrap.append(
 				$('<div class="aichat-code-head"></div>')
-					.append($('<span></span>').text(language || 'code'))
-					.append('<button type="button" class="aichat-icon-btn aichat-copy-code" title="' + escapeHtml(t('Copy code')) + '"><i class="fa fa-copy"></i></button>')
+					.append($('<span class="aichat-code-name"></span>').text(fileName.named ? fileName.name : language || 'code'))
+					.append(
+						$('<span class="aichat-code-actions"></span>')
+							.append($('<button type="button" class="aichat-icon-btn aichat-download-code"><i class="fa fa-download"></i></button>').attr({ title: t('Download as') + ' ' + fileName.name, 'data-name': fileName.name }))
+							.append('<button type="button" class="aichat-icon-btn aichat-copy-code" title="' + escapeHtml(t('Copy code')) + '"><i class="fa fa-copy"></i></button>')
+					)
 			);
 			$pre.replaceWith($wrap);
 			$wrap.append($pre);
 		});
 		return $html.html();
+	}
+
+	// file extension per code block language, for downloads without a file name
+	const CODE_EXTENSIONS = {
+		bash: 'sh', sh: 'sh', shell: 'sh', zsh: 'sh', console: 'sh', python: 'py', py: 'py', javascript: 'js', js: 'js',
+		typescript: 'ts', ts: 'ts', jsx: 'jsx', tsx: 'tsx', json: 'json', yaml: 'yml', yml: 'yml', toml: 'toml', ini: 'ini',
+		xml: 'xml', html: 'html', css: 'css', scss: 'scss', php: 'php', sql: 'sql', powershell: 'ps1', ps1: 'ps1',
+		ps: 'ps1', bat: 'bat', cmd: 'bat', batch: 'bat', go: 'go', rust: 'rs', rs: 'rs', java: 'java', kotlin: 'kt',
+		c: 'c', cpp: 'cpp', 'c++': 'cpp', csharp: 'cs', cs: 'cs', 'c#': 'cs', ruby: 'rb', rb: 'rb', lua: 'lua',
+		perl: 'pl', swift: 'swift', markdown: 'md', md: 'md', csv: 'csv', nginx: 'conf', apache: 'conf', conf: 'conf',
+		env: 'env', dotenv: 'env', vue: 'vue', svelte: 'svelte', diff: 'diff', patch: 'patch', r: 'r', dart: 'dart',
+	};
+
+	/**
+	 * File name for a code block's download: from its info string ("bash filename=backup.sh", "python:run.py",
+	 * "bash backup.sh"), else from a paragraph right above it that is only a file name ("**backup.sh**"), else
+	 * "file.<extension of the language>". named = the model gave the name.
+	 */
+	function codeFileName(info, language, before) {
+		const looksLikeFile = /^\w[\w.()-]*\.[a-z]\w{0,9}$|^(Dockerfile|Makefile|Caddyfile|Jenkinsfile|Vagrantfile)$/i;
+		const candidates = [];
+		const attribute = info.match(/\b(?:filename|file|name|title|path)\s*=\s*("([^"]+)"|'([^']+)'|(\S+))/i);
+		if (attribute) {
+			candidates.push(attribute[2] || attribute[3] || attribute[4]);
+		}
+		const colon = info.match(/^[\w+#-]+:(\S+)/);
+		if (colon) {
+			candidates.push(colon[1]);
+		}
+		const words = info.split(/\s+/);
+		if (words.length === 2) {
+			candidates.push(words[1]);
+		}
+		candidates.push(String(before || '').trim().replace(/^[`*_"']+|[`*_"':]+$/g, ''));
+		for (const candidate of candidates) {
+			// only the last part of a path, and nothing that could make a strange download name
+			const name = String(candidate || '').split(/[\\/]/).pop().replace(/[\x00-\x1f"<>|?*:]/g, '').trim();
+			if (name && name.length <= 100 && looksLikeFile.test(name)) {
+				return { name: name, named: true };
+			}
+		}
+		const lower = language.toLowerCase();
+		if (lower === 'dockerfile' || lower === 'docker') {
+			return { name: 'Dockerfile', named: false };
+		}
+		return { name: 'file.' + (CODE_EXTENSIONS[lower] || 'txt'), named: false };
 	}
 
 	function formatTime(iso) {
@@ -1426,6 +1488,9 @@
 			if (msg) {
 				copyText(msg.content || '');
 			}
+		});
+		$panel.on('click', '.aichat-download-code', function () {
+			download($(this).attr('data-name') || 'file.txt', $(this).closest('.aichat-code').find('pre code').text(), 'text/plain;charset=utf-8');
 		});
 		$panel.on('click', '.aichat-copy-code', function () {
 			copyText($(this).closest('.aichat-code').find('pre code').text());

@@ -336,6 +336,13 @@ class AiChat extends Londerland
 					'attr' => 'rows="4"'
 				),
 				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-fileNameHint',
+					'label' => 'Ask the Model to Name Files',
+					'help' => 'Adds one sentence to the system prompt asking the model to put a file name on code blocks that hold a whole file (```bash filename=backup.sh), so their Download button saves them under that name. Without it, downloads are named after the language (file.sh, file.py, file.txt).',
+					'value' => $this->config['AICHAT-fileNameHint']
+				),
+				array(
 					'type' => 'input',
 					'name' => 'AICHAT-temperature',
 					'label' => 'Temperature',
@@ -1046,6 +1053,10 @@ class AiChat extends Londerland
 	{
 		$messages = [];
 		$system = trim($this->config['AICHAT-systemPrompt']);
+		if ($this->config['AICHAT-fileNameHint']) {
+			// the chat shows a Download button on every code block that saves it under this name
+			$system = trim($system . "\n\n" . 'When a code block holds a whole file (a script, config or text file), put its file name after the language, like ```bash filename=backup.sh');
+		}
 		$personal = trim($this->_aiChatGetPrefs()['system_prompt'] ?? '');
 		if ($personal !== '') {
 			$system = trim($system . "\n\n" . 'Instructions from the user ' . $this->user['username'] . ":\n" . $personal);
