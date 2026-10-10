@@ -450,6 +450,15 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   background: rgba(255, 255, 255, 0.04);
   font-size: 12px;
 }
+.aichat-code-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aichat-code-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+}
 .aichat-code pre {
   margin: 0;
   padding: 12px;

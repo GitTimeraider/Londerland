@@ -137,13 +137,25 @@
 		if (!window.marked || !window.DOMPurify) {
 			return '<p>' + escapeHtml(text).replace(/\n/g, '<br>') + '</p>';
 		}
-		const html = window.marked.parse(text || '', { gfm: true, breaks: true });
+		const options = { gfm: true, breaks: true };
+		const tokens = window.marked.lexer(text || '', options);
+		// the rendered HTML only keeps the first word of a code block's info string ("bash filename=backup.sh"), so
+		// collect the full ones; they come in the same order as the code blocks in the HTML
+		const infos = [];
+		window.marked.walkTokens(tokens, function (token) {
+			if (token.type === 'code') {
+				infos.push(token.lang || '');
+			}
+		});
+		const html = window.marked.parser(tokens, options);
 		const clean = window.DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
 		const $html = $('<div>').html(clean);
 		$html.find('a').attr({ target: '_blank', rel: 'noopener noreferrer' });
-		$html.find('pre > code').each(function () {
+		$html.find('pre > code').each(function (index) {
 			const code = this;
-			const language = (code.className.match(/language-([\w+#.-]+)/) || [])[1] || '';
+			const info = infos[index] || '';
+			const language = (info.match(/^[\w+#-]+/) || [''])[0];
+			const fileName = codeFileName(info, language, $(code).parent().prev('p').text());
 			if (window.hljs) {
 				try {
 					if (language && window.hljs.getLanguage(language)) {
@@ -160,13 +172,63 @@
 			const $wrap = $('<div class="aichat-code"></div>');
 			$wrap.append(
 				$('<div class="aichat-code-head"></div>')
-					.append($('<span></span>').text(language || 'code'))
-					.append('<button type="button" class="aichat-icon-btn aichat-copy-code" title="' + escapeHtml(t('Copy code')) + '"><i class="fa fa-copy"></i></button>')
+					.append($('<span class="aichat-code-name"></span>').text(fileName.named ? fileName.name : language || 'code'))
+					.append(
+						$('<span class="aichat-code-actions"></span>')
+							.append($('<button type="button" class="aichat-icon-btn aichat-download-code"><i class="fa fa-download"></i></button>').attr({ title: t('Download as') + ' ' + fileName.name, 'data-name': fileName.name }))
+							.append('<button type="button" class="aichat-icon-btn aichat-copy-code" title="' + escapeHtml(t('Copy code')) + '"><i class="fa fa-copy"></i></button>')
+					)
 			);
 			$pre.replaceWith($wrap);
 			$wrap.append($pre);
 		});
 		return $html.html();
+	}
+
+	// file extension per code block language, for downloads without a file name
+	const CODE_EXTENSIONS = {
+		bash: 'sh', sh: 'sh', shell: 'sh', zsh: 'sh', console: 'sh', python: 'py', py: 'py', javascript: 'js', js: 'js',
+		typescript: 'ts', ts: 'ts', jsx: 'jsx', tsx: 'tsx', json: 'json', yaml: 'yml', yml: 'yml', toml: 'toml', ini: 'ini',
+		xml: 'xml', html: 'html', css: 'css', scss: 'scss', php: 'php', sql: 'sql', powershell: 'ps1', ps1: 'ps1',
+		ps: 'ps1', bat: 'bat', cmd: 'bat', batch: 'bat', go: 'go', rust: 'rs', rs: 'rs', java: 'java', kotlin: 'kt',
+		c: 'c', cpp: 'cpp', 'c++': 'cpp', csharp: 'cs', cs: 'cs', 'c#': 'cs', ruby: 'rb', rb: 'rb', lua: 'lua',
+		perl: 'pl', swift: 'swift', markdown: 'md', md: 'md', csv: 'csv', nginx: 'conf', apache: 'conf', conf: 'conf',
+		env: 'env', dotenv: 'env', vue: 'vue', svelte: 'svelte', diff: 'diff', patch: 'patch', r: 'r', dart: 'dart',
+	};
+
+	/**
+	 * File name for a code block's download: from its info string ("bash filename=backup.sh", "python:run.py",
+	 * "bash backup.sh"), else from a paragraph right above it that is only a file name ("**backup.sh**"), else
+	 * "file.<extension of the language>". named = the model gave the name.
+	 */
+	function codeFileName(info, language, before) {
+		const looksLikeFile = /^\w[\w.()-]*\.[a-z]\w{0,9}$|^(Dockerfile|Makefile|Caddyfile|Jenkinsfile|Vagrantfile)$/i;
+		const candidates = [];
+		const attribute = info.match(/\b(?:filename|file|name|title|path)\s*=\s*("([^"]+)"|'([^']+)'|(\S+))/i);
+		if (attribute) {
+			candidates.push(attribute[2] || attribute[3] || attribute[4]);
+		}
+		const colon = info.match(/^[\w+#-]+:(\S+)/);
+		if (colon) {
+			candidates.push(colon[1]);
+		}
+		const words = info.split(/\s+/);
+		if (words.length === 2) {
+			candidates.push(words[1]);
+		}
+		candidates.push(String(before || '').trim().replace(/^[`*_"']+|[`*_"':]+$/g, ''));
+		for (const candidate of candidates) {
+			// only the last part of a path, and nothing that could make a strange download name
+			const name = String(candidate || '').split(/[\\/]/).pop().replace(/[\x00-\x1f"<>|?*:]/g, '').trim();
+			if (name && name.length <= 100 && looksLikeFile.test(name)) {
+				return { name: name, named: true };
+			}
+		}
+		const lower = language.toLowerCase();
+		if (lower === 'dockerfile' || lower === 'docker') {
+			return { name: 'Dockerfile', named: false };
+		}
+		return { name: 'file.' + (CODE_EXTENSIONS[lower] || 'txt'), named: false };
 	}
 
 	function formatTime(iso) {
@@ -617,6 +679,18 @@
 		updateSendState();
 	}
 
+	// Word, Excel, PowerPoint and OpenDocument files (their text is sent to the model)
+	const DOCUMENT_EXTENSIONS = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp'];
+
+	function fileExtension(name) {
+		return (String(name || '').match(/\.([^.]+)$/) || ['', ''])[1].toLowerCase();
+	}
+
+	function documentIcon(name) {
+		const extension = fileExtension(name);
+		return extension === 'xlsx' || extension === 'ods' ? 'fa-file-excel-o' : extension === 'pptx' || extension === 'odp' ? 'fa-file-powerpoint-o' : 'fa-file-word-o';
+	}
+
 	function attachmentHtml(attachment, removable) {
 		const name = escapeHtml(attachment.name);
 		const remove = removable ? `<button type="button" class="aichat-attachment-remove" data-id="${escapeHtml(attachment.localId || attachment.id)}" title="${escapeHtml(t('Remove'))}">&times;</button>` : '';
@@ -626,7 +700,7 @@
 			const open = attachment.id ? ` href="${fileUrl(attachment.id)}" target="_blank" rel="noopener"` : '';
 			return `<a class="aichat-attachment image${uploading}"${open} title="${name}"><img src="${escapeHtml(src)}" alt="${name}">${remove}</a>`;
 		}
-		const icon = attachment.kind === 'pdf' ? 'fa-file-pdf-o' : 'fa-file-text-o';
+		const icon = attachment.kind === 'pdf' ? 'fa-file-pdf-o' : attachment.kind === 'document' ? documentIcon(attachment.name) : 'fa-file-text-o';
 		const open = attachment.id ? ` href="${fileUrl(attachment.id)}"` : '';
 		const spinner = attachment.uploading ? '<i class="fa fa-spinner fa-spin"></i>' : `<i class="fa ${icon}"></i>`;
 		return `<a class="aichat-attachment${uploading}"${open} title="${name}">${spinner}<span>${name}</span>${attachment.size ? `<small class="text-muted">${formatSize(attachment.size)}</small>` : ''}${remove}</a>`;
@@ -1009,12 +1083,80 @@
 		updateSendState();
 	}
 
+	// Largest image file sent on: Claude refuses images over 10 MB once base64 encoded (4/3 of the file size)
+	const MAX_IMAGE_BYTES = 7 * 1024 * 1024;
+
+	function canvasBlob(canvas, type, quality) {
+		return new Promise(function (resolve) {
+			canvas.toBlob(resolve, type, quality);
+		});
+	}
+
+	/**
+	 * Makes a photo or screenshot smaller before upload: the longest side at most "Max Image Size (pixels)" and the
+	 * file under MAX_IMAGE_BYTES. Smaller images upload faster and cost fewer tokens. GIFs (maybe animated) and images
+	 * that are already small enough are left as they are; so is anything the browser cannot draw.
+	 */
+	async function shrinkImage(file) {
+		const setting = parseInt(activeInfo.plugins.includes['AICHAT-imageMaxSide-include'], 10);
+		const maxSide = isNaN(setting) ? 2000 : setting;
+		if (!/^image\/(png|jpeg|webp)$/.test(file.type) || typeof createImageBitmap !== 'function') {
+			return file;
+		}
+		let bitmap;
+		try {
+			bitmap = await createImageBitmap(file);
+		} catch (e) {
+			return file;
+		}
+		const scale = maxSide > 0 ? Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height)) : 1;
+		if (scale === 1 && file.size <= MAX_IMAGE_BYTES) {
+			bitmap.close();
+			return file;
+		}
+		const canvas = document.createElement('canvas');
+		canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+		canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+		const context = canvas.getContext('2d');
+		// screenshots stay PNG (sharp text) when that is small enough; otherwise JPEG, which has no transparency, so
+		// transparent parts become white instead of black
+		let blob = null;
+		if (file.type === 'image/png') {
+			context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+			blob = await canvasBlob(canvas, 'image/png');
+		}
+		// JPEG at falling quality; still too large (a huge photo with "0" as max size) = a quarter fewer pixels per try
+		for (let attempt = 0; attempt < 6 && (!blob || blob.size > (blob.type === 'image/png' ? MAX_IMAGE_BYTES / 2 : MAX_IMAGE_BYTES)); attempt++) {
+			if (attempt > 0) {
+				canvas.width = Math.max(1, Math.round(canvas.width * 0.75));
+				canvas.height = Math.max(1, Math.round(canvas.height * 0.75));
+			}
+			context.fillStyle = '#fff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+			for (const quality of [0.9, 0.8, 0.7]) {
+				blob = await canvasBlob(canvas, 'image/jpeg', quality);
+				if (!blob || blob.size <= MAX_IMAGE_BYTES) {
+					break;
+				}
+			}
+		}
+		bitmap.close();
+		if (!blob || blob.size >= file.size) {
+			// could not do better than the original (the server leaves out images that are too large)
+			return file;
+		}
+		const name = (file.name || 'pasted-image.png').replace(/\.[^.]*$/, '') + (blob.type === 'image/png' ? '.png' : '.jpg');
+		return new File([blob], name, { type: blob.type });
+	}
+
 	function addFiles(fileList) {
 		if (activeInfo.plugins.includes['AICHAT-uploads-include'] === false) {
 			return;
 		}
 		const maxBytes = (parseInt(activeInfo.plugins.includes['AICHAT-maxUploadMB-include'], 10) || 20) * 1024 * 1024;
-		Array.from(fileList).forEach(function (file) {
+		Array.from(fileList).forEach(async function (file) {
+			file = await shrinkImage(file);
 			if (file.size > maxBytes) {
 				notify(file.name + ': ' + t('file is too large'));
 				return;
@@ -1023,7 +1165,7 @@
 				localId: 'local-' + Math.random().toString(36).slice(2),
 				name: file.name || 'pasted-image.png',
 				size: file.size,
-				kind: file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'text',
+				kind: file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : DOCUMENT_EXTENSIONS.includes(fileExtension(file.name)) ? 'document' : 'text',
 				uploading: true,
 				localUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
 			};
@@ -1426,6 +1568,9 @@
 			if (msg) {
 				copyText(msg.content || '');
 			}
+		});
+		$panel.on('click', '.aichat-download-code', function () {
+			download($(this).attr('data-name') || 'file.txt', $(this).closest('.aichat-code').find('pre code').text(), 'text/plain;charset=utf-8');
 		});
 		$panel.on('click', '.aichat-copy-code', function () {
 			copyText($(this).closest('.aichat-code').find('pre code').text());

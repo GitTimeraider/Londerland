@@ -26,8 +26,15 @@ class AiChat extends Londerland
 	// Text-like files are sent to the model as text, images as image parts, PDFs as extracted text
 	private const TEXT_EXTENSIONS = ['txt', 'md', 'markdown', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'ini', 'conf', 'cfg', 'toml', 'log', 'html', 'htm', 'css', 'js', 'mjs', 'ts', 'tsx', 'jsx', 'php', 'py', 'rb', 'go', 'rs', 'java', 'kt', 'c', 'h', 'cpp', 'hpp', 'cs', 'swift', 'sh', 'bash', 'zsh', 'ps1', 'bat', 'sql', 'env', 'dockerfile', 'vue', 'svelte', 'lua', 'pl', 'r', 'scala', 'dart', 'tex'];
 	private const IMAGE_TYPES = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+	// Office and OpenDocument files are zip archives of XML; their text is read out like a PDF's
+	private const DOCUMENT_EXTENSIONS = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp'];
+	// Most XML read from one part of such a document, so a crafted file cannot unpack into gigabytes
+	private const MAX_DOCUMENT_XML = 52428800;
 	// Cap on extracted text per file so one big upload cannot blow up the request
 	private const MAX_FILE_TEXT = 200000;
+	// Largest image sent to the model: Claude refuses images over 10 MB once base64 encoded (4/3 of the file size).
+	// The browser shrinks uploads below this; older or other uploads above it are left out with a note
+	private const MAX_IMAGE_BYTES = 7340032;
 	// fetch_url: largest download and how much page text the model gets per call
 	private const MAX_FETCH_BYTES = 5242880;
 	private const MAX_PAGE_TEXT = 20000;
@@ -136,7 +143,9 @@ class AiChat extends Londerland
 				`model`	TEXT,
 				`pinned`	INTEGER DEFAULT 0,
 				`created`	DATETIME,
-				`updated`	DATETIME
+				`updated`	DATETIME,
+				`summary`	LONGTEXT,
+				`summary_until`	INTEGER DEFAULT 0
 			);',
 			'AICHAT-messages' => 'CREATE TABLE `AICHAT-messages` (
 				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -174,6 +183,13 @@ class AiChat extends Londerland
 		// Tables from the first version of the plugin have no meta column yet
 		if (!$this->_aiChatColumnExists('AICHAT-messages', 'meta')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-messages` ADD `meta` LONGTEXT']]);
+		}
+		// Summary of the messages no longer sent to the model, up to and including message summary_until
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'summary')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `summary` LONGTEXT']]);
+		}
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'summary_until')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `summary_until` INTEGER DEFAULT 0']]);
 		}
 		if (!$this->_aiChatColumnExists('AICHAT-prefs', 'web_tools')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-prefs` ADD `web_tools` INTEGER DEFAULT 1']]);
@@ -336,6 +352,13 @@ class AiChat extends Londerland
 					'attr' => 'rows="4"'
 				),
 				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-fileNameHint',
+					'label' => 'Ask the Model to Name Files',
+					'help' => 'Adds one sentence to the system prompt asking the model to put a file name on code blocks that hold a whole file (```bash filename=backup.sh), so their Download button saves them under that name. Without it, downloads are named after the language (file.sh, file.py, file.txt).',
+					'value' => $this->config['AICHAT-fileNameHint']
+				),
+				array(
 					'type' => 'input',
 					'name' => 'AICHAT-temperature',
 					'label' => 'Temperature',
@@ -355,7 +378,22 @@ class AiChat extends Londerland
 					'label' => 'Messages Sent as Context',
 					'value' => $this->config['AICHAT-contextMessages'],
 					'placeholder' => '40',
-					'help' => 'How many earlier messages of a chat are sent along with each question.'
+					'help' => 'The most earlier messages of a chat sent along with each question. When a chat goes past this, its oldest messages are dropped, a block at a time (see below).'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-dropMessages',
+					'label' => 'Messages Dropped at Once',
+					'value' => $this->config['AICHAT-dropMessages'],
+					'placeholder' => '20',
+					'help' => 'How many of the oldest messages are dropped together once the number above is reached; at most that number. Dropping a block at a time keeps the start of what the model gets the same for many questions, which servers with prompt caching charge less for. Higher = fewer summaries and more caching, but the model sees fewer messages on average.'
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-summarizeDropped',
+					'label' => 'Summarize Dropped Messages',
+					'help' => 'The model writes a short summary of the dropped messages, which is sent along instead, so it still knows what was discussed earlier. Costs one extra request each time messages are dropped. Off = dropped messages are forgotten.',
+					'value' => $this->config['AICHAT-summarizeDropped']
 				),
 				array(
 					'type' => 'switch',
@@ -484,6 +522,22 @@ class AiChat extends Londerland
 					'label' => 'Max Upload Size (MB)',
 					'value' => $this->config['AICHAT-maxUploadMB-include'],
 					'placeholder' => '20'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-imageHistory',
+					'label' => 'Earlier Images Sent Along',
+					'value' => $this->config['AICHAT-imageHistory'],
+					'placeholder' => '20',
+					'help' => 'Images from earlier messages are sent again with every question (each costs up to a few thousand tokens). Only the newest this many go along; older ones are replaced by a short note. Images in the question being asked always go along. Claude refuses images over 2000 pixels once a request holds more than 20 images.'
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-imageMaxSide-include',
+					'label' => 'Max Image Size (pixels)',
+					'value' => $this->config['AICHAT-imageMaxSide-include'],
+					'placeholder' => '2000',
+					'help' => 'Images are made smaller in the browser before upload so their longest side is at most this, and recompressed if needed to stay under 7 MB (Claude refuses images over 10 MB). Smaller images use fewer tokens: newer Claude models see up to 2576 pixels, older ones up to 1568, and once a request holds more than 20 images Claude refuses any image over 2000 pixels. 0 = only recompress images that are too large.'
 				),
 			),
 			'Chat Button' => array(
@@ -924,6 +978,9 @@ class AiChat extends Londerland
 		if ($extension === 'pdf' || $mime === 'application/pdf') {
 			return 'pdf';
 		}
+		if (in_array($extension, self::DOCUMENT_EXTENSIONS, true)) {
+			return 'document';
+		}
 		if (in_array($extension, self::TEXT_EXTENSIONS, true) || strpos($mime, 'text/') === 0 || in_array($mime, ['application/json', 'application/xml', 'application/x-yaml'], true)) {
 			return 'text';
 		}
@@ -963,7 +1020,7 @@ class AiChat extends Londerland
 		$kind = $this->_aiChatFileKind($name, $mime);
 		if (!$kind) {
 			unlink($path);
-			$this->setAPIResponse('error', 'This file type is not supported. Use images, PDFs or text/code files.', 415);
+			$this->setAPIResponse('error', 'This file type is not supported. Use images, PDFs, Word, Excel, PowerPoint, OpenDocument or text/code files.', 415);
 			return false;
 		}
 		$this->processQueries([[
@@ -1022,6 +1079,11 @@ class AiChat extends Londerland
 		try {
 			if ($kind === 'pdf') {
 				$text = (new \Smalot\PdfParser\Parser())->parseFile($file['fullPath'])->getText();
+				if (mb_strlen(trim(preg_replace('/\s+/u', ' ', $text))) < 20) {
+					return '[This PDF has no readable text. It is probably scanned or made of images, which are not sent along. Tell the user, and suggest a PDF with text or screenshots of the pages.]';
+				}
+			} elseif ($kind === 'document') {
+				$text = $this->_aiChatDocumentText($file['fullPath'], strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)));
 			} else {
 				$text = file_get_contents($file['fullPath']);
 				if (!mb_check_encoding($text, 'UTF-8')) {
@@ -1037,29 +1099,264 @@ class AiChat extends Londerland
 		return $text;
 	}
 
+	/**
+	 * Text of a Word, Excel, PowerPoint or OpenDocument file. These are zip archives of XML; the XML is turned into
+	 * text with plain string replacements (no XML parser, so no external entities): paragraphs and rows become
+	 * lines, table and sheet cells are separated by tabs.
+	 */
+	private function _aiChatDocumentText($path, $extension)
+	{
+		$zip = new ZipArchive();
+		if ($zip->open($path) !== true) {
+			throw new RuntimeException('not a valid ' . $extension . ' file');
+		}
+		// read with a length limit, not by the size the zip claims (a crafted file can lie about it)
+		$read = function ($name) use ($zip) {
+			return (string)$zip->getFromName($name, self::MAX_DOCUMENT_XML);
+		};
+		// numbered parts (slide1, slide2, ..., slide10) in their real order
+		$parts = function ($pattern) use ($zip) {
+			$names = [];
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = $zip->getNameIndex($i);
+				if (preg_match($pattern, $name, $match)) {
+					$names[(int)$match[1]] = $name;
+				}
+			}
+			ksort($names);
+			return $names;
+		};
+		$text = '';
+		switch ($extension) {
+			case 'docx':
+				foreach (['word/document.xml', 'word/footnotes.xml', 'word/endnotes.xml'] as $name) {
+					// a cell's last paragraph ends with the cell, so the next cell follows on the same line
+					$xml = preg_replace('#</w:p>\s*</w:tc>#', '</w:tc>', $read($name));
+					$text .= $this->_aiChatXmlText($xml, ['</w:p>' => "\n", '</w:tr>' => "\n", '</w:tc>' => "\t", '<w:tab/>' => "\t", '<w:br/>' => "\n", '<w:cr/>' => "\n"]) . "\n";
+				}
+				break;
+			case 'pptx':
+				foreach ($parts('#^ppt/slides/slide(\d+)\.xml$#') as $number => $name) {
+					$text .= '## Slide ' . $number . "\n" . trim($this->_aiChatXmlText($read($name), ['</a:p>' => "\n", '<a:br/>' => "\n", '</a:tc>' => "\t", '</a:tr>' => "\n"])) . "\n\n";
+					$notes = trim($this->_aiChatXmlText($read('ppt/notesSlides/notesSlide' . $number . '.xml'), ['</a:p>' => "\n"]));
+					if (trim($notes) !== '') {
+						$text .= "Speaker notes:\n" . $notes . "\n\n";
+					}
+				}
+				break;
+			case 'xlsx':
+				$strings = [];
+				if (preg_match_all('#<si>(.*?)</si>#s', $read('xl/sharedStrings.xml'), $matches)) {
+					foreach ($matches[1] as $item) {
+						$strings[] = $this->_aiChatXmlText($item);
+					}
+				}
+				preg_match_all('#<sheet\b[^>]*\bname="([^"]*)"#', $read('xl/workbook.xml'), $sheetNames);
+				$index = 0;
+				foreach ($parts('#^xl/worksheets/sheet(\d+)\.xml$#') as $name) {
+					$text .= '## Sheet: ' . html_entity_decode($sheetNames[1][$index++] ?? basename($name, '.xml'), ENT_QUOTES | ENT_XML1, 'UTF-8') . "\n";
+					// an empty row can be written as <row/>, which must not swallow the next row
+					preg_match_all('#<row\b[^>]*(?<!/)>(.*?)</row>#s', $read($name), $rows);
+					foreach ($rows[1] as $row) {
+						$cells = [];
+						preg_match_all('#<c\b([^>]*?)(?:/>|>(.*?)</c>)#s', $row, $found, PREG_SET_ORDER);
+						foreach ($found as $cell) {
+							$value = preg_match('#<v>(.*?)</v>#s', $cell[2] ?? '', $v) ? html_entity_decode($v[1], ENT_QUOTES | ENT_XML1, 'UTF-8') : $this->_aiChatXmlText($cell[2] ?? '');
+							if (preg_match('#\bt="s"#', $cell[1])) {
+								$value = $strings[(int)$value] ?? '';
+							} elseif ($value === '' && preg_match('#<f\b[^>]*>(.*?)</f>#s', $cell[2] ?? '', $formula)) {
+								// a formula the file holds no result for
+								$value = '=' . html_entity_decode($formula[1], ENT_QUOTES | ENT_XML1, 'UTF-8');
+							}
+							// the cell's column (A, B, ..., AA) keeps empty cells in between in place
+							$column = preg_match('#\br="([A-Z]+)\d+"#', $cell[1], $ref) ? array_reduce(str_split($ref[1]), function ($carry, $letter) {
+								return $carry * 26 + ord($letter) - 64;
+							}, 0) - 1 : count($cells);
+							$cells[$column] = trim($value);
+						}
+						if ($cells) {
+							$line = [];
+							for ($i = 0; $i <= max(array_keys($cells)); $i++) {
+								$line[] = $cells[$i] ?? '';
+							}
+							$text .= implode("\t", $line) . "\n";
+						}
+					}
+					$text .= "\n";
+				}
+				break;
+			default: // odt, ods, odp
+				$xml = preg_replace('#</text:p>\s*</table:table-cell>#', '</table:table-cell>', $read('content.xml'));
+				$count = 0;
+				if ($extension === 'ods') {
+					$xml = preg_replace_callback('#<table:table\b[^>]*\btable:name="([^"]*)"[^>]*>#', function ($match) {
+						return "\n## Sheet: " . $match[1] . "\n";
+					}, $xml);
+				} elseif ($extension === 'odp') {
+					// <draw:page-thumbnail> (in the speaker notes) is not a slide
+					$xml = preg_replace_callback('#<draw:page(?=[\s>])[^>]*>#', function () use (&$count) {
+						return "\n## Slide " . ++$count . "\n";
+					}, $xml);
+					$xml = preg_replace(['#<presentation:notes\b[^>]*>#', '#<text:page-number\b.*?</text:page-number>#s'], ["\nSpeaker notes:\n", ''], $xml);
+				}
+				$text = $this->_aiChatXmlText($xml, ['</text:p>' => "\n", '</text:h>' => "\n", '<text:tab/>' => "\t", '<text:line-break/>' => "\n", '<text:s/>' => ' ', '</table:table-cell>' => "\t", '</table:table-row>' => "\n", '</draw:page>' => "\n\n"]);
+				// slides without notes still have an (empty) notes page
+				$text = preg_replace('/Speaker notes:\s*(?=## Slide |\z)/', '', $text);
+		}
+		$zip->close();
+		// no tabs at the end of a row, at most one empty line in a row
+		return trim(preg_replace(["/[\t ]+\n/", "/\n{3,}/"], ["\n", "\n\n"], $text));
+	}
+
+	// XML to text: the given tags become line breaks or tabs first, then all tags go and entities are decoded
+	private function _aiChatXmlText($xml, $replacements = [])
+	{
+		// line breaks may carry attributes (<w:br w:type="page"/>); tabs are left alone, since a <w:tab .../> with
+		// attributes is a tab stop setting, not a tab in the text
+		$xml = preg_replace('#<(\w+:(?:br|cr|s|line-break))\b[^>]*/>#', '<$1/>', (string)$xml);
+		$text = strip_tags(strtr($xml, $replacements));
+		return html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8');
+	}
+
 	/* ===================== conversation ===================== */
 
 	/**
-	 * Builds the OpenAI "messages" array: system prompts, then the latest messages with their attachments
+	 * The summary of older messages and the messages sent along with a question. Once a chat has more than "Messages
+	 * Sent as Context" messages, the oldest are dropped "Messages Dropped at Once" at a time and, if switched on, folded
+	 * into the summary. Dropping a block at a time keeps the start of the request the same for many questions, which
+	 * servers with prompt caching charge less for. Returns [summary, messages].
 	 */
-	private function _aiChatBuildMessages($chatId)
+	private function _aiChatHistory($chatId, $model)
+	{
+		$chat = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT `summary`, `summary_until` FROM `AICHAT-chats` WHERE `id` = ?', (int)$chatId]
+		]]) ?: [];
+		// with summaries off, a summary made before is not sent anymore either
+		$summary = $this->config['AICHAT-summarizeDropped'] ? trim((string)($chat['summary'] ?? '')) : '';
+		$until = (int)($chat['summary_until'] ?? 0);
+		$history = array_values(array_filter($this->_aiChatMessages($chatId), function ($message) use ($until) {
+			return (int)$message['id'] > $until && in_array($message['role'], ['user', 'assistant'], true);
+		}));
+		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
+		if (count($history) <= $limit) {
+			return [$summary, $history];
+		}
+		$block = min($limit, max(1, (int)$this->config['AICHAT-dropMessages'] ?: 20));
+		$count = (int)ceil((count($history) - $limit) / $block) * $block;
+		// the kept messages start with a question, not an answer
+		while ($count < count($history) - 1 && $history[$count]['role'] !== 'user') {
+			$count++;
+		}
+		$dropped = array_slice($history, 0, $count);
+		if ($this->config['AICHAT-summarizeDropped']) {
+			$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Summarizing older messages...']);
+			$newSummary = $this->_aiChatSummarize($summary, $dropped, $model);
+			if ($newSummary === null) {
+				// nothing is dropped until a summary works (tried again with the next question); until then the
+				// latest messages go along as before
+				return [$summary, array_slice($history, -$limit)];
+			}
+			$summary = $newSummary;
+		}
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE [AICHAT-chats] SET', ['summary' => $summary !== '' ? $summary : null, 'summary_until' => (int)end($dropped)['id']], 'WHERE `id` = ?', (int)$chatId]
+		]]);
+		return [$summary, array_slice($history, $count)];
+	}
+
+	/**
+	 * Asks the chat model to fold messages into the summary so far; null when that fails
+	 */
+	private function _aiChatSummarize($summary, $messages, $model)
+	{
+		$conversation = '';
+		foreach ($messages as $message) {
+			$text = trim((string)$message['content']);
+			if (mb_strlen($text) > 3000) {
+				$text = mb_substr($text, 0, 3000) . ' [...]';
+			}
+			$names = array_map(function ($attachment) {
+				return $attachment['prompt'] ?? $attachment['name'];
+			}, json_decode($message['attachments'] ?: '[]', true) ?: []);
+			if ($names) {
+				$text .= "\n[" . ($message['role'] === 'user' ? 'Attached: ' : 'Images created: ') . implode(', ', $names) . ']';
+			}
+			$conversation .= strtoupper($message['role']) . ': ' . trim($text) . "\n\n";
+		}
+		[$code, $body, $error] = $this->_aiChatRequest('POST', 'chat/completions', [
+			'model' => $model,
+			'messages' => [
+				['role' => 'system', 'content' => 'You keep a running summary of a conversation between a USER and an AI ASSISTANT. Combine the summary so far and the new messages into one updated summary. Keep what is needed to carry on the conversation: facts about the user and their setup, decisions, preferences, the names of files, commands and code that matter, and open questions. Leave out small talk. At most 300 words, in the language of the conversation. Answer with the summary only.'],
+				['role' => 'user', 'content' => ($summary !== '' ? "Summary so far:\n" . $summary . "\n\n" : '') . "New messages:\n\n" . $conversation],
+			],
+			'max_tokens' => 2000,
+		], max(30, (int)$this->config['AICHAT-requestTimeout']));
+		$text = $body['choices'][0]['message']['content'] ?? null;
+		// some reasoning models wrap their thinking in <think> tags
+		$text = is_string($text) ? trim(preg_replace('/<think>.*?<\/think>/s', '', $text)) : '';
+		if ($error || $text === '') {
+			$this->setLoggerChannel('AI Chat')->warning('Could not summarize older messages: ' . ($error ?: 'empty answer'), ['model' => $model]);
+			return null;
+		}
+		return mb_substr($text, 0, 8000);
+	}
+
+	/**
+	 * A send that removes stored messages (edit, regenerate) from message $fromId on makes the summary wrong if it
+	 * covered them; it is then made again from the start
+	 */
+	private function _aiChatResetSummary($chatId, $fromId)
+	{
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE [AICHAT-chats] SET', ['summary' => null, 'summary_until' => 0], 'WHERE `id` = ? AND `summary_until` >= ?', (int)$chatId, (int)$fromId]
+		]]);
+	}
+
+	/**
+	 * Builds the OpenAI "messages" array: system prompts and the summary of older messages, then the latest messages
+	 * with their attachments
+	 */
+	private function _aiChatBuildMessages($chatId, $model)
 	{
 		$messages = [];
+		[$summary, $history] = $this->_aiChatHistory($chatId, $model);
+		// only the newest images go along again: each one costs tokens on every question, and Claude limits how many
+		// images (and how large) one request may hold
+		$setting = trim((string)($this->config['AICHAT-imageHistory'] ?? ''));
+		$imagesLeft = $setting === '' ? 20 : max(0, (int)$setting);
+		$sendImage = [];
+		$newest = true;
+		foreach (array_reverse($history) as $message) {
+			if ($message['role'] !== 'user') {
+				continue;
+			}
+			foreach (array_reverse(json_decode($message['attachments'] ?: '[]', true) ?: []) as $attachment) {
+				if (($attachment['kind'] ?? '') === 'image' || preg_match('#^image/#', $attachment['mime'] ?? '')) {
+					// the images of the question being asked always go along
+					$sendImage[(int)$attachment['id']] = $newest || $imagesLeft-- > 0;
+				}
+			}
+			$newest = false;
+		}
 		$system = trim($this->config['AICHAT-systemPrompt']);
+		if ($this->config['AICHAT-fileNameHint']) {
+			// the chat shows a Download button on every code block that saves it under this name
+			$system = trim($system . "\n\n" . 'When a code block holds a whole file (a script, config or text file), put its file name after the language, like ```bash filename=backup.sh');
+		}
 		$personal = trim($this->_aiChatGetPrefs()['system_prompt'] ?? '');
 		if ($personal !== '') {
 			$system = trim($system . "\n\n" . 'Instructions from the user ' . $this->user['username'] . ":\n" . $personal);
 		}
+		if ($summary !== '') {
+			$system = trim($system . "\n\n" . "Summary of the earlier part of this conversation (those messages are no longer shown to you):\n" . $summary);
+		}
 		if ($system !== '') {
 			$messages[] = ['role' => 'system', 'content' => $system];
 		}
-		$history = $this->_aiChatMessages($chatId);
-		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
-		$history = array_slice($history, -$limit);
 		foreach ($history as $message) {
-			if (!in_array($message['role'], ['user', 'assistant'], true)) {
-				continue;
-			}
 			$attachments = json_decode($message['attachments'] ?: '[]', true) ?: [];
 			if ($message['role'] === 'user' && $attachments) {
 				$parts = [];
@@ -1070,7 +1367,11 @@ class AiChat extends Londerland
 						$text .= "\n\n[Attachment " . $attachment['name'] . ' is no longer available]';
 						continue;
 					}
-					if ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image') {
+					if ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image' && empty($sendImage[(int)$attachment['id']])) {
+						$text .= "\n\n[Image " . $attachment['name'] . ' was shown earlier in this conversation and is no longer sent along]';
+					} elseif ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image' && filesize($file['fullPath']) > self::MAX_IMAGE_BYTES) {
+						$text .= "\n\n[Image " . $attachment['name'] . ' was left out: it is larger than the AI server accepts]';
+					} elseif ($this->_aiChatFileKind($file['name'], $file['mime']) === 'image') {
 						$parts[] = ['type' => 'image_url', 'image_url' => ['url' => 'data:' . $file['mime'] . ';base64,' . base64_encode(file_get_contents($file['fullPath']))]];
 					} else {
 						$text .= "\n\n<file name=\"" . $file['name'] . "\">\n" . $this->_aiChatFileText($file) . "\n</file>";
@@ -1137,6 +1438,7 @@ class AiChat extends Londerland
 				throw new InvalidArgumentException('There is no question to answer again');
 			}
 			$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` = ? AND `id` > ?', $chatId, $lastUser]]]);
+			$this->_aiChatResetSummary($chatId, $lastUser + 1);
 			return null;
 		}
 		$content = trim((string)($data['content'] ?? ''));
@@ -1153,6 +1455,7 @@ class AiChat extends Londerland
 		if (!empty($data['editFrom'])) {
 			// Editing a question removes it and everything after it
 			$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` = ? AND `id` >= ?', $chatId, (int)$data['editFrom']]]]);
+			$this->_aiChatResetSummary($chatId, (int)$data['editFrom']);
 		}
 		$message = $this->_aiChatInsertMessage($chatId, 'user', $content, $attachments);
 		if (!empty($data['editFrom'])) {
@@ -1798,7 +2101,7 @@ class AiChat extends Londerland
 			exit;
 		}
 
-		$messages = $this->_aiChatBuildMessages($chatId);
+		$messages = $this->_aiChatBuildMessages($chatId, $model);
 		$sources = [];
 		$searches = [];
 		if ($searchMode) {
