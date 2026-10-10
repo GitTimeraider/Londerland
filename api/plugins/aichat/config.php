@@ -17,6 +17,7 @@ return array(
 	'AICHAT-allowedModels' => '',
 	'AICHAT-extraModels' => '',
 	'AICHAT-systemPrompt' => '',
+	'AICHAT-fileNameHint' => true,
 	'AICHAT-temperature' => '',
 	'AICHAT-maxTokens' => '',
 	'AICHAT-contextMessages' => '40',
