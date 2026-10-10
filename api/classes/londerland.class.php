@@ -1121,7 +1121,7 @@ class Londerland
 							}
 							if ($pluginEnabled || $settings) {
 								if ($continue) {
-									$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? $this->fileHash;
+									$version = $this->pluginFileVersion($key);
 									$files .= '<script src="' . $rootPath . $webDirectory . basename(dirname($info->getPathname())) . '/' . basename($info->getFilename()) . '?v=' . $version . '" defer="true"></script>';
 								}
 							}
@@ -1132,7 +1132,7 @@ class Londerland
 					foreach ($iteratorIterator as $info) {
 						if (pathinfo($info->getPathname(), PATHINFO_EXTENSION) == 'css') {
 							$key = basename(dirname($info->getPathname()));
-							$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? $this->fileHash;
+							$version = $this->pluginFileVersion($key);
 							$files .= '<link href="' . $rootPath . $webDirectory . basename(dirname($info->getPathname())) . '/' . basename($info->getFilename()) . '?v=' . $version . '" rel="stylesheet">';
 						}
 					}
@@ -1142,6 +1142,16 @@ class Londerland
 			}
 		}
 		return $files;
+	}
+
+	/**
+	 * Version in a plugin file's address (?v=). Browsers keep those files for a year, so it has to change with every
+	 * update: the plugin's own version alone stays the same while its files change, so the build is added to it.
+	 */
+	public function pluginFileVersion($key)
+	{
+		$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? '';
+		return $version !== '' && $version !== $this->fileHash ? $version . '-' . $this->fileHash : $this->fileHash;
 	}
 
 	public function pluginFiles($type, $settings = false, $rootPath = '')
