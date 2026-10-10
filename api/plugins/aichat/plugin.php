@@ -524,8 +524,8 @@ class AiChat extends Londerland
 					'name' => 'AICHAT-imageMaxSide-include',
 					'label' => 'Max Image Size (pixels)',
 					'value' => $this->config['AICHAT-imageMaxSide-include'],
-					'placeholder' => '2048',
-					'help' => 'Images are made smaller in the browser before upload so their longest side is at most this, and recompressed if needed to stay under 7 MB (Claude refuses images over 10 MB). Smaller images use fewer tokens: newer Claude models see up to 2576 pixels, older ones up to 1568. 0 = only recompress images that are too large.'
+					'placeholder' => '2000',
+					'help' => 'Images are made smaller in the browser before upload so their longest side is at most this, and recompressed if needed to stay under 7 MB (Claude refuses images over 10 MB). Smaller images use fewer tokens: newer Claude models see up to 2576 pixels, older ones up to 1568, and once a request holds more than 20 images Claude refuses any image over 2000 pixels. 0 = only recompress images that are too large.'
 				),
 			),
 			'Chat Button' => array(

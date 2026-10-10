@@ -1087,7 +1087,7 @@
 	 */
 	async function shrinkImage(file) {
 		const setting = parseInt(activeInfo.plugins.includes['AICHAT-imageMaxSide-include'], 10);
-		const maxSide = isNaN(setting) ? 2048 : setting;
+		const maxSide = isNaN(setting) ? 2000 : setting;
 		if (!/^image\/(png|jpeg|webp)$/.test(file.type) || typeof createImageBitmap !== 'function') {
 			return file;
 		}
