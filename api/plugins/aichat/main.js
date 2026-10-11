@@ -456,6 +456,7 @@
 		if (window.innerWidth < 768) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
+		fitToScreen();
 		$panel.find('.aichat-input').trigger('focus');
 		if (state.initialized) {
 			return;
@@ -481,8 +482,31 @@
 		}
 	}
 
+	/**
+	 * Phones: an on-screen keyboard covers the bottom of the screen, and the browser then pushes the whole page up,
+	 * so the chat's header went out of sight. The full screen chat is fitted to the part of the screen that is still
+	 * visible instead: the header stays on top, the message list gets shorter and keeps showing its latest lines.
+	 */
+	function fitToScreen() {
+		const viewport = window.visualViewport;
+		if (!viewport || !$panel) {
+			return;
+		}
+		if (!$('body').hasClass('aichat-open') || window.innerWidth >= 768) {
+			$panel.css({ top: '', height: '' });
+			return;
+		}
+		const messages = $panel.find('.aichat-messages')[0];
+		const fromBottom = messages ? messages.scrollHeight - messages.scrollTop - messages.clientHeight : 0;
+		$panel.css({ top: viewport.offsetTop + 'px', height: viewport.height + 'px' });
+		if (messages) {
+			messages.scrollTop = messages.scrollHeight - messages.clientHeight - fromBottom;
+		}
+	}
+
 	function closeChat() {
 		$('body').removeClass('aichat-open');
+		fitToScreen();
 		$('.aichat-launcher').attr({ 'aria-expanded': 'false', 'aria-label': t('Open AI Chat') });
 		$('.aichat-launcher').trigger('focus');
 	}
@@ -1587,6 +1611,13 @@
 		$panel.on('click', '.aichat-regenerate', function () {
 			send({ regenerate: true, content: '' });
 		});
+
+		// the on-screen keyboard opening or closing changes the visible part of the screen
+		if (window.visualViewport) {
+			window.visualViewport.addEventListener('resize', fitToScreen);
+			window.visualViewport.addEventListener('scroll', fitToScreen);
+		}
+		$(window).on('resize', fitToScreen);
 
 		$(document).on('keydown', function (e) {
 			if (e.key !== 'Escape' || !$('body').hasClass('aichat-open')) {
