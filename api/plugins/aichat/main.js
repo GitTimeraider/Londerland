@@ -404,7 +404,7 @@
 					<div class="aichat-composer">
 						<div class="aichat-composer-box">
 							<div class="aichat-attachments aichat-pending"></div>
-							<textarea class="aichat-input" rows="1" placeholder="${escapeHtml(t('Send a message'))}"></textarea>
+							<textarea class="aichat-input" rows="1" placeholder="${escapeHtml(t('Send a message'))}" enterkeyhint="${touchTyping() ? 'enter' : 'send'}"></textarea>
 							<div class="aichat-composer-row">
 								<div>
 									${uploads ? `<button type="button" class="aichat-icon-btn aichat-attach" title="${escapeHtml(t('Add images or files'))}"><i class="fa fa-paperclip"></i></button>
@@ -648,8 +648,8 @@
 		const suggestions = [t('Explain how Docker volumes work'), t('Write a short welcome text for my homelab'), t('Help me debug a bash script'), t('Summarize the file I upload')];
 		$panel.find('.aichat-messages').html(`
 			<div class="aichat-welcome">
-				<h3>${escapeHtml(t('Hi stranger'))}</h3>
-				<p>${escapeHtml(t('How can I help you today?'))}</p>
+				<h3>${escapeHtml(t('Well, well. A stranger.'))}</h3>
+				<p>${escapeHtml(t("Something's broken, or you wouldn't be here. Tell me what, and we'll see whether it's worth fixing."))}</p>
 				<div class="aichat-suggestions">${suggestions.map((text) => `<button type="button" class="aichat-suggestion">${escapeHtml(text)}</button>`).join('')}</div>
 			</div>`);
 		renderChatList();
@@ -847,10 +847,16 @@
 		$send.prop('disabled', !ready).removeClass('stop').attr('title', t('Send')).html('<i class="fa fa-arrow-up"></i>');
 	}
 
+	// Phones and tablets: an on-screen keyboard has no Shift+Enter, so Enter makes a new line there and the send
+	// button sends
+	function touchTyping() {
+		return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+	}
+
 	function updateHint() {
 		$panel
 			.find('.aichat-hint')
-			.text(state.prefs.send_on_enter ? t('Enter to send, Shift+Enter for a new line') : t('Ctrl+Enter to send'));
+			.text(touchTyping() ? t('Enter for a new line, tap the arrow to send') : state.prefs.send_on_enter ? t('Enter to send, Shift+Enter for a new line') : t('Ctrl+Enter to send'));
 	}
 
 	async function ensureChat() {
@@ -1470,7 +1476,7 @@
 			if (e.key !== 'Enter' || e.isComposing) {
 				return;
 			}
-			const sendKey = state.prefs.send_on_enter !== false ? !e.shiftKey : e.ctrlKey || e.metaKey;
+			const sendKey = state.prefs.send_on_enter !== false && !touchTyping() ? !e.shiftKey : e.ctrlKey || e.metaKey;
 			if (sendKey || ((e.ctrlKey || e.metaKey) && !e.shiftKey)) {
 				e.preventDefault();
 				if (!$panel.find('.aichat-send').prop('disabled') && !state.controller) {
