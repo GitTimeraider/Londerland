@@ -538,6 +538,8 @@
 		const $select = $panel.find('.aichat-model');
 		if (state.modelSelect) {
 			state.modelSelect.destroy();
+			// until Tom Select is set up again, the plain select below is used
+			state.modelSelect = null;
 		}
 		$select.empty();
 		state.models.forEach(function (model) {
@@ -547,11 +549,23 @@
 			$select.append($('<option value="">').text(t('No models available')));
 		}
 		$select.val(preferredModel());
-		if (window.TomSelect && state.models.length) {
-			state.modelSelect = new TomSelect($select[0], {
-				maxOptions: null,
-				allowEmptyOption: false,
-				onChange: onModelChange,
+		if (state.models.length) {
+			// Tom Select is fetched after start-up; until it is set up the plain select works on its own. If the list was
+			// rebuilt in the meantime, the newest call sets it up.
+			$select.off('change.aichatPlain').on('change.aichatPlain', function () {
+				if (!state.modelSelect) {
+					onModelChange(this.value);
+				}
+			});
+			londerlandLoadLibrary('tomselect').then(function () {
+				if ($select[0].tomselect) {
+					return;
+				}
+				state.modelSelect = new TomSelect($select[0], {
+					maxOptions: null,
+					allowEmptyOption: false,
+					onChange: onModelChange,
+				});
 			});
 		} else {
 			$select.addClass('form-select form-select-sm').on('change', function () {

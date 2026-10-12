@@ -216,5 +216,6 @@ js/custom.min.js
 js/functions.min.js
 js/helpers.min.js
 js/i18n.min.js
+js/londerland.min.js
 dev-data/
 server.log

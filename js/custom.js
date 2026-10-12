@@ -1577,7 +1577,9 @@ $(document).on('click', '.log-details', function() {
 			if(activateClipboard){
 				clipboard(true,JSON.stringify(response.data));
 			}else{
-				formatLogDetails(response.data);
+				londerlandLoadLibrary('moment').then(function () {
+					formatLogDetails(response.data);
+				});
 			}
 		}catch(e) {
 			londerlandCatchError(e,data);

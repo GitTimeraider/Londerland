@@ -21,6 +21,9 @@ $Londerland = new Londerland(true);
     <script>
         // Ask for the start-up data now, while the scripts below are still downloading; launch() picks it up
         window.londerlandLaunchRequest = window.fetch ? fetch('api/v2/launch', {credentials: 'same-origin', headers: {'Accept': 'application/json'}}) : null;
+        // for the libraries londerlandLoadLibrary() (helpers.js) fetches later
+        window.londerlandVersion = <?php echo json_encode((string)$Londerland->fileHash, JSON_HEX_TAG); ?>;
+        window.londerlandMomentLocale = <?php echo json_encode($Londerland->momentLocale()); ?>;
     </script>
 	<?php echo $Londerland->startTabPreconnect(); ?>
     <link href="assets/vendor/bootstrap/bootstrap.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
@@ -37,21 +40,18 @@ $Londerland = new Londerland(true);
         <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     </noscript>
     <link href="assets/vendor/metismenu/metisMenu.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
-    <!-- Styles of parts that only appear after start-up (pop-ups, selects, notifications) load without holding up the first paint;
+    <!-- Styles of parts that only appear after start-up (pop-ups) load without holding up the first paint; selects, notifications,
          colour pickers, uploads, tables and drag-and-drop sorting are fetched with their scripts by londerlandLoadLibrary() -->
     <link href="assets/vendor/magnific-popup/magnific-popup.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/tom-select/tom-select.bootstrap5.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="assets/vendor/overlayscrollbars/overlayscrollbars.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
-    <link href="assets/vendor/alertifyjs/css/alertify.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="assets/vendor/alertifyjs/css/themes/default.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
     <link id="style" href="css/<?php echo (($Londerland->config['style'] ?? '') === 'light') ? 'light' : 'dark'; ?>.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
 	<?php echo $Londerland->setTheme(); ?>
-    <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon). Asked for
-         after the stylesheets above, which the first paint waits for; the stylesheets would only ask for them once loaded. -->
-    <link rel="preload" href="<?php echo $Londerland->assetUrl('assets/vendor/fontawesome/webfonts/fa-solid-900.woff2'); ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo $Londerland->assetUrl('assets/vendor/fontawesome/webfonts/fa-regular-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <!-- Fonts the top bar needs right away (text and its icons). Asked for after the stylesheets above, which the first paint
+         waits for; the stylesheets would only ask for them once loaded. Font Awesome (side menu icons, 137 KiB) is not preloaded:
+         Chrome held back the first paint while it was still loading (Lighthouse: first paint ~1.2 s later in most runs), and
+         the side menu, built at start-up, asks for it anyway. -->
     <link rel="preload" href="<?php echo $Londerland->assetUrl('css/fonts/rubik/files/rubik-latin-wght-normal.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?php echo $Londerland->assetUrl('less/icons/themify-icons/fonts/themify.woff2'); ?>" as="font" type="font/woff2" crossorigin>
 	<?php echo $Londerland->appearanceCSS(); ?>
@@ -100,7 +100,7 @@ $Londerland = new Londerland(true);
                 <li class=""><a class="dropdown-toggle waves-effect waves-light hidden" onclick="splashMenu();"> <i
                                 class="ti-layout-grid2"></i></a></li>
             </ul>
-            <ul class="nav navbar-top-links navbar-right float-end"></ul>
+            <ul class="nav navbar-top-links navbar-right float-end"><?php echo $Londerland->topBarUserHTML(); ?></ul>
         </div>
         <!-- /.navbar-header -->
         <!-- /.navbar-top-links -->
@@ -190,25 +190,10 @@ $Londerland = new Londerland(true);
 	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<!-- All scripts use defer: they download while the page is drawn and run in this order once it has been read -->
-<script src="assets/vendor/jquery/jquery.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/metismenu/metisMenu.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/moment/moment.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<?php echo $Londerland->momentLocaleScript(); ?>
-<script src="assets/vendor/moment/moment-timezone-with-data-10-year-range.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/bowser/bowser.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/arrive/arrive.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/vanilla-lazyload/lazyload.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/sweetalert2/sweetalert2.all.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/alertifyjs/alertify.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/tom-select/tom-select.complete.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="assets/vendor/tinykeys/tinykeys.umd.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
-<script src="js/custom.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<!-- Start-up scripts, as one file (startupScripts in scripts/build-frontend.mjs): jQuery, Bootstrap, metisMenu, Bowser, arrive,
+     vanilla-lazyload, Magnific Popup, tinykeys and Londerland's i18n, helpers, functions and custom. With defer it downloads while
+     the page is drawn and runs once the page has been read. Libraries start-up does not need come via londerlandLoadLibrary(). -->
+<script src="js/londerland.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
 <script id="custom-theme-javascript"></script>
 <script id="custom-javascript"></script>
 <?php

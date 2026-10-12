@@ -116,6 +116,31 @@ for (const [from, to] of ownFiles) {
 	writeFileSync(join(root, to), result.code);
 }
 
+// The scripts index.php loads for start-up, in the order they have to run, as one file (js/londerland.min.js): one
+// request instead of twelve. None of them starts with "use strict" or reads document.currentScript, so joining them
+// changes nothing; each is ended with a semicolon so the next cannot continue its last statement.
+const startupScripts = [
+	'assets/vendor/jquery/jquery.min.js',
+	'assets/vendor/bootstrap/bootstrap.bundle.min.js',
+	'assets/vendor/metismenu/metisMenu.min.js',
+	'assets/vendor/bowser/bowser.min.js',
+	'assets/vendor/arrive/arrive.min.js',
+	'assets/vendor/vanilla-lazyload/lazyload.min.js',
+	'assets/vendor/magnific-popup/jquery.magnific-popup.min.js',
+	'assets/vendor/tinykeys/tinykeys.umd.js',
+	'js/i18n.min.js',
+	'js/helpers.min.js',
+	'js/functions.min.js',
+	'js/custom.min.js',
+];
+writeFileSync(join(root, 'js/londerland.min.js'), startupScripts.map((file) => {
+	const code = readFileSync(join(root, file), 'utf8').replace(/\/\/# sourceMappingURL=\S+\s*$/, '').trimEnd();
+	if (/^(\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*["']use strict["']/.test(code)) {
+		throw new Error(`${file} starts with "use strict", which would apply to the scripts after it in js/londerland.min.js`);
+	}
+	return `/* ${file} */\n${code}\n;`;
+}).join('\n'));
+
 // Fonts are linked from stylesheets, so they cannot carry the ?v=<commit> that index.php puts on the stylesheets. They get
 // ?v=<hash of the font file> instead: Apache lets browsers keep files with ?v= for a year, and the address changes when the
 // font does. assets/vendor/asset-versions.json lists the same hashes for the fonts index.php preloads (Londerland::assetUrl()).
@@ -191,4 +216,4 @@ const iconSets = pickerSets.map((set) => {
 });
 writeFileSync(join(vendor, 'icons.json'), JSON.stringify(iconSets));
 
-console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Londerland files, versioned ${fileVersions.size} fonts, ${mdiAliases.size} icon aliases`);
+console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Londerland files, bundled ${startupScripts.length} start-up scripts, versioned ${fileVersions.size} fonts, ${mdiAliases.size} icon aliases`);

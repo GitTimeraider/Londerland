@@ -1942,7 +1942,9 @@ function buildUserManagement() {
       } catch (e) {
         londerlandCatchError(e, data);
       }
-      $("#manageUserTable").html(buildUserManagementItem(response.data));
+      londerlandLoadLibrary("moment").then(function () {
+        $("#manageUserTable").html(buildUserManagementItem(response.data));
+      });
     })
     .fail(function (xhr) {
       LonderlandApiError(xhr);
@@ -2353,12 +2355,12 @@ function buildActiveTokens(array) {
                 <td>` +
       extraText +
       `</td>
-                <td>` +
-      moment(v.created).format("LLL") +
-      `</td>
-                <td>` +
-      moment(v.expires).format("LLL") +
-      `</td>
+                <td><span data-moment="` +
+      v.created +
+      `" data-moment-format="LLL"></span></td>
+                <td><span data-moment="` +
+      v.expires +
+      `" data-moment-format="LLL"></span></td>
                 <td>` +
       v.ip +
       `</td>
@@ -2370,6 +2372,8 @@ function buildActiveTokens(array) {
             </tr>
         `;
   });
+  // the account area is built during start-up, before moment is there: the dates are filled in once it has loaded
+  londerlandFillMoments();
   return (
     `
         <div class="col-xl-12">
@@ -2651,6 +2655,8 @@ function userMenu(user) {
 		</li>
 		`;
   }
+  // index.php wrote the picture and name in already (topBarUserHTML()); this is the same plus the menu
+  $(".navbar-right").empty();
   $(menuList).appendTo(".navbar-right").html;
   //$(sideMenu).appendTo('#side-menu').html;
   //message("",window.lang.translate('Welcome')+" "+user.data.user.username,activeInfo.settings.notifications.position,"#FFF","success","3500");
@@ -3824,7 +3830,9 @@ function getLonderlandBackups() {
     .done(function (data) {
       try {
         let json = data.response;
-        $("#backup-file-list").html(buildLonderlandBackups(json.data));
+        londerlandLoadLibrary("moment").then(function () {
+          $("#backup-file-list").html(buildLonderlandBackups(json.data));
+        });
       } catch (e) {
         londerlandCatchError(e, data);
       }
@@ -5603,12 +5611,15 @@ function message(
   let positions = messagePositions();
   let placement = (positions[position] || positions.bc)[backbone];
   if (backbone === "alertify") {
-    if (single) {
-      alertify.dismissAll();
-    }
-    let msgFull = heading !== "" ? heading + "<br/>" + text : text;
-    alertify.set("notifier", "position", placement);
-    alertify.notify(msgFull, icon + "-alertify", timeout / 1000);
+    // AlertifyJS is only fetched when this notification style is selected
+    londerlandLoadLibrary("alertify").then(function () {
+      if (single) {
+        alertify.dismissAll();
+      }
+      let msgFull = heading !== "" ? heading + "<br/>" + text : text;
+      alertify.set("notifier", "position", placement);
+      alertify.notify(msgFull, icon + "-alertify", timeout / 1000);
+    });
     return true;
   }
   let containerId = "org-toasts-" + (positions[position] ? position : "bc");
@@ -5947,8 +5958,9 @@ function toggleDebug() {
     html: createElementFromHTML(div),
     button: "OK",
     customClass: { popup: "orgErrorAlert" },
+    // SweetAlert2 may still be on its way; the debug box only exists once the dialog is open
+    didOpen: getDebugPreInfo,
   });
-  getDebugPreInfo();
 }
 function closeOrgError() {
   $("#main-org-error-container").removeClass("show");
@@ -6254,8 +6266,10 @@ function formatLogDetails(details) {
     html: createElementFromHTML(div),
     showConfirmButton: false,
     customClass: { popup: "orgAlertTransparent" },
+    didOpen: function () {
+      pageLoad();
+    },
   });
-  pageLoad();
 }
 function checkToken(activate = false) {
   if (typeof activeInfo !== "undefined") {
@@ -6547,7 +6561,8 @@ function launch() {
           categories: json.data.categories,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           offest: new Date().getTimezoneOffset(),
-          language: language(moment.locale(navigator.languages[0])),
+          // the language moment uses for dates (index.php picks its locale file; see londerlandLibraries.moment)
+          language: language(window.londerlandMomentLocale || "en"),
           browserVersion: browserInfo.version,
           browserName: browserInfo.name,
           mobile: browserInfo.mobile,
@@ -6637,6 +6652,8 @@ function launch() {
         );
         oAuthLoginNeededCheck();
         bypassLocalLogin();
+        // dialogs, selects and dates: fetched now that the page is up
+        londerlandPreloadLibraries();
       } catch (e) {
         orgErrorCode(data);
         defineNotification();
