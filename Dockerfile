@@ -29,6 +29,8 @@ RUN npm ci --no-audit --no-fund
 COPY scripts/build-frontend.mjs scripts/
 COPY css css
 COPY js js
+# the build adds a version to the font addresses in the stylesheets, so it needs the font files they link to
+COPY less/icons/themify-icons/fonts less/icons/themify-icons/fonts
 RUN npm run build
 
 # ---------------------------------------------------------------------------

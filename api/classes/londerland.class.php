@@ -928,7 +928,7 @@ class Londerland
 	{
 		if ($this->config['gaTrackingID'] !== '') {
 			return '
-				<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+				<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady" defer></script>
 				<script async src="https://www.googletagmanager.com/gtag/js?id=' . $this->config['gaTrackingID'] . '"></script>
 				<script>
 					window.dataLayer = window.dataLayer || [];
@@ -1169,7 +1169,8 @@ class Londerland
 		if (isset($this->config['londerlandHash'])) {
 			if ($this->config['londerlandHash'] !== '') {
 				$hash = password_hash(substr($this->config['londerlandHash'], 2, 10), PASSWORD_BCRYPT);
-				return ($script) ? '<script>local("s","formKey","' . $hash . '");</script>' : $hash;
+				// index.php loads functions.js (which has local()) with defer, so it runs once the page has been read
+				return ($script) ? '<script>document.addEventListener("DOMContentLoaded", function () { local("s","formKey","' . $hash . '"); });</script>' : $hash;
 			}
 		}
 	}
@@ -2335,6 +2336,8 @@ class Londerland
 	// functions.js keeps it instead of creating a second one. Skipped when the address names another tab (#name).
 	// #page-wrapper gets its scrollbars (customScrollbars() in helpers.js) before the iframe is added: OverlayScrollbars
 	// moves the element's contents when it starts, and an iframe that is moved loads its site again.
+	// The script is a module so it waits, like the scripts index.php loads with defer, until OverlayScrollbars (the
+	// deferred script just before it) has run; it still runs before the other deferred scripts and so before start-up.
 	public function startTabFrame()
 	{
 		$start = $this->startIframeTab();
@@ -2351,7 +2354,7 @@ class Londerland
 			'allow' => $allow,
 		], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
 		return <<<HTML
-<script>
+<script type="module">
     (function (tab) {
         // the same tab names as setHash() in functions.js writes into the address
         var hash = location.hash.slice(1);
@@ -2377,6 +2380,37 @@ class Londerland
 </script>
 
 HTML;
+	}
+
+	// A font's address with the ?v=<hash> that scripts/build-frontend.mjs puts on it in the stylesheets, so a preload
+	// fetches the same address the stylesheet asks for (and browsers may keep it for a year)
+	public function assetUrl($path)
+	{
+		static $versions = null;
+		if ($versions === null) {
+			$file = $this->root . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'asset-versions.json';
+			$versions = is_file($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
+		}
+		return isset($versions[$path]) ? $path . '?v=' . $versions[$path] : $path;
+	}
+
+	// moment is loaded without its locales; launch() in functions.js switches it to the browser's first language, so only
+	// that language's locale file is needed. Browsers send the same list as Accept-Language. Like moment.locale('nl-NL'),
+	// the full name (nl-nl) is tried before the language alone (nl).
+	public function momentLocaleScript()
+	{
+		$first = strtolower(trim(explode(';', explode(',', (string)($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''))[0])[0]));
+		$first = str_replace('_', '-', $first);
+		if (!preg_match('/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/', $first)) {
+			return '';
+		}
+		$parts = explode('-', $first);
+		foreach (array_unique([$first, $parts[0] . (isset($parts[1]) ? '-' . $parts[1] : ''), $parts[0]]) as $locale) {
+			if (is_file($this->root . '/assets/vendor/moment/locale/' . $locale . '.js')) {
+				return '<script src="assets/vendor/moment/locale/' . $locale . '.js?v=' . $this->fileHash . '" defer></script>' . PHP_EOL;
+			}
+		}
+		return '';
 	}
 
 	// The logo or title in the top bar, written into the page so it shows on the first paint

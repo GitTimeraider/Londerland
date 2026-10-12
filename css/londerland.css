@@ -54,6 +54,12 @@
   padding: 0;
   margin: 0 !important;
 }
+/* The profile picture in the top bar has width and height set (so the bar does not shift when it loads); any picture
+   that is not square is cropped instead of squeezed */
+.profile-pic img.profile-image {
+  object-fit: cover;
+}
+
 /*Preloader*/
 
 .preloader {

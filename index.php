@@ -23,18 +23,14 @@ $Londerland = new Londerland(true);
         window.londerlandLaunchRequest = window.fetch ? fetch('api/v2/launch', {credentials: 'same-origin', headers: {'Accept': 'application/json'}}) : null;
     </script>
 	<?php echo $Londerland->startTabPreconnect(); ?>
-    <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon) -->
-    <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="css/fonts/rubik/files/rubik-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="less/icons/themify-icons/fonts/themify.woff2" as="font" type="font/woff2" crossorigin>
     <link href="assets/vendor/bootstrap/bootstrap.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/all.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/v4-shims.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
-    <!-- Icon sets that only menu items and pages built later use: fetched right away, but they do not hold up the first paint -->
-    <link href="assets/vendor/mdi/css/materialdesignicons.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css?v=<?php echo $Londerland->fileHash; ?>" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- Icon sets that only menu items and pages built later use: they do not hold up the first paint, and media="print" makes
+         the browser fetch them after the stylesheets that do (as rel="preload" they took bandwidth from those) -->
+    <link href="assets/vendor/mdi/css/materialdesignicons.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="assets/vendor/simple-line-icons/css/simple-line-icons.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript>
         <link href="assets/vendor/mdi/css/materialdesignicons.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
         <link href="assets/vendor/mdi/css/materialdesignicons-aliases.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
@@ -52,6 +48,12 @@ $Londerland = new Londerland(true);
     <link href="css/londerland.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
 	<?php echo $Londerland->pluginFiles('css'); ?>
 	<?php echo $Londerland->setTheme(); ?>
+    <!-- Fonts the menu icons and text need right away (the largest item of the first screen is often a menu icon). Asked for
+         after the stylesheets above, which the first paint waits for; the stylesheets would only ask for them once loaded. -->
+    <link rel="preload" href="<?php echo $Londerland->assetUrl('assets/vendor/fontawesome/webfonts/fa-solid-900.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo $Londerland->assetUrl('assets/vendor/fontawesome/webfonts/fa-regular-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo $Londerland->assetUrl('css/fonts/rubik/files/rubik-latin-wght-normal.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo $Londerland->assetUrl('less/icons/themify-icons/fonts/themify.woff2'); ?>" as="font" type="font/woff2" crossorigin>
 	<?php echo $Londerland->appearanceCSS(); ?>
     <style id="user-appearance"></style>
     <style id="custom-theme-css"></style>
@@ -74,7 +76,7 @@ $Londerland = new Londerland(true);
     <!-- ============================================================== -->
     <!-- Topbar header - style you can find in pages.scss -->
     <!-- ============================================================== -->
-    <nav class="navbar navbar-default navbar-static-top m-b-0 animated slideInDown">
+    <nav class="navbar navbar-default navbar-static-top m-b-0">
         <div class="navbar-header">
             <div class="top-left-part hidden-xs p-r-10">
 				<?php echo $Londerland->showTopBarHamburger(); ?>
@@ -155,9 +157,9 @@ $Londerland = new Londerland(true);
         <div class="internal-listing p-0 hidden"></div>
         <div class="iFrame-listing p-0 hidden"></div>
     </div>
-    <!-- Loaded here rather than with the scripts below: startTabFrame() gives #page-wrapper its scrollbars before it adds the
+    <!-- Listed here rather than with the scripts below: startTabFrame() gives #page-wrapper its scrollbars before it adds the
          start tab's iframe, because setting them up later moves the iframe, and a moved iframe loads its site a second time -->
-    <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+    <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
 	<?php echo $Londerland->startTabFrame(); ?>
     <div class="splitRight hidden" id="page-wrapper-right">
         <div class="londerland-area-right"></div>
@@ -188,24 +190,25 @@ $Londerland = new Londerland(true);
 	<?php echo $Londerland->inconspicuous(); ?>
 </div>
 <!-- /#wrapper -->
-<script src="assets/vendor/jquery/jquery.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/metismenu/metisMenu.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/moment/moment-with-locales.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/moment/moment-timezone-with-data-10-year-range.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/bowser/bowser.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/js-cookie/js.cookie.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/arrive/arrive.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/vanilla-lazyload/lazyload.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/sweetalert2/sweetalert2.all.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/alertifyjs/alertify.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/tom-select/tom-select.complete.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/tinykeys/tinykeys.umd.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="js/custom.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
+<!-- All scripts use defer: they download while the page is drawn and run in this order once it has been read -->
+<script src="assets/vendor/jquery/jquery.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/metismenu/metisMenu.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/moment/moment.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<?php echo $Londerland->momentLocaleScript(); ?>
+<script src="assets/vendor/moment/moment-timezone-with-data-10-year-range.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/bowser/bowser.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/arrive/arrive.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/vanilla-lazyload/lazyload.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/magnific-popup/jquery.magnific-popup.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/sweetalert2/sweetalert2.all.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/alertifyjs/alertify.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/tom-select/tom-select.complete.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="assets/vendor/tinykeys/tinykeys.umd.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
+<script src="js/custom.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
 <script id="custom-theme-javascript"></script>
 <script id="custom-javascript"></script>
 <?php

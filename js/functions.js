@@ -2563,7 +2563,7 @@ function userMenu(user) {
 			<li class="dropdown">
 				<a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="javascript:void(0)"><img alt="" class="rounded-circle profile-image" src="` +
       user.data.user.image +
-      `" width="36"><b class="hidden-xs">` +
+      `" width="36" height="36"><b class="hidden-xs">` +
       user.data.user.username +
       `</b></a>
 				<ul class="dropdown-menu dropdown-user animated flipInY">
@@ -2615,7 +2615,7 @@ function userMenu(user) {
 			<li class="dropdown">
 					<a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="javascript:void(0)"><img alt="" class="rounded-circle profile-image" src="` +
       user.data.user.image +
-      `" width="36"><b class="hidden-xs">` +
+      `" width="36" height="36"><b class="hidden-xs">` +
       user.data.user.username +
       `</b></a>
 					<ul class="dropdown-menu dropdown-user animated flipInY">
