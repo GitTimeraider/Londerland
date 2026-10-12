@@ -564,9 +564,9 @@ class AiChat extends Londerland
 				array(
 					'type' => 'password-alt',
 					'name' => 'AICHAT-usageApiKey',
-					'label' => 'OmniRoute API Key (manage)',
+					'label' => 'OmniRoute API Key',
 					'value' => $this->config['AICHAT-usageApiKey'],
-					'help' => 'An OmniRoute API key with the "manage" scope. Leave empty to use the API Key under Connection (it then needs that scope).'
+					'help' => 'Leave empty to use the API Key under Connection. In OmniRoute, turn on "Own Cost and Token Usage" and "Shared Account Quota" for that key. A key with the "manage" scope also works and shows the connection names.'
 				),
 				array(
 					'type' => 'input',
@@ -775,6 +775,9 @@ class AiChat extends Londerland
 		return rtrim($url, '/');
 	}
 
+	/**
+	 * JSON request to OmniRoute: [httpCode, decodedBody, errorText]
+	 */
 	private function _aiChatUsageRequest($method, $path)
 	{
 		$key = trim((string)$this->config['AICHAT-usageApiKey']) ?: trim((string)$this->config['AICHAT-apiKey']);
@@ -784,13 +787,10 @@ class AiChat extends Londerland
 		}
 		[$code, $raw, $error] = $this->_aiChatHttp($method, $this->_aiChatUsageBase() . $path, $headers, $method === 'POST' ? '' : null, 60);
 		if ($error) {
-			if ($code === 401 || $code === 403) {
-				$error = 'OmniRoute refused the API key (' . $code . '). Use a key with the "manage" scope.';
-			}
-			return [null, $error];
+			return [$code, null, $error];
 		}
 		$decoded = json_decode($raw, true);
-		return is_array($decoded) ? [$decoded, null] : [null, 'OmniRoute did not answer with JSON. Check the OmniRoute address.'];
+		return is_array($decoded) ? [$code, $decoded, null] : [$code, null, 'OmniRoute did not answer with JSON. Check the OmniRoute address.'];
 	}
 
 	public function _aiChatUsageCacheFile()
@@ -800,7 +800,12 @@ class AiChat extends Londerland
 
 	/**
 	 * Used percentages per OmniRoute connection. Kept for 60 seconds, so many open chats do not
-	 * hammer OmniRoute; $refresh asks OmniRoute to fetch fresh numbers from the providers first.
+	 * hammer OmniRoute (or the providers behind it).
+	 *
+	 * First tries /v1/me/status, which any API key may call once "Own Cost and Token Usage" and
+	 * "Shared Account Quota" are enabled for it in OmniRoute. When that is refused, falls back to
+	 * the dashboard API (/api/providers + /api/usage/provider-limits), which needs the "manage" scope
+	 * but also gives the connection names; there $refresh asks OmniRoute for fresh numbers first.
 	 */
 	public function _aiChatUsage($refresh = false)
 	{
@@ -814,24 +819,85 @@ class AiChat extends Londerland
 			$this->setAPIResponse('error', 'Enter and save the OmniRoute address first', 409);
 			return false;
 		}
-		[$providers, $error] = $this->_aiChatUsageRequest('GET', '/api/providers');
-		if ($error) {
-			$this->setAPIResponse('error', $error, 502);
-			return false;
+		[$code, $status, $selfError] = $this->_aiChatUsageRequest('GET', '/v1/me/status');
+		if (!$selfError && isset($status['accountQuotas']) && is_array($status['accountQuotas'])) {
+			$data = $this->_aiChatFormatSelfUsage($status['accountQuotas']);
+		} else {
+			if (!$selfError) {
+				$selfError = 'turn on "Shared Account Quota" for this API key in OmniRoute';
+			} elseif ($code === 401 || $code === 403) {
+				$selfError = 'turn on "Own Cost and Token Usage" and "Shared Account Quota" for this API key in OmniRoute';
+			}
+			[$code, $providers, $error] = $this->_aiChatUsageRequest('GET', '/api/providers');
+			if (!$error) {
+				[$code, $limits, $error] = $this->_aiChatUsageRequest($refresh ? 'POST' : 'GET', '/api/usage/provider-limits');
+			}
+			if ($error) {
+				$this->setAPIResponse('error', 'OmniRoute gave no usage limits: ' . $selfError . '.', 502);
+				return false;
+			}
+			$data = $this->_aiChatFormatUsage($providers['connections'] ?? [], $limits['caches'] ?? []);
 		}
-		[$limits, $error] = $this->_aiChatUsageRequest($refresh ? 'POST' : 'GET', '/api/usage/provider-limits');
-		if ($error) {
-			$this->setAPIResponse('error', $error, 502);
-			return false;
-		}
-		$data = $this->_aiChatFormatUsage($providers['connections'] ?? [], $limits['caches'] ?? []);
 		@file_put_contents($cacheFile, json_encode(['time' => time(), 'data' => $data]), LOCK_EX);
 		return $data;
 	}
 
-	public function _aiChatFormatUsage($connections, $caches)
+	private function _aiChatUsageProviderWanted($provider)
 	{
 		$wanted = array_map('strtolower', $this->_aiChatSplitList($this->config['AICHAT-usageProviders']));
+		return !$wanted || in_array(strtolower((string)$provider), $wanted, true);
+	}
+
+	/**
+	 * accountQuotas of /v1/me/status: [{provider, connectionId, plan, quotas: {label: {usedPercentage, resetAt}}}]
+	 */
+	public function _aiChatFormatSelfUsage($accountQuotas)
+	{
+		$result = [];
+		$perProvider = [];
+		foreach ($accountQuotas as $account) {
+			if (!is_array($account) || !$this->_aiChatUsageProviderWanted($account['provider'] ?? '')) {
+				continue;
+			}
+			$provider = (string)$account['provider'];
+			$windows = [];
+			foreach ((array)($account['quotas'] ?? []) as $label => $quota) {
+				if (is_array($quota) && is_numeric($quota['usedPercentage'] ?? null)) {
+					$windows[] = [
+						'label' => (string)$label,
+						'percent' => round(max(0, min(100, (float)$quota['usedPercentage'])), 1),
+						'resetAt' => $quota['resetAt'] ?? null,
+					];
+				}
+			}
+			$reason = $account['reason'] ?? null;
+			if (!$windows && ($reason === 'not_supported' || $reason === null)) {
+				continue;
+			}
+			// This endpoint gives no connection names; number them per provider instead
+			$perProvider[$provider] = ($perProvider[$provider] ?? 0) + 1;
+			$result[] = [
+				'name' => $provider,
+				'number' => $perProvider[$provider],
+				'provider' => $provider,
+				'plan' => is_string($account['plan'] ?? null) ? $account['plan'] : null,
+				'message' => $windows ? null : 'No usage limits available (' . str_replace('_', ' ', (string)$reason) . ')',
+				'fetchedAt' => null,
+				'windows' => $windows,
+			];
+		}
+		foreach ($result as &$item) {
+			if ($perProvider[$item['provider']] > 1) {
+				$item['name'] .= ' #' . $item['number'];
+			}
+			unset($item['number']);
+		}
+		unset($item);
+		return $result;
+	}
+
+	public function _aiChatFormatUsage($connections, $caches)
+	{
 		$result = [];
 		foreach ($connections as $connection) {
 			$id = (string)($connection['id'] ?? '');
@@ -840,7 +906,7 @@ class AiChat extends Londerland
 			if ($id === '' || ($connection['isActive'] ?? true) === false || !is_array($entry)) {
 				continue;
 			}
-			if ($wanted && !in_array(strtolower($provider), $wanted, true)) {
+			if (!$this->_aiChatUsageProviderWanted($provider)) {
 				continue;
 			}
 			$windows = [];
