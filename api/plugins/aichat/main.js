@@ -434,6 +434,13 @@
 								<input class="form-check-input aichat-pref-enter" type="checkbox" role="switch" id="aichat-pref-enter">
 								<label class="form-check-label" for="aichat-pref-enter">${escapeHtml(t('Enter sends the message (Shift+Enter for a new line)'))}</label>
 							</div>
+							<div class="form-group aichat-usage" hidden>
+								<div class="d-flex align-items-center justify-content-between mb-1">
+									<label class="mb-0">${escapeHtml(t('Usage limits'))}</label>
+									<button type="button" class="aichat-icon-btn aichat-usage-refresh" title="${escapeHtml(t('Refresh'))}"><i class="fa fa-refresh"></i></button>
+								</div>
+								<div class="aichat-usage-list"></div>
+							</div>
 							<div class="d-flex justify-content-end gap-2">
 								<button type="button" class="btn btn-secondary btn-sm aichat-settings-cancel">${escapeHtml(t('Cancel'))}</button>
 								<button type="button" class="btn btn-info btn-sm aichat-settings-save">${escapeHtml(t('Save'))}</button>
@@ -1336,6 +1343,72 @@
 		$panel.find('.aichat-pref-prompt').val(state.prefs.system_prompt || '');
 		$panel.find('.aichat-pref-enter').prop('checked', state.prefs.send_on_enter !== false);
 		$panel.find('.aichat-settings-overlay').addClass('show');
+		if (usageVisible()) {
+			$panel.find('.aichat-usage').prop('hidden', false);
+			loadUsage(false);
+		}
+	}
+
+	// The server checks this too; here it only decides whether the usage block is shown
+	function usageVisible() {
+		const mode = (activeInfo.plugins.includes || {})['AICHAT-usage-include'];
+		return mode === 'all' || (mode === 'admin' && parseInt(activeInfo.user.groupID, 10) <= 1);
+	}
+
+	function timeUntil(iso) {
+		const ms = new Date(iso).getTime() - Date.now();
+		if (!iso || isNaN(ms)) {
+			return '';
+		}
+		if (ms <= 0) {
+			return t('resets now');
+		}
+		const minutes = Math.round(ms / 60000);
+		const days = Math.floor(minutes / 1440);
+		const hours = Math.floor((minutes % 1440) / 60);
+		const parts = days ? [days + t('d'), hours + t('h')] : hours ? [hours + t('h'), (minutes % 60) + t('m')] : [minutes + t('m')];
+		return t('resets in') + ' ' + parts.join(' ');
+	}
+
+	async function loadUsage(refresh) {
+		const $list = $panel.find('.aichat-usage-list');
+		const $button = $panel.find('.aichat-usage-refresh').prop('disabled', true);
+		$list.html('<div class="aichat-usage-note"><i class="fa fa-spinner fa-spin me-1"></i>' + escapeHtml(t('Loading...')) + '</div>');
+		try {
+			const connections = (await api('GET', 'usage' + (refresh ? '?refresh=1' : ''))).data || [];
+			$list.empty();
+			if (!connections.length) {
+				$list.html('<div class="aichat-usage-note">' + escapeHtml(t('No connection reports usage limits yet.')) + '</div>');
+			}
+			connections.forEach(function (connection) {
+				const $item = $('<div class="aichat-usage-item">');
+				const title = connection.name + (connection.plan ? ' (' + connection.plan + ')' : '');
+				$('<div class="aichat-usage-name">').text(title).attr('title', connection.provider).appendTo($item);
+				if (connection.message) {
+					$('<div class="aichat-usage-note">').text(connection.message).appendTo($item);
+				}
+				connection.windows.forEach(function (limit) {
+					const level = limit.percent >= 90 ? 'high' : limit.percent >= 70 ? 'mid' : 'low';
+					const $row = $('<div class="aichat-usage-row">').appendTo($item);
+					$('<div class="aichat-usage-label">')
+						.append($('<span>').text(limit.label))
+						.append($('<span>').text(Math.round(limit.percent) + '%'))
+						.appendTo($row);
+					$('<div class="aichat-usage-bar">')
+						.append($('<div>').addClass('aichat-usage-fill aichat-usage-' + level).css('width', limit.percent + '%'))
+						.appendTo($row);
+					const reset = timeUntil(limit.resetAt);
+					if (reset) {
+						$('<div class="aichat-usage-reset">').text(reset).appendTo($row);
+					}
+				});
+				$list.append($item);
+			});
+		} catch (error) {
+			$list.html($('<div class="aichat-usage-note">').text(error.message));
+		} finally {
+			$button.prop('disabled', false);
+		}
 	}
 
 	async function saveSettings() {
@@ -1486,6 +1559,9 @@
 			$panel.find('.aichat-settings-overlay').removeClass('show');
 		});
 		$panel.on('click', '.aichat-settings-save', saveSettings);
+		$panel.on('click', '.aichat-usage-refresh', function () {
+			loadUsage(true);
+		});
 		$panel.on('click', '.aichat-suggestion', function () {
 			$panel.find('.aichat-input').val($(this).text()).trigger('input').trigger('focus');
 		});

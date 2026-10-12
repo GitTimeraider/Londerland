@@ -272,6 +272,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
    - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search by themselves.
    - **Images (optional):** turn on image generation through an OpenAI-compatible `/images/generations` endpoint (for example `https://api.openai.com/v1` with `gpt-image-1`). Leave URL and key empty to use the chat server. Claude cannot create images, so use a different server here when chatting with Claude. Optionally let tool-calling models create images by themselves.
    - **Uploads:** whether users may add images and files, and the size limit.
+   - **Usage Limits (optional, [OmniRoute](https://github.com/diegosouzapw/OmniRoute) only):** show the used percentage of each OmniRoute connection (for example the 5 hour and weekly limits of Claude Code) to admins or to everyone. Needs an OmniRoute API key with the `manage` scope and, if the API Base URL is not OmniRoute, the OmniRoute address (for example `http://omniroute:20128`). Fill in `claude` under Providers to Show to list only Claude connections.
 3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
 
 **Using it:** logged in users get a large **AI** chat bubble in the bottom right corner of every Londerland page. The chat offers:
@@ -283,6 +284,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - Chat history with search, pin, rename, export (Markdown or JSON), delete and delete all.
 - Editing a question, answering again, and copying.
 - Personal instructions sent with every chat.
+- Usage limits of the OmniRoute connections under **Settings**, with a bar per limit and when it resets (if the admin turned this on).
 - A "Thinking" section for reasoning models.
 - **Search** button (globe): the web is searched first. The answer cites its sources as clickable [1], [2] links, with a list of sources under it.
 - **Image** button: your message becomes a picture, shown in the chat with a download button. "Answer again" creates a new version.
