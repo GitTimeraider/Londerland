@@ -82,14 +82,14 @@ class Londerland
 		$this->demo = (file_exists(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'Demo.txt'));
 		// Set variable if install has commit hash and variable to be used as hash for files
 		$this->commit = ($this->docker && !$this->dev) ? file_get_contents(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'Github.txt') : null;
-		$this->fileHash = ($this->commit) ?? $this->version;
-		$this->fileHash = trim($this->fileHash);
 		// Set location path to user config path
 		$this->chooseConfigFile();
 		// Set location path to default config path
 		$this->defaultConfigPath = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'default.php';
 		// Load Config file
 		$this->config = $this->config();
+		// Set the ?v= value for file addresses: it changes with every build, but is hashed so it does not show the version
+		$this->fileHash = substr(hash('sha256', trim(($this->commit) ?? $this->version) . ($this->config['londerlandHash'] ?? '')), 0, 12);
 		// Set cookie name for Londerland Instance
 		$this->cookieName = ($this->hasConfig()) ? $this->config['uuid'] !== '' ? 'londerland_token_' . $this->config['uuid'] : 'londerland_token_temp' : 'londerland_token_temp';
 
@@ -1463,8 +1463,11 @@ class Londerland
 		}
 		$status['writable'] = is_writable(dirname(__DIR__, 2));
 		$status['minVersion'] = (version_compare(PHP_VERSION, $this->minimumPHP) >= 0);
-		$status['os'] = $this->getOS();
-		$status['php'] = phpversion();
+		// Server details are for admins only (or before setup, when there are no users yet)
+		if (!$this->hasDB() || $this->qualifyRequest(0)) {
+			$status['os'] = $this->getOS();
+			$status['php'] = phpversion();
+		}
 		$status['userConfigPathExists'] = file_exists($this->userConfigPath);
 		if (!($status['minVersion'])) {
 			$status['action'] = 'php';
@@ -1520,11 +1523,14 @@ class Londerland
 		$status['minVersion'] = (version_compare(PHP_VERSION, $this->minimumPHP) >= 0) ? 'yes' : 'no';
 		$status['dependenciesActive'] = $dependenciesActive;
 		$status['dependenciesInactive'] = $dependenciesInactive;
-		$status['version'] = $this->version;
-		$status['os'] = $this->getOS();
-		$status['php'] = phpversion();
-		$status['php_user'] = get_current_user();
-		$status['userConfigPath'] = $this->userConfigPath;
+		// Version and server details are for admins only; the setup screens (wizard, missing dependencies) still need them
+		if ($status['status'] !== 'ok' || $this->qualifyRequest(0)) {
+			$status['version'] = $this->version;
+			$status['os'] = $this->getOS();
+			$status['php'] = phpversion();
+			$status['php_user'] = get_current_user();
+			$status['userConfigPath'] = $this->userConfigPath;
+		}
 		return $status;
 	}
 
