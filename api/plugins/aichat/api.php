@@ -45,6 +45,32 @@ $app->get('/plugins/aichat/test/search', function ($request, $response, $args) {
 	}
 	return aiChatJsonResponse($response);
 });
+$app->get('/plugins/aichat/test/usage', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAdminAccess($request)) {
+		@unlink($AiChat->_aiChatUsageCacheFile());
+		$usage = $AiChat->_aiChatUsage();
+		if ($usage !== false) {
+			$AiChat->setAPIResponse('success', 'OmniRoute answered. Connections with limits: ' . count($usage), 200, $usage);
+		}
+	}
+	return aiChatJsonResponse($response);
+});
+// Used percentages of the OmniRoute connections (5 hour / weekly limits), if the admin turned it on
+$app->get('/plugins/aichat/usage', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		if (!$AiChat->_aiChatUsageAllowed()) {
+			$AiChat->setAPIResponse('error', 'Usage limits are not shown to your group', 403);
+		} else {
+			$usage = $AiChat->_aiChatUsage(!empty($request->getQueryParams()['refresh']));
+			if ($usage !== false) {
+				$GLOBALS['api']['response']['data'] = $usage;
+			}
+		}
+	}
+	return aiChatJsonResponse($response);
+});
 $app->get('/plugins/aichat/models', function ($request, $response, $args) {
 	$AiChat = new AiChat();
 	if ($AiChat->_aiChatAccess($request)) {

@@ -31,6 +31,24 @@ $(document).on('click', '.aichatTestSearch', function () {
 			$button.prop('disabled', false);
 		});
 });
+// "Test usage" asks OmniRoute for the used percentages of its connections
+$(document).on('click', '.aichatTestUsage', function () {
+	const $button = $(this).prop('disabled', true);
+	londerlandAPI2('GET', 'api/v2/plugins/aichat/test/usage')
+		.done(function (data) {
+			const list = (data.response.data || [])
+				.slice(0, 10)
+				.map((c) => $('<div>').text(c.name + ': ' + (c.message || c.windows.map((w) => w.label + ' ' + Math.round(w.percent) + '%').join(', '))).html())
+				.join('<br>');
+			messageSingle(data.response.message, list, activeInfo.settings.notifications.position, '#FFF', 'success', '15000');
+		})
+		.fail(function (xhr) {
+			LonderlandApiError(xhr, 'AI Chat');
+		})
+		.always(function () {
+			$button.prop('disabled', false);
+		});
+});
 // Chat button colour: colour picker with a few presets (light and dark purple first)
 $('body').arrive('#AICHAT-settings-items input.aichat-color-picker', function () {
 	initColorPickers(this, {

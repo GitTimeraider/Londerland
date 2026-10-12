@@ -34,5 +34,10 @@ return array(
 	'AICHAT-imageApiKey' => '',
 	'AICHAT-imageModel' => 'gpt-image-1',
 	'AICHAT-imageSize' => '1024x1024',
-	'AICHAT-imageAuto' => false
+	'AICHAT-imageAuto' => false,
+	// Usage limits from an OmniRoute server: off, admin (admins and co-admins) or all (everyone with the chat)
+	'AICHAT-usage-include' => 'off',
+	'AICHAT-usageUrl' => '',
+	'AICHAT-usageApiKey' => '',
+	'AICHAT-usageProviders' => ''
 );

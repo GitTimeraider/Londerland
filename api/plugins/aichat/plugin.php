@@ -464,6 +464,50 @@ class AiChat extends Londerland
 					'placeholder' => '20'
 				),
 			),
+			'Usage Limits' => array(
+				array(
+					'type' => 'select',
+					'name' => 'AICHAT-usage-include',
+					'label' => 'Show Usage Limits',
+					'value' => $this->config['AICHAT-usage-include'],
+					'options' => [
+						['name' => 'Off', 'value' => 'off'],
+						['name' => 'Admins and co-admins', 'value' => 'admin'],
+						['name' => 'Everyone with AI Chat', 'value' => 'all'],
+					],
+					'help' => 'Shows the used percentage of each OmniRoute connection (for example the 5 hour and weekly limits of Claude Code) under Settings in the chat window.'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-usageUrl',
+					'label' => 'OmniRoute Address',
+					'value' => $this->config['AICHAT-usageUrl'],
+					'placeholder' => 'Empty = API Base URL without /v1',
+					'help' => 'Address of the OmniRoute dashboard, for example http://omniroute:20128. Leave empty when the API Base URL already points to OmniRoute.'
+				),
+				array(
+					'type' => 'password-alt',
+					'name' => 'AICHAT-usageApiKey',
+					'label' => 'OmniRoute API Key (manage)',
+					'value' => $this->config['AICHAT-usageApiKey'],
+					'help' => 'An OmniRoute API key with the "manage" scope. Leave empty to use the API Key under Connection (it then needs that scope).'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-usageProviders',
+					'label' => 'Providers to Show',
+					'value' => $this->config['AICHAT-usageProviders'],
+					'placeholder' => 'claude',
+					'help' => 'Comma separated OmniRoute provider IDs (for example claude, codex). Leave empty to show every connection that reports limits.'
+				),
+				array(
+					'type' => 'button',
+					'label' => 'Test Usage',
+					'class' => ' aichatTestUsage',
+					'icon' => 'fa fa-tachometer',
+					'text' => 'Test (save first)'
+				),
+			),
 			'Chat Button' => array(
 				array(
 					'type' => 'input',
@@ -629,6 +673,135 @@ class AiChat extends Londerland
 		}
 		$this->setAPIResponse('success', 'Connected. Models available to users: ' . $count, 200, $result['models']);
 		return $result['models'];
+	}
+
+	/* ===================== usage limits (OmniRoute) ===================== */
+
+	public function _aiChatUsageMode()
+	{
+		$mode = $this->config['AICHAT-usage-include'] ?? 'off';
+		return in_array($mode, ['admin', 'all'], true) ? $mode : 'off';
+	}
+
+	public function _aiChatUsageAllowed()
+	{
+		$mode = $this->_aiChatUsageMode();
+		return $mode === 'all' || ($mode === 'admin' && (int)($this->user['groupID'] ?? 999) <= 1);
+	}
+
+	private function _aiChatUsageBase()
+	{
+		$url = trim((string)$this->config['AICHAT-usageUrl']);
+		if ($url === '') {
+			// OmniRoute serves the OpenAI API under /v1 and its management API under /api on the same address
+			$url = preg_replace('~/v1/?$~i', '', rtrim(trim((string)$this->config['AICHAT-baseUrl']), '/'));
+		}
+		return rtrim($url, '/');
+	}
+
+	private function _aiChatUsageRequest($method, $path)
+	{
+		$key = trim((string)$this->config['AICHAT-usageApiKey']) ?: trim((string)$this->config['AICHAT-apiKey']);
+		$headers = ['Accept: application/json'];
+		if ($key !== '') {
+			$headers[] = 'Authorization: Bearer ' . $key;
+		}
+		[$code, $raw, $error] = $this->_aiChatHttp($method, $this->_aiChatUsageBase() . $path, $headers, $method === 'POST' ? '' : null, 60);
+		if ($error) {
+			if ($code === 401 || $code === 403) {
+				$error = 'OmniRoute refused the API key (' . $code . '). Use a key with the "manage" scope.';
+			}
+			return [null, $error];
+		}
+		$decoded = json_decode($raw, true);
+		return is_array($decoded) ? [$decoded, null] : [null, 'OmniRoute did not answer with JSON. Check the OmniRoute address.'];
+	}
+
+	public function _aiChatUsageCacheFile()
+	{
+		return $this->_aiChatFileDir() . DIRECTORY_SEPARATOR . 'usage-cache.json';
+	}
+
+	/**
+	 * Used percentages per OmniRoute connection. Kept for 60 seconds, so many open chats do not
+	 * hammer OmniRoute; $refresh asks OmniRoute to fetch fresh numbers from the providers first.
+	 */
+	public function _aiChatUsage($refresh = false)
+	{
+		$cacheFile = $this->_aiChatUsageCacheFile();
+		$cache = is_file($cacheFile) ? json_decode((string)file_get_contents($cacheFile), true) : null;
+		$age = is_array($cache) ? time() - (int)($cache['time'] ?? 0) : PHP_INT_MAX;
+		if ($age < 60 && isset($cache['data'])) {
+			return $cache['data'];
+		}
+		if ($this->_aiChatUsageBase() === '') {
+			$this->setAPIResponse('error', 'Enter and save the OmniRoute address first', 409);
+			return false;
+		}
+		[$providers, $error] = $this->_aiChatUsageRequest('GET', '/api/providers');
+		if ($error) {
+			$this->setAPIResponse('error', $error, 502);
+			return false;
+		}
+		[$limits, $error] = $this->_aiChatUsageRequest($refresh ? 'POST' : 'GET', '/api/usage/provider-limits');
+		if ($error) {
+			$this->setAPIResponse('error', $error, 502);
+			return false;
+		}
+		$data = $this->_aiChatFormatUsage($providers['connections'] ?? [], $limits['caches'] ?? []);
+		@file_put_contents($cacheFile, json_encode(['time' => time(), 'data' => $data]), LOCK_EX);
+		return $data;
+	}
+
+	public function _aiChatFormatUsage($connections, $caches)
+	{
+		$wanted = array_map('strtolower', $this->_aiChatSplitList($this->config['AICHAT-usageProviders']));
+		$result = [];
+		foreach ($connections as $connection) {
+			$id = (string)($connection['id'] ?? '');
+			$provider = (string)($connection['provider'] ?? '');
+			$entry = $caches[$id] ?? null;
+			if ($id === '' || ($connection['isActive'] ?? true) === false || !is_array($entry)) {
+				continue;
+			}
+			if ($wanted && !in_array(strtolower($provider), $wanted, true)) {
+				continue;
+			}
+			$windows = [];
+			foreach (array_merge((array)($entry['quotas'] ?? []), (array)($entry['modelQuotas'] ?? [])) as $label => $quota) {
+				if (!is_array($quota) || !empty($quota['unlimited'])) {
+					continue;
+				}
+				$total = (float)($quota['total'] ?? 0);
+				if ($total <= 0 || !is_numeric($quota['used'] ?? null)) {
+					continue;
+				}
+				$windows[] = [
+					'label' => (string)$label,
+					'percent' => round(max(0, min(100, (float)$quota['used'] / $total * 100)), 1),
+					'resetAt' => $quota['resetAt'] ?? null,
+				];
+			}
+			if (!$windows && empty($entry['message'])) {
+				continue;
+			}
+			$name = $provider;
+			foreach (['displayName', 'name', 'email'] as $field) {
+				if (trim((string)($connection[$field] ?? '')) !== '') {
+					$name = trim((string)$connection[$field]);
+					break;
+				}
+			}
+			$result[] = [
+				'name' => (string)$name,
+				'provider' => $provider,
+				'plan' => is_string($entry['plan'] ?? null) ? $entry['plan'] : null,
+				'message' => $windows ? null : (string)$entry['message'],
+				'fetchedAt' => $entry['fetchedAt'] ?? null,
+				'windows' => $windows,
+			];
+		}
+		return $result;
 	}
 
 	/* ===================== preferences ===================== */

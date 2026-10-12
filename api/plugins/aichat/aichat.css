@@ -844,6 +844,56 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
 .aichat-dialog .form-group {
   margin-bottom: 14px;
 }
+/* Usage limits (OmniRoute) in the settings dialog */
+.aichat-usage-item {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--aichat-surface);
+  border: 1px solid var(--aichat-border);
+  border-radius: 8px;
+}
+.aichat-usage-name {
+  margin-bottom: 4px;
+  color: var(--aichat-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.aichat-usage-row {
+  margin-top: 6px;
+}
+.aichat-usage-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--aichat-text);
+  font-size: 12px;
+}
+.aichat-usage-bar {
+  height: 6px;
+  margin-top: 3px;
+  overflow: hidden;
+  background: var(--aichat-border);
+  border-radius: 3px;
+}
+.aichat-usage-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.aichat-usage-low {
+  background: #66bb6a;
+}
+.aichat-usage-mid {
+  background: #ffa726;
+}
+.aichat-usage-high {
+  background: #ef5350;
+}
+.aichat-usage-reset,
+.aichat-usage-note {
+  margin-top: 2px;
+  color: var(--aichat-muted);
+  font-size: 11px;
+}
 .aichat-notice {
   padding: 30px 20px;
   color: var(--aichat-muted);
