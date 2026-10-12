@@ -131,6 +131,31 @@ class HealthChecks extends Londerland
 		);
 	}
 
+	/**
+	 * Checks of the healthchecks.io account(s) set in this plugin, for "Import Services" in the plugin settings
+	 */
+	public function _healthCheckPluginImportChecks()
+	{
+		$api = ['content' => ['checks' => []]];
+		foreach (explode(',', $this->config['healthChecksToken']) as $token) {
+			$url = $this->qualifyURL($this->config['healthChecksURL']) . '/';
+			try {
+				$options = $this->requestOptions($url, 30, $this->config['healthChecksDisableCertCheck'] ?? false);
+				$response = \WpOrg\Requests\Requests::get($url, ['X-Api-Key' => trim($token)], $options);
+				if ($response->success) {
+					$api['content']['checks'] = array_merge($api['content']['checks'], json_decode($response->body, true)['checks'] ?? []);
+				}
+			} catch (\WpOrg\Requests\Exception $e) {
+				$this->setLoggerChannel('HealthChecks')->error($e);
+			}
+		}
+		usort($api['content']['checks'], function ($a, $b) {
+			return $a['status'] <=> $b['status'];
+		});
+		$this->setAPIResponse('success', null, 200, $api);
+		return $api;
+	}
+
 	public function _healthCheckPluginTest($url)
 	{
 		$success = false;

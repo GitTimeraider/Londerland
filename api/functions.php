@@ -7,13 +7,6 @@ require_once(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'a
 foreach (glob(__DIR__ . DIRECTORY_SEPARATOR . 'functions' . DIRECTORY_SEPARATOR . '*.php') as $filename) {
 	require_once $filename;
 }
-foreach (glob(__DIR__ . DIRECTORY_SEPARATOR . 'homepage' . DIRECTORY_SEPARATOR . '*.php') as $filename) {
-	require_once $filename;
-}
-// Include EmbyLiveTVTracker trait before class loading
-if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'embyLiveTVTracker' . DIRECTORY_SEPARATOR . 'api.php')) {
-	require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'embyLiveTVTracker' . DIRECTORY_SEPARATOR . 'api.php';
-}
 foreach (glob(__DIR__ . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . '*.php') as $filename) {
 	require_once $filename;
 }

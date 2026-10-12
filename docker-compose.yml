@@ -29,6 +29,11 @@ services:
     environment:
       # Your timezone (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
       - TZ=Etc/UTC
+      # Optional: only these IPs and subnets may log in (comma separated). Everyone else sees
+      # "Login not allowed" and cannot log in at all; pages for guests stay visible. Leave out = login from anywhere.
+      # - LONDERLAND_LOGIN_ALLOWED_IPS=192.168.1.0/24,10.8.0.0/24
+      # Behind a reverse proxy: the proxy's IP or subnet, so the visitor's real IP (X-Forwarded-For) is used
+      # - LONDERLAND_TRUSTED_PROXIES=172.18.0.0/16
     volumes:
       # Settings, database, logs and uploaded images. Keep this folder to keep your setup across updates.
       - ./londerland-data:/var/www/html/data

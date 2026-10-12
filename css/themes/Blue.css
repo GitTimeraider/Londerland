@@ -17,9 +17,6 @@
   top: calc(50% - 3.5px);
   left: calc(50% - 3.5px);
 }
-#londerlandNewsPanel .card-body {
-    background: #fdfdfd;
-}
 /*Just change your choise color here its theme Colors*/
 body {
   background: #fff;
@@ -41,9 +38,6 @@ body {
   color: #686868;
 }
 /*Right panel*/
-.right-sidebar .rpanel-title {
-  background: #2cabe3;
-}
 /*Bread Crumb*/
 .bg-title .breadcrumb .active {
   color: #2cabe3;
@@ -52,9 +46,6 @@ body {
 .sidebar {
   background: #fff;
   box-shadow: 1px 0px 20px rgba(0, 0, 0, 0.08);
-}
-.sidebar .label-custom {
-  background: #01c0c8;
 }
 #side-menu li a {
   color: #54667a;
@@ -79,16 +70,7 @@ body {
   color: #2cabe3;
   font-weight: 500;
 }
-.user-profile .user-pro-body .u-dropdown {
-  color: #54667a;
-}
 /*themecolor*/
-.bg-theme {
-  background-color: #707cd2 !important;
-}
-.bg-theme-dark {
-  background-color: #2cabe3 !important;
-}
 /*Button*/
 .btn-custom {
   background: #2cabe3;
@@ -115,9 +97,3 @@ body {
   border-right: 2px solid #2cabe3;
 }
 /*Nav-pills*/
-.nav-pills > li.active > a,
-.nav-pills > li.active > a:focus,
-.nav-pills > li.active > a:hover {
-  background: #2cabe3;
-  color: #ffffff;
-}

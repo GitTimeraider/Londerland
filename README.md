@@ -1,21 +1,47 @@
-<p align="center"><img src="plugins/images/londerland/logo-wide.png" alt="Londerland" width="420"></p>
+<p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true" alt="Londerland" width="420"></p>
 
-**Londerland** puts all of your self-hosted web apps on one page, behind one login.
-Add your services (Sonarr, Radarr, Plex, Home Assistant, a router page, anything with a web interface) as tabs,
-choose who may see which tab, and open them all from a single place instead of remembering IP addresses and ports.
+#### Disclaimer: 
+While guided and checked, AI is responsible for half of the coding. Development is also 100% for own personal use, no promises.
+__________________________________
+
+**Londerland** is a self-hosted web portal you can put on the internet as your own website:
+one address with your own name, logo and look, where visitors see public pages and members log in
+for more. It works just as well as the private start page for your home network, but it is built to feel like a
+website, not like a wall of server tiles.
+
+- **Public when you want it.** Guests (visitors who are not logged in) get their own tabs and their own start page,
+  so the same address serves a public site for everyone and private pages for members.
+- **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
+  and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
+- **Pages, not just links.** Every tab shows a web page inside the site, or opens it in a new window, and each group
+  can have its own start tab.
+- **Members and groups.** Invite members by e-mail; every tab is shown only to the groups you choose.
+- **AI Chat** for logged in members, with any OpenAI-compatible server.
 
 ## Features
 
-- **Tabs** for every web app, shown inside Londerland (iFrame) or opened in a new window.
-- **Users and groups**: decide per tab which group may open it; guests can get their own tabs.
-- **Homepage** with live items for Plex, Emby, Jellyfin, Sonarr, Radarr, Lidarr, SABnzbd, qBittorrent, Deluge, Transmission, Ombi, Overseerr, Tautulli, a calendar and more.
-- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel), with optional two-factor authentication.
-- **Single sign-on** for supported apps, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth) using `api/v2/auth`.
-- **AI Chat** for logged in users with any OpenAI-compatible server, including web search and image generation ([details below](#ai-chat)).
-- **Plugins**: invites, e-mail (PHPMailer), health checks, speed test, chat, bookmarks and more.
-- **Look and feel**: themes, colours, your own logo and title, custom CSS and JavaScript, login page and splash screen.
-- **Backups** on a schedule, a log viewer, an image manager and a built-in API with documentation (`/docs`).
-- Works on phones and tablets, and in many languages.
+- **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, sorted into categories,
+  with a start tab per group.
+- **Visitors and members**: guest access, local accounts, invites and e-mail (PHPMailer), groups that decide who sees what,
+  login lockout after failed attempts and e-mails about new device logins.
+- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
+  with optional two-factor authentication, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth)
+  using `api/v2/auth`.
+- **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
+- **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
+- **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
+- **Plugins**: bookmarks, chat, invites, e-mail, health checks and speed test.
+- **Works on phones and tablets.**
+- **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
+
+## Using it as a public website
+
+1. Install it (see below) and finish the setup wizard.
+2. Put it behind a reverse proxy with HTTPS (for example Nginx Proxy Manager, Caddy or Traefik) and point your domain at it.
+   Do not expose the container's port to the internet without HTTPS.
+3. In Londerland, open **Settings > Customize** and set the title, description, logo, favicon, theme and login page.
+4. Add the pages visitors should see as tabs under **Settings > Tab Editor** and set their group to **Guest**.
+   Mark one of them as the default tab: that is the page visitors land on. Everything else stays for members only.
 
 ## Install with Docker
 
@@ -99,8 +125,10 @@ for example `/var/www/html/data/db/`, so the database is kept when the container
 | `--security-opt` / `security_opt:` | `no-new-privileges:true` | Stops processes in the container from gaining extra rights. Works with and without `--user`. |
 | `--cap-drop` / `cap_drop:` | `ALL` | Removes all Linux capabilities. Works as it is with `--user`; as root, add back the four listed below. |
 | `-p` / `ports:` | `8080:80` | `<port on your machine>:<port in the container>`. |
-| `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs, the calendar and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
+| `-e TZ` / `environment:` | `TZ=Europe/Amsterdam` | Time zone for logs and scheduled jobs ([list of names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). Defaults to `UTC`. |
 | `-e LONDERLAND_PORT` | `8080` | The port Londerland listens on **inside** the container (default `80`). Only needed with `--network host`, rootless Docker or Docker older than 20.10; then also change the right side of `-p`. |
+| `-e LONDERLAND_LOGIN_ALLOWED_IPS` | `192.168.1.0/24,10.8.0.0/24` | Only these IPs and subnets (IPv4 or IPv6, comma separated) may log in. See [Login only from your own networks](#login-only-from-your-own-networks). Not set = login from anywhere. |
+| `-e LONDERLAND_TRUSTED_PROXIES` | `172.18.0.0/16` | Your reverse proxy's IP or subnet. Only from these addresses is the `X-Forwarded-For` header believed. |
 | `-v` / `volumes:` | `./londerland-data:/var/www/html/data` | Your settings, database, logs, backups and uploaded images. Keep this folder to keep your setup. |
 
 **Running as a user (`--user`)**: the data folder on your host must belong to that user before the container starts
@@ -124,6 +152,68 @@ Port 80 needs no capability on Docker 20.10 or newer; on older Docker, set `LOND
 If a capability is missing, the container stops and `docker logs londerland` says which ones to add.
 
 The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
+
+### Login only from your own networks
+
+Set `LONDERLAND_LOGIN_ALLOWED_IPS` to make logging in possible only from your home network, a VPN or a few fixed addresses:
+
+```yaml
+    environment:
+      - LONDERLAND_LOGIN_ALLOWED_IPS=192.168.1.0/24,10.8.0.0/24,203.0.113.7
+```
+
+Visitors from any other address see a **Login not allowed** page (with the address Londerland sees for them) instead of the
+login form. Every way of logging in is refused for them: username and password, Plex, Emby/Jellyfin, OpenID Connect,
+reverse proxy header login, registering, password recovery and the setup wizard. Pages and tabs meant for guests stay visible,
+so the public part of your site keeps working. People who are already logged in stay logged in until their login expires.
+Each refused attempt is written to Londerland's log.
+
+**Behind a reverse proxy** (Nginx Proxy Manager, Traefik, Caddy, Cloudflare Tunnel, ...), every visitor connects through the proxy,
+so Londerland only sees the proxy's address. Also set `LONDERLAND_TRUSTED_PROXIES` to the proxy's IP or Docker subnet:
+
+```yaml
+      - LONDERLAND_TRUSTED_PROXIES=172.18.0.0/16
+```
+
+Londerland then uses the visitor's address from the `X-Forwarded-For` header, but only for requests that come from those
+proxies, so nobody can get in by sending that header themselves. Find the proxy's address with
+`docker network inspect <network name>` (on the Docker host), or open the login page from outside: the blocked page shows the
+address Londerland sees. If that is your proxy's address, `LONDERLAND_TRUSTED_PROXIES` is missing or wrong.
+Do not put the proxy's address in `LONDERLAND_LOGIN_ALLOWED_IPS`, as that would allow everyone who comes through the proxy.
+
+After changing these variables, recreate the container: `docker compose up -d` (Compose) or `docker rm -f londerland` and the
+`docker run` command again.
+
+### OIDC is down while Auto-Redirect to OIDC is on
+
+With **Auto-Redirect to OIDC** turned on, the login page sends everyone straight to your OIDC provider (Authentik, Keycloak, ...).
+If that provider is down, nobody can reach the username/password form that way. People who are already logged in stay logged in.
+Two ways back in:
+
+1. **Add `#noredirect` to the address**, for example `https://your-site/#noredirect`. The login page then shows the normal
+   username/password form. This works best when guests have no tabs: otherwise Londerland opens the first guest tab and
+   replaces `#noredirect` in the address, so open the login right away or use option 2.
+2. **Turn the redirect off on the server** (always works). On the Docker host, run:
+
+   ```bash
+   docker exec londerland sed -i "s/'oidcAutoRedirect' => true/'oidcAutoRedirect' => false/" /var/www/html/data/config/config.php
+   ```
+
+   Reload the login page; no restart is needed. When OIDC works again, turn it back on under
+   **Settings > System Settings > SSO > OIDC Global > Auto-Redirect to OIDC**.
+
+### Lost authenticator (2FA bypass code)
+
+If a user with two-factor authentication (Google Authenticator) loses their authenticator, they log in with their username and
+password and click **Get a one-time code from your admin** under the 2FA field. Londerland then writes a code to the
+container log, never to the page:
+
+```bash
+docker logs londerland 2>&1 | grep "2FA bypass"
+```
+
+The user enters that code (like `ABCD-EFGH`) in the 2FA field. It works once, for 15 minutes, and does not turn 2FA off;
+the user can do that afterwards in **Account Settings**. A new code can be requested once a minute.
 
 ### Updating
 

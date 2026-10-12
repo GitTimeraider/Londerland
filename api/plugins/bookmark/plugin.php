@@ -271,6 +271,7 @@ class Bookmark extends Londerland
 		return '
 		<script>
 		buildBookmarkTabEditor();
+		londerlandLoadLibrary("sortable").then(function() {
 		new Sortable(document.getElementById("bookmarkTabEditorTable"), {
 			animation: 150,
 			onEnd: function () {
@@ -282,6 +283,7 @@ class Bookmark extends Londerland
 				$(\'.saveBookmarkTabOrderButton\').removeClass(\'hidden\');
 				//submitTabOrder(newTabs);
 			}
+		});
 		});
 		' . $iconSelectors . '
 		</script>
@@ -672,6 +674,7 @@ class Bookmark extends Londerland
 		return '
 	<script>
 	buildBookmarkCategoryEditor();
+	londerlandLoadLibrary("sortable").then(function() {
 	new Sortable(document.getElementById("bookmarkCategoryEditorTable"), {
 		animation: 150,
 		onEnd: function () {
@@ -682,6 +685,7 @@ class Bookmark extends Londerland
 			});
 			submitBookmarkCategoryOrder();
 		}
+	});
 	});
 	</script>
 	<div class="card bg-org card-info">

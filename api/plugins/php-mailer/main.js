@@ -155,7 +155,7 @@ function buildEmailModal(){
 				}
 			)
 		}
-		tinymce.init({
+		londerlandLoadLibrary("tinymce").then(function () { tinymce.init({
 			selector: "textarea#sendEmail",
 			license_key: "gpl",
 			base_url: "assets/vendor/tinymce",
@@ -184,7 +184,7 @@ function buildEmailModal(){
 					}
 				});
 			}
-		});
+		}); });
 	}
 
 }

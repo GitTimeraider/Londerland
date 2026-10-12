@@ -44,8 +44,9 @@ function get_page_settings_settings_logs($Londerland)
 	<!-- /.container-fluid -->
 	<script>
 	clearTimeout(timeouts[\'londerland-log\']);
+	londerlandLoadLibrary("datatables").then(function() {
 	$.fn.dataTable.ext.errMode = "none";
-	var londerlandLogTable = $("#londerlandLogTable")
+	window.londerlandLogTable = $("#londerlandLogTable")
 	.on("error.dt", function(e, settings, techNote, message) {
 		console.log("An error has been reported by DataTables: ", message);
 		londerlandLogTable.draw();
@@ -98,7 +99,8 @@ function get_page_settings_settings_logs($Londerland)
 		"order": [
 			[0, "desc"]
 		],
-	})
+	});
+	});
 	</script>
 	';
 }

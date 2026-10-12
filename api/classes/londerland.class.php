@@ -10,69 +10,23 @@ class Londerland
 	use AuthFunctions;
 	use BackupFunctions;
 	use ConfigFunctions;
-	use DemoFunctions;
-	use HomepageConnectFunctions;
-	use HomepageFunctions;
 	use LogFunctions;
-	use NetDataFunctions;
 	use NormalFunctions;
-	use OAuthFunctions;
 	use OIDCFunctions;
 	use OptionsFunction;
 	use LonderlandFunctions;
+	use LoginNetworkFunctions;
 	use PluginFunctions;
 	use StaticFunctions;
 	use SSOFunctions;
 	use TokenFunctions;
 	use UpgradeFunctions;
 
-	// Use homepage item functions
-	use BookmarksHomepageItem;
-	use CalendarHomepageItem;
-	use CouchPotatoHomepageItem;
-	use DelugeHomepageItem;
-	use DonateHomepageItem;
-	use EmbyHomepageItem;
-	use EmbyLiveTVTrackerHomepageItem;
-	use HealthChecksHomepageItem;
-	use HTMLHomepageItem;
-	use ICalHomepageItem;
-	use JackettHomepageItem;
-	use ProwlarrHomepageItem;
-	use JDownloaderHomepageItem;
-	use JellyfinHomepageItem;
-	use LidarrHomepageItem;
-	use MiscHomepageItem;
-	use MonitorrHomepageItem;
-	use NetDataHomepageItem;
-	use NZBGetHomepageItem;
-	use OctoPrintHomepageItem;
-	use OmbiHomepageItem;
-	use OverseerrHomepageItem;
-	use PiHoleHomepageItem;
-	use AdGuardHomepageItem;
-	use PlexHomepageItem;
-	use QBitTorrentHomepageItem;
-	use RadarrHomepageItem;
-	use RTorrentHomepageItem;
-	use SabNZBdHomepageItem;
-	use SickRageHomepageItem;
-	use SonarrHomepageItem;
-	use SpeedTestHomepageItem;
-	use TautulliHomepageItem;
-	use TraktHomepageItem;
-	use TransmissionHomepageItem;
-	use UnifiHomepageItem;
-	use WeatherHomepageItem;
-	use uTorrentHomepageItem;
-	use UptimeKumaHomepageItem;
-	use JellyStatHomepageItem;
-	use PromPageHomepageItem;
 
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.1';
+	public $version = '2.2.3';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -100,6 +54,8 @@ class Londerland
 	public $warnings;
 	public $errors;
 	public bool $loggerSetup = false;
+	// startIframeTab(), looked up once per request (false: not looked up yet)
+	private $startIframeTab = false;
 	public LonderlandLogger $logger;
 
 	public function __construct($checkForUpdates = false)
@@ -785,15 +741,6 @@ class Londerland
 		}
 	}
 
-	public function printWarningsAndErrors()
-	{
-		if (isset($GLOBALS['api']['response']['exceptions'])) {
-			$this->prettyPrint($GLOBALS['api']['response']['exceptions'], true);
-		} else {
-			$this->prettyPrint('No Errors');
-		}
-	}
-
 	public function setAPIErrorResponse($number, $message, $file, $line)
 	{
 		if (!(error_reporting() & $number)) {
@@ -854,18 +801,6 @@ class Londerland
 			}
 		}
 		$this->handleError($exceptions[$number], $message, $file, $line, $type);
-	}
-
-	public function setErrorResponse($number, $message, $file, $line)
-	{
-		$error = [
-			'error' => $number,
-			'message' => $message,
-			'file' => $file,
-			'line' => $line
-		];
-		$this->handleError($number, $message, $file, $line);
-		//$this->prettyPrint($error, true);
 	}
 
 	public function handleError($number, $message, $file, $line, $type)
@@ -1004,24 +939,6 @@ class Londerland
 			';
 		}
 		return null;
-	}
-
-	public function matchBrackets($text, $brackets = 's')
-	{
-		switch ($brackets) {
-			case 's':
-			case 'square':
-				$pattern = '#\[(.*?)\]#';
-				break;
-			case 'c':
-			case 'curly':
-				$pattern = '#\((.*?)\)#';
-				break;
-			default:
-				return null;
-		}
-		preg_match($pattern, $text, $match);
-		return $match[1];
 	}
 
 	public function getRootPath()
@@ -1204,7 +1121,7 @@ class Londerland
 							}
 							if ($pluginEnabled || $settings) {
 								if ($continue) {
-									$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? $this->fileHash;
+									$version = $this->pluginFileVersion($key);
 									$files .= '<script src="' . $rootPath . $webDirectory . basename(dirname($info->getPathname())) . '/' . basename($info->getFilename()) . '?v=' . $version . '" defer="true"></script>';
 								}
 							}
@@ -1215,7 +1132,7 @@ class Londerland
 					foreach ($iteratorIterator as $info) {
 						if (pathinfo($info->getPathname(), PATHINFO_EXTENSION) == 'css') {
 							$key = basename(dirname($info->getPathname()));
-							$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? $this->fileHash;
+							$version = $this->pluginFileVersion($key);
 							$files .= '<link href="' . $rootPath . $webDirectory . basename(dirname($info->getPathname())) . '/' . basename($info->getFilename()) . '?v=' . $version . '" rel="stylesheet">';
 						}
 					}
@@ -1225,6 +1142,16 @@ class Londerland
 			}
 		}
 		return $files;
+	}
+
+	/**
+	 * Version in a plugin file's address (?v=). Browsers keep those files for a year, so it has to change with every
+	 * update: the plugin's own version alone stays the same while its files change, so the build is added to it.
+	 */
+	public function pluginFileVersion($key)
+	{
+		$version = $GLOBALS['pluginInfo'][strtolower($key)]['version'] ?? '';
+		return $version !== '' && $version !== $this->fileHash ? $version . '-' . $this->fileHash : $this->fileHash;
 	}
 
 	public function pluginFiles($type, $settings = false, $rootPath = '')
@@ -1510,12 +1437,6 @@ class Londerland
 			return $migrated;
 		}
 		return $config;
-	}
-
-	public function combineConfig($array)
-	{
-		$this->config = array_merge($this->config, $array);
-		return $this->config;
 	}
 
 	public function status($action = false)
@@ -1825,7 +1746,7 @@ class Londerland
 					'loggedin' => true,
 					'locked' => $user['locked'] ?? 0,
 					'tokenList' => $allTokens,
-					'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+					'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 				);
 			}
 		} else {
@@ -1864,21 +1785,10 @@ class Londerland
 				'loggedin' => true,
 				'locked' => $user['locked'] ?? 0,
 				'tokenList' => $allTokens,
-				'authService' => (isset($user['auth_service'])) ? explode('::', $user['auth_service'])[0] : 'internal'
+				'authService' => $this->twoFAType($user['auth_service'] ?? '') ?? 'internal'
 			);
 		}
 		return false;
-	}
-
-	public function defaultUserGroup()
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => 'SELECT * FROM groups WHERE `default` = 1'
-			)
-		];
-		return $this->processQueries($response);
 	}
 
 	/**
@@ -1947,21 +1857,6 @@ class Londerland
 		return $tabs;
 	}
 
-	public function getUsers()
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM users'
-			),
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM groups ORDER BY group_id ASC'
-			),
-		];
-		return $this->processQueries($response);
-	}
-
 	public function usernameTaken($username, $email, $id = null)
 	{
 		if ($id) {
@@ -1994,16 +1889,6 @@ class Londerland
 	public function cleanPageName($page)
 	{
 		return ($page) ? strtolower(str_replace(array('%20', ' ', '-', '_'), '_', $page)) : '';
-	}
-
-	public function cleanClassName($name, $char = '-')
-	{
-		return ($name) ? (str_replace(array('%20', ' ', '-', '_'), $char, strtolower($name))) : '';
-	}
-
-	public function reverseCleanClassName($name)
-	{
-		return ($name) ? (str_replace(array('%20', '-', '_'), ' ', strtolower($name))) : '';
 	}
 
 	public function getPageList()
@@ -2280,18 +2165,22 @@ class Londerland
 				$this->settingsOption('switch', 'expandCategoriesByDefault', ['label' => 'Expand All Categories']),
 				$this->settingsOption('switch', 'autoCollapseCategories', ['label' => 'Auto-Collapse Categories']),
 				$this->settingsOption('switch', 'autoExpandNavBar', ['label' => 'Auto-Expand Nav Bar']),
+				$this->settingsOption('select', 'sideMenuTabSpacing', ['label' => 'Tab Spacing', 'help' => 'Space between the tabs. Reload the page after saving', 'options' => [['name' => 'Very Compact', 'value' => 'tighter'], ['name' => 'Compact', 'value' => 'tight'], ['name' => 'Default', 'value' => 'default'], ['name' => 'Spacious', 'value' => 'loose'], ['name' => 'Very Spacious', 'value' => 'looser']]]),
+				$this->settingsOption('select', 'sideMenuCategorySpacing', ['label' => 'Category Spacing', 'help' => 'Space between the categories. Reload the page after saving', 'options' => [['name' => 'Very Compact', 'value' => 'tighter'], ['name' => 'Compact', 'value' => 'tight'], ['name' => 'Default', 'value' => 'default'], ['name' => 'Spacious', 'value' => 'loose'], ['name' => 'Very Spacious', 'value' => 'looser']]]),
 				$this->settingsOption('select', 'unsortedTabs', ['label' => 'Unsorted Tab Placement', 'options' => [['name' => 'Top', 'value' => 'top'], ['name' => 'Bottom', 'value' => 'bottom']]]),
+			],
+			'Fonts' => [
+				$this->settingsOption('select', 'menuFont', ['label' => 'Font', 'help' => 'Rubik is bundled with Londerland, the others use fonts already installed on the device, so none of them add loading time. Reload the page after saving', 'options' => [['name' => 'Rubik (default)', 'value' => 'rubik'], ['name' => 'System Default', 'value' => 'system'], ['name' => 'Arial / Helvetica', 'value' => 'arial'], ['name' => 'Verdana', 'value' => 'verdana'], ['name' => 'Tahoma', 'value' => 'tahoma']]]),
+				$this->settingsOption('select', 'menuFontWeight', ['label' => 'Font Thickness', 'options' => [['name' => 'Light (original)', 'value' => 'light'], ['name' => 'Regular', 'value' => 'regular'], ['name' => 'Medium', 'value' => 'medium'], ['name' => 'Bold', 'value' => 'bold']]]),
+				$this->settingsOption('select', 'menuFontScope', ['label' => 'Apply To', 'options' => [['name' => 'Side Menu & Top Bar Title', 'value' => 'menu'], ['name' => 'Entire Interface', 'value' => 'all']]]),
 			],
 			'Login Page' => [
 				$this->settingsOption('input', 'loginLogo', ['label' => 'Login Logo URL']),
 				$this->settingsOption('multiple-url', 'loginWallpaper', ['label' => 'Login Wallpaper URL', 'help' => 'You may enter multiple URL\'s']),
 				$this->settingsOption('switch', 'useLogoLogin', ['label' => 'Use Logo instead of Title on Login Page']),
 				$this->settingsOption('switch', 'minimalLoginScreen', ['label' => 'Minimal Login Screen']),
-				$this->settingsOption('switch', 'useRandomMediaImage', ['label' => 'Use Random Media Wallpaper From Media Server']),
 			],
 			'Options' => [
-				$this->settingsOption('switch', 'alternateHomepageHeaders', ['label' => 'Alternate Homepage Titles']),
-				$this->settingsOption('switch', 'disableHomepageModals', ['label' => 'Disable Homepage Saved Modal', 'help' => 'Disable the modal when saving homepage config settings']),
 				$this->settingsOption('switch', 'debugErrors', ['label' => 'Show Debug Errors']),
 				$this->settingsOption('switch', 'easterEggs', ['label' => 'Show Easter Eggs']),
 				$this->settingsOption('input', 'gaTrackingID', ['label' => 'Google Analytics Tracking ID', 'placeholder' => 'e.g. UA-XXXXXXXXX-X']),
@@ -2371,6 +2260,188 @@ class Londerland
 		];
 	}
 
+	// <link rel="preconnect"> to the host of the iframe tab the user will probably start with (group default tab,
+	// default tab of the Tab Editor, else the first tab), so the connection to it is ready by the time start-up
+	// opens the iframe. Picks like startTabId() in functions.js, minus the tab in the address, which only the browser knows.
+	// The iframe tab the user will probably start with: the group's default tab, then the default tab of the Tab Editor,
+	// then the first tab (the same choice as startTabId() in functions.js). Null when that is not an iframe tab with a
+	// http(s) address.
+	private function startIframeTab()
+	{
+		if ($this->startIframeTab === false) {
+			$this->startIframeTab = $this->findStartIframeTab();
+		}
+		return $this->startIframeTab;
+	}
+
+	private function findStartIframeTab()
+	{
+		try {
+			$tabs = $this->hasDB() ? ($this->getUserTabsAndCategories('tabs') ?: []) : [];
+		} catch (\Throwable $e) {
+			return null;
+		}
+		$startable = array_values(array_filter($tabs, function ($tab) {
+			return !in_array((string)$tab['type'], ['2', '3'], true);
+		}));
+		$candidates = [(string)($this->config['defaultTabGroup-' . (int)($this->user['groupID'] ?? 999)] ?? '')];
+		foreach ($startable as $tab) {
+			if ((int)$tab['default'] === 1) {
+				$candidates[] = (string)$tab['id'];
+			}
+		}
+		$start = null;
+		foreach ($candidates as $id) {
+			foreach ($startable as $tab) {
+				if ($id !== '' && (string)$tab['id'] === $id) {
+					$start = $tab;
+					break 2;
+				}
+			}
+		}
+		$start = $start ?? ($startable[0] ?? null);
+		if (!$start || !in_array((string)$start['type'], ['1', 'iframe'], true)) {
+			return null;
+		}
+		$url = parse_url((string)($start['access_url'] ?? $start['url'] ?? ''));
+		if (!isset($url['scheme'], $url['host']) || !in_array(strtolower($url['scheme']), ['http', 'https'], true)) {
+			return null;
+		}
+		return $start;
+	}
+
+	// The start tab's iframe is only created once start-up has finished; until then the browser has not looked up or
+	// connected to its host. A preconnect gets DNS, TCP and TLS done early. Tabs on the page's own host need none.
+	public function startTabPreconnect()
+	{
+		$start = $this->startIframeTab();
+		if (!$start) {
+			return '';
+		}
+		$url = parse_url((string)($start['access_url'] ?? $start['url']));
+		$origin = strtolower($url['scheme']) . '://' . $url['host'] . (isset($url['port']) ? ':' . $url['port'] : '');
+		$ownHost = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
+		if (strtolower($url['host']) === $ownHost) {
+			return '';
+		}
+		return '<link rel="preconnect" href="' . htmlspecialchars($origin, ENT_QUOTES) . '">' . PHP_EOL;
+	}
+
+	// Creates the start tab's iframe while the page is still loading, so the site in it loads at the same time as
+	// Londerland's own scripts instead of after them. It stays hidden until start-up opens the tab; tabProcess() in
+	// functions.js keeps it instead of creating a second one. Skipped when the address names another tab (#name).
+	public function startTabFrame()
+	{
+		$start = $this->startIframeTab();
+		if (!$start) {
+			return '';
+		}
+		$sandbox = str_replace(',', ' ', (string)($this->config['sandbox'] ?? ''));
+		$allow = str_replace(',', '; ', (string)($this->config['iframeAllow'] ?? ''));
+		$tab = json_encode([
+			'id' => (string)$start['id'],
+			'name' => (string)$start['name'],
+			'url' => (string)($start['access_url'] ?? $start['url']),
+			'sandbox' => $sandbox,
+			'allow' => $allow,
+		], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
+		return <<<HTML
+<script>
+    (function (tab) {
+        // the same tab names as setHash() in functions.js writes into the address
+        var hash = location.hash.slice(1);
+        if (hash !== '' && hash !== tab.id && hash !== encodeURI(tab.name).split('%20').join('-')) {
+            return;
+        }
+        var container = document.createElement('div');
+        container.id = 'container-' + tab.id;
+        container.className = 'frame-container frame-' + tab.id + ' hidden loaded';
+        var frame = document.createElement('iframe');
+        if (tab.allow) frame.setAttribute('allow', tab.allow);
+        if (tab.sandbox) frame.setAttribute('sandbox', tab.sandbox);
+        frame.setAttribute('frameborder', '0');
+        frame.setAttribute('scrolling', 'auto');
+        frame.id = 'frame-' + tab.id;
+        frame.className = 'iframe';
+        frame.src = tab.url;
+        container.appendChild(frame);
+        document.querySelector('.iFrame-listing').appendChild(container);
+    })($tab);
+</script>
+
+HTML;
+	}
+
+	// The logo or title in the top bar, written into the page so it shows on the first paint
+	// (loadAppearance() in functions.js draws the same once start-up has finished)
+	public function logoHTML($class)
+	{
+		if (!$this->hasConfig()) {
+			return '';
+		}
+		if ($this->config['useLogo'] ?? false) {
+			return '<img alt="home" class="' . $class . '" src="' . htmlspecialchars($this->config['logo'] ?? '', ENT_QUOTES) . '">';
+		}
+		return htmlspecialchars($this->config['title'] ?? '', ENT_QUOTES);
+	}
+
+	// Side menu spacing and fonts from Settings > Customize > Appearance, written into <head> by index.php so the
+	// side menu and the title show with them on the first paint
+	public function appearanceCSS()
+	{
+		if (!$this->hasConfig()) {
+			return '';
+		}
+		$css = $this->sideMenuSpacingCSS() . $this->fontCSS();
+		return $css === '' ? '' : '<style id="appearance-settings">' . $css . '</style>';
+	}
+
+	// Space above and below the side menu rows, in steps of 4px around the default (top-level rows 10px, tabs
+	// inside a category 14px): top-level rows are 32, 40, 48, 56 or 64px tall. A tab's name is placed at a fixed top (.sidebar-tabName: 15px, 20px inside a
+	// category), so it moves by the same step to stay level with the icon.
+	private function sideMenuSpacingCSS()
+	{
+		$steps = ['tighter' => -8, 'tight' => -4, 'loose' => 4, 'looser' => 8];
+		$css = '';
+		$tabs = $steps[$this->config['sideMenuTabSpacing'] ?? ''] ?? 0;
+		if ($tabs) {
+			$css .= '#side-menu > li.allTabsList > a {padding-top: ' . (10 + $tabs) . 'px; padding-bottom: ' . (10 + $tabs) . 'px;}';
+			$css .= '#side-menu .nav-second-level li.allTabsList > a {padding-top: ' . (14 + $tabs) . 'px; padding-bottom: ' . (14 + $tabs) . 'px;}';
+			$css .= '#side-menu > li.allTabsList > a .sidebar-tabName {top: ' . (15 + $tabs) . 'px;}';
+			$css .= '#side-menu .nav-second-level li.allTabsList > a .sidebar-tabName {top: ' . (20 + $tabs) . 'px;}';
+		}
+		$categories = $steps[$this->config['sideMenuCategorySpacing'] ?? ''] ?? 0;
+		if ($categories) {
+			$css .= '#side-menu > li.allGroupsList > a {padding-top: ' . (10 + $categories) . 'px; padding-bottom: ' . (10 + $categories) . 'px;}';
+		}
+		return $css;
+	}
+
+	// Font and thickness from Settings > Customize > Appearance > Fonts. Rubik is a variable font (300-900) that is
+	// already loaded, the others are fonts installed on the device, so no option downloads anything extra.
+	private function fontCSS()
+	{
+		$families = [
+			'system' => 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+			'arial' => 'Arial, Helvetica, sans-serif',
+			'verdana' => 'Verdana, Geneva, sans-serif',
+			'tahoma' => 'Tahoma, "DejaVu Sans", Verdana, sans-serif',
+		];
+		$weights = ['regular' => 400, 'medium' => 500, 'bold' => 600];
+		$family = $families[$this->config['menuFont'] ?? ''] ?? null;
+		$weight = $weights[$this->config['menuFontWeight'] ?? ''] ?? null;
+		if (!$family && !$weight) {
+			return '';
+		}
+		$rules = ($family ? 'font-family: ' . $family . ';' : '') . ($weight ? 'font-weight: ' . $weight . ';' : '');
+		$css = '#side-menu li a, .sidebar .sidebar-head h3, #main-logo, #side-logo {' . $rules . '}';
+		if (($this->config['menuFontScope'] ?? '') === 'all') {
+			$css .= ':root {' . ($family ? '--bs-body-font-family: ' . $family . ';' : '') . ($weight ? '--bs-body-font-weight: ' . $weight . ';' : '') . '}';
+			$css .= 'body, h1, h2, h3, h4, h5, h6, button, input, select, textarea {' . $rules . '}';
+		}
+		return $css;
+	}
+
 	public function loadAppearance()
 	{
 		$appearance['logo'] = $this->config['logo'];
@@ -2389,7 +2460,6 @@ class Londerland
 		$appearance['buttonTextHoverColor'] = $this->config['buttonTextHoverColor'];
 		$appearance['buttonHoverColor'] = $this->config['buttonHoverColor'];
 		$appearance['loginWallpaper'] = $this->config['loginWallpaper'];
-		$appearance['randomMediaImage'] = $this->getRandomMediaImage('np');
 		$appearance['loginLogo'] = $this->config['loginLogo'];
 		$appearance['customCss'] = $this->config['customCss'];
 		$appearance['customThemeCss'] = $this->config['customThemeCss'];
@@ -2398,63 +2468,11 @@ class Londerland
 		return $appearance;
 	}
 
-	public function getRandomMediaImage($type = null)
-	{
-		if (!$this->config['useRandomMediaImage']) {
-			return false;
-		}
-		if (file_exists(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache')) {
-			$folder = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache';
-			try {
-				$directoryIterator = new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS);
-				$iteratorIterator = new RecursiveIteratorIterator($directoryIterator);
-				$image = null;
-				switch ($type) {
-					case 'np':
-						$i = 0;
-						$array = iterator_to_array($iteratorIterator);
-						if (count($array) > 0) {
-							shuffle($array);
-							$iteratorIterator = new ArrayIterator($array);
-						}
-						foreach ($iteratorIterator as $info) {
-							if (stripos($info->getFilename(), 'np') !== false) {
-								if ($i < 1) {
-									$imageInfo = getimagesize($folder . DIRECTORY_SEPARATOR . $info->getFilename());
-									if ($imageInfo[0] >= $this->getCacheImageSize('npw')) {
-										$image = 'data/cache/' . $info->getFilename();
-										$i++;
-									}
-								} else {
-									break;
-								}
-							}
-						}
-						return $image;
-					default:
-						return false;
-				}
-			} catch (Exception $e) {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-
 	public function getSettingsMain()
 	{
-		$certificateStatus = $this->hasCustomCert() ? '<span lang="en">Custom Certificate Loaded</span><br />Located at <span>' . $this->getCustomCert() . '</span>' : '<span lang="en">Custom Certificate not found - please upload below</span>';
 		$settings = [
-			'Socks' => [
-				$this->settingsOption('switch', 'socksDebug', ['label' => 'Enable Debug Log', 'help' => 'Enable the option to have socks output to logs']),
-				$this->settingsOption('number', 'maxSocksDebugSize', ['label' => 'Max Debug Data Rows', 'help' => 'Max amount of rows in debug log', 'attr' => 'min="1"'])
-			],
 			'Settings Page' => [
 				$this->settingsOption('select', 'defaultSettingsTab', ['label' => 'Default Settings Tab', 'options' => $this->getSettingsTabs(), 'help' => 'Choose which Settings Tab to be default when opening settings page']),
-			],
-			'The Movie Database' => [
-				$this->settingsOption('token', 'tmdbApiKey', ['label' => 'TMDB API Key', 'help' => 'Your own API key (v3) from themoviedb.org. Needed for the movie and TV lists and search in the Ombi and Overseerr request items']),
 			],
 			'API' => [
 				$this->settingsOption('password-alt-copy', 'londerlandAPI', ['label' => 'Londerland API']),
@@ -2567,50 +2585,6 @@ class Londerland
 				$this->settingsOption('auth', 'pingAuthMs', ['label' => 'Minimum Authentication for Time Display']),
 				$this->settingsOption('refresh', 'adminPingRefresh', ['label' => 'Admin Refresh Seconds']),
 				$this->settingsOption('refresh', 'otherPingRefresh', ['label' => 'Everyone Refresh Seconds']),
-			],
-			'Certificate' => [
-				$this->settingsOption('html', '', ['override' => 12,
-						'html' => '
-					<script>
-						new Dropzone("#upload-custom-certificate", {
-							url: "api/v2/certificate/custom",
-							headers:{ "formKey": local("g","formKey") },
-							init: function() {
-								this.on("complete", function(file) {
-									if(file["status"] === "success"){
-										$(".custom-certificate-status").html("<span lang=\"en\">Custom Certificate Loaded</span>");
-									}else{
-										$(".custom-certificate-status").html("<span lang=\"en\">Error Saving file...</span>");
-									}
-								});
-							}
-						});
-					</script>
-					<div class="row">
-						<div class="col-xl-12">
-							<div class="card card-info">
-								<div class="card-header"><span lang="en">Notice</span></div>
-								<div class="card-wrapper collapse show" aria-expanded="true">
-									<div class="card-body">
-										<span lang="en">By default, Londerland uses certificates from https://curl.se/docs/caextract.html<br/>If you would like to use your own certificate, please upload it below.  You will then need to enable each homepage item to use it.</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-lg-12">
-							<div class="white-box">
-								<h3 class="box-title m-b-0" lang="en">Custom Certificate Status</h3>
-								<p class="text-muted m-b-30 custom-certificate-status">' . $certificateStatus . '</p>
-								<form action="#" class="dropzone dz-clickable" id="upload-custom-certificate">
-									<div class="dz-default dz-message"><span lang="en">Drop Certificate file here to upload</span></div>
-								</form>
-							</div>
-						</div>
-					</div>
-					']
-				)
 			],
 		];
 		if ($this->config['driver'] == 'sqlite3') {
@@ -2826,18 +2800,6 @@ class Londerland
 				'anchor' => 'settings-tab-editor-categories-anchor',
 				'name' => 'Categories'
 			],
-			[
-				'active' => false,
-				'api' => 'api/v2/page/settings_tab_editor_homepage',
-				'anchor' => 'settings-tab-editor-homepage-anchor',
-				'name' => 'Homepage Items'
-			],
-			[
-				'active' => false,
-				'api' => 'api/v2/page/settings_tab_editor_homepage_order',
-				'anchor' => 'settings-tab-editor-homepage-order-anchor',
-				'name' => 'Homepage Order'
-			],
 		];
 		$systemSettingsMenu = [
 			[
@@ -2877,11 +2839,6 @@ class Londerland
 		$systemMenus['user_management'] = $this->buildSettingsMenus($userManagementMenu, 'User Management');
 		$systemMenus['plugins'] = $this->buildSettingsMenus($pluginsMenu, 'Plugins');
 		return $systemMenus;
-	}
-
-	public function updateConfigMultiple($array)
-	{
-		return (bool)$this->updateConfig($array);
 	}
 
 	public function updateConfigItems($array)
@@ -2933,28 +2890,6 @@ class Londerland
 		return (bool)$this->updateConfig($newItems);
 	}
 
-	public function updateConfigItem($array)
-	{
-		$array['value'] = $array['value'] ?? '';
-		switch ($array['value']) {
-			case 'true':
-				$array['value'] = (bool)true;
-				break;
-			case 'false':
-				$array['value'] = (bool)false;
-				break;
-		}
-		// Hash
-		if ($array['type'] == 'password') {
-			$array['value'] = $this->encrypt($array['value']);
-		}
-		$newItem = array(
-			$array['name'] => $array['value']
-		);
-		$this->config[$array['name']] = $array['value'];
-		return (bool)$this->updateConfig($newItem);
-	}
-
 	public function testWizardPath($array)
 	{
 		if ($this->hasDB()) {
@@ -3002,6 +2937,9 @@ class Londerland
 
 	public function wizardConfig($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		if($this->hasConfig() && $this->hasDB()) {
 			$this->setAPIResponse('error', 'Endpoint disabled as database already exists', 401);
 			return false;
@@ -3541,17 +3479,6 @@ class Londerland
 			'image' => 'fontawesome::cog',
 			'type' => 0
 		];
-		$homepageInfo = [
-			'order' => 2,
-			'category_id' => 0,
-			'name' => 'Homepage',
-			'url' => 'api/v2/page/homepage',
-			'default' => 0,
-			'enabled' => 0,
-			'group_id' => 4,
-			'image' => 'fontawesome::home',
-			'type' => 0
-		];
 		$unsortedInfo = [
 			'order' => 1,
 			'category' => 'Unsorted',
@@ -3619,13 +3546,6 @@ class Londerland
 			array(
 				'function' => 'query',
 				'query' => array(
-					'INSERT INTO [tabs]',
-					$homepageInfo
-				)
-			),
-			array(
-				'function' => 'query',
-				'query' => array(
 					'INSERT INTO [categories]',
 					$unsortedInfo
 				)
@@ -3651,6 +3571,10 @@ class Londerland
 
 	public function createToken($username, $email, $days = 1)
 	{
+		// Every way of logging in ends here, so this is the last line of defence for LONDERLAND_LOGIN_ALLOWED_IPS
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$this->setLoggerChannel('Authentication', $username);
 		$this->logger->debug('Starting token creation function');
 		$days = ($days > 365) ? 365 : $days;
@@ -3761,6 +3685,10 @@ class Londerland
 
 	public function login($array)
 	{
+		// LONDERLAND_LOGIN_ALLOWED_IPS: no login of any kind from other networks
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		// Bypass Check
 		$bypassLogin = $this->config['bypassLoginForLocal'] && $this->config['localLoginUserId'] && $this->isLocal() == true;
 		if(gettype($array) == 'array'){
@@ -3912,7 +3840,7 @@ class Londerland
 					}
 				}
 				// 2FA might go here
-				if ($result['auth_service'] !== 'internal' && strpos($result['auth_service'], '::') !== false) {
+				if ($this->twoFAType($result['auth_service']) !== null) {
 					$tfaProceed = true;
 					// Add check for local or not
 					if ($this->config['ignoreTFALocal'] !== false) {
@@ -3935,11 +3863,22 @@ class Londerland
 						$this->setLoggerChannel('Authentication', $username);
 						$this->logger->debug('Starting 2FA verification');
 						$TFA = explode('::', $result['auth_service']);
+						// "Get a one-time bypass code" on the 2FA step: the password was right, write a code to the container log
+						if (!empty($array['tfaBypassRequest'])) {
+							$this->createTFABypassCode($result);
+							return false;
+						}
 						// Is code with login info?
 						if ($tfaCode == '') {
 							$this->logger->debug('Sending 2FA response to login UI');
 							$this->setAPIResponse('warning', '2FA Code Needed', 422);
 							return false;
+						} elseif ($this->isTFABypassCode($tfaCode)) {
+							if (!$this->useTFABypassCode($result, $tfaCode)) {
+								$this->logger->warning('Incorrect or expired 2FA bypass code');
+								$this->setAPIResponse('error', 'Wrong or expired bypass code', 422);
+								return false;
+							}
 						} else {
 							if (!$this->verify2FA($TFA[1], $tfaCode, $TFA[0])) {
 								$this->logger->warning('Incorrect 2FA');
@@ -4103,6 +4042,9 @@ class Londerland
 
 	public function recover($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$email = $array['email'] ?? null;
 		if (!$email) {
 			$this->setAPIResponse('error', 'Email was not supplied', 422);
@@ -4145,6 +4087,9 @@ class Londerland
 
 	public function register($array)
 	{
+		if (!$this->loginNetworkCheck()) {
+			return false;
+		}
 		$email = $array['email'] ?? null;
 		$username = $array['username'] ?? null;
 		$password = $array['password'] ?? null;
@@ -4188,9 +4133,6 @@ class Londerland
 	public function authRegister($username, $password, $email, $token = null)
 	{
 		$this->setLoggerChannel('Authentication', $username);
-		if ($this->config['authBackend'] !== '') {
-			$this->ombiImport($this->config['authBackend']);
-		}
 		$this->ssoCheck($username, $password, $token);
 		if ($token && (!$password || $password == '')) {
 			$password = $this->random_ascii_string(10);
@@ -4251,25 +4193,6 @@ class Londerland
 				),
 			];
 		}
-		return $this->processQueries($response);
-	}
-
-	public function revokeToken($token = null)
-	{
-		if (!$token) {
-			$this->setAPIResponse('error', 'Token was not supplied', 422);
-			return false;
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'DELETE FROM tokens WHERE token = ?',
-					[$token]
-				)
-			),
-		];
-		$this->setAPIResponse('success', 'Token revoked', 204);
 		return $this->processQueries($response);
 	}
 
@@ -4432,28 +4355,12 @@ class Londerland
 		return $url !== '' && $url !== null & $url !== 'null' ? $this->qualifyURL($url, false, true) : '';
 	}
 
+	// Refresh times (settings ending in "Refresh", for example CHAT-userRefreshTimeout), sent to the browser as settings.refresh
 	public function refreshList()
 	{
-		$searchTerm = "Refresh";
-		$list = array_filter($this->config, function ($k) use ($searchTerm) {
-			return stripos($k, $searchTerm) !== false;
-		}, ARRAY_FILTER_USE_KEY);
-		foreach ($list as $item => $value) {
-			if (!is_numeric($value)) {
-				unset($list[$item]);
-			}
-		}
-		return $list;
-	}
-
-	public function homepageOrderList()
-	{
-		$searchTerm = "homepageOrder";
-		$order = array_filter($this->config, function ($k) use ($searchTerm) {
-			return stripos($k, $searchTerm) !== false;
-		}, ARRAY_FILTER_USE_KEY);
-		asort($order);
-		return $order;
+		return array_filter($this->config, function ($value, $key) {
+			return stripos($key, 'Refresh') !== false && is_numeric($value);
+		}, ARRAY_FILTER_USE_BOTH);
 	}
 
 	public function tautulliList()
@@ -4481,59 +4388,7 @@ class Londerland
 	{
 		// js activeInfo
 		return [
-			'homepage' => [
-				'refresh' => $this->refreshList(),
-				'order' => $this->homepageOrderList(),
-				'search' => [
-					'enabled' => $this->qualifyRequest($this->config['mediaSearchAuth']) && $this->config['mediaSearch'] == true && $this->config['plexToken'],
-					'type' => $this->config['mediaSearchType'],
-				],
-				'requests' => [
-					'service' => $this->config['defaultRequestService'],
-				],
-				'ombi' => [
-					'enabled' => $this->qualifyRequest($this->config['homepageOmbiAuth']) && $this->qualifyRequest($this->config['homepageOmbiRequestAuth']) && $this->config['homepageOmbiEnabled'] == true && $this->config['ssoOmbi'] && isset($_COOKIE['Auth']),
-					'authView' => $this->qualifyRequest($this->config['homepageOmbiAuth']),
-					'authRequest' => $this->qualifyRequest($this->config['homepageOmbiRequestAuth']),
-					'sso' => (bool)$this->config['ssoOmbi'],
-					'cookie' => isset($_COOKIE['Auth']),
-					'alias' => (bool)$this->config['ombiAlias'],
-					'ombiDefaultFilterAvailable' => (bool)$this->config['ombiDefaultFilterAvailable'],
-					'ombiDefaultFilterUnavailable' => (bool)$this->config['ombiDefaultFilterUnavailable'],
-					'ombiDefaultFilterApproved' => (bool)$this->config['ombiDefaultFilterApproved'],
-					'ombiDefaultFilterUnapproved' => (bool)$this->config['ombiDefaultFilterUnapproved'],
-					'ombiDefaultFilterDenied' => (bool)$this->config['ombiDefaultFilterDenied']
-				],
-				'overseerr' => [
-					'enabled' => $this->qualifyRequest($this->config['homepageOverseerrAuth']) && $this->qualifyRequest($this->config['homepageOverseerrRequestAuth']) && $this->config['homepageOverseerrEnabled'] == true && $this->config['ssoOverseerr'] && isset($_COOKIE['connect_sid']),
-					'authView' => $this->qualifyRequest($this->config['homepageOverseerrAuth']),
-					'authRequest' => $this->qualifyRequest($this->config['homepageOverseerrRequestAuth']),
-					'sso' => (bool)$this->config['ssoOverseerr'],
-					'cookie' => isset($_COOKIE['connect_sid']),
-					'userSelectTv' => (bool)$this->config['homepageOverseerrRequestAuth'] == 'user',
-					'overseerrDefaultFilterAvailable' => (bool)$this->config['overseerrDefaultFilterAvailable'],
-					'overseerrDefaultFilterUnavailable' => (bool)$this->config['overseerrDefaultFilterUnavailable'],
-					'overseerrDefaultFilterApproved' => (bool)$this->config['overseerrDefaultFilterApproved'],
-					'overseerrDefaultFilterUnapproved' => (bool)$this->config['overseerrDefaultFilterUnapproved'],
-					'overseerrDefaultFilterDenied' => (bool)$this->config['overseerrDefaultFilterDenied']
-				],
-				'jackett' => [
-					'homepageJackettBackholeDownload' => $this->config['homepageJackettBackholeDownload'] ? true : false
-				],
-				'prowlarr' => [
-					'homepageProwlarrBackholeDownload' => $this->config['homepageProwlarrBackholeDownload'] ? true : false
-				],
-				'options' => [
-					'alternateHomepageHeaders' => $this->config['alternateHomepageHeaders'],
-					'healthChecksTags' => $this->config['healthChecksTags'],
-					'titles' => [
-						'tautulli' => $this->config['tautulliHeader']
-					]
-				],
-				'media' => [
-					'jellyfin' => $this->config['homepageJellyfinInstead']
-				]
-			],
+			'refresh' => $this->refreshList(),
 			'sso' => [
 				'misc' => [
 					'oAuthLogin' => isset($_COOKIE['oAuth']),
@@ -4620,8 +4475,6 @@ class Londerland
 				'enableLocalAddressForward' => $this->config['enableLocalAddressForward'],
 			],
 			'misc' => [
-				// Used by the browser for TMDB lookups in the request items
-				'tmdbApiKey' => $this->qualifyRequest(998) ? $this->config['tmdbApiKey'] : '',
 				'installedPlugins' => $this->qualifyRequest(1) ? $this->config['installedPlugins'] : '',
 				'installedThemes' => $this->qualifyRequest(1) ? $this->config['installedThemes'] : '',
 				'return' => $_SERVER['HTTP_REFERER'] ?? false,
@@ -4647,25 +4500,11 @@ class Londerland
 				'collapseSideMenuOnClick' => $this->config['allowCollapsableSideMenu'] && $this->config['collapseSideMenuOnClick'],
 				'authProxyOverrideLogout' => $this->config['authProxyOverrideLogout'],
 				'authProxyLogoutURL' => $this->config['authProxyLogoutURL'],
-				'disableHomepageModals' => $this->config['disableHomepageModals'],
 			],
 			'menuLink' => [
 				'londerlandSignoutMenuLink' => $this->config['londerlandSignoutMenuLink'],
 			]
 		];
-	}
-
-	public function checkLog($path)
-	{
-		if (file_exists($path)) {
-			if (filesize($path) > 500000) {
-				rename($path, $path . '[' . date('Y-m-d') . '].json');
-				return false;
-			}
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public function isApprovedRequest($method, $data)
@@ -4703,318 +4542,6 @@ class Londerland
 		return password_verify(substr($this->config['londerlandHash'], 2, 10), $formKey);
 	}
 
-	public function buildHomepage()
-	{
-		$homepageOrder = $this->homepageOrderList();
-		$homepageBuilt = '';
-		foreach ($homepageOrder as $key => $value) {
-			//new way
-			if (method_exists($this, $key)) {
-				$homepageBuilt .= $this->$key();
-			} elseif (strpos($key, 'homepageOrdercustomhtml') !== false) {
-				$iteration = substr($key, -2);
-				$homepageBuilt .= $this->homepageOrdercustomhtml($iteration);
-			} else {
-				$homepageBuilt .= '<div id="' . $key . '"></div>';
-			}
-			//old way
-			//$homepageBuilt .= $this->buildHomepageItem($key);
-		}
-		return $homepageBuilt;
-	}
-
-	public function buildHomepageSettings()
-	{
-		$homepageOrder = $this->homepageOrderList();
-		$homepageList = '<div class="col-xl-12"><h4 lang="en">Drag Homepage Items to Order Them</h4></div><div id="homepage-items-sort" class="row external-events">';
-		$inputList = '<form id="homepage-values" class="row">';
-		foreach ($homepageOrder as $key => $val) {
-			switch ($key) {
-				case 'homepageOrdercustomhtml01':
-				case 'homepageOrdercustomhtml02':
-				case 'homepageOrdercustomhtml03':
-				case 'homepageOrdercustomhtml04':
-				case 'homepageOrdercustomhtml05':
-				case 'homepageOrdercustomhtml06':
-				case 'homepageOrdercustomhtml07':
-				case 'homepageOrdercustomhtml08':
-					$iteration = substr($key, -2);
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/HTML5.png';
-					if (!$this->config['homepageCustomHTML' . $iteration . 'Enabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrdertransmission':
-					$class = 'bg-transmission';
-					$image = 'plugins/images/tabs/transmission.png';
-					if (!$this->config['homepageTransmissionEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrdernzbget':
-					$class = 'bg-nzbget';
-					$image = 'plugins/images/tabs/nzbget.png';
-					if (!$this->config['homepageNzbgetEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderjdownloader':
-					$class = 'bg-sab';
-					$image = 'plugins/images/tabs/jdownloader.png';
-					if (!$this->config['homepageJdownloaderEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrdersabnzbd':
-					$class = 'bg-sab';
-					$image = 'plugins/images/tabs/sabnzbd.png';
-					if (!$this->config['homepageSabnzbdEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderdeluge':
-					$class = 'bg-deluge';
-					$image = 'plugins/images/tabs/deluge.png';
-					if (!$this->config['homepageDelugeEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderqBittorrent':
-					$class = 'bg-qbit';
-					$image = 'plugins/images/tabs/qBittorrent.png';
-					if (!$this->config['homepageqBittorrentEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderuTorrent':
-					$class = 'bg-qbit';
-					$image = 'plugins/images/tabs/utorrent.png';
-					if (!$this->config['homepageuTorrentEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderrTorrent':
-					$class = 'bg-qbit';
-					$image = 'plugins/images/tabs/rTorrent.png';
-					if (!$this->config['homepagerTorrentEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderplexnowplaying':
-				case 'homepageOrderplexrecent':
-				case 'homepageOrderplexplaylist':
-					$class = 'bg-plex';
-					$image = 'plugins/images/tabs/plex.png';
-					if (!$this->config['homepagePlexEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-			case 'homepageOrderembynowplaying':
-			case 'homepageOrderembyrecent':
-				$class = 'bg-emby';
-				$image = 'plugins/images/tabs/emby.png';
-				if (!$this->config['homepageEmbyEnabled']) {
-					$class .= ' faded';
-				}
-				break;
-			case 'homepageOrderEmbyLiveTVTracker':
-				$class = 'bg-emby';
-				$image = 'plugins/images/homepage/embyLiveTVTracker.png';
-				if (!$this->config['homepageEmbyLiveTVTrackerEnabled']) {
-					$class .= ' faded';
-				}
-				break;
-			case 'homepageOrderJellyStat':
-				$class = 'bg-info';
-				$image = 'plugins/images/homepage/jellystat.png';
-				if (!$this->config['homepageJellyStatEnabled']) {
-					$class .= ' faded';
-				}
-				break;
-				case 'homepageOrderjellyfinnowplaying':
-				case 'homepageOrderjellyfinrecent':
-					$class = 'bg-jellyfin';
-					$image = 'plugins/images/tabs/jellyfin.png';
-					if (!$this->config['homepageJellyfinEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderombi':
-					$class = 'bg-inverse';
-					$image = 'plugins/images/tabs/ombi.png';
-					if (!$this->config['homepageOmbiEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderoverseerr':
-					$class = 'bg-inverse';
-					$image = 'plugins/images/tabs/overseerr.png';
-					if (!$this->config['homepageOverseerrEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderDonate':
-					$class = 'bg-primary';
-					$image = 'plugins/images/tabs/donate.png';
-					if (!$this->config['homepageDonateEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrdercalendar':
-					$class = 'bg-primary';
-					$image = 'plugins/images/tabs/calendar.png';
-					if (!$this->config['homepageCalendarEnabled'] && !$this->config['homepageSonarrEnabled'] && !$this->config['homepageRadarrEnabled'] && !$this->config['homepageSickrageEnabled'] && !$this->config['homepageCouchpotatoEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderdownloader':
-					$class = 'bg-inverse';
-					$image = 'plugins/images/tabs/downloader.png';
-					if (!$this->config['jdownloaderCombine'] && !$this->config['sabnzbdCombine'] && !$this->config['nzbgetCombine'] && !$this->config['rTorrentCombine'] && !$this->config['delugeCombine'] && !$this->config['transmissionCombine'] && !$this->config['qBittorrentCombine'] && !$this->config['uTorrentCombine']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderhealthchecks':
-					$class = 'bg-healthchecks';
-					$image = 'plugins/images/tabs/healthchecks.png';
-					if (!$this->config['homepageHealthChecksEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderunifi':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/ubnt.png';
-					if (!$this->config['homepageUnifiEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrdertautulli':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/tautulli.png';
-					if (!$this->config['homepageTautulliEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderPihole':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/pihole.png';
-					if (!$this->config['homepagePiholeEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderAdGuard':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/AdGuardHomepageItem';
-					if (!$this->config['homepageAdGuardEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderMonitorr':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/monitorr.png';
-					if (!$this->config['homepageMonitorrEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderUptimeKuma':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/kuma.png';
-					if (!$this->config['homepageUptimeKumaEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderPromPage':
-					$class = 'bg-info';
-					$image = 'plugins/images/tabs/prompage.png';
-					if (!$this->config['homepagePromPageEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderWeatherAndAir':
-					$class = 'bg-success';
-					$image = 'plugins/images/tabs/wind.png';
-					if (!$this->config['homepageWeatherAndAirEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderSpeedtest':
-					$class = 'bg-success';
-					$image = 'plugins/images/tabs/speedtest-icon.png';
-					if (!$this->config['homepageSpeedtestEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderNetdata':
-					$class = 'bg-success';
-					$image = 'plugins/images/tabs/netdata.png';
-					if (!$this->config['homepageNetdataEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderOctoprint':
-					$class = 'bg-success';
-					$image = 'plugins/images/tabs/octoprint.png';
-					if (!$this->config['homepageOctoprintEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderSonarrQueue':
-					$class = 'bg-sonarr';
-					$image = 'plugins/images/tabs/sonarr.png';
-					if (!$this->config['homepageSonarrQueueEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderRadarrQueue':
-					$class = 'bg-radarr';
-					$image = 'plugins/images/tabs/radarr.png';
-					if (!$this->config['homepageRadarrQueueEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderJackett':
-					$class = 'bg-inverse';
-					$image = 'plugins/images/tabs/jackett.png';
-					if (!$this->config['homepageJackettEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderProwlarr':
-					$class = 'bg-inverse';
-					$image = 'plugins/images/tabs/prowlarr.png';
-					if (!$this->config['homepageProwlarrEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				case 'homepageOrderBookmarks':
-					$class = 'bg-bookmarks';
-					$image = 'plugins/images/bookmark.png';
-					if (!$this->config['homepageBookmarksEnabled']) {
-						$class .= ' faded';
-					}
-					break;
-				default:
-					$class = 'blue-bg';
-					$image = '';
-					break;
-			}
-			$homepageList .= '
-		<div class="col-lg-3 col-12 sort-homepage m-t-10 hvr-grow clearfix">
-			<div class="homepage-drag fc-event ' . $class . ' lazyload"  data-src="' . $image . '">
-				<span class="ordinal-position text-uppercase badge bg-org homepage-number" data-link="' . $key . '" style="float:left;width: 30px;">' . $val . '</span>
-				<span class="homepage-text">&nbsp; ' . strtoupper(substr($key, 13)) . '</span>
-
-			</div>
-		</div>
-		';
-			$inputList .= '<input type="hidden" name="' . $key . '">';
-		}
-		$homepageList .= '</div>';
-		$inputList .= '</form>';
-		return $homepageList . $inputList;
-	}
-
 	public function setGroupOptionsVariable()
 	{
 		$this->groupOptions = $this->groupSelect();
@@ -5023,50 +4550,6 @@ class Londerland
 	public function setUserOptionsVariable()
 	{
 		$this->userOptions = $this->userSelect();
-	}
-
-	public function getSettingsHomepageItem($item)
-	{
-		$items = $this->getSettingsHomepage();
-		foreach ($items as $k => $v) {
-			if (strtolower($v['name']) === strtolower($item)) {
-				$functionName = $v['settingsArray'];
-				return $this->$functionName();
-			}
-		}
-		$this->setAPIResponse('error', 'Homepage item was not found', 404);
-		return null;
-	}
-
-	public function getSettingsHomepageItemDebug($service)
-	{
-		$service = $this->getSettingsHomepageItem($service);
-		if ($service) {
-			$debug = [];
-			foreach ($service['settings'] as $category => $items) {
-				if ($category !== 'About' && $category !== 'Test Connection') {
-					foreach ($items as $item) {
-						if ($item['type'] !== 'html' && $item['type'] !== 'blank' && $item['type'] !== 'button') {
-							if ((stripos($item['name'], 'token') !== false) || (stripos($item['name'], 'key') !== false) || (stripos($item['name'], 'password'))) {
-								if ($item['value'] !== '') {
-									$item['value'] = '***redacted***';
-								}
-							}
-							$debug[$category][$item['name']] = $item['value'];
-						}
-					}
-				}
-			}
-			return $debug;
-		}
-		$this->setAPIResponse('error', 'Homepage item was not found', 404);
-		return null;
-	}
-
-	public function getSettingsHomepage()
-	{
-		$this->setGroupOptionsVariable();
-		return $this->getHomepageSettingsCombined();
 	}
 
 	public function isTabNameTaken($name, $id = null)
@@ -5292,19 +4775,6 @@ class Londerland
 				'function' => 'fetchSingle',
 				'query' => array(
 					'SELECT `group_id` FROM groups WHERE `default` = 1'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function getDefaultCategory()
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => array(
-					'SELECT * FROM categories WHERE `default` = 1'
 				)
 			),
 		];
@@ -6554,34 +6024,6 @@ class Londerland
 		return caBundlePath();
 	}
 
-	public function hasCustomCert()
-	{
-		return file_exists($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'custom.pem');
-	}
-
-	public function getCustomCert()
-	{
-		return ($this->hasCustomCert()) ? $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'custom.pem' : false;
-	}
-
-	public function uploadCert()
-	{
-		$filesCheck = array_filter($_FILES);
-		if (!empty($filesCheck) && $this->approvedFileExtension($_FILES['file']['name'], 'cert')) {
-			ini_set('upload_max_filesize', '10M');
-			ini_set('post_max_size', '10M');
-			$tempFile = $_FILES['file']['tmp_name'];
-			$targetPath = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR;
-			$targetFile = $targetPath . 'custom.pem';
-			$this->setAPIResponse(null, pathinfo($_FILES['file']['name'], PATHINFO_BASENAME) . ' has been uploaded', null);
-			$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cert');
-			return move_uploaded_file($tempFile, $targetFile);
-		} else {
-			$this->setAPIResponse('error', pathinfo($_FILES['file']['name'], PATHINFO_BASENAME) . ' is not approved to be uploaded', 403);
-			return false;
-		}
-	}
-
 	public function createCronFile()
 	{
 		$file = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'Cron.txt';
@@ -6730,195 +6172,6 @@ class Londerland
 		return $this->processQueries($response);
 	}
 
-public function youtubeSearch($query)
-	{
-		if (!$query) {
-			$this->setAPIResponse('error', 'No query supplied', 422);
-			return false;
-		}
-		$apikey = $this->config['youtubeAPI'] ?? '';
-		if ($apikey === '') {
-			$this->setAPIResponse('error', 'No YouTube API key configured', 422);
-			return false;
-		}
-		$results = false;
-		// Ensure query is URL-encoded to avoid API errors
-		$safeQuery = urlencode($query . ' official trailer');
-		$url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q={$safeQuery}&maxResults=1&type=video&videoDuration=short&key=" . urlencode($apikey);
-		$response = \WpOrg\Requests\Requests::get($url);
-		if ($response->success) {
-			$results = json_decode($response->body, true);
-			$this->setAPIResponse('success', null, 200, $results);
-			return $results;
-		} else {
-			$this->setAPIResponse('error', 'Bad response from YouTube', 500);
-			return false;
-		}
-	}
-
-	/**
-	 * Validate that URL is external and not a local/internal resource
-	 * Prevents SSRF attacks by blocking local file access and private IP ranges
-	 * 
-	 * @param string $url The URL to validate
-	 * @return bool True if URL is external and safe, false otherwise
-	 */
-	private function isExternalURL($url)
-	{
-		// Parse the URL
-		$parsedUrl = parse_url($url);
-		
-		if (!$parsedUrl || !isset($parsedUrl['scheme']) || !isset($parsedUrl['host'])) {
-			return false;
-		}
-		
-		// Block file:// and other non-http(s) schemes
-		$scheme = strtolower($parsedUrl['scheme']);
-		if (!in_array($scheme, ['http', 'https'])) {
-			return false;
-		}
-		
-		$host = strtolower($parsedUrl['host']);
-		
-		// Block localhost variations
-		$localhostPatterns = [
-			'localhost',
-			'127.0.0.1',
-			'0.0.0.0',
-			'::1',
-			'0:0:0:0:0:0:0:1'
-		];
-		
-		if (in_array($host, $localhostPatterns)) {
-			return false;
-		}
-		
-		// Resolve hostname to IP if it's not already an IP
-		$ip = $host;
-		if (!filter_var($host, FILTER_VALIDATE_IP)) {
-			$ip = gethostbyname($host);
-			// If gethostbyname fails, it returns the hostname unchanged
-			if ($ip === $host) {
-				// Could not resolve - for security, block unresolvable hosts
-				return false;
-			}
-		}
-		
-		// Block private IP ranges (IPv4)
-		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-			// Convert IP to long for range checking
-			$ipLong = ip2long($ip);
-			
-			// Private IP ranges:
-			// 10.0.0.0 - 10.255.255.255
-			// 172.16.0.0 - 172.31.255.255
-			// 192.168.0.0 - 192.168.255.255
-			// 169.254.0.0 - 169.254.255.255 (link-local)
-			// 127.0.0.0 - 127.255.255.255 (loopback)
-			$privateRanges = [
-				['10.0.0.0', '10.255.255.255'],
-				['172.16.0.0', '172.31.255.255'],
-				['192.168.0.0', '192.168.255.255'],
-				['169.254.0.0', '169.254.255.255'],
-				['127.0.0.0', '127.255.255.255']
-			];
-			
-			foreach ($privateRanges as $range) {
-				$rangeStart = ip2long($range[0]);
-				$rangeEnd = ip2long($range[1]);
-				if ($ipLong >= $rangeStart && $ipLong <= $rangeEnd) {
-					return false;
-				}
-			}
-		}
-		
-		// Block private/local IPv6 addresses
-		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-			// Block IPv6 loopback (::1) and link-local (fe80::/10)
-			if (strpos($ip, '::1') === 0 || strpos($ip, 'fe80:') === 0 || strpos($ip, 'fc00:') === 0 || strpos($ip, 'fd00:') === 0) {
-				return false;
-			}
-		}
-		
-		// URL passed all checks - it's external
-		return true;
-	}
-
-	public function scrapePage($array)
-	{
-		try {
-			$url = $array['url'] ?? false;
-			$type = $array['type'] ?? false;
-			if (!$url) {
-				$this->setAPIResponse('error', 'URL was not supplied', 422);
-				return false;
-			}
-			$url = $this->qualifyURL($url);
-			// Security: Only allow external URLs, block local/internal resources
-			if (!$this->isExternalURL($url)) {
-				$this->setAPIResponse('error', 'Access to local or internal URLs is not allowed', 403);
-				return false;
-			}
-			$data = array(
-				'full_url' => $url,
-				'drill_url' => $this->qualifyURL($url, true)
-			);
-			$options = array('verify' => false);
-			$response = \WpOrg\Requests\Requests::get($url, array(), $options);
-			$data['response_code'] = $response->status_code;
-			if ($response->success) {
-				$data['result'] = 'Success';
-				switch ($type) {
-					case 'html':
-						$data['data'] = html_entity_decode($response->body);
-						break;
-					case 'json':
-						$data['data'] = json_decode($response->body);
-						break;
-					default:
-						$data['data'] = $response->body;
-				}
-				$this->setAPIResponse('success', null, 200, $data);
-				return $data;
-			} else {
-				$this->setAPIResponse('error', 'Error getting successful response', 500);
-				return false;
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setResponse(500, $e->getMessage());
-			return false;
-		}
-	}
-
-	public function chooseInstance($url = null, $token = null, $instance = 0, $type = null)
-	{
-		if (!$url || !$token) {
-			return false;
-		}
-		$list = $this->csvHomepageUrlToken($url, $token);
-		if ($type) {
-			$type = strtolower($type);
-			switch ($type) {
-				case 'url':
-				case 'token':
-					break;
-				default:
-					$type = 'url';
-					break;
-			}
-			if (is_numeric($instance)) {
-				return $list[$instance][$type];
-			} else {
-				return $list;
-			}
-		}
-		if (is_numeric($instance)) {
-			return $list[$instance];
-		} else {
-			return $list;
-		}
-	}
-
 	public function CBPFWTabs()
 	{
 		return '
@@ -7006,192 +6259,6 @@ public function youtubeSearch($query)
 		})( window );
 		</script>
 		';
-	}
-
-	public function socksHeadingHTML($app)
-	{
-		return '
-		<h3 lang="en">' . ucwords($app) . ' SOCKS API Connection</h3>
-		<p>Using this feature allows you to access the API without having to reverse proxy it.  Just access it from: </p>
-		<code class="elip hidden-xs">' . $this->getServerPath() . 'api/v2/socks/' . $app . '/</code>
-		<p>If you are using multiple URL\'s (using the csv method) you will have to use the url like these: </p>
-		<code class="elip hidden-xs">' . $this->getServerPath() . 'api/v2/multiple/socks/' . $app . '/1</code>
-		<br/>
-		<code class="elip hidden-xs">' . $this->getServerPath() . 'api/v2/multiple/socks/' . $app . '/2</code>
-		';
-	}
-
-	public function socksListing($app = null)
-	{
-		switch ($app) {
-			case 'sonarr':
-				$appDetails = [
-					'url' => 'sonarrURL',
-					'enabled' => 'sonarrSocksEnabled',
-					'auth' => 'sonarrSocksAuth',
-					'header' => 'X-Api-Key'
-				];
-				break;
-			case 'radarr':
-				$appDetails = [
-					'url' => 'radarrURL',
-					'enabled' => 'radarrSocksEnabled',
-					'auth' => 'radarrSocksAuth',
-					'header' => 'X-Api-Key'
-				];
-				break;
-			case 'lidarr':
-				$appDetails = [
-					'url' => 'lidarrURL',
-					'enabled' => 'lidarrSocksEnabled',
-					'auth' => 'lidarrSocksAuth',
-					'header' => 'X-Api-Key'
-				];
-				break;
-			case 'sabnzbd':
-				$appDetails = [
-					'url' => 'sabnzbdURL',
-					'enabled' => 'sabnzbdSocksEnabled',
-					'auth' => 'sabnzbdSocksAuth',
-					'header' => null
-				];
-				break;
-			case 'nzbget':
-				$appDetails = [
-					'url' => 'nzbgetURL',
-					'enabled' => 'nzbgetSocksEnabled',
-					'auth' => 'nzbgetSocksAuth',
-					'header' => 'Authorization'
-				];
-				break;
-			case 'tautulli':
-				$appDetails = [
-					'url' => 'tautulliURL',
-					'enabled' => 'tautulliSocksEnabled',
-					'auth' => 'tautulliSocksAuth',
-					'header' => null
-				];
-				break;
-			case 'qbittorrent':
-				$appDetails = [
-					'url' => 'qBittorrentURL',
-					'enabled' => 'qBittorrentSocksEnabled',
-					'auth' => 'qBittorrentSocksAuth',
-					'header' => null
-				];
-				break;
-			default:
-				$appDetails = null;
-		}
-		return $appDetails;
-	}
-
-	public function socks($appDetails, $requestObject, $multiple = null)
-	{
-		$url = $appDetails['url'];
-		$enabled = $appDetails['enabled'];
-		$auth = $appDetails['auth'];
-		$header = $appDetails['header'];
-		$error = false;
-		if (!$this->config[$enabled]) {
-			$error = true;
-			$this->setAPIResponse('error', 'SOCKS module is not enabled', 409);
-		}
-		if (!$this->qualifyRequest($this->config[$auth], true)) {
-			$error = true;
-		}
-		if (strpos($this->config[$url], ',') !== false) {
-			if (!$multiple) {
-				$error = true;
-				$this->setAPIResponse('error', 'Multiple URLs found in field, please use /api/v2/multiple/socks endpoint', 409);
-			}
-		} else {
-			if ($multiple) {
-				$error = true;
-				$this->setAPIResponse('error', 'Multiple endpoint accessed but multiple URLs not found in field, please use /api/v2/socks endpoint', 409);
-			}
-		}
-
-		if ($error) {
-			return null;
-		}
-
-		if ($multiple) {
-			$instance = $multiple - 1;
-			$pre = explode('/api/v2/multiple/socks/', $requestObject->getUri()->getPath());
-			$pre[1] = $this->replace_first('/' . $multiple . '/', '/', $pre[1]);
-			// sent url twice since we arent using tokens
-			$list = $this->csvHomepageUrlToken($this->config[$url], $this->config[$url]);
-			$appURL = $list[$instance]['url'];
-		} else {
-			$pre = explode('/api/v2/socks/', $requestObject->getUri()->getPath());
-			$appURL = $this->config[$url];
-		}
-		$endpoint = explode('/', $pre[1]);
-		$new = urldecode(preg_replace('/' . $endpoint[0] . '/', '', $pre[1], 1));
-		$getParams = ($_GET) ? '?' . http_build_query($_GET) : '';
-		$url = $this->qualifyURL($appURL) . $new . $getParams;
-		$url = $this->cleanPath($url);
-		$options = ($this->localURL($appURL)) ? ['verify' => false, 'timeout' => 120] : ['timeout' => 120];
-		$headers = [];
-		$apiData = $this->apiData($requestObject, false);
-		if ($header) {
-			if ($requestObject->hasHeader($header)) {
-				$headerKey = $requestObject->getHeaderLine($header);
-				$headers[$header] = $headerKey;
-			}
-		}
-		if ($requestObject->hasHeader('Content-Type')) {
-			$headerKey = $requestObject->getHeaderLine('Content-Type');
-			$headers['Content-Type'] = $headerKey;
-		}
-		$debugInformation = [
-			'type' => $requestObject->getMethod(),
-			'headerType' => $requestObject->getHeaderLine('Content-Type'),
-			'header' => $header,
-			'headers' => $headers,
-			'url' => $url,
-			'options' => $options,
-			'data' => $apiData,
-		];
-		$this->setLoggerChannel('Socks')->debug('Sending Socks request', $debugInformation);
-		try {
-			switch ($requestObject->getMethod()) {
-				case 'GET':
-					$call = \WpOrg\Requests\Requests::get($url, $headers, $options);
-					break;
-				case 'POST':
-					$call = \WpOrg\Requests\Requests::post($url, $headers, $apiData, $options);
-					break;
-				case 'DELETE':
-					$call = \WpOrg\Requests\Requests::delete($url, $headers, $options);
-					break;
-				case 'PUT':
-					$call = \WpOrg\Requests\Requests::put($url, $headers, $apiData, $options);
-					break;
-				default:
-					$call = \WpOrg\Requests\Requests::get($url, $headers, $options);
-			}
-			if ($this->config['socksDebug']) {
-				if ($this->json_validator($call->body)) {
-					$logData = json_decode($call->body, true);
-					$size = (!is_numeric($this->config['maxSocksDebugSize']) || $this->config['maxSocksDebugSize'] == 0) ? 1 : $this->config['maxSocksDebugSize'];
-					if (count($logData) > $size) {
-						$logData = 'Count too large to output';
-					}
-				} else {
-					$logData = $call->body;
-				}
-			} else {
-				$logData = 'Debug not enabled';
-			}
-			$this->setLoggerChannel('Socks')->debug('Socks Response', ['body' => $logData, 'debug' => $debugInformation]);
-			return $call->body;
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setResponse(500, $e->getMessage());
-			$this->setLoggerChannel('Socks')->critical($e, $debugInformation);
-			return null;
-		}
 	}
 
 	public function getPlexServers()

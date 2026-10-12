@@ -2,62 +2,6 @@
 
 trait NormalFunctions
 {
-	public function formatSeconds($seconds)
-	{
-		$hours = 0;
-		$milliseconds = str_replace("0.", '', $seconds - floor($seconds));
-		if ($seconds > 3600) {
-			$hours = floor($seconds / 3600);
-		}
-		$seconds = $seconds % 3600;
-		$time = str_pad($hours, 2, '0', STR_PAD_LEFT)
-			. gmdate(':i:s', $seconds)
-			. ($milliseconds ? '.' . $milliseconds : '');
-		$parts = explode(':', $time);
-		$timeExtra = explode('.', $parts[2]);
-		if ($parts[0] !== '00') { // hours
-			return $time;
-		} elseif ($parts[1] !== '00') { // mins
-			return $parts[1] . 'min(s) ' . $timeExtra[0] . 's';
-		} elseif ($timeExtra[0] !== '00') { // secs
-			return substr($parts[2], 0, 5) . 's | ' . substr($parts[2], 0, 7) * 1000 . 'ms';
-		} else {
-			return substr($parts[2], 0, 7) * 1000 . 'ms';
-		}
-		//return $timeExtra[0] . 's ' . (number_format(('0.' . substr($timeExtra[1], 0, 4)), 4, '.', '') * 1000) . 'ms';
-		//return (number_format(('0.' . substr($timeExtra[1], 0, 4)), 4, '.', '') * 1000) . 'ms';
-	}
-
-	public function getExtension($string)
-	{
-		return preg_replace("#(.+)?\.(\w+)(\?.+)?#", "$2", $string);
-	}
-
-	public function get_browser_name()
-	{
-		$user_agent = $_SERVER['HTTP_USER_AGENT'];
-		if (strpos($user_agent, 'Opera') || strpos($user_agent, 'OPR/')) {
-			return 'Opera';
-		} elseif (strpos($user_agent, 'Edge')) {
-			return 'Edge';
-		} elseif (strpos($user_agent, 'Chrome')) {
-			return 'Chrome';
-		} elseif (strpos($user_agent, 'Safari')) {
-			return 'Safari';
-		} elseif (strpos($user_agent, 'Firefox')) {
-			return 'Firefox';
-		} elseif (strpos($user_agent, 'MSIE') || strpos($user_agent, 'Trident/7')) {
-			return 'Internet Explorer';
-		}
-		return 'Other';
-	}
-
-	public function array_filter_key(array $array, $callback)
-	{
-		$matchedKeys = array_filter(array_keys($array), $callback);
-		return array_intersect_key($array, array_flip($matchedKeys));
-	}
-
 	public function getOS()
 	{
 		if (PHP_SHLIB_SUFFIX == "dll") {
@@ -547,20 +491,6 @@ trait NormalFunctions
 		];
 	}
 
-	public function convertIPStringToRange($string = null)
-	{
-		$ips = [];
-		if ($string) {
-			$ipListing = explode(',', $string);
-			if (count($ipListing) > 0) {
-				foreach ($ipListing as $ip) {
-					$ips[] = $this->convertIPToRange($ip);
-				}
-			}
-		}
-		return $ips;
-	}
-
 	public function localIPRanges()
 	{
 		$mainArray = [
@@ -649,34 +579,6 @@ trait NormalFunctions
 		$size = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 		$factor = floor((strlen($bytes) - 1) / 3);
 		return sprintf("%.{$dec}f %s", $bytes / (1024 ** $factor), $size[$factor]);
-	}
-
-	public function apiResponseFormatter($response)
-	{
-		if (is_array($response)) {
-			return $response;
-		}
-		if (empty($response) || $response == '') {
-			return ['api_response' => 'No data'];
-		}
-		if ($this->json_validator($response)) {
-			return json_decode($response, true);
-		}
-		return ['api_response' => 'No data'];
-	}
-
-	public function json_validator($data = null)
-	{
-		if (!empty($data)) {
-			@json_decode($data);
-			return (json_last_error() === JSON_ERROR_NONE);
-		}
-		return false;
-	}
-
-	public function replace_first($search_str, $replacement_str, $src_str)
-	{
-		return (false !== ($pos = strpos($src_str, $search_str))) ? substr_replace($src_str, $replacement_str, $pos, strlen($search_str)) : $src_str;
 	}
 
 	/**
@@ -786,71 +688,7 @@ function localURL($url, $force = false)
 }
 
 // Maybe use later?
-function curl($curl, $url, $headers = array(), $data = array())
-{
-	// Initiate cURL
-	$curlReq = curl_init($url);
-	if (in_array(trim(strtoupper($curl)), ["GET", "POST", "PUT", "DELETE"])) {
-		curl_setopt($curlReq, CURLOPT_CUSTOMREQUEST, trim(strtoupper($curl)));
-	} else {
-		return null;
-	}
-	curl_setopt($curlReq, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($curlReq, CURLOPT_CAINFO, getCert());
-	curl_setopt($curlReq, CURLOPT_CONNECTTIMEOUT, 5);
-	if (localURL($url)) {
-		curl_setopt($curlReq, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($curlReq, CURLOPT_SSL_VERIFYPEER, 0);
-	}
-	// Format Headers
-	$cHeaders = array();
-	foreach ($headers as $k => $v) {
-		$cHeaders[] = $k . ': ' . $v;
-	}
-	if (count($cHeaders)) {
-		curl_setopt($curlReq, CURLOPT_HTTPHEADER, $cHeaders);
-	}
-	// Format Data
-	switch (isset($headers['Content-Type']) ? $headers['Content-Type'] : '') {
-		case 'application/json':
-			curl_setopt($curlReq, CURLOPT_POSTFIELDS, json_encode($data));
-			break;
-		case 'application/x-www-form-urlencoded':
-			curl_setopt($curlReq, CURLOPT_POSTFIELDS, http_build_query($data));
-			break;
-		default:
-			$headers['Content-Type'] = 'application/x-www-form-urlencoded';
-			curl_setopt($curlReq, CURLOPT_POSTFIELDS, http_build_query($data));
-	}
-	// Execute
-	$result = curl_exec($curlReq);
-	$httpcode = curl_getinfo($curlReq);
-	// Close
-	curl_close($curlReq);
-	// Return
-	return array('content' => $result, 'http_code' => $httpcode);
-}
-
 // Maybe use later?
-function getHeaders($url)
-{
-	$ch = curl_init($url);
-	curl_setopt($ch, CURLOPT_NOBODY, true);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
-	curl_setopt($ch, CURLOPT_HEADER, false);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-	curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
-	curl_setopt($ch, CURLOPT_CAINFO, getCert());
-	if (localURL($url)) {
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-	}
-	curl_exec($ch);
-	$headers = curl_getinfo($ch);
-	curl_close($ch);
-	return $headers;
-}
-
 // Maybe use later?
 function download($url, $path)
 {

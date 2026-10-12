@@ -1,11 +1,19 @@
 name: Docker image
 
+# Changes that only touch text files (README and other Markdown, the license) do not build an image.
+# Version tags always build.
 on:
   push:
     branches: [master, develop]
     tags: ['v*']
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   pull_request:
     branches: [master, develop]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   workflow_dispatch:
 
 concurrency:
@@ -15,15 +23,23 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v6
 
+      # The QEMU and BuildKit helper images come from Google's mirror of Docker Hub (mirror.gcr.io): pulling them
+      # from Docker Hub itself failed whenever its login server timed out, before the build could start
       - uses: docker/setup-qemu-action@v4
+        with:
+          image: mirror.gcr.io/tonistiigi/binfmt:latest
 
       - uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: image=mirror.gcr.io/moby/buildkit:buildx-stable-1
 
       - name: Log in to ghcr.io
         if: github.event_name != 'pull_request'
@@ -32,6 +48,26 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Base images (php, node, composer) come from Docker Hub, which rate-limits anonymous pulls per runner IP
+      # (429 Too Many Requests); logged-in pulls get their own, higher limit. Docker Hub's login server also has
+      # short outages, so the login is tried three times and a failure does not stop the job: the build then
+      # takes the same official images from Google's mirror of Docker Hub. Skipped when the secrets are not set.
+      - name: Log in to Docker Hub
+        id: dockerhub
+        if: env.DOCKERHUB_USERNAME != ''
+        continue-on-error: true
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          for attempt in 1 2 3; do
+            if printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin; then
+              exit 0
+            fi
+            echo "::warning::Docker Hub login attempt $attempt failed"
+            sleep $((attempt * 15))
+          done
+          exit 1
 
       - id: meta
         uses: docker/metadata-action@v6
@@ -44,14 +80,39 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      # Pull requests (including Dependabot) only build for amd64 to verify the image; nothing is pushed
-      - uses: docker/build-push-action@v7
+      # Pull requests (including Dependabot) only build for amd64 to verify the image; nothing is pushed.
+      # Base images come from Docker Hub when the login worked, otherwise from Google's mirror of Docker Hub
+      # (mirror.gcr.io; AWS's public mirror was tried first but rate-limits anonymous multi-platform builds).
+      - name: Build (base images from Docker Hub)
+        id: build
+        if: steps.dockerhub.outcome == 'success'
+        continue-on-error: true
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: LONDERLAND_COMMIT=${{ github.sha }}
+          build-args: |
+            LONDERLAND_COMMIT=${{ github.sha }}
+            BASE_REGISTRY=docker.io/library
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable; a real build
+      # error fails here the same way and stops the job
+      - name: Build (base images from Google's mirror of Docker Hub)
+        if: steps.build.outcome != 'success'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            LONDERLAND_COMMIT=${{ github.sha }}
+            BASE_REGISTRY=mirror.gcr.io/library
           cache-from: type=gha
           cache-to: type=gha,mode=max
