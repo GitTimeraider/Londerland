@@ -2324,12 +2324,17 @@ class Londerland
 		if (strtolower($url['host']) === $ownHost) {
 			return '';
 		}
-		return '<link rel="preconnect" href="' . htmlspecialchars($origin, ENT_QUOTES) . '">' . PHP_EOL;
+		// The page in the iframe is fetched without CORS, but sites built with tools such as Vite load their scripts with
+		// crossorigin, which needs a connection of its own
+		$href = htmlspecialchars($origin, ENT_QUOTES);
+		return '<link rel="preconnect" href="' . $href . '">' . PHP_EOL . '    <link rel="preconnect" href="' . $href . '" crossorigin>' . PHP_EOL;
 	}
 
 	// Creates the start tab's iframe while the page is still loading, so the site in it loads at the same time as
 	// Londerland's own scripts instead of after them. It stays hidden until start-up opens the tab; tabProcess() in
 	// functions.js keeps it instead of creating a second one. Skipped when the address names another tab (#name).
+	// #page-wrapper gets its scrollbars (customScrollbars() in helpers.js) before the iframe is added: OverlayScrollbars
+	// moves the element's contents when it starts, and an iframe that is moved loads its site again.
 	public function startTabFrame()
 	{
 		$start = $this->startIframeTab();
@@ -2365,6 +2370,8 @@ class Londerland
         frame.className = 'iframe';
         frame.src = tab.url;
         container.appendChild(frame);
+        // the same as customScrollbars('#page-wrapper', 'move') in pageLoad(), which then leaves it as it is
+        OverlayScrollbarsGlobal.OverlayScrollbars(document.getElementById('page-wrapper'), {scrollbars: {autoHide: 'move'}});
         document.querySelector('.iFrame-listing').appendChild(container);
     })($tab);
 </script>

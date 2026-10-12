@@ -3087,7 +3087,7 @@ ul.list-icons li i {
 @font-face {
     font-family: themify;
     src: url(../less/icons/themify-icons/fonts/themify.eot?-fvbane);
-    src: url(../less/icons/themify-icons/fonts/themify.eot?#iefix-fvbane) format("embedded-opentype"), url(../less/icons/themify-icons/fonts/themify.woff?-fvbane) format("woff"),
+    src: url(../less/icons/themify-icons/fonts/themify.woff2) format("woff2"), url(../less/icons/themify-icons/fonts/themify.woff?-fvbane) format("woff"),
     url(../less/icons/themify-icons/fonts/themify.ttf?-fvbane) format("truetype"), url(../less/icons/themify-icons/fonts/themify.svg?-fvbane#themify) format("svg");
     font-weight: 400;
     font-style: normal;
