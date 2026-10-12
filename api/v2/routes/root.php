@@ -59,7 +59,8 @@ $app->get('/launch[/]', function ($request, $response, $args) {
 	$GLOBALS['api']['response']['data']['user'] = $Londerland->user;
 	$GLOBALS['api']['response']['data']['theme'] = $Londerland->config['theme'];
 	$GLOBALS['api']['response']['data']['style'] = $Londerland->config['style'];
-	$GLOBALS['api']['response']['data']['version'] = $Londerland->version;
+	// Only admins (or a fresh install) see the real version; everyone else gets the hashed file version, used for ?v=
+	$GLOBALS['api']['response']['data']['version'] = (!$Londerland->hasDB() || $Londerland->qualifyRequest(0)) ? $Londerland->version : $Londerland->fileHash;
 	$GLOBALS['api']['response']['data']['settings'] = $Londerland->londerlandSpecialSettings();
 	$GLOBALS['api']['response']['data']['plugins'] = $Londerland->pluginGlobalList();
 	$GLOBALS['api']['response']['data']['appearance'] = $Londerland->loadAppearance();

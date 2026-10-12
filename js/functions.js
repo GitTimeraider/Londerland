@@ -136,14 +136,18 @@ function formatDebug(result) {
   );
 }
 function getDebugPreInfo() {
+  // Version and server details are only sent to admins
   var formatted =
-    "Version: " +
-    activeInfo.version +
-    "<br/>Server OS: " +
-    activeInfo.serverOS +
-    "<br/>PHP: " +
-    activeInfo.phpVersion +
-    "<br/>Install Type: " +
+    (activeInfo.serverOS !== undefined
+      ? "Version: " +
+        activeInfo.version +
+        "<br/>Server OS: " +
+        activeInfo.serverOS +
+        "<br/>PHP: " +
+        activeInfo.phpVersion +
+        "<br/>"
+      : "") +
+    "Install Type: " +
     (activeInfo.settings.misc.docker ? "Docker" : "Native") +
     "<br/>Auth Type: " +
     activeInfo.settings.misc.authType +

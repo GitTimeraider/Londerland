@@ -162,12 +162,8 @@ function get_page_settings($Londerland)
 										<div class="white-box bg-org">
 											<h3 class="box-title" lang="en">Information</h3>
 											<ul class="feeds">
-												<li><div class="bg-info"><i class="mdi mdi-webpack mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Londerland Version</span> ' . $Londerland->version . '</li>
 												<li><div class="bg-info"><i class="mdi mdi-database mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Database Driver</span> ' . $Londerland->config['driver'] . '&nbsp;<code><i class="fa fa-arrow-right"></i></code>&nbsp;<small>' . $Londerland->config['dbName'] . '</small></li>
 												' . $Londerland->settingsDocker() . $Londerland->settingsPathChecks() . '
-												<hr class="m-t-10">
-												<li><div class="bg-info"><i class="mdi mdi-language-php mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">PHP Version</span> ' . phpversion() . '</li>
-												<li><div class="bg-info"><i class="mdi mdi-package-variant-closed mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Webserver Version</span> ' . $_SERVER['SERVER_SOFTWARE'] . '</li>
 												<hr class="m-t-10">
 												<li><div class="bg-info"><i class="mdi mdi-card-account-details mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">License</span> ' . ucwords($Londerland->config['license']) . '</li>
 											</ul>
