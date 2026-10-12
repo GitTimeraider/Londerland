@@ -928,7 +928,7 @@ class Londerland
 	{
 		if ($this->config['gaTrackingID'] !== '') {
 			return '
-				<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+				<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady" defer></script>
 				<script async src="https://www.googletagmanager.com/gtag/js?id=' . $this->config['gaTrackingID'] . '"></script>
 				<script>
 					window.dataLayer = window.dataLayer || [];
@@ -1169,7 +1169,8 @@ class Londerland
 		if (isset($this->config['londerlandHash'])) {
 			if ($this->config['londerlandHash'] !== '') {
 				$hash = password_hash(substr($this->config['londerlandHash'], 2, 10), PASSWORD_BCRYPT);
-				return ($script) ? '<script>local("s","formKey","' . $hash . '");</script>' : $hash;
+				// index.php loads functions.js (which has local()) with defer, so it runs once the page has been read
+				return ($script) ? '<script>document.addEventListener("DOMContentLoaded", function () { local("s","formKey","' . $hash . '"); });</script>' : $hash;
 			}
 		}
 	}
@@ -2335,6 +2336,11 @@ class Londerland
 	// functions.js keeps it instead of creating a second one. Skipped when the address names another tab (#name).
 	// #page-wrapper gets its scrollbars (customScrollbars() in helpers.js) before the iframe is added: OverlayScrollbars
 	// moves the element's contents when it starts, and an iframe that is moved loads its site again.
+	// The script is a module so it waits, like the scripts index.php loads with defer, until OverlayScrollbars (the
+	// deferred script just before it) has run; it still runs before the other deferred scripts and so before start-up.
+	// The iframe itself is added just after the page's first frame has been drawn: a site on the same domain shares the
+	// page's process, and its scripts would otherwise hold up that first paint. Should start-up get there first (a tab in
+	// the background draws no frames), tabProcess() creates the iframe and this script leaves it at that.
 	public function startTabFrame()
 	{
 		$start = $this->startIframeTab();
@@ -2351,32 +2357,90 @@ class Londerland
 			'allow' => $allow,
 		], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
 		return <<<HTML
-<script>
+<script type="module">
     (function (tab) {
         // the same tab names as setHash() in functions.js writes into the address
         var hash = location.hash.slice(1);
         if (hash !== '' && hash !== tab.id && hash !== encodeURI(tab.name).split('%20').join('-')) {
             return;
         }
-        var container = document.createElement('div');
-        container.id = 'container-' + tab.id;
-        container.className = 'frame-container frame-' + tab.id + ' hidden loaded';
-        var frame = document.createElement('iframe');
-        if (tab.allow) frame.setAttribute('allow', tab.allow);
-        if (tab.sandbox) frame.setAttribute('sandbox', tab.sandbox);
-        frame.setAttribute('frameborder', '0');
-        frame.setAttribute('scrolling', 'auto');
-        frame.id = 'frame-' + tab.id;
-        frame.className = 'iframe';
-        frame.src = tab.url;
-        container.appendChild(frame);
         // the same as customScrollbars('#page-wrapper', 'move') in pageLoad(), which then leaves it as it is
         OverlayScrollbarsGlobal.OverlayScrollbars(document.getElementById('page-wrapper'), {scrollbars: {autoHide: 'move'}});
-        document.querySelector('.iFrame-listing').appendChild(container);
+        var added = false;
+        function addFrame() {
+            if (added || document.getElementById('container-' + tab.id)) {
+                return;
+            }
+            added = true;
+            var container = document.createElement('div');
+            container.id = 'container-' + tab.id;
+            container.className = 'frame-container frame-' + tab.id + ' hidden loaded';
+            var frame = document.createElement('iframe');
+            if (tab.allow) frame.setAttribute('allow', tab.allow);
+            if (tab.sandbox) frame.setAttribute('sandbox', tab.sandbox);
+            frame.setAttribute('frameborder', '0');
+            frame.setAttribute('scrolling', 'auto');
+            frame.id = 'frame-' + tab.id;
+            frame.className = 'iframe';
+            frame.src = tab.url;
+            container.appendChild(frame);
+            document.querySelector('.iFrame-listing').appendChild(container);
+        }
+        // requestAnimationFrame runs just before a frame is drawn, the timeout just after it
+        requestAnimationFrame(function () {
+            setTimeout(addFrame, 0);
+        });
     })($tab);
 </script>
 
 HTML;
+	}
+
+	// A font's address with the ?v=<hash> that scripts/build-frontend.mjs puts on it in the stylesheets, so a preload
+	// fetches the same address the stylesheet asks for (and browsers may keep it for a year)
+	public function assetUrl($path)
+	{
+		static $versions = null;
+		if ($versions === null) {
+			$file = $this->root . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'asset-versions.json';
+			$versions = is_file($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
+		}
+		return isset($versions[$path]) ? $path . '?v=' . $versions[$path] : $path;
+	}
+
+	// moment is loaded without its locales (londerlandLibraries.moment in helpers.js), and the dates follow the browser's
+	// first language, so only that language's locale file is needed. Browsers send the same list as Accept-Language. Like
+	// moment.locale('nl-NL'), the full name (nl-nl) is tried before the language alone (nl). Empty: moment's own English.
+	public function momentLocale()
+	{
+		$first = strtolower(trim(explode(';', explode(',', (string)($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''))[0])[0]));
+		$first = str_replace('_', '-', $first);
+		if (!preg_match('/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/', $first)) {
+			return '';
+		}
+		$parts = explode('-', $first);
+		foreach (array_unique([$first, $parts[0] . (isset($parts[1]) ? '-' . $parts[1] : ''), $parts[0]]) as $locale) {
+			if (is_file($this->root . '/assets/vendor/moment/locale/' . $locale . '.js')) {
+				return $locale;
+			}
+		}
+		return '';
+	}
+
+	// The user's picture and name at the right of the top bar (and the full screen button before them), written into the
+	// page so they show on the first paint: on phones the picture is the largest thing on the first screen. userMenu() in
+	// functions.js replaces them with the same markup plus the menu once start-up has finished. Not on the lock screen.
+	// fetchpriority: the picture is small, and fetched before the page's other images.
+	public function topBarUserHTML()
+	{
+		if (!$this->hasDB() || !is_array($this->user) || !empty($this->user['locked'])) {
+			return '';
+		}
+		$image = htmlspecialchars((string)($this->user['image'] ?? ''), ENT_QUOTES);
+		$name = htmlspecialchars((string)($this->user['username'] ?? ''), ENT_QUOTES);
+		return '<li class="hidden-xs"><a class="waves-effect waves-light"> <i class="ti-fullscreen fullscreen-icon"></i></a></li>'
+			. '<li class="dropdown"><a class="dropdown-toggle profile-pic" href="javascript:void(0)"><img alt="" class="rounded-circle profile-image" src="'
+			. $image . '" width="36" height="36" fetchpriority="high"><b class="hidden-xs">' . $name . '</b></a></li>';
 	}
 
 	// The logo or title in the top bar, written into the page so it shows on the first paint

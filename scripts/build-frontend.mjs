@@ -1,7 +1,8 @@
 // Copies the frontend libraries Londerland loads from node_modules into assets/vendor
 // and minifies Londerland's own stylesheets and scripts. Run with: npm ci && npm run build
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
@@ -23,7 +24,9 @@ const assets = [
 	['simple-line-icons/fonts', 'simple-line-icons/fonts'],
 	['metismenu/dist/metisMenu.min.js', 'metismenu/metisMenu.min.js'],
 	['metismenu/dist/metisMenu.min.css', 'metismenu/metisMenu.min.css'],
-	['moment/min/moment-with-locales.min.js', 'moment/moment-with-locales.min.js'],
+	// moment without its 130 locales; index.php adds the one locale the browser asks for (momentLocaleScript())
+	['moment/min/moment.min.js', 'moment/moment.min.js'],
+	['moment/locale', 'moment/locale'],
 	// time zone data for this year +/- 5 (the full history is four times bigger and only older dates need it)
 	['moment-timezone/builds/moment-timezone-with-data-10-year-range.min.js', 'moment/moment-timezone-with-data-10-year-range.min.js'],
 	// es5.js is the minified build without the polyfills that bundled.js carries for old browsers
@@ -88,11 +91,94 @@ for (const [from, to] of assets) {
 	cpSync(source, join(vendor, to), { recursive: true });
 }
 
+// A stylesheet with its @import-ed stylesheets written into it, so the browser does not have to fetch them one after the
+// other before it can draw the page. url()s in an imported file are rewritten to be relative to the importing file.
+function inlineImports(file) {
+	const css = readFileSync(file, 'utf8');
+	return css.replace(/@import\s+(?:url\(\s*)?["']?([^"')\s]+)["']?\s*\)?\s*;/g, (statement, path) => {
+		if (/^[a-z]+:|^\/\//i.test(path)) {
+			return statement;
+		}
+		const imported = resolve(dirname(file), path);
+		return inlineImports(imported).replace(/url\(\s*["']?([^"')]+)["']?\s*\)/g, (match, url) => {
+			if (/^([a-z]+:|\/|#)/i.test(url)) {
+				return match;
+			}
+			return `url(${relative(dirname(file), resolve(dirname(imported), url)).split(sep).join('/')})`;
+		});
+	});
+}
+
 for (const [from, to] of ownFiles) {
 	const loader = from.endsWith('.css') ? 'css' : 'js';
-	const result = await esbuild.transform(readFileSync(join(root, from), 'utf8'), { loader, minify: true, legalComments: 'none' });
+	const source = loader === 'css' ? inlineImports(join(root, from)) : readFileSync(join(root, from), 'utf8');
+	const result = await esbuild.transform(source, { loader, minify: true, legalComments: 'none' });
 	writeFileSync(join(root, to), result.code);
 }
+
+// The scripts index.php loads for start-up, in the order they have to run, as one file (js/londerland.min.js): one
+// request instead of twelve. None of them starts with "use strict" or reads document.currentScript, so joining them
+// changes nothing; each is ended with a semicolon so the next cannot continue its last statement.
+const startupScripts = [
+	'assets/vendor/jquery/jquery.min.js',
+	'assets/vendor/bootstrap/bootstrap.bundle.min.js',
+	'assets/vendor/metismenu/metisMenu.min.js',
+	'assets/vendor/bowser/bowser.min.js',
+	'assets/vendor/arrive/arrive.min.js',
+	'assets/vendor/vanilla-lazyload/lazyload.min.js',
+	'assets/vendor/magnific-popup/jquery.magnific-popup.min.js',
+	'assets/vendor/tinykeys/tinykeys.umd.js',
+	'js/i18n.min.js',
+	'js/helpers.min.js',
+	'js/functions.min.js',
+	'js/custom.min.js',
+];
+writeFileSync(join(root, 'js/londerland.min.js'), startupScripts.map((file) => {
+	const code = readFileSync(join(root, file), 'utf8').replace(/\/\/# sourceMappingURL=\S+\s*$/, '').trimEnd();
+	if (/^(\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*["']use strict["']/.test(code)) {
+		throw new Error(`${file} starts with "use strict", which would apply to the scripts after it in js/londerland.min.js`);
+	}
+	return `/* ${file} */\n${code}\n;`;
+}).join('\n'));
+
+// Fonts are linked from stylesheets, so they cannot carry the ?v=<commit> that index.php puts on the stylesheets. They get
+// ?v=<hash of the font file> instead: Apache lets browsers keep files with ?v= for a year, and the address changes when the
+// font does. assets/vendor/asset-versions.json lists the same hashes for the fonts index.php preloads (Londerland::assetUrl()).
+const fontFile = /\.(woff2?|ttf|otf|eot|svg)$/i;
+const fileVersions = new Map();
+function fileVersion(file) {
+	if (!fileVersions.has(file)) {
+		fileVersions.set(file, createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 12));
+	}
+	return fileVersions.get(file);
+}
+function versionFontUrls(file) {
+	const css = readFileSync(file, 'utf8');
+	const versioned = css.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g, (match, quote, url) => {
+		const [, path, query = '', hash = ''] = url.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
+		const target = resolve(dirname(file), path);
+		if (/^([a-z]+:|\/)/i.test(path) || !fontFile.test(path) || !existsSync(target)) {
+			return match;
+		}
+		const version = `v=${fileVersion(target)}`;
+		return `url(${quote}${path}${query ? `${query}&${version}` : `?${version}`}${hash}${quote})`;
+	});
+	if (versioned !== css) {
+		writeFileSync(file, versioned);
+	}
+}
+function cssFiles(directory) {
+	return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+		const path = join(directory, entry.name);
+		return entry.isDirectory() ? cssFiles(path) : (entry.name.endsWith('.css') ? [path] : []);
+	});
+}
+for (const file of [...cssFiles(vendor), ...ownFiles.filter(([from]) => from.endsWith('.css')).map(([, to]) => join(root, to))]) {
+	versionFontUrls(file);
+}
+writeFileSync(join(vendor, 'asset-versions.json'), JSON.stringify(Object.fromEntries(
+	[...fileVersions].map(([file, version]) => [relative(root, file).split(sep).join('/'), version]).sort()
+), null, '\t'));
 
 // Material Design Icons renamed many icons over the years; keep the old names (stored in users' tab and
 // bookmark settings) working by mapping every alias to its current glyph
@@ -130,4 +216,4 @@ const iconSets = pickerSets.map((set) => {
 });
 writeFileSync(join(vendor, 'icons.json'), JSON.stringify(iconSets));
 
-console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Londerland files, ${mdiAliases.size} icon aliases`);
+console.log(`Copied ${assets.length} vendor assets, minified ${ownFiles.length} Londerland files, bundled ${startupScripts.length} start-up scripts, versioned ${fileVersions.size} fonts, ${mdiAliases.size} icon aliases`);

@@ -317,6 +317,8 @@ $(document).on('click', '.inviteModal', function() {
 	if (activeInfo.user.loggedin === true && activeInfo.user.groupID <= activeInfo.plugins.includes["INVITES-Auth-include"]) {
 		ajaxloader(".content-wrap","in");
 		londerlandAPI2('GET','api/v2/plugins/invites').done(function(data) {
+			// the invite dates are formatted with moment, which is fetched after start-up
+			londerlandLoadLibrary('moment').then(function () {
 			var response = data.response;
 			var htmlDOM = '';
 			htmlDOM = `
@@ -356,6 +358,7 @@ $(document).on('click', '.inviteModal', function() {
 			if (activeInfo.plugins.includes["INVITES-allow-delete-include"] === false && activeInfo.user.groupID > 1) {
 				$('.deleteButton').hide();
 			}
+			});
 		}).fail(function(xhr) {
 			console.error("Londerland Function: API Connection Failed");
 		});

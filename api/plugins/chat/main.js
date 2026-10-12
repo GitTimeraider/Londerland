@@ -39,7 +39,7 @@ function chatLaunch(){
 			// Enable pusher logging - don't include this in production
 			//Pusher.logToConsole = true;
 			// Add API Key & cluster here to make the connection
-			londerlandLoadLibrary('pusher').then(function() {
+			londerlandLoadLibraries(['pusher', 'moment']).then(function() {
 				var pusher = new Pusher(activeInfo.plugins.includes["CHAT-authKey-include"], {
 					cluster: activeInfo.plugins.includes["CHAT-cluster-include"],
 					forceTLS: true

@@ -219,7 +219,7 @@ function tomSelectRenderer(format) {
 
 // Searchable single select fed page by page from an Londerland API list endpoint (replaces Select2 ajax pickers)
 function initRemoteChooser(selector, url, format, placeholder) {
-	$(selector).each(function () {
+	return londerlandLoadLibrary('tomselect').then(() => $(selector).each(function () {
 		if (this.tomselect) {
 			return;
 		}
@@ -257,12 +257,12 @@ function initRemoteChooser(selector, url, format, placeholder) {
 				item: tomSelectRenderer(format),
 			},
 		});
-	});
+	}));
 }
 
 // Multi select with optional free-typed entries (replaces Select2 for "select2" settings fields)
 function initMultiSelect(selector, settings = {}) {
-	$(selector).each(function () {
+	return londerlandLoadLibrary('tomselect').then(() => $(selector).each(function () {
 		if (this.tomselect) {
 			return;
 		}
@@ -281,7 +281,7 @@ function initMultiSelect(selector, settings = {}) {
 		if (settings.selectionCssClass) {
 			$(select.wrapper).addClass(settings.selectionCssClass);
 		}
-	});
+	}));
 }
 
 // Reset Tom Select controls (or plain selects) to nothing selected
@@ -328,8 +328,10 @@ $(document).on('show.bs.tab', function (e) {
 	}
 });
 
-// Big libraries that only a few pages use (code editor, e-mail editor, user table) are not part of the
-// page load; they are fetched the first time a page asks for them. Returns a Promise; later calls reuse it.
+// Libraries that start-up does not need are not part of the page load; they are fetched the first time something asks
+// for them (the big ones: code editor, e-mail editor, tables) or right after start-up (londerlandPreloadLibraries()).
+// londerlandLoadLibrary() returns a Promise that resolves once the scripts have run and the stylesheets have loaded;
+// later calls reuse it. index.php sets londerlandVersion (?v=, so browsers may keep the files) and londerlandMomentLocale.
 const londerlandLibraries = {
 	ace: { js: ['assets/vendor/ace/ace.js'], css: [] },
 	tinymce: { js: ['assets/vendor/tinymce/tinymce.min.js'], css: [] },
@@ -339,35 +341,63 @@ const londerlandLibraries = {
 	datatables: { js: ['assets/vendor/datatables/dataTables.min.js', 'assets/vendor/datatables/dataTables.bootstrap5.min.js'], css: ['assets/vendor/datatables/dataTables.bootstrap5.min.css'] },
 	sortable: { js: ['assets/vendor/sortablejs/Sortable.min.js'], css: [] },
 	pusher: { js: ['assets/vendor/pusher-js/pusher.min.js'], css: [] },
+	sweetalert2: { js: ['assets/vendor/sweetalert2/sweetalert2.all.min.js'], css: [] },
+	alertify: { js: ['assets/vendor/alertifyjs/alertify.min.js'], css: ['assets/vendor/alertifyjs/css/alertify.min.css', 'assets/vendor/alertifyjs/css/themes/default.min.css'] },
+	tomselect: { js: ['assets/vendor/tom-select/tom-select.complete.min.js'], css: ['assets/vendor/tom-select/tom-select.bootstrap5.min.css'] },
+	moment: {
+		js: ['assets/vendor/moment/moment.min.js'].concat(
+			window.londerlandMomentLocale ? ['assets/vendor/moment/locale/' + window.londerlandMomentLocale + '.js'] : [],
+			['assets/vendor/moment/moment-timezone-with-data-10-year-range.min.js']
+		),
+		css: [],
+		// what launch() used to do: dates in the browser's language
+		ready: function () {
+			moment.locale(navigator.languages[0]);
+		},
+	},
 };
 const londerlandLibraryLoads = {};
+function londerlandVersioned(path) {
+	return window.londerlandVersion ? path + '?v=' + encodeURIComponent(window.londerlandVersion) : path;
+}
 function londerlandLoadLibrary(name) {
 	if (!londerlandLibraryLoads[name]) {
 		const library = londerlandLibraries[name];
 		// Stylesheets go before the theme stylesheet, where they used to be, so the theme still overrides them
 		const themeStyle = document.getElementById('style');
-		library.css.forEach(function (href) {
-			if (!document.querySelector('link[href="' + href + '"]')) {
+		const styles = library.css.map(function (path) {
+			const href = londerlandVersioned(path);
+			if (document.querySelector('link[href="' + href + '"]')) {
+				return Promise.resolve();
+			}
+			return new Promise(function (resolve) {
 				const link = document.createElement('link');
 				link.rel = 'stylesheet';
 				link.href = href;
+				// a stylesheet that does not load leaves the library unstyled, but working
+				link.onload = link.onerror = resolve;
 				document.head.insertBefore(link, themeStyle);
-			}
+			});
 		});
 		// Scripts one after the other: later files of a library expect the earlier ones
-		londerlandLibraryLoads[name] = library.js.reduce(function (previous, src) {
+		const scripts = library.js.reduce(function (previous, path) {
 			return previous.then(function () {
 				return new Promise(function (resolve, reject) {
 					const script = document.createElement('script');
-					script.src = src;
+					script.src = londerlandVersioned(path);
 					script.onload = resolve;
 					script.onerror = function () {
-						reject(new Error('Could not load ' + src));
+						reject(new Error('Could not load ' + path));
 					};
 					document.head.appendChild(script);
 				});
 			});
-		}, Promise.resolve());
+		}, Promise.resolve()).then(function () {
+			if (library.ready) {
+				library.ready();
+			}
+		});
+		londerlandLibraryLoads[name] = Promise.all([scripts].concat(styles)).then(function () {});
 		londerlandLibraryLoads[name].catch(function (error) {
 			// Allow a new try (for example after a network hiccup)
 			delete londerlandLibraryLoads[name];
@@ -375,5 +405,58 @@ function londerlandLoadLibrary(name) {
 		});
 	}
 	return londerlandLibraryLoads[name];
+}
+function londerlandLoadLibraries(names) {
+	return Promise.all(names.map(londerlandLoadLibrary));
+}
+// Fetched once start-up has finished (launch() in functions.js), while the browser has nothing else to do, so they are
+// there before anyone opens a dialog; anything that needs one earlier waits for it through londerlandLoadLibrary()
+function londerlandPreloadLibraries() {
+	const names = ['sweetalert2', 'tomselect', 'moment'];
+	if (typeof notificationBackbone === 'function' && notificationBackbone() === 'alertify') {
+		names.push('alertify');
+	}
+	const preload = function () {
+		names.forEach(londerlandLoadLibrary);
+	};
+	if (window.requestIdleCallback) {
+		requestIdleCallback(preload, { timeout: 2000 });
+	} else {
+		setTimeout(preload, 200);
+	}
+}
+// Until SweetAlert2 is there, Swal.fire() fetches it and then shows the dialog; it returns a Promise either way.
+// The library replaces this window.Swal with its own when it loads.
+if (!window.Swal) {
+	window.Swal = {
+		fire: function () {
+			const args = arguments;
+			const stub = window.Swal;
+			return londerlandLoadLibrary('sweetalert2').then(function () {
+				if (window.Swal === stub) {
+					throw new Error('SweetAlert2 did not load');
+				}
+				return window.Swal.fire.apply(window.Swal, args);
+			});
+		},
+		// nothing can be open before the library is there
+		close: function () {},
+		getPopup: function () {
+			return null;
+		},
+		isVisible: function () {
+			return false;
+		},
+	};
+}
+// Dates written as <span data-moment="2026-01-05T10:00:00Z" data-moment-format="LLL"></span> by code that runs before
+// moment is there (the account area is built during start-up); filled in once moment has loaded
+function londerlandFillMoments() {
+	return londerlandLoadLibrary('moment').then(function () {
+		document.querySelectorAll('[data-moment]').forEach(function (element) {
+			element.textContent = moment(element.getAttribute('data-moment')).format(element.getAttribute('data-moment-format'));
+			element.removeAttribute('data-moment');
+		});
+	});
 }
 

@@ -44,7 +44,7 @@ function get_page_settings_settings_logs($Londerland)
 	<!-- /.container-fluid -->
 	<script>
 	clearTimeout(timeouts[\'londerland-log\']);
-	londerlandLoadLibrary("datatables").then(function() {
+	londerlandLoadLibraries(["datatables", "moment"]).then(function() {
 	$.fn.dataTable.ext.errMode = "none";
 	window.londerlandLogTable = $("#londerlandLogTable")
 	.on("error.dt", function(e, settings, techNote, message) {

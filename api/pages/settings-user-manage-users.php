@@ -13,7 +13,7 @@ function get_page_settings_user_manage_users($Londerland)
 	}
 	return '
 <script>
-	$(function() { londerlandLoadLibrary("tabulator").then(function() {
+	$(function() { londerlandLoadLibraries(["tabulator", "moment"]).then(function() {
 		let groups = {};
 		const lockedValues = {0: window.lang.translate("No"), 1: window.lang.translate("Yes")};
 		const userError = function(title) {
