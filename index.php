@@ -27,6 +27,7 @@ $Londerland = new Londerland(true);
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/vendor/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="css/fonts/rubik/files/rubik-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="less/icons/themify-icons/fonts/themify.woff2" as="font" type="font/woff2" crossorigin>
     <link href="assets/vendor/bootstrap/bootstrap.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/all.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
     <link href="assets/vendor/fontawesome/css/v4-shims.min.css?v=<?php echo $Londerland->fileHash; ?>" rel="stylesheet">
@@ -154,6 +155,9 @@ $Londerland = new Londerland(true);
         <div class="internal-listing p-0 hidden"></div>
         <div class="iFrame-listing p-0 hidden"></div>
     </div>
+    <!-- Loaded here rather than with the scripts below: startTabFrame() gives #page-wrapper its scrollbars before it adds the
+         start tab's iframe, because setting them up later moves the iframe, and a moved iframe loads its site a second time -->
+    <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 	<?php echo $Londerland->startTabFrame(); ?>
     <div class="splitRight hidden" id="page-wrapper-right">
         <div class="londerland-area-right"></div>
@@ -198,7 +202,6 @@ $Londerland = new Londerland(true);
 <script src="assets/vendor/alertifyjs/alertify.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="assets/vendor/tom-select/tom-select.complete.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="assets/vendor/tinykeys/tinykeys.umd.js?v=<?php echo $Londerland->fileHash; ?>"></script>
-<script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/i18n.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/helpers.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
 <script src="js/functions.min.js?v=<?php echo $Londerland->fileHash; ?>"></script>
