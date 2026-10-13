@@ -1,28 +1,5 @@
 <?php
 switch ($extra) {
-	case 'invite':
-		$button = '
-		<tr>
-			<td class="divider sideborder" style="font-family:\'Helvetica\', Arial, sans-serif;color:#73747C;padding:0;text-align:left;border-left:1px solid #e9e9e9;border-right:1px solid #e9e9e9;background-color:#ffffff;">
-				<table border="0" class="table-basic full-width" style="border-collapse:collapse;border:0px solid #000;width:100%;">
-					<tbody>
-						<tr>
-							<td style="font-family: \'Helvetica\', Arial, sans-serif; color: #73747C; padding: 0; text-align: left;" width="50%">
-								<hr style="margin-top: 10px; height: 1px; overflow: hidden; border: 0; border-bottom: 1px solid #e9e9e9;">
-							</td>
-							<td style="font-family: \'Helvetica\', Arial, sans-serif; color: #73747C; padding: 0; text-align: left;" width="175">
-								<a class="button orange nowrap" href="' . $this->getServerPath(true) . '?invite=' . $email['inviteCode'] . '" rel="noopener noreferrer" style="text-decoration:none;color:#ffffff;white-space:nowrap;display:inline-block;padding:6px 15px 6px 15px;font-size:16px;border-radius:3px;background-color:#E74D39;margin:0 15px;">Use Invite Code</a>
-							</td>
-							<td style="font-family: \'Helvetica\', Arial, sans-serif; color: #73747C; padding: 0; text-align: left;" width="50%">
-								<hr style="margin-top: 10px; height: 1px; overflow: hidden; border: 0; border-bottom: 1px solid #e9e9e9;">
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</td>
-		</tr>
-        ';
-		break;
 	case 'reset':
 		$button = '
 		<tr>

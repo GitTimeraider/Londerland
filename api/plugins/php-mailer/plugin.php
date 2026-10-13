@@ -71,7 +71,6 @@ class PhpMailer extends Londerland
 			'{user}' => $emailTemplate['user'],
 			'{domain}' => $this->getServerPath(true),
 			'{password}' => $emailTemplate['password'],
-			'{inviteCode}' => $emailTemplate['inviteCode'],
 			'{fullDomain}' => $this->getServerPath(true),
 			'{title}' => $this->config['title'],
 		];
@@ -87,9 +86,6 @@ class PhpMailer extends Londerland
 		$body = (isset($email['body'])) ? $email['body'] : 'Message Error Occurred';
 		$type = (isset($email['type'])) ? $email['type'] : 'No Type';
 		switch ($type) {
-			case 'invite':
-				$extra = 'invite';
-				break;
 			case 'reset':
 				$extra = 'reset';
 				break;
@@ -110,7 +106,6 @@ class PhpMailer extends Londerland
 				'subject' => $array['subject'],
 				'user' => null,
 				'password' => null,
-				'inviteCode' => null,
 			);
 			$emailTemplate = $this->_phpMailerPluginEmailTemplate($emailTemplate);
 			$sendEmail = array(
@@ -148,7 +143,6 @@ class PhpMailer extends Londerland
 			'subject' => 'Test E-Mail',
 			'user' => null,
 			'password' => null,
-			'inviteCode' => null,
 		);
 		$emailTemplate = $this->_phpMailerPluginEmailTemplate($emailTemplate);
 		$this->config['phpmOriginalDebug'] = '|||DEBUG|||';
@@ -424,25 +418,6 @@ class PhpMailer extends Londerland
 									'name' => 'PHPMAILER-emailTemplateReset',
 									'smallLabel' => 'Body',
 									'value' => $this->config['PHPMAILER-emailTemplateReset'],
-									'attr' => 'rows="10"',
-								]
-							]
-						],
-						[
-							'id' => 'PHPMAILER-emailTemplateInviteUserForm',
-							'header' => 'Invite User',
-							'body' => [
-								[
-									'type' => 'input',
-									'name' => 'PHPMAILER-emailTemplateInviteUserSubject',
-									'smallLabel' => 'Subject',
-									'value' => $this->config['PHPMAILER-emailTemplateInviteUserSubject'],
-								],
-								[
-									'type' => 'textbox',
-									'name' => 'PHPMAILER-emailTemplateInviteUser',
-									'smallLabel' => 'Body',
-									'value' => $this->config['PHPMAILER-emailTemplateInviteUser'],
 									'attr' => 'rows="10"',
 								]
 							]

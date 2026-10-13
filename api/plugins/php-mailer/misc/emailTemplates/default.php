@@ -1,26 +1,5 @@
 <?php
 switch ($extra) {
-	case 'invite':
-		$button = '
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnButtonBlock" style="min-width:100%;">
-            <tbody class="mcnButtonBlockOuter">
-                <tr>
-                    <td style="padding-top:0; padding-right:18px; padding-bottom:18px; padding-left:18px;" valign="top" align="center" class="mcnButtonBlockInner">
-                        <table border="0" cellpadding="0" cellspacing="0" class="mcnButtonContentContainer" style="border-collapse: separate !important;border-radius: 10px;background-color: #AD80FD;">
-                            <tbody>
-                                <tr>
-                                    <td align="center" valign="middle" class="mcnButtonContent" style="font-family: Helvetica; font-size: 18px; padding: 18px;">
-                                        <a class="mcnButton " title="Button Text" href="' . $this->getServerPath(true) . '?invite=' . $email['inviteCode'] . '" target="_self" style="font-weight: bold;letter-spacing: -0.5px;line-height: 100%;text-align: center;text-decoration: none;color: #FFFFFF;">Use Invite Code</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        ';
-		break;
 	case 'reset':
 		$button = '
         <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnButtonBlock" style="min-width:100%;">

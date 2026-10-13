@@ -1,12 +1,5 @@
 <?php
 switch ($extra) {
-	case 'invite':
-		$button = '
-		<center>
-			<a href="' . $this->getServerPath(true) . '?invite=' . $email['inviteCode'] . '" style="display: inline-block; padding: 11px 30px; margin: 20px 0px 30px; font-size: 15px; color: #fff; background: #1e88e5; border-radius: 60px; text-decoration:none;">Use Invite Code</a>
-		</center>
-        ';
-		break;
 	case 'reset':
 		$button = '
 		<center>

@@ -139,6 +139,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.4';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -494,6 +502,9 @@ trait UpgradeFunctions
 			case '2.2.3':
 				$this->removeHomepage();
 				break;
+			case '2.2.4':
+				$this->removeRetiredPlugins();
+				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
 		$this->setAPIResponse('success', 'Ran update function for version: ' . $version, 200);
@@ -520,6 +531,19 @@ trait UpgradeFunctions
 			$this->removeConfigItem(array_values($remove));
 		}
 		$this->setLoggerChannel('Upgrade')->info('Removed the Homepage tab and ' . count($remove) . ' homepage settings');
+	}
+
+	// The Chat, Health Checks, Invites, Shuck Stop and Speed Test plugins were removed: drop their settings from
+	// config.php (kept under deletedConfigItems like other upgrades). Their database tables (chatroom, invites) stay.
+	public function removeRetiredPlugins()
+	{
+		$remove = array_filter(array_keys($this->config), function ($key) {
+			return preg_match('/^(CHAT|HEALTHCHECKS|INVITES|SHUCKSTOP|SPEEDTEST)-|^healthChecks|^PHPMAILER-emailTemplateInviteUser/', $key);
+		});
+		if ($remove) {
+			$this->removeConfigItem(array_values($remove));
+		}
+		$this->setLoggerChannel('Upgrade')->info('Removed ' . count($remove) . ' settings of the removed Chat, Health Checks, Invites, Shuck Stop and Speed Test plugins');
 	}
 
 	public function removeOIDCFromAuthService()

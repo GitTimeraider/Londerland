@@ -146,7 +146,7 @@ trait LonderlandFunctions
 		//$correct stores the template users object
 		$correct = null;
 		foreach ($response as $element) {
-			if ($element['Name'] == $this->config['INVITES-EmbyTemplate']) {
+			if ($element['Name'] == ($this->config['INVITES-EmbyTemplate'] ?? '')) {
 				$correct = $element;
 			}
 		}

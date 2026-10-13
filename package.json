@@ -29,7 +29,6 @@
     "moment": "^2.31.0",
     "moment-timezone": "^0.6.5",
     "overlayscrollbars": "^2.16.0",
-    "pusher-js": "^8.6.0",
     "rapidoc": "^10.1.0",
     "simple-line-icons": "^2.5.5",
     "sortablejs": "^1.15.7",

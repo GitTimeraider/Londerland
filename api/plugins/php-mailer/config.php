@@ -19,12 +19,6 @@ return array(
 	If you want to change it once you log in, you can.  Head over to my website: {domain}<br />
 	',
 	'PHPMAILER-emailTemplateResetSubject' => 'Password Reset',
-	'PHPMAILER-emailTemplateInviteUser' => '
-	<h2>Hey there {user}!</h2><br />
-	Here is the invite code to join my cool media server: {inviteCode}<br/>
-	Head over to my website and enter the code to join: {domain}<br />
-	',
-	'PHPMAILER-emailTemplateInviteUserSubject' => 'You have been invited to join my server',
 	'PHPMAILER-emailTemplateRegisterUser' => '
 	<h2>Hey there {user}!</h2><br />
 	Welcome to my site.<br/>
