@@ -504,15 +504,14 @@ function logout() {
       LonderlandApiError(xhr, "Logout Failed");
     });
 }
-function hideFrames(split = null) {
-  let extra = split ? "-right" : "";
-  $(".iFrame-listing" + extra + " div[class^='frame-container']")
+function hideFrames() {
+  $(".iFrame-listing div[class^='frame-container']")
     .addClass("hidden")
     .removeClass("show");
-  $(".internal-listing" + extra + " div[class^='internal-container']")
+  $(".internal-listing div[class^='internal-container']")
     .addClass("hidden")
     .removeClass("show");
-  $(".plugin-listing" + extra + " div[class^='plugin-container']")
+  $(".plugin-listing div[class^='plugin-container']")
     .addClass("hidden")
     .removeClass("show");
 }
@@ -522,55 +521,46 @@ function closeSideMenu() {
 function removeMenuActive() {
   $("#side-menu a").removeClass("active");
 }
-function swapDisplay(type, split) {
-  let extra = split ? "-right" : "";
+function swapDisplay(type) {
   switch (type) {
     case "internal":
       $("body").removeClass("fix-header");
-      $(".iFrame-listing" + extra)
+      $(".iFrame-listing")
         .addClass("hidden")
         .removeClass("show");
-      $(".internal-listing" + extra)
+      $(".internal-listing")
         .addClass("show")
         .removeClass("hidden");
       $(".login-area").addClass("hidden").removeClass("show");
-      $(".plugin-listing" + extra)
+      $(".plugin-listing")
         .addClass("hidden")
         .removeClass("show");
       //$('body').removeClass('fix-header');
-      if (split) {
-        $("#page-wrapper").addClass("split");
-        $("#page-wrapper-right").removeClass("hidden");
-      }
       break;
     case "iframe":
       $("body").addClass("fix-header");
-      $(".iFrame-listing" + extra)
+      $(".iFrame-listing")
         .addClass("show")
         .removeClass("hidden");
-      $(".internal-listing" + extra)
+      $(".internal-listing")
         .addClass("hidden")
         .removeClass("show");
       $(".login-area").addClass("hidden").removeClass("show");
-      $(".plugin-listing" + extra)
+      $(".plugin-listing")
         .addClass("hidden")
         .removeClass("show");
       //$('body').addClass('fix-header');
-      if (split) {
-        $("#page-wrapper").addClass("split");
-        $("#page-wrapper-right").removeClass("hidden");
-      }
       break;
     case "login":
       $("body").removeClass("fix-header");
-      $(".iFrame-listing" + extra)
+      $(".iFrame-listing")
         .addClass("hidden")
         .removeClass("show");
-      $(".internal-listing" + extra)
+      $(".internal-listing")
         .addClass("hidden")
         .removeClass("show");
       $(".login-area").addClass("show").removeClass("hidden");
-      $(".plugin-listing" + extra)
+      $(".plugin-listing")
         .addClass("hidden")
         .removeClass("show");
       if (activeInfo.settings.misc.minimalLoginScreen == true) {
@@ -578,26 +568,18 @@ function swapDisplay(type, split) {
         $(".navbar").addClass("hidden");
         $("#page-wrapper").addClass("hidden");
       }
-      if (split) {
-        $("#page-wrapper").addClass("split");
-        $("#page-wrapper-right").removeClass("hidden");
-      }
       break;
     case "plugin":
-      $(".iFrame-listing" + extra)
+      $(".iFrame-listing")
         .addClass("hidden")
         .removeClass("show");
-      $(".internal-listing" + extra)
+      $(".internal-listing")
         .addClass("hidden")
         .removeClass("show");
       $(".login-area").addClass("hidden").removeClass("show");
-      $(".plugin-listing" + extra)
+      $(".plugin-listing")
         .addClass("show")
         .removeClass("hidden");
-      if (split) {
-        $("#page-wrapper").addClass("split");
-        $("#page-wrapper-right").removeClass("hidden");
-      }
       break;
     default:
   }
@@ -647,7 +629,7 @@ function switchToPlugin(plugin) {
     .addClass("show")
     .removeClass("hidden");
 }
-function switchTab(id, split = null) {
+function switchTab(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
     londerlandConsole("Switch Tab", "No Tab Info Found... Id: " + id, "error");
@@ -658,11 +640,9 @@ function switchTab(id, split = null) {
       toggleSideMenu();
     }
   }
-  let extra = split ? "right-" : "";
   let type = tabInfo.type;
-  // need to rework for split
   if (type !== 2) {
-    hideFrames(split);
+    hideFrames();
     closeSideMenu();
     removeMenuActive();
     toggleParentActive(id);
@@ -675,8 +655,8 @@ function switchTab(id, split = null) {
     case 0:
     case "0":
     case "internal":
-      swapDisplay("internal", split);
-      var newTab = $("#internal-" + extra + id);
+      swapDisplay("internal");
+      var newTab = $("#internal-" + id);
       $("#menu-" + id)
         .find("a")
         .addClass("active");
@@ -692,7 +672,7 @@ function switchTab(id, split = null) {
           .children()
           .addClass("tabLoaded");
         newTab.addClass("show loaded").removeClass("hidden");
-        loadInternal(id, split);
+        loadInternal(id);
         setTabInfo(id, "active", true);
         setTabInfo(id, "loaded", true);
         //$("#preloader").fadeOut();
@@ -701,8 +681,8 @@ function switchTab(id, split = null) {
     case 1:
     case "1":
     case "iframe":
-      swapDisplay("iframe", split);
-      var newTab = $("#container-" + extra + id);
+      swapDisplay("iframe");
+      var newTab = $("#container-" + id);
       var tabURL = newTab.attr("data-url");
       $("#menu-" + id)
         .find("a")
@@ -719,7 +699,7 @@ function switchTab(id, split = null) {
           .children()
           .addClass("tabLoaded");
         newTab.addClass("show loaded").removeClass("hidden");
-        $(buildFrame(id, extra)).appendTo(newTab);
+        $(buildFrame(id)).appendTo(newTab);
         setTabInfo(id, "active", true);
         setTabInfo(id, "loaded", true);
         $("#preloader").fadeOut();
@@ -744,6 +724,129 @@ function switchTab(id, split = null) {
       londerlandConsole("Tab Function", "Action not set", "error");
   }
 }
+/*
+ * Split view: Ctrl+Alt+click a website tab to show it next to the open tab. The right pane has its own bar
+ * (reload, open in a new browser tab, show in the main view, close) and a divider to drag it wider or narrower.
+ * Londerland's own pages are not offered there: they use fixed element IDs and can only be open once.
+ */
+const splitView = { id: null, ratio: 0.5 };
+function openSplitTab(id) {
+  const tabInfo = findTab(id);
+  if (!tabInfo) {
+    londerlandConsole("Split View", "No Tab Info Found... Id: " + id, "error");
+    return false;
+  }
+  if (!isIframeTab(tabInfo)) {
+    splitViewNotice("Only website tabs can be opened in split view");
+    return false;
+  }
+  if (window.innerWidth < 768) {
+    splitViewNotice("Split view needs a wider screen");
+    return false;
+  }
+  try {
+    const saved = parseFloat(localStorage.getItem("londerland-split-ratio"));
+    if (saved >= 0.2 && saved <= 0.8) {
+      splitView.ratio = saved;
+    }
+  } catch (e) {
+    // only a convenience
+  }
+  splitView.id = tabInfo.id;
+  const $pane = $("#split-pane");
+  $pane.find(".split-pane-title").text(tabInfo.name).attr("title", tabInfo.name);
+  $pane.find(".split-pane-icon").html(iconPrefix(tabInfo.image));
+  $pane
+    .find(".split-pane-body")
+    .html(buildFrame(tabInfo.id).replace(`id="frame-${tabInfo.id}"`, `id="split-frame-${tabInfo.id}"`));
+  // same colours as the main view and the top bar of the chosen theme
+  const page = document.getElementById("page-wrapper");
+  const bar = document.querySelector(".navbar-header");
+  const link = document.querySelector(".navbar-top-links > li > a");
+  $pane.css("background-color", page ? getComputedStyle(page).backgroundColor : "");
+  $pane.find(".split-pane-bar").css({
+    "background-color": bar ? getComputedStyle(bar).backgroundColor : "",
+    color: link ? getComputedStyle(link).color : "",
+  });
+  $pane.removeClass("hidden");
+  $("body").addClass("split-view");
+  layoutSplitView();
+  closeSideMenu();
+}
+function closeSplitTab() {
+  splitView.id = null;
+  $("#split-pane").addClass("hidden").find(".split-pane-body").empty();
+  $("body").removeClass("split-view");
+}
+function reloadSplitTab() {
+  const frame = $("#split-pane iframe");
+  frame.attr("src", frame.attr("src"));
+}
+function openSplitTabInNewBrowserTab() {
+  const tabInfo = findTab(splitView.id);
+  if (tabInfo) {
+    window.open(tabInfo.access_url, "_blank", "noopener");
+  }
+}
+// The tab takes over the main view and the split closes
+function moveSplitTabToMain() {
+  const id = splitView.id;
+  closeSplitTab();
+  if (id !== null) {
+    switchTab(id);
+  }
+}
+function splitViewNotice(text) {
+  messageSingle(window.lang.translate(text), "", activeInfo.settings.notifications.position, "#FFF", "warning", "5000");
+}
+// Width of the right pane in pixels, from the share of the space next to the side menu
+function layoutSplitView() {
+  if (splitView.id === null) {
+    return;
+  }
+  const left = $("#page-wrapper").hasClass("sidebar-hidden") || window.innerWidth < 768 ? 0 : 60;
+  const width = Math.round((window.innerWidth - left) * splitView.ratio);
+  document.body.style.setProperty("--split-left", left + "px");
+  document.body.style.setProperty("--split-width", width + "px");
+}
+$(window).on("resize", layoutSplitView);
+$(document).on("pointerdown", ".split-divider", function (e) {
+  e.preventDefault();
+  const divider = this;
+  divider.setPointerCapture(e.pointerId);
+  // iframes swallow the mouse while it is over them, so they ignore it during the drag
+  $("body").addClass("split-dragging");
+  const left = $("#page-wrapper").hasClass("sidebar-hidden") ? 0 : 60;
+  const move = function (event) {
+    const ratio = (window.innerWidth - event.clientX) / (window.innerWidth - left);
+    splitView.ratio = Math.min(0.8, Math.max(0.2, ratio));
+    layoutSplitView();
+  };
+  const stop = function () {
+    $("body").removeClass("split-dragging");
+    divider.removeEventListener("pointermove", move);
+    divider.removeEventListener("pointerup", stop);
+    divider.removeEventListener("pointercancel", stop);
+    try {
+      localStorage.setItem("londerland-split-ratio", String(splitView.ratio));
+    } catch (e) {
+      // only a convenience
+    }
+  };
+  divider.addEventListener("pointermove", move);
+  divider.addEventListener("pointerup", stop);
+  divider.addEventListener("pointercancel", stop);
+});
+// Double-click the divider: back to half and half
+$(document).on("dblclick", ".split-divider", function () {
+  splitView.ratio = 0.5;
+  layoutSplitView();
+  try {
+    localStorage.removeItem("londerland-split-ratio");
+  } catch (e) {
+    // only a convenience
+  }
+});
 function popTab(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
@@ -963,16 +1066,8 @@ function loadNextTab(loadNextTabIfNotLoaded = false) {
   }
 }
 function closeCurrentTab(event) {
-  let extra = "";
-  let split = "";
-  if (typeof event !== "undefined") {
-    if (event.ctrlKey && event.altKey && !event.shiftKey) {
-      extra = "-right";
-      split = true;
-    }
-  }
   if ($(".plugin-listing").hasClass("show")) {
-    hideFrames(split);
+    hideFrames();
     loadNextTab();
     return false;
   }
@@ -986,8 +1081,8 @@ function closeCurrentTab(event) {
     );
     return false;
   }
-  var iframe = $(".iFrame-listing" + extra).find(".show");
-  var internal = $(".internal-listing" + extra).find(".show");
+  var iframe = $(".iFrame-listing").find(".show");
+  var internal = $(".internal-listing").find(".show");
   if (iframe.length > 0) {
     var type = "iframe";
   } else if (internal.length > 0) {
@@ -1000,12 +1095,12 @@ function closeCurrentTab(event) {
     case "0":
     case "internal":
       londerlandConsole("Londerland Function", "Closing tab: " + tabInfo.name);
-      $("#internal" + extra + "-" + id).html("");
+      $("#internal-" + id).html("");
       $("#menu-" + id + " a").removeClass("active");
       $("#menu-" + id + " a")
         .children()
         .removeClass("tabLoaded");
-      $("#internal" + extra + "-" + id).removeClass("loaded show");
+      $("#internal-" + id).removeClass("loaded show");
       $("#menu-" + id).removeClass("active");
       setTabInfo(id, "loaded", false);
       setTabInfo(id, "active", false);
@@ -1019,10 +1114,10 @@ function closeCurrentTab(event) {
       $("#menu-" + id + " a")
         .children()
         .removeClass("tabLoaded");
-      $("#container" + extra + "-" + id)
+      $("#container-" + id)
         .removeClass("loaded show")
         .addClass("hidden");
-      $("#frame" + extra + "-" + id).remove();
+      $("#frame-" + id).remove();
       setTabInfo(id, "loaded", false);
       setTabInfo(id, "active", false);
       loadNextTab();
@@ -1082,8 +1177,7 @@ function tabActions(event, id, redirectURL = "") {
   } else if (event.ctrlKey && event.shiftKey && !event.altKey) {
     londerlandConsole("Tab Function", "Action not defined yet", "info");
   } else if (event.ctrlKey && event.altKey && !event.shiftKey) {
-    londerlandConsole("Tab Function", "Action not defined yet", "info");
-    switchTab(id, true);
+    openSplitTab(id);
   } else if (event.shiftKey && event.altKey && !event.ctrlKey) {
     londerlandConsole("Tab Function", "Action not defined yet", "info");
   } else {
@@ -2758,8 +2852,7 @@ function categoryProcess(arrayItems) {
     $(menuList).appendTo($("#side-menu"));
   }
 }
-function buildFrame(id, split = null) {
-  let extra = split ? "right-" : "";
+function buildFrame(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
     londerlandConsole("Build Frame", "No Tab Info Found... Id: " + id, "error");
@@ -2776,7 +2869,6 @@ function buildFrame(id, split = null) {
 		<iframe ` +
     allow +
     ` frameborder="0" id="frame-` +
-    extra +
     id +
     `" ` +
     sandbox +
@@ -2786,20 +2878,16 @@ function buildFrame(id, split = null) {
 	`
   );
 }
-function buildFrameContainer(id, split = null) {
-  let extra = split ? "right-" : "";
+function buildFrameContainer(id) {
   return (
     `<div id="container-` +
-    extra +
     id +
     `" class="frame-container frame-${id} hidden" ></div>`
   );
 }
-function buildInternalContainer(id, split = null) {
-  let extra = split ? "right-" : "";
+function buildInternalContainer(id) {
   return (
     `<div id="internal-` +
-    extra +
     id +
     `" class="internal-container frame-${id} hidden"></div>`
   );
@@ -2899,8 +2987,6 @@ function tabProcess(arrayItems) {
           case "internal":
             internalList = buildInternalContainer(v.id);
             $(internalList).appendTo($(".internal-listing"));
-            internalList = buildInternalContainer(v.id, true);
-            $(internalList).appendTo($(".internal-listing-right"));
             if (v.preload) {
               var newTab = $("#internal-" + v.id);
               londerlandConsole(
@@ -2926,8 +3012,6 @@ function tabProcess(arrayItems) {
               iFrameList = buildFrameContainer(v.id);
               $(iFrameList).appendTo($(".iFrame-listing"));
             }
-            iFrameList = buildFrameContainer(v.id, true);
-            $(iFrameList).appendTo($(".iFrame-listing-right"));
             if (v.preload && !$("#container-" + v.id).hasClass("loaded")) {
               var newTab = $("#container-" + v.id);
               londerlandConsole(
@@ -4034,8 +4118,7 @@ function loadSettingsPage2(api, element, londerlandFn) {
       LonderlandApiError(xhr);
     });
 }
-function loadInternal(id, split = null) {
-  let extra = split ? "right-" : "";
+function loadInternal(id) {
   let tabInfo = findTab(id);
   if (!tabInfo) {
     londerlandConsole("Load Internal", "No Tab Info Found... Id: " + id, "error");
@@ -4046,7 +4129,7 @@ function loadInternal(id, split = null) {
     .done(function (data) {
       try {
         var html = data.response;
-        $("#internal-" + extra + id).html(html.data);
+        $("#internal-" + id).html(html.data);
       } catch (e) {
         londerlandCatchError(e, data);
       }
@@ -6459,6 +6542,7 @@ function toggleSideMenuClasses() {
   $("#page-wrapper").toggleClass("sidebar-hidden");
   $(".sidebar").toggleClass("sidebar-hidden");
   $(".navbar").toggleClass("sidebar-hidden");
+  layoutSplitView();
 }
 function sideMenuCollapsed() {
   if (activeInfo.settings.misc.sideMenuCollapsed) {

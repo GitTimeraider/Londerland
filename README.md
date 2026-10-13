@@ -14,7 +14,8 @@ website, not like a wall of server tiles.
 - **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
   and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
 - **Pages, not just links.** Every tab shows a web page inside the site, or opens it in a new window, and each group
-  can have its own start tab.
+  can have its own start tab. Ctrl+Alt+click a website tab in the side menu to show it next to the open tab
+  (split view), with its own reload, new browser tab, main view and close buttons and a divider to resize it.
 - **Members and groups.** Every tab is shown only to the groups you choose.
 - **AI Chat** for logged in members, with any OpenAI-compatible server.
 

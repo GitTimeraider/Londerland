@@ -161,11 +161,18 @@ $Londerland = new Londerland(true);
          start tab's iframe, because setting them up later moves the iframe, and a moved iframe loads its site a second time -->
     <script src="assets/vendor/overlayscrollbars/overlayscrollbars.browser.es6.min.js?v=<?php echo $Londerland->fileHash; ?>" defer></script>
 	<?php echo $Londerland->startTabFrame(); ?>
-    <div class="splitRight hidden" id="page-wrapper-right">
-        <div class="londerland-area-right"></div>
-        <div class="plugin-listing-right p-0 hidden"></div>
-        <div class="internal-listing-right p-0 hidden"></div>
-        <div class="iFrame-listing-right p-0 hidden"></div>
+    <!-- Split view (Ctrl+Alt+click a website tab): a second website next to the open tab, with its own bar -->
+    <div class="split-pane hidden" id="split-pane">
+        <div class="split-divider" title="Drag to resize, double-click for half and half" role="separator" aria-orientation="vertical"></div>
+        <div class="split-pane-bar">
+            <span class="split-pane-icon"></span>
+            <span class="split-pane-title elip"></span>
+            <a class="split-pane-btn waves-effect" href="javascript:void(0)" onclick="reloadSplitTab();" title="Reload"><i class="ti-reload"></i></a>
+            <a class="split-pane-btn waves-effect" href="javascript:void(0)" onclick="openSplitTabInNewBrowserTab();" title="Open in a new browser tab"><i class="ti-new-window"></i></a>
+            <a class="split-pane-btn waves-effect" href="javascript:void(0)" onclick="moveSplitTabToMain();" title="Show in the main view"><i class="fa fa-arrow-left"></i></a>
+            <a class="split-pane-btn waves-effect" href="javascript:void(0)" onclick="closeSplitTab();" title="Close split view"><i class="ti-close"></i></a>
+        </div>
+        <div class="split-pane-body"></div>
     </div>
     <!-- help modal content -->
     <div class="modal fade help-modal-lg" tabindex="-1" role="dialog" aria-labelledby="help-modal-lg" aria-hidden="true"
