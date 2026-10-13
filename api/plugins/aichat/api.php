@@ -138,6 +138,35 @@ $app->delete('/plugins/aichat/chats/{id}', function ($request, $response, $args)
 	}
 	return aiChatJsonResponse($response);
 });
+$app->get('/plugins/aichat/folders', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		$GLOBALS['api']['response']['data'] = $AiChat->_aiChatListFolders();
+	}
+	return aiChatJsonResponse($response);
+});
+$app->post('/plugins/aichat/folders', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		$AiChat->_aiChatCreateFolder($AiChat->apiData($request) ?? []);
+	}
+	return aiChatJsonResponse($response);
+});
+$app->put('/plugins/aichat/folders/{id}', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		$AiChat->_aiChatUpdateFolder($args['id'], $AiChat->apiData($request) ?? []);
+	}
+	return aiChatJsonResponse($response);
+});
+// Deleting a folder keeps its chats; they move back to the main list
+$app->delete('/plugins/aichat/folders/{id}', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		$AiChat->_aiChatDeleteFolder($args['id']);
+	}
+	return aiChatJsonResponse($response);
+});
 // Streams the answer as server-sent events; only falls back to JSON when the request is refused
 $app->post('/plugins/aichat/chats/{id}/stream', function ($request, $response, $args) {
 	$AiChat = new AiChat();

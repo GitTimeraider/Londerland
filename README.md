@@ -14,7 +14,8 @@ website, not like a wall of server tiles.
 - **Your site, your style.** Set the page title and description that browsers and search engines show, your logo
   and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
 - **Pages, not just links.** Every tab shows a web page inside the site, or opens it in a new window, and each group
-  can have its own start tab.
+  can have its own start tab. Ctrl+Alt+click a website tab in the side menu to show it next to the open tab
+  (split view), with its own reload, new browser tab, main view and close buttons and a divider to resize it.
 - **Members and groups.** Every tab is shown only to the groups you choose.
 - **AI Chat** for logged in members, with any OpenAI-compatible server.
 
@@ -270,6 +271,8 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
    - **Connection:** the API Base URL up to and including `/v1` (for example `https://api.openai.com/v1`, `https://api.anthropic.com/v1/` or `http://ollama:11434/v1`) and the API key (leave it empty for servers without one).
    - **Models:** the default model, and optionally which models users may pick (`*` works as a wildcard) or extra model IDs the server does not list.
    - **Chat:** the minimum group that gets the chat (guests never do), a system prompt, temperature, answer length and how many earlier messages are sent along.
+     **Delete Chats After** removes chats nobody wrote in for that many days (0 = never). Users can mark a chat as **Keep** to save it permanently.
+     The check runs every hour through `cron.php` (the Docker image runs it by itself) and whenever a user opens the chat list.
    - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search by themselves.
    - **Images (optional):** turn on image generation through an OpenAI-compatible `/images/generations` endpoint (for example `https://api.openai.com/v1` with `gpt-image-1`). Leave URL and key empty to use the chat server. Claude cannot create images, so use a different server here when chatting with Claude. Optionally let tool-calling models create images by themselves.
    - **Uploads:** whether users may add images and files, and the size limit.
@@ -283,6 +286,8 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - A model picker per chat, and a star to make the current model your default.
 - Image uploads for vision models, plus text, code and PDF files, which are sent as text. Attach files with the paperclip button, by dragging them into the chat, or by pasting.
 - Chat history with search, pin, rename, export (Markdown or JSON), delete and delete all.
+- Folders in the chat history: create, rename and delete them (their chats stay), and move chats in with drag and drop or **Move to folder**.
+- **Keep permanently** per chat when the admin set a retention period. A chat moved into a folder is kept automatically.
 - Editing a question, answering again, and copying.
 - Personal instructions sent with every chat.
 - Usage limits of the OmniRoute connections under **Settings**, with a bar per limit and when it resets (if the admin turned this on).

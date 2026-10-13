@@ -9,7 +9,9 @@
 	const VENDOR = 'assets/vendor/';
 	const state = {
 		chats: [],
-		chat: null, // { id, title, model, pinned, messages: [] }
+		chat: null, // { id, title, model, pinned, keep, folder_id, messages: [] }
+		folders: [], // { id, name }
+		collapsed: {}, // folder id => true while the folder is closed in the sidebar
 		models: [],
 		defaultModel: null,
 		prefs: { default_model: null, system_prompt: '', send_on_enter: true, web_tools: true },
@@ -333,6 +335,37 @@
 		root.setProperty('--aichat-user-text', lum > 0.6 ? '#1d1f26' : '#fff');
 	}
 
+	// Days without activity after which a chat that is not kept is deleted; 0 = never
+	function retentionDays() {
+		return Math.max(0, parseInt(activeInfo.plugins.includes['AICHAT-retentionDays-include'], 10) || 0);
+	}
+
+	// When the server will delete the chat, or null when it stays
+	function expiresAt(chat) {
+		const days = retentionDays();
+		const updated = new Date(chat.updated);
+		if (!days || chat.keep || isNaN(updated)) {
+			return null;
+		}
+		return new Date(updated.getTime() + days * 86400000);
+	}
+
+	function loadCollapsed() {
+		try {
+			state.collapsed = JSON.parse(localStorage.getItem('aichat-collapsed-folders') || '{}') || {};
+		} catch (e) {
+			state.collapsed = {};
+		}
+	}
+
+	function saveCollapsed() {
+		try {
+			localStorage.setItem('aichat-collapsed-folders', JSON.stringify(state.collapsed));
+		} catch (e) {
+			// only a convenience
+		}
+	}
+
 	// Name and colour of the chat button come from the plugin settings
 	function styleLauncher() {
 		const includes = activeInfo.plugins.includes;
@@ -370,9 +403,11 @@
 				<aside class="aichat-sidebar">
 					<div class="aichat-sidebar-head">
 						<button type="button" class="btn btn-info btn-sm aichat-new"><i class="fa fa-plus me-1"></i> <span>${escapeHtml(t('New chat'))}</span></button>
+						<button type="button" class="aichat-icon-btn aichat-new-folder" title="${escapeHtml(t('New folder'))}"><i class="fa fa-folder-o"></i><i class="fa fa-plus aichat-new-folder-plus"></i></button>
 					</div>
 					<input type="search" class="form-control form-control-sm aichat-search" placeholder="${escapeHtml(t('Search chats'))}">
 					<ul class="aichat-chat-list" role="list"></ul>
+					${retentionDays() ? `<div class="aichat-retention-note"><i class="fa fa-clock-o me-1"></i>${escapeHtml(t('Chats without activity are deleted after'))} ${retentionDays()} ${escapeHtml(t('days, unless you keep them.'))}</div>` : ''}
 					<div class="aichat-sidebar-foot">
 						<button type="button" class="aichat-icon-btn aichat-open-settings" title="${escapeHtml(t('Chat settings'))}"><i class="fa fa-sliders"></i>&nbsp;<span>${escapeHtml(t('Settings'))}</span></button>
 						<button type="button" class="aichat-icon-btn aichat-delete-all" title="${escapeHtml(t('Delete all chats'))}"><i class="fa fa-trash"></i></button>
@@ -391,6 +426,8 @@
 							<ul class="dropdown-menu dropdown-menu-end">
 								<li><a class="dropdown-item aichat-rename" href="#"><i class="fa fa-pencil fa-fw me-2"></i>${escapeHtml(t('Rename'))}</a></li>
 								<li><a class="dropdown-item aichat-pin" href="#"><i class="fa fa-thumb-tack fa-fw me-2"></i><span>${escapeHtml(t('Pin'))}</span></a></li>
+								${retentionDays() ? `<li><a class="dropdown-item aichat-keep" href="#"><i class="fa fa-bookmark-o fa-fw me-2"></i><span>${escapeHtml(t('Keep permanently'))}</span></a></li>` : ''}
+								<li><a class="dropdown-item aichat-move" href="#"><i class="fa fa-folder-o fa-fw me-2"></i>${escapeHtml(t('Move to folder'))}</a></li>
 								<li><a class="dropdown-item aichat-export-md" href="#"><i class="fa fa-file-text-o fa-fw me-2"></i>${escapeHtml(t('Export as Markdown'))}</a></li>
 								<li><a class="dropdown-item aichat-export-json" href="#"><i class="fa fa-file-code-o fa-fw me-2"></i>${escapeHtml(t('Export as JSON'))}</a></li>
 								<li><hr class="dropdown-divider"></li>
@@ -451,6 +488,7 @@
 			</section>
 		`);
 		$panel = $('.aichat-panel');
+		loadCollapsed();
 		bindEvents();
 	}
 
@@ -627,7 +665,9 @@
 
 	async function refreshChats() {
 		const path = 'chats' + (state.search ? '?search=' + encodeURIComponent(state.search) : '');
-		state.chats = (await api('GET', path)).data || [];
+		const [chats, folders] = await Promise.all([api('GET', path), api('GET', 'folders')]);
+		state.chats = chats.data || [];
+		state.folders = folders.data || [];
 		renderChatList();
 	}
 
@@ -654,31 +694,83 @@
 		return t('Older');
 	}
 
+	function chatItem(chat) {
+		const $item = $('<li class="aichat-chat-item" tabindex="0" role="button" draggable="true"></li>')
+			.attr('data-id', chat.id)
+			.toggleClass('active', !!(state.chat && state.chat.id === chat.id));
+		const expires = expiresAt(chat);
+		let tooltip = chat.title;
+		if (chat.keep && retentionDays()) {
+			tooltip += '\n' + t('Kept permanently');
+		} else if (expires) {
+			tooltip += '\n' + t('Deleted on') + ' ' + expires.toLocaleDateString() + ' ' + t('without new messages');
+		}
+		$item.append($('<span class="aichat-chat-title"></span>').text(chat.title).attr('title', tooltip));
+		if (chat.keep && retentionDays()) {
+			$item.append(`<i class="fa fa-bookmark aichat-chat-kept" title="${escapeHtml(t('Kept permanently'))}"></i>`);
+		} else if (expires && expires - Date.now() < 3 * 86400000) {
+			$item.append(`<i class="fa fa-hourglass-end aichat-chat-expiring" title="${escapeHtml(t('Deleted on') + ' ' + expires.toLocaleString())}"></i>`);
+		}
+		$item.append(
+			`<span class="aichat-chat-actions">
+				<button type="button" class="aichat-icon-btn aichat-item-pin" title="${escapeHtml(chat.pinned ? t('Unpin') : t('Pin'))}"><i class="fa fa-thumb-tack"></i></button>
+				${retentionDays() ? `<button type="button" class="aichat-icon-btn aichat-item-keep${chat.keep ? ' active' : ''}" title="${escapeHtml(chat.keep ? t('Stop keeping') : t('Keep permanently'))}"><i class="fa fa-bookmark${chat.keep ? '' : '-o'}"></i></button>` : ''}
+				<button type="button" class="aichat-icon-btn aichat-item-move" title="${escapeHtml(t('Move to folder'))}"><i class="fa fa-folder-o"></i></button>
+				<button type="button" class="aichat-icon-btn aichat-item-delete" title="${escapeHtml(t('Delete chat'))}"><i class="fa fa-trash"></i></button>
+			</span>`
+		);
+		return $item;
+	}
+
 	function renderChatList() {
 		const $list = $panel.find('.aichat-chat-list').empty();
+		// folders first (while searching only those with matches, opened), then the other chats by date
+		state.folders.forEach(function (folder) {
+			const chats = state.chats.filter((chat) => chat.folder_id === folder.id);
+			if (state.search && !chats.length) {
+				return;
+			}
+			const open = state.search || !state.collapsed[folder.id];
+			const $folder = $('<li class="aichat-folder"></li>').attr('data-folder', folder.id).toggleClass('open', !!open);
+			const $head = $('<div class="aichat-folder-head" tabindex="0" role="button"></div>').attr('aria-expanded', String(!!open));
+			$head.append(`<i class="fa fa-chevron-right aichat-folder-caret"></i><i class="fa ${open ? 'fa-folder-open-o' : 'fa-folder-o'}"></i>`);
+			$head.append($('<span class="aichat-folder-name"></span>').text(folder.name).attr('title', folder.name));
+			$head.append($('<span class="aichat-folder-count"></span>').text(chats.length));
+			$head.append(
+				`<span class="aichat-chat-actions">
+					<button type="button" class="aichat-icon-btn aichat-folder-rename" title="${escapeHtml(t('Rename folder'))}"><i class="fa fa-pencil"></i></button>
+					<button type="button" class="aichat-icon-btn aichat-folder-delete" title="${escapeHtml(t('Delete folder'))}"><i class="fa fa-trash"></i></button>
+				</span>`
+			);
+			const $children = $('<ul class="aichat-folder-chats" role="list"></ul>');
+			if (!chats.length) {
+				$children.append($('<li class="aichat-folder-empty"></li>').text(t('Drag chats here')));
+			}
+			chats.forEach((chat) => $children.append(chatItem(chat)));
+			$folder.append($head, $children);
+			$list.append($folder);
+		});
+		const loose = state.chats.filter((chat) => !chat.folder_id || !state.folders.some((folder) => folder.id === chat.folder_id));
 		if (!state.chats.length) {
 			$list.append($('<li class="aichat-empty-list"></li>').text(state.search ? t('No chats found') : t('No chats yet')));
 			return;
 		}
+		const $loose = $('<li class="aichat-loose" data-folder="0"></li>');
+		const $looseList = $('<ul class="aichat-loose-chats" role="list"></ul>');
 		let lastGroup = null;
-		state.chats.forEach(function (chat) {
+		loose.forEach(function (chat) {
 			const group = chatGroup(chat);
 			if (group !== lastGroup) {
-				$list.append($('<li class="aichat-group-label"></li>').text(group));
+				$looseList.append($('<li class="aichat-group-label"></li>').text(group));
 				lastGroup = group;
 			}
-			const $item = $('<li class="aichat-chat-item" tabindex="0" role="button"></li>')
-				.attr('data-id', chat.id)
-				.toggleClass('active', !!(state.chat && state.chat.id === chat.id));
-			$item.append($('<span class="aichat-chat-title"></span>').text(chat.title).attr('title', chat.title));
-			$item.append(
-				`<span class="aichat-chat-actions">
-					<button type="button" class="aichat-icon-btn aichat-item-pin" title="${escapeHtml(chat.pinned ? t('Unpin') : t('Pin'))}"><i class="fa fa-thumb-tack"></i></button>
-					<button type="button" class="aichat-icon-btn aichat-item-delete" title="${escapeHtml(t('Delete chat'))}"><i class="fa fa-trash"></i></button>
-				</span>`
-			);
-			$list.append($item);
+			$looseList.append(chatItem(chat));
 		});
+		if (state.folders.length && !loose.length && !state.search) {
+			$looseList.append($('<li class="aichat-folder-empty"></li>').text(t('Drag a chat here to take it out of its folder')));
+		}
+		$loose.append($looseList);
+		$list.append($loose);
 	}
 
 	/* ===================== messages ===================== */
@@ -690,6 +782,7 @@
 		setModel(preferredModel());
 		$panel.find('.aichat-title').text(t('New chat'));
 		$panel.find('.aichat-pin span').text(t('Pin'));
+		updateKeepLabel();
 		const suggestions = [t('Explain how Docker volumes work'), t('Write a short welcome text for my homelab'), t('Help me debug a bash script'), t('Summarize the file I upload')];
 		$panel.find('.aichat-messages').html(`
 			<div class="aichat-welcome">
@@ -716,6 +809,7 @@
 		setModel(state.chat.model);
 		$panel.find('.aichat-title').text(state.chat.title);
 		$panel.find('.aichat-pin span').text(state.chat.pinned ? t('Unpin') : t('Pin'));
+		updateKeepLabel();
 		renderMessages();
 		renderChatList();
 		if (window.innerWidth < 768) {
@@ -1296,6 +1390,165 @@
 		}
 	}
 
+	function updateKeepLabel() {
+		const keep = !!(state.chat && state.chat.keep);
+		$panel.find('.aichat-keep span').text(keep ? t('Stop keeping') : t('Keep permanently'));
+		$panel.find('.aichat-keep i').toggleClass('fa-bookmark', keep).toggleClass('fa-bookmark-o', !keep);
+	}
+
+	// Applies a saved chat (keep, folder) to the list and the open chat
+	function applyChatUpdate(updated) {
+		state.chats.forEach((c) => c.id === updated.id && Object.assign(c, { keep: updated.keep, folder_id: updated.folder_id }));
+		if (state.chat && state.chat.id === updated.id) {
+			Object.assign(state.chat, { keep: updated.keep, folder_id: updated.folder_id });
+			updateKeepLabel();
+		}
+		renderChatList();
+	}
+
+	async function toggleKeep(id) {
+		const chat = state.chats.find((c) => c.id === id) || state.chat;
+		if (!chat) {
+			return;
+		}
+		try {
+			const updated = (await api('PUT', 'chats/' + id, { keep: !chat.keep })).data;
+			applyChatUpdate(updated);
+			notify(updated.keep ? t('This chat is kept permanently') : t('This chat is deleted after') + ' ' + retentionDays() + ' ' + t('days without activity'), 'success');
+		} catch (error) {
+			notify(error.message);
+		}
+	}
+
+	async function moveChat(id, folderId) {
+		try {
+			applyChatUpdate((await api('PUT', 'chats/' + id, { folder_id: folderId || null })).data);
+		} catch (error) {
+			notify(error.message);
+		}
+	}
+
+	// Asks for the folder; "New folder..." creates one on the way
+	async function pickFolder(id) {
+		const chat = state.chats.find((c) => c.id === id) || state.chat;
+		if (!chat) {
+			return;
+		}
+		// a Map keeps the order (object keys that are numbers would be sorted by number)
+		const options = new Map([['0', t('No folder')]]);
+		state.folders.forEach((folder) => options.set(String(folder.id), folder.name));
+		options.set('new', t('New folder...'));
+		let choice;
+		if (window.Swal) {
+			const result = await Swal.fire({
+				title: t('Move to folder'),
+				input: 'select',
+				inputOptions: options,
+				inputValue: String(chat.folder_id || 0),
+				showCancelButton: true,
+				confirmButtonText: t('Move'),
+				cancelButtonText: t('Cancel'),
+				customClass: { popup: 'bg-org' },
+			});
+			if (!result.isConfirmed) {
+				return;
+			}
+			choice = result.value;
+		} else {
+			choice = window.prompt(t('Folder name (empty = no folder)'), '');
+			if (choice === null) {
+				return;
+			}
+			const existing = state.folders.find((folder) => folder.name === trim(choice));
+			choice = !trim(choice) ? '0' : existing ? String(existing.id) : 'new:' + trim(choice);
+		}
+		if (choice === 'new' || String(choice).startsWith('new:')) {
+			const folder = await createFolder(choice === 'new' ? null : choice.slice(4));
+			if (!folder) {
+				return;
+			}
+			choice = folder.id;
+		}
+		await moveChat(id, parseInt(choice, 10) || 0);
+	}
+
+	async function askFolderName(title, value) {
+		let name = value || '';
+		if (window.Swal) {
+			const result = await Swal.fire({
+				title: title,
+				input: 'text',
+				inputValue: name,
+				inputAttributes: { maxlength: 100 },
+				showCancelButton: true,
+				confirmButtonText: t('Save'),
+				cancelButtonText: t('Cancel'),
+				customClass: { popup: 'bg-org' },
+			});
+			if (!result.isConfirmed) {
+				return null;
+			}
+			name = result.value;
+		} else {
+			name = window.prompt(title, name);
+		}
+		return name && trim(name) ? trim(name) : null;
+	}
+
+	async function createFolder(name) {
+		name = name || (await askFolderName(t('New folder')));
+		if (!name) {
+			return null;
+		}
+		try {
+			const folder = (await api('POST', 'folders', { name: name })).data;
+			state.folders.push(folder);
+			state.folders.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+			renderChatList();
+			return folder;
+		} catch (error) {
+			notify(error.message);
+			return null;
+		}
+	}
+
+	async function renameFolder(id) {
+		const folder = state.folders.find((f) => f.id === id);
+		const name = folder ? await askFolderName(t('Rename folder'), folder.name) : null;
+		if (!name) {
+			return;
+		}
+		try {
+			folder.name = (await api('PUT', 'folders/' + id, { name: name })).data.name;
+			state.folders.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+			renderChatList();
+		} catch (error) {
+			notify(error.message);
+		}
+	}
+
+	async function deleteFolder(id) {
+		const folder = state.folders.find((f) => f.id === id);
+		if (!folder) {
+			return;
+		}
+		const ok = await confirmDialog(t('Delete folder?'), folder.name + ': ' + t('the chats in it are not deleted, they move back to the list.'), t('Delete'));
+		if (!ok) {
+			return;
+		}
+		try {
+			await api('DELETE', 'folders/' + id);
+			state.folders = state.folders.filter((f) => f.id !== id);
+			state.chats.forEach((c) => c.folder_id === id && (c.folder_id = null));
+			if (state.chat && state.chat.folder_id === id) {
+				state.chat.folder_id = null;
+			}
+			renderChatList();
+		} catch (error) {
+			notify(error.message);
+		}
+	}
+
 	async function deleteChat(id) {
 		const chat = state.chats.find((c) => c.id === id);
 		const ok = await confirmDialog(t('Delete chat?'), chat ? chat.title : '', t('Delete'));
@@ -1315,13 +1568,14 @@
 	}
 
 	async function deleteAll() {
-		const ok = await confirmDialog(t('Delete all chats?'), t('This removes your whole chat history and uploaded files.'), t('Delete all'));
+		const ok = await confirmDialog(t('Delete all chats?'), t('This removes your whole chat history, kept chats, folders and uploaded files.'), t('Delete all'));
 		if (!ok) {
 			return;
 		}
 		try {
 			await api('DELETE', 'chats');
 			state.chats = [];
+			state.folders = [];
 			showWelcome();
 		} catch (error) {
 			notify(error.message);
@@ -1533,6 +1787,70 @@
 		$panel.on('click', '.aichat-item-delete', function () {
 			deleteChat(parseInt($(this).closest('.aichat-chat-item').attr('data-id'), 10));
 		});
+		$panel.on('click', '.aichat-item-keep', function () {
+			toggleKeep(parseInt($(this).closest('.aichat-chat-item').attr('data-id'), 10));
+		});
+		$panel.on('click', '.aichat-item-move', function () {
+			pickFolder(parseInt($(this).closest('.aichat-chat-item').attr('data-id'), 10));
+		});
+		$panel.on('click', '.aichat-new-folder', function () {
+			createFolder();
+		});
+		$panel.on('click keydown', '.aichat-folder-head', function (e) {
+			if ((e.type === 'keydown' && e.key !== 'Enter') || $(e.target).closest('.aichat-chat-actions').length || state.search) {
+				return;
+			}
+			const id = parseInt($(this).closest('.aichat-folder').attr('data-folder'), 10);
+			if (state.collapsed[id]) {
+				delete state.collapsed[id];
+			} else {
+				state.collapsed[id] = true;
+			}
+			saveCollapsed();
+			renderChatList();
+		});
+		$panel.on('click', '.aichat-folder-rename', function () {
+			renameFolder(parseInt($(this).closest('.aichat-folder').attr('data-folder'), 10));
+		});
+		$panel.on('click', '.aichat-folder-delete', function () {
+			deleteFolder(parseInt($(this).closest('.aichat-folder').attr('data-folder'), 10));
+		});
+		// drag a chat onto a folder (or onto the other chats to take it out of its folder)
+		$panel.on('dragstart', '.aichat-chat-item', function (e) {
+			e.originalEvent.dataTransfer.setData('application/x-aichat-chat', $(this).attr('data-id'));
+			e.originalEvent.dataTransfer.effectAllowed = 'move';
+		});
+		const isChatDrag = (e) => Array.from(e.originalEvent.dataTransfer.types || []).includes('application/x-aichat-chat');
+		$panel.on('dragover', '.aichat-folder, .aichat-loose', function (e) {
+			if (isChatDrag(e)) {
+				e.preventDefault();
+				e.stopPropagation();
+				$panel.find('.aichat-drop-target').not(this).removeClass('aichat-drop-target');
+				$(this).addClass('aichat-drop-target');
+			}
+		});
+		$panel.on('dragleave', '.aichat-folder, .aichat-loose', function (e) {
+			if (!this.contains(e.originalEvent.relatedTarget)) {
+				$(this).removeClass('aichat-drop-target');
+			}
+		});
+		$panel.on('dragend', '.aichat-chat-item', function () {
+			$panel.find('.aichat-drop-target').removeClass('aichat-drop-target');
+		});
+		$panel.on('drop', '.aichat-folder, .aichat-loose', function (e) {
+			if (!isChatDrag(e)) {
+				return;
+			}
+			e.preventDefault();
+			e.stopPropagation();
+			$panel.find('.aichat-drop-target').removeClass('aichat-drop-target');
+			const id = parseInt(e.originalEvent.dataTransfer.getData('application/x-aichat-chat'), 10);
+			const folderId = parseInt($(this).attr('data-folder'), 10) || 0;
+			const chat = state.chats.find((c) => c.id === id);
+			if (chat && (chat.folder_id || 0) !== folderId) {
+				moveChat(id, folderId);
+			}
+		});
 		let searchTimer;
 		$panel.on('input', '.aichat-search', function () {
 			clearTimeout(searchTimer);
@@ -1550,6 +1868,18 @@
 			e.preventDefault();
 			if (state.chat) {
 				togglePin(state.chat.id);
+			}
+		});
+		$panel.on('click', '.aichat-keep', function (e) {
+			e.preventDefault();
+			if (state.chat) {
+				toggleKeep(state.chat.id);
+			}
+		});
+		$panel.on('click', '.aichat-move', function (e) {
+			e.preventDefault();
+			if (state.chat) {
+				pickFolder(state.chat.id);
 			}
 		});
 		$panel.on('click', '.aichat-delete', function (e) {
