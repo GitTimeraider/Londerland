@@ -15,14 +15,14 @@ website, not like a wall of server tiles.
   and favicon, a theme and colours, a login page with your own wallpaper, a splash screen, and your own CSS and JavaScript.
 - **Pages, not just links.** Every tab shows a web page inside the site, or opens it in a new window, and each group
   can have its own start tab.
-- **Members and groups.** Invite members by e-mail; every tab is shown only to the groups you choose.
+- **Members and groups.** Every tab is shown only to the groups you choose.
 - **AI Chat** for logged in members, with any OpenAI-compatible server.
 
 ## Features
 
 - **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, sorted into categories,
   with a start tab per group.
-- **Visitors and members**: guest access, local accounts, invites and e-mail (PHPMailer), groups that decide who sees what,
+- **Visitors and members**: guest access, local accounts, e-mail (PHPMailer), groups that decide who sees what,
   login lockout after failed attempts and e-mails about new device logins.
 - **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
   with optional two-factor authentication, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth)
@@ -31,7 +31,7 @@ website, not like a wall of server tiles.
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
 - **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
 - **Achievements and My Stats**: badges for using Londerland and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
-- **Plugins**: bookmarks, chat, invites, e-mail, health checks and speed test.
+- **Bookmarks**: a page with your favourite links in categories, with icons, colours and search ([details below](#bookmarks)).
 - **Works on phones and tablets.**
 - **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
 
@@ -314,6 +314,28 @@ Then open **Settings > Plugins > Active** and click its settings icon to choose:
   Night Shift (a visit after midnight), Thank Your Sysadmin (SysAdmin Day) and a few secret ones.
 
 The browser only reports small events (a visit, a tab that was opened); counting and unlocking happens on the server, per user.
+
+## Bookmarks
+
+A page with your favourite links, sorted into categories, with an icon and colours per link and a search box.
+
+**Setting it up (as admin):** in Londerland, open **Settings > Plugins > Inactive** and enable **Bookmarks**.
+Then open **Settings > Plugins > Active**, click its settings icon and click **Set up**: this creates the **Bookmarks** tab
+and a first category. Reload Londerland (F5) to see the tab. Under **Options** you choose whether links open in a new
+browser tab, whether there is a search box, and the layout (tiles, a list with the addresses, or small tiles).
+
+**Adding and changing bookmarks (as admin):** open the **Bookmarks** tab and click **Edit** at the top. Then:
+
+- **+ Category** adds a category; the pencil next to a category renames it or makes it the default category.
+- **+** next to a category adds a bookmark: name, address, category, the group that sees it (and all higher groups),
+  an icon (search Londerland's icons or images, or type an image address), colours, and on/off.
+- Click a bookmark to change or delete it, and drag bookmarks (also to another category) or categories to sort them.
+- Click **Done** when you are finished.
+
+**Using it:** everyone who may open the Bookmarks tab sees the bookmarks of their group. Type in the search box to
+filter (press `/` to jump there, Enter opens the first result), and click a category name to fold it away.
+
+Bookmarks from the earlier Bookmark plugin are kept: it uses the same database tables and the same tab address.
 
 ## License
 
