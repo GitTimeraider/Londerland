@@ -142,6 +142,8 @@ api/v2/routes/custom/*
 # =========================
 api/plugins/*
 !api/plugins/aichat/
+!api/plugins/achievements/
+!api/plugins/seasonal/
 !api/plugins/invites.php
 !api/plugins/api/invites.php
 !api/plugins/config/invites.php

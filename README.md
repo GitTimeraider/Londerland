@@ -30,6 +30,8 @@ website, not like a wall of server tiles.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
 - **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
+- **Achievements and My Stats**: badges for using Londerland and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
+- **Seasonal Themes**: a small scene in the corner on special days, such as a snowman at Christmas or a pumpkin at Halloween ([details below](#seasonal-themes)).
 - **Plugins**: bookmarks, chat, invites, e-mail, health checks and speed test.
 - **Works on phones and tablets.**
 - **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
@@ -292,6 +294,58 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 
 The API key stays on the Londerland server and is never sent to browsers. Chats and uploads are stored per user
 (uploads in `data/aichat`, readable only through Londerland's API).
+
+## Achievements and My Stats
+
+Logged in users collect badges by using Londerland, and see statistics about their own account.
+
+**Setting it up (as admin):** in Londerland, open **Settings > Plugins > Inactive** and enable **Achievements**.
+Then open **Settings > Plugins > Active** and click its settings icon to choose:
+
+- **Options:** which groups collect badges (guests have no account, so they never do), whether a message pops up when
+  a badge is unlocked, whether My Stats shows a leaderboard (top 10 by number of badges), and badges to switch off.
+- **Users:** how many badges, active days and opened tabs each user has, and a button that resets everything.
+
+**Using it:** open the user menu (your name, top right) and click **My Stats**. The page shows:
+
+- Account: account age, sign-in method (standard or OpenID Connect, with or without two-factor), signed-in devices, previous visit.
+- Activity: visits, active days, current and best streak (days in a row), tabs opened, different tabs, AI chats and messages (when AI Chat is enabled).
+- Charts of when you use Londerland (hour of the day, day of the week) and your most opened tabs.
+- All badges with their progress, for example Uptime 99.9% (30 active days), Port Scanner (5 different tabs),
+  Night Shift (a visit after midnight), Thank Your Sysadmin (SysAdmin Day) and a few secret ones.
+
+The browser only reports small events (a visit, a tab that was opened); counting and unlocking happens on the server, per user.
+
+## Seasonal Themes
+
+On special days Londerland shows a small scene in the bottom left corner, sometimes a figure that moves along the bottom
+edge, a decoration on the logo and a greeting once a day. Nothing covers the middle of the screen.
+
+| Season | Date | What you see |
+|---|---|---|
+| New Year | 31 December - 1 January | A champagne bottle with a bit of confetti |
+| Valentine's Day | 14 February | A love letter with rising hearts |
+| Easter | Good Friday - Easter Monday (calculated) | A hopping bunny and a chick waddling along the bottom |
+| April Fools' Day | 1 April | A bug crawling along the bottom and an upside-down logo |
+| King's Day (NL) | 27 April (off by default) | A crown with orange confetti |
+| SysAdmin Day | Last Friday of July (calculated) | A steaming cup of coffee |
+| Programmers' Day | Day 256 of the year (calculated) | A computer with falling ones and zeros |
+| Halloween | 24 - 31 October | A glowing pumpkin and a ghost floating along the bottom |
+| Christmas | 1 - 26 December | A snowman with a bit of snow and a Santa hat on the logo |
+
+**Setting it up (as admin):** in Londerland, open **Settings > Plugins > Inactive** and enable **Seasonal Themes**.
+Then open **Settings > Plugins > Active** and click its settings icon:
+
+- **Options:** who sees it (everyone, logged in users only or guests only), **Show season** to try a season out today
+  (set it back to Automatic afterwards), the corner scene, how much snow or confetti, whether it also shows on top of
+  website tabs, the logo decoration, the greeting, and whether users may switch it off.
+- **Seasons:** switch each season on or off and change the dates of the fixed-date ones (`MM-DD` or `MM-DD - MM-DD`).
+
+**Switching it off for yourself:** while a season is showing, users and guests find **Seasonal effects: on/off**
+in the user menu (top right). The choice is remembered in that browser.
+
+The date is the viewer's own device date. Nothing moves for people who asked their device for reduced motion,
+and everything pauses while the browser tab is in the background. A disabled plugin does nothing.
 
 ## License
 
