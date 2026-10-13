@@ -142,6 +142,8 @@ class AiChat extends Londerland
 				`title`	TEXT,
 				`model`	TEXT,
 				`pinned`	INTEGER DEFAULT 0,
+				`keep`	INTEGER DEFAULT 0,
+				`folder_id`	INTEGER,
 				`created`	DATETIME,
 				`updated`	DATETIME,
 				`summary`	LONGTEXT,
@@ -165,6 +167,12 @@ class AiChat extends Londerland
 				`mime`	TEXT,
 				`size`	INTEGER,
 				`path`	TEXT,
+				`created`	DATETIME
+			);',
+			'AICHAT-folders' => 'CREATE TABLE `AICHAT-folders` (
+				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+				`user_id`	INTEGER,
+				`name`	TEXT,
 				`created`	DATETIME
 			);',
 			'AICHAT-prefs' => 'CREATE TABLE `AICHAT-prefs` (
@@ -193,6 +201,13 @@ class AiChat extends Londerland
 		}
 		if (!$this->_aiChatColumnExists('AICHAT-prefs', 'web_tools')) {
 			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-prefs` ADD `web_tools` INTEGER DEFAULT 1']]);
+		}
+		// Keeping chats and folders came later too
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'keep')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `keep` INTEGER DEFAULT 0']]);
+		}
+		if (!$this->_aiChatColumnExists('AICHAT-chats', 'folder_id')) {
+			$this->processQueries([['function' => 'query', 'query' => 'ALTER TABLE `AICHAT-chats` ADD `folder_id` INTEGER']]);
 		}
 	}
 
@@ -401,6 +416,14 @@ class AiChat extends Londerland
 					'label' => 'Name Chats Automatically',
 					'help' => 'Asks the model for a short title after the first answer.',
 					'value' => $this->config['AICHAT-autoTitle']
+				),
+				array(
+					'type' => 'number',
+					'name' => 'AICHAT-retentionDays-include',
+					'label' => 'Delete Chats After (days without activity)',
+					'value' => $this->config['AICHAT-retentionDays-include'],
+					'placeholder' => '0 = never',
+					'help' => 'Chats nobody wrote in for this many days are deleted with their files. Users can mark a chat as Keep to save it permanently. 0 or empty = chats are never deleted automatically. Existing chats count too, so set this with care. Checked every hour by cron.php (the Docker image runs it by itself).'
 				),
 			),
 			'Groups' => $groupSettings,
@@ -1001,9 +1024,60 @@ class AiChat extends Londerland
 			'title' => $chat['title'],
 			'model' => $chat['model'],
 			'pinned' => (bool)$chat['pinned'],
+			'keep' => (bool)($chat['keep'] ?? false),
+			'folder_id' => !empty($chat['folder_id']) ? (int)$chat['folder_id'] : null,
 			'created' => $this->_aiChatIsoDate($chat['created']),
 			'updated' => $this->_aiChatIsoDate($chat['updated']),
 		];
+	}
+
+	/* ===================== retention ===================== */
+
+	private function _aiChatRetentionDays()
+	{
+		return max(0, (int)($this->config['AICHAT-retentionDays-include'] ?? 0));
+	}
+
+	/**
+	 * Deletes the chats (with their messages and files) that had no activity for the retention period and are not kept.
+	 * Without a user ID it does this for every user.
+	 */
+	private function _aiChatPurgeExpired($userId = null)
+	{
+		$days = $this->_aiChatRetentionDays();
+		if (!$days) {
+			return 0;
+		}
+		$cutoff = gmdate('Y-m-d H:i:s', time() - $days * 86400);
+		$query = ['SELECT `id`, `user_id` FROM `AICHAT-chats` WHERE (`keep` IS NULL OR `keep` = 0) AND `updated` < ?', $cutoff];
+		if ($userId !== null) {
+			$query[0] .= ' AND `user_id` = ?';
+			$query[] = (int)$userId;
+		}
+		$byUser = [];
+		foreach ($this->processQueries([['function' => 'fetchAll', 'query' => $query]]) ?: [] as $chat) {
+			$byUser[(int)$chat['user_id']][] = (int)$chat['id'];
+		}
+		foreach ($byUser as $owner => $chatIds) {
+			$this->_aiChatDeleteChatRows($chatIds, $owner);
+		}
+		return array_sum(array_map('count', $byUser));
+	}
+
+	/**
+	 * Cron job (see cron.php): removes expired chats of all users
+	 */
+	public function _aiChatRetentionCron()
+	{
+		if (!$this->_aiChatRetentionDays() || !$this->hasDB() || !$this->_aiChatTableExists('AICHAT-chats')) {
+			return 'Retention is off';
+		}
+		$this->_aiChatEnsureTables();
+		$deleted = $this->_aiChatPurgeExpired();
+		if ($deleted) {
+			$this->setLoggerChannel('AI Chat')->info('Deleted ' . $deleted . ' chat(s) without activity for ' . $this->_aiChatRetentionDays() . ' days');
+		}
+		return 'Deleted chats: ' . $deleted;
 	}
 
 	private function _aiChatFindChat($chatId)
@@ -1022,6 +1096,8 @@ class AiChat extends Londerland
 	public function _aiChatListChats($search = null)
 	{
 		$userId = $this->_aiChatUserId();
+		// also here, so retention works when cron.php does not run
+		$this->_aiChatPurgeExpired($userId);
 		$search = trim((string)$search);
 		if ($search !== '') {
 			$like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
@@ -1102,6 +1178,20 @@ class AiChat extends Londerland
 		if (isset($data['model']) && $data['model'] !== '') {
 			$update['model'] = mb_substr((string)$data['model'], 0, 200);
 		}
+		if (isset($data['keep'])) {
+			$update['keep'] = filter_var($data['keep'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+		}
+		if (array_key_exists('folder_id', $data)) {
+			$folderId = (int)$data['folder_id'];
+			if ($folderId && !$this->_aiChatFindFolder($folderId)) {
+				return false;
+			}
+			$update['folder_id'] = $folderId ?: null;
+			// a chat filed in a folder is meant to stay
+			if ($folderId && !isset($data['keep'])) {
+				$update['keep'] = 1;
+			}
+		}
 		if ($update) {
 			$this->processQueries([[
 				'function' => 'query',
@@ -1130,16 +1220,18 @@ class AiChat extends Londerland
 		}, $this->_aiChatListChats());
 		$this->_aiChatDeleteChatRows($ids);
 		$this->_aiChatCleanupFiles(true);
+		$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-folders` WHERE `user_id` = ?', $this->_aiChatUserId()]]]);
 		$this->setAPIResponse('success', 'All chats deleted', 200);
 		return true;
 	}
 
-	// Deletes chats, their messages and the files only those messages used
-	private function _aiChatDeleteChatRows($chatIds)
+	// Deletes chats, their messages and the files only those messages used (of the logged in user unless a user ID is given)
+	private function _aiChatDeleteChatRows($chatIds, $userId = null)
 	{
 		if (!$chatIds) {
 			return;
 		}
+		$userId = $userId ?? $this->_aiChatUserId();
 		$fileIds = [];
 		foreach ($chatIds as $chatId) {
 			foreach ($this->_aiChatMessages($chatId) as $message) {
@@ -1150,21 +1242,21 @@ class AiChat extends Londerland
 		}
 		$this->processQueries([
 			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` IN %in', $chatIds]],
-			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-chats` WHERE `id` IN %in AND `user_id` = ?', $chatIds, $this->_aiChatUserId()]],
+			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-chats` WHERE `id` IN %in AND `user_id` = ?', $chatIds, $userId]],
 		]);
 		foreach (array_unique($fileIds) as $fileId) {
-			$this->_aiChatDeleteFile($fileId);
+			$this->_aiChatDeleteFile($fileId, $userId);
 		}
-		$this->_aiChatCleanupFiles();
+		$this->_aiChatCleanupFiles(false, $userId);
 	}
 
 	/**
 	 * Removes this user's uploads that no message uses anymore (after edits, regenerates or uploads that were
 	 * never sent). Fresh uploads get an hour, since they may still be waiting in the message box.
 	 */
-	private function _aiChatCleanupFiles($all = false)
+	private function _aiChatCleanupFiles($all = false, $userId = null)
 	{
-		$userId = $this->_aiChatUserId();
+		$userId = $userId ?? $this->_aiChatUserId();
 		$files = $this->processQueries([[
 			'function' => 'fetchAll',
 			'query' => ['SELECT `id`, `created` FROM `AICHAT-files` WHERE `user_id` = ?', $userId]
@@ -1188,9 +1280,104 @@ class AiChat extends Londerland
 		foreach ($files as $file) {
 			$created = is_object($file['created']) ? $file['created']->format('Y-m-d H:i:s') : (string)$file['created'];
 			if (!isset($used[(int)$file['id']]) && ($all || $created < $cutoff)) {
-				$this->_aiChatDeleteFile($file['id']);
+				$this->_aiChatDeleteFile($file['id'], $userId);
 			}
 		}
+	}
+
+	/* ===================== folders ===================== */
+
+	private function _aiChatFormatFolder($folder)
+	{
+		return [
+			'id' => (int)$folder['id'],
+			'name' => $folder['name'],
+		];
+	}
+
+	private function _aiChatFindFolder($folderId)
+	{
+		$folder = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `AICHAT-folders` WHERE `id` = ? AND `user_id` = ?', (int)$folderId, $this->_aiChatUserId()]
+		]]);
+		if (!$folder) {
+			$this->setAPIResponse('error', 'Folder not found', 404);
+			return false;
+		}
+		return $folder;
+	}
+
+	private function _aiChatFolderName($data)
+	{
+		$name = mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string)($data['name'] ?? ''))), 0, 100);
+		if ($name === '') {
+			$this->setAPIResponse('error', 'Give the folder a name', 422);
+			return false;
+		}
+		return $name;
+	}
+
+	public function _aiChatListFolders()
+	{
+		$folders = $this->processQueries([[
+			'function' => 'fetchAll',
+			'query' => ['SELECT * FROM `AICHAT-folders` WHERE `user_id` = ?', $this->_aiChatUserId()]
+		]]) ?: [];
+		$folders = array_map([$this, '_aiChatFormatFolder'], $folders);
+		usort($folders, function ($a, $b) {
+			return strnatcasecmp($a['name'], $b['name']);
+		});
+		return $folders;
+	}
+
+	public function _aiChatCreateFolder($data)
+	{
+		$name = $this->_aiChatFolderName($data);
+		if ($name === false) {
+			return false;
+		}
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['INSERT INTO [AICHAT-folders]', [
+				'user_id' => $this->_aiChatUserId(),
+				'name' => $name,
+				'created' => $this->_aiChatNow(),
+			]]
+		]]);
+		$folder = ['id' => (int)$this->db->getInsertId(), 'name' => $name];
+		$this->setAPIResponse('success', 'Folder created', 200, $folder);
+		return $folder;
+	}
+
+	public function _aiChatUpdateFolder($folderId, $data)
+	{
+		$folder = $this->_aiChatFindFolder($folderId);
+		$name = $folder ? $this->_aiChatFolderName($data) : false;
+		if ($name === false) {
+			return false;
+		}
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE [AICHAT-folders] SET', ['name' => $name], 'WHERE `id` = ?', (int)$folderId]
+		]]);
+		$folder = ['id' => (int)$folderId, 'name' => $name];
+		$this->setAPIResponse('success', 'Folder renamed', 200, $folder);
+		return $folder;
+	}
+
+	// The chats in it stay and move back to the main list
+	public function _aiChatDeleteFolder($folderId)
+	{
+		if (!$this->_aiChatFindFolder($folderId)) {
+			return false;
+		}
+		$this->processQueries([
+			['function' => 'query', 'query' => ['UPDATE [AICHAT-chats] SET', ['folder_id' => null], 'WHERE `folder_id` = ? AND `user_id` = ?', (int)$folderId, $this->_aiChatUserId()]],
+			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-folders` WHERE `id` = ? AND `user_id` = ?', (int)$folderId, $this->_aiChatUserId()]],
+		]);
+		$this->setAPIResponse('success', 'Folder deleted', 200);
+		return true;
 	}
 
 	/* ===================== files ===================== */
@@ -1296,11 +1483,11 @@ class AiChat extends Londerland
 		return $file;
 	}
 
-	private function _aiChatDeleteFile($fileId)
+	private function _aiChatDeleteFile($fileId, $userId = null)
 	{
 		$file = $this->processQueries([[
 			'function' => 'fetch',
-			'query' => ['SELECT * FROM `AICHAT-files` WHERE `id` = ? AND `user_id` = ?', (int)$fileId, $this->_aiChatUserId()]
+			'query' => ['SELECT * FROM `AICHAT-files` WHERE `id` = ? AND `user_id` = ?', (int)$fileId, $userId ?? $this->_aiChatUserId()]
 		]]);
 		if (!$file) {
 			return;

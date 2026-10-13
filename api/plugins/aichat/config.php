@@ -26,6 +26,11 @@ return array(
 	'AICHAT-dropMessages' => '20',
 	'AICHAT-summarizeDropped' => true,
 	'AICHAT-autoTitle' => true,
+	// Chats without activity for this many days are deleted, unless the user keeps them (0 = keep all chats)
+	'AICHAT-retentionDays-include' => '0',
+	// Hourly job (cron.php) that deletes the expired chats of all users
+	'AICHAT-cron-cleanup-enabled' => true,
+	'AICHAT-cron-cleanup-schedule' => '41 * * * *',
 	'AICHAT-requestTimeout' => '300',
 	'AICHAT-verifySSL' => true,
 	// Web search: none, searxng, brave, tavily or duckduckgo
