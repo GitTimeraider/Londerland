@@ -3502,9 +3502,10 @@ function buildTabEditorItem(array) {
 				</div>
 			</td>
 			<td><span class="tooltip-info" data-bs-toggle="tooltip" data-bs-placement="right" title="" data-bs-title="` +
-      v.url +
+      // a tab without an address gave "null", which Bootstrap refuses as tooltip text
+      $("<div>").text(v.url || v.url_local || v.name || "").html() +
       `">` +
-      v.name +
+      $("<div>").text(v.name || "").html() +
       `</span></td>
 			` +
       buildTabCategorySelect(array.categories, v.id, v.category_id) +

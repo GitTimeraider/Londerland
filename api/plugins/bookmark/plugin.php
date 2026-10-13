@@ -1,15 +1,15 @@
 <?php
 // PLUGIN INFORMATION
-$GLOBALS['plugins']['Bookmark'] = array( // Plugin Name
-	'name' => 'Bookmark', // Plugin Name
-	'author' => 'leet1994', // Who wrote the plugin
+$GLOBALS['plugins']['Bookmarks'] = array( // Plugin Name
+	'name' => 'Bookmarks', // Plugin Name
+	'author' => 'Londerland', // Who wrote the plugin
 	'category' => 'Utilities', // One to Two Word Description
 	'link' => '', // Link to plugin info
 	'license' => 'personal,business', // License Type use , for multiple
 	'idPrefix' => 'BOOKMARK', // html element id prefix
 	'configPrefix' => 'BOOKMARK', // config file prefix for array items without the hyphen
 	'dbPrefix' => 'BOOKMARK', // db prefix
-	'version' => '0.1.0', // SemVer of plugin
+	'version' => '2.0.0', // SemVer of plugin
 	'image' => 'api/plugins/bookmark/logo.png', // 1:1 non transparent image for plugin
 	'settings' => true, // does plugin need a settings modal?
 	'bind' => true, // use default bind to make settings page - true or false
@@ -17,1076 +17,566 @@ $GLOBALS['plugins']['Bookmark'] = array( // Plugin Name
 	'homepage' => false // Is plugin for use on homepage? true or false
 );
 
-// Logo image under Public Domain from https://openclipart.org/detail/182527/open-book
+/**
+ * A page of bookmarks (links) in categories, shown on a Londerland tab that points to api/v2/plugins/bookmark/page.
+ * Everyone who can open that tab sees the bookmarks of their group; admins add, change and sort them on the page itself.
+ * Uses the tables of the first Bookmark plugin (BOOKMARK-categories, BOOKMARK-tabs), so existing bookmarks stay.
+ */
 class Bookmark extends Londerland
 {
-	public function _bookmarkGetLonderlandTabInfo()
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => array(
-					'SELECT * FROM tabs',
-					'WHERE url = ?',
-					'api/v2/plugins/bookmark/page'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
+	public const PAGE_URL = 'api/v2/plugins/bookmark/page';
+	private const MAX_NAME = 100;
+	private const MAX_URL = 2000;
+	// Links that would run code in the page are refused; everything else (http, https, ssh, smb, rdp, ...) is allowed
+	private const BLOCKED_SCHEMES = ['javascript', 'data', 'vbscript'];
+	private const DEFAULT_BACKGROUND = '#2f323e';
+	private const DEFAULT_TEXT = '#ffffff';
 
-	public function _bookmarkGetLonderlandTabGroupId()
+	/* ===================== access & setup ===================== */
+
+	/**
+	 * The plugin is enabled and has its tables. Reading needs nothing more: the tab decides who opens the page,
+	 * and every bookmark carries its own minimum group.
+	 */
+	public function _bookmarkReady($request)
 	{
-		$tab = $this->_bookmarkGetLonderlandTabInfo();
-		if ($tab) {
-			return $tab['group_id'];
-		} else {
-			return 999;
+		if (!$this->checkRoute($request)) {
+			return false;
 		}
-	}
-
-	public function _checkRequest($request)
-	{
-		$result = false;
-		if ($this->config['BOOKMARK-enabled'] && $this->hasDB()) {
-			if (!$this->_checkDatabaseTablesExist()) {
-				$this->_createDatabaseTables();
-			}
-			$result = true;
+		if (!$this->config['BOOKMARK-enabled'] || !$this->hasDB()) {
+			$this->setAPIResponse('error', 'Bookmarks are not enabled', 404);
+			return false;
 		}
-		return $result;
+		$this->_bookmarkEnsureTables();
+		return true;
 	}
 
-	public function _checkDatabaseTablesExist()
+	public function _bookmarkAdminAccess($request)
+	{
+		return $this->_bookmarkReady($request) && $this->qualifyRequest(1, true);
+	}
+
+	public function _bookmarkSettingsAccess($request)
+	{
+		return $this->checkRoute($request) && $this->qualifyRequest(1, true);
+	}
+
+	private function _bookmarkTableExists($table)
 	{
 		if ($this->config['driver'] == 'sqlite3') {
-			$queryCategories = ["SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' AND `name` = 'BOOKMARK-categories'"];
-			$queryTabs = ["SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' AND `name` = 'BOOKMARK-tabs'"];
+			$query = ["SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' AND `name` = %s", $table];
 		} else {
-			$queryCategories = ['SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_TYPE LIKE "BASE TABLE" AND TABLE_NAME = %s', (string)$this->config['dbName'], 'BOOKMARK-categories'];
-			$queryTabs = ['SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_TYPE LIKE "BASE TABLE" AND TABLE_NAME = %s', (string)$this->config['dbName'], 'BOOKMARK-categories'];
+			$query = ['SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s', (string)$this->config['dbName'], $table];
 		}
-		$response = [
-			array(
-				'function' => 'fetchSingle',
-				'query' => $queryCategories,
-				'key' => 'BOOKMARK-categories'
-			),
-			array(
-				'function' => 'fetchSingle',
-				'query' => $queryTabs,
-				'key' => 'BOOKMARK-tabs'
-			),
-		];
-		$data = $this->processQueries($response);
-		return ($data["BOOKMARK-categories"] != false && $data["BOOKMARK-tabs"] != false);
+		return (bool)$this->processQueries([['function' => 'fetchSingle', 'query' => $query]]);
 	}
 
-	protected function _createDatabaseTables()
+	// Same structure as the first Bookmark plugin
+	private function _bookmarkEnsureTables()
 	{
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => 'CREATE TABLE `BOOKMARK-categories` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`order`	INTEGER,
-					`category`	TEXT UNIQUE,
-					`category_id`	INTEGER,
-					`default` INTEGER
-				);'
-			),
-			array(
-				'function' => 'query',
-				'query' => 'CREATE TABLE `BOOKMARK-tabs` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`order`	INTEGER,
-					`category_id`	INTEGER,
-					`name`	TEXT,
-					`url`	TEXT,
-					`enabled`	INTEGER,
-					`group_id`	INTEGER,
-					`image`	TEXT,
-					`background_color` TEXT,
-					`text_color` TEXT
-				);'
-			)
+		$tables = [
+			'BOOKMARK-categories' => 'CREATE TABLE `BOOKMARK-categories` (
+				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+				`order`	INTEGER,
+				`category`	TEXT UNIQUE,
+				`category_id`	INTEGER,
+				`default` INTEGER
+			);',
+			'BOOKMARK-tabs' => 'CREATE TABLE `BOOKMARK-tabs` (
+				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+				`order`	INTEGER,
+				`category_id`	INTEGER,
+				`name`	TEXT,
+				`url`	TEXT,
+				`enabled`	INTEGER,
+				`group_id`	INTEGER,
+				`image`	TEXT,
+				`background_color` TEXT,
+				`text_color` TEXT
+			);',
 		];
-		$this->processQueries($response);
+		foreach ($tables as $name => $create) {
+			if (!$this->_bookmarkTableExists($name)) {
+				$this->processQueries([['function' => 'query', 'query' => $create]]);
+			}
+		}
 	}
 
-	public function _getSettings()
+	/* ===================== reading ===================== */
+
+	private function _bookmarkCategories()
 	{
+		return $this->processQueries([[
+			'function' => 'fetchAll',
+			'query' => 'SELECT * FROM `BOOKMARK-categories` ORDER BY `order` ASC, `id` ASC'
+		]]) ?: [];
+	}
+
+	private function _bookmarkFormatCategory($category)
+	{
+		return [
+			'id' => (int)$category['id'],
+			'categoryId' => (int)$category['category_id'],
+			'name' => (string)$category['category'],
+			'order' => (int)$category['order'],
+			'default' => (bool)$category['default'],
+		];
+	}
+
+	private function _bookmarkFormat($bookmark)
+	{
+		return [
+			'id' => (int)$bookmark['id'],
+			'categoryId' => (int)$bookmark['category_id'],
+			'name' => (string)$bookmark['name'],
+			'url' => (string)$bookmark['url'],
+			'image' => (string)($bookmark['image'] ?? ''),
+			'background' => $this->_bookmarkColor($bookmark['background_color'] ?? '') ?: self::DEFAULT_BACKGROUND,
+			'text' => $this->_bookmarkColor($bookmark['text_color'] ?? '') ?: self::DEFAULT_TEXT,
+			'groupId' => (int)$bookmark['group_id'],
+			'enabled' => (bool)$bookmark['enabled'],
+			'order' => (int)$bookmark['order'],
+		];
+	}
+
+	/**
+	 * Categories and the bookmarks this user may see (switched on, and their group or a higher one).
+	 * Admins asking for everything also get switched off bookmarks and the list of groups, for editing.
+	 */
+	public function _bookmarkList($everything = false)
+	{
+		$everything = $everything && $this->qualifyRequest(1);
+		if ($everything) {
+			$query = 'SELECT * FROM `BOOKMARK-tabs` ORDER BY `order` ASC, `id` ASC';
+		} else {
+			$query = ['SELECT * FROM `BOOKMARK-tabs` WHERE `enabled` = 1 AND `group_id` >= ? ORDER BY `order` ASC, `id` ASC', (int)$this->getUserLevel()];
+		}
+		$bookmarks = $this->processQueries([['function' => 'fetchAll', 'query' => $query]]) ?: [];
+		$data = [
+			'categories' => array_map([$this, '_bookmarkFormatCategory'], $this->_bookmarkCategories()),
+			'bookmarks' => array_map([$this, '_bookmarkFormat'], $bookmarks),
+			'canEdit' => $this->qualifyRequest(1),
+		];
+		if ($everything) {
+			$data['groups'] = array_map(function ($group) {
+				return ['id' => (int)$group['value'], 'name' => $group['name']];
+			}, $this->groupSelect());
+			$data['defaultGroup'] = (int)$this->getDefaultGroupId();
+		}
+		return $data;
+	}
+
+	/* ===================== validation ===================== */
+
+	// #rgb, #rrggbb or #rrggbbaa; anything else is no colour
+	private function _bookmarkColor($value)
+	{
+		$value = trim((string)$value);
+		return preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $value) ? strtolower($value) : '';
+	}
+
+	private function _bookmarkUrl($value)
+	{
+		$url = trim((string)$value);
+		if ($url === '' || mb_strlen($url) > self::MAX_URL || preg_match('/[\x00-\x1f]/', $url)) {
+			return false;
+		}
+		// browsers ignore spaces and control characters in a scheme, so check it without them
+		if (preg_match('/^([a-z][a-z0-9+.\-]*):/i', preg_replace('/\s+/', '', $url), $match) && in_array(strtolower($match[1]), self::BLOCKED_SCHEMES, true)) {
+			return false;
+		}
+		return $url;
+	}
+
+	// An icon from Londerland's icon list (prefix::name), an image path or address; nothing that could leave the attribute
+	private function _bookmarkImage($value)
+	{
+		$image = trim((string)$value);
+		if ($image === '' || mb_strlen($image) > 500 || preg_match('/["<>\x00-\x1f]/', $image)) {
+			return '';
+		}
+		if (preg_match('/^(materialize|fontawesome|fontawesome-brands|themify|simpleline|weathericon|alphanumeric)::[\w\- ]{1,60}$/', $image)) {
+			return $image;
+		}
+		if (strpos($image, 'url::') === 0) {
+			$url = $this->_bookmarkUrl(substr($image, 5));
+			return $url ? 'url::' . $url : '';
+		}
+		return $this->_bookmarkUrl($image) ?: '';
+	}
+
+	private function _bookmarkGroupId($value)
+	{
+		$groups = array_map(function ($group) {
+			return (int)$group['value'];
+		}, $this->groupSelect());
+		$value = (int)$value;
+		return in_array($value, $groups, true) ? $value : null;
+	}
+
+	private function _bookmarkCategoryById($categoryId)
+	{
+		return $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `BOOKMARK-categories` WHERE `category_id` = ?', (int)$categoryId]
+		]]);
+	}
+
+	private function _bookmarkDefaultCategoryId()
+	{
+		$categoryId = $this->processQueries([[
+			'function' => 'fetchSingle',
+			'query' => 'SELECT `category_id` FROM `BOOKMARK-categories` ORDER BY `default` DESC, `order` ASC LIMIT 1'
+		]]);
+		return $categoryId !== false && $categoryId !== null ? (int)$categoryId : $this->_bookmarkCreateDefaultCategory();
+	}
+
+	private function _bookmarkCreateDefaultCategory()
+	{
+		$categoryId = $this->_bookmarkNext('BOOKMARK-categories', 'category_id');
+		$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [BOOKMARK-categories]', [
+			'order' => 1,
+			'category' => 'Bookmarks',
+			'category_id' => $categoryId,
+			'default' => 1,
+		]]]]);
+		return $categoryId;
+	}
+
+	private function _bookmarkNext($table, $column)
+	{
+		return (int)$this->processQueries([[
+			'function' => 'fetchSingle',
+			'query' => ['SELECT MAX(%n) FROM %n', $column, $table]
+		]]) + 1;
+	}
+
+	private function _bookmarkCategoryNameTaken($name, $exceptId = null)
+	{
+		foreach ($this->_bookmarkCategories() as $category) {
+			if (mb_strtolower($category['category']) === mb_strtolower($name) && (int)$category['id'] !== (int)$exceptId) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/* ===================== bookmarks ===================== */
+
+	/**
+	 * Checks and cleans a bookmark sent by the editor; for a change, missing fields keep their stored value.
+	 */
+	private function _bookmarkClean($data, $current = null)
+	{
+		$value = function ($key, $fallback) use ($data) {
+			return array_key_exists($key, $data) ? $data[$key] : $fallback;
+		};
+		$name = trim((string)$value('name', $current['name'] ?? ''));
+		if ($name === '' || mb_strlen($name) > self::MAX_NAME) {
+			$this->setAPIResponse('error', 'Give the bookmark a name of at most ' . self::MAX_NAME . ' characters', 422);
+			return false;
+		}
+		$url = $this->_bookmarkUrl($value('url', $current['url'] ?? ''));
+		if ($url === false) {
+			$this->setAPIResponse('error', 'Enter a valid address (javascript: and data: links are not allowed)', 422);
+			return false;
+		}
+		$categoryId = (int)$value('categoryId', $current['category_id'] ?? 0);
+		if (!$this->_bookmarkCategoryById($categoryId)) {
+			$categoryId = $this->_bookmarkDefaultCategoryId();
+		}
+		$groupId = $this->_bookmarkGroupId($value('groupId', $current['group_id'] ?? $this->getDefaultGroupId()));
+		if ($groupId === null) {
+			$this->setAPIResponse('error', 'Choose an existing group', 422);
+			return false;
+		}
+		$image = $this->_bookmarkImage($value('image', $current['image'] ?? ''));
+		return [
+			'name' => $name,
+			'url' => $url,
+			'category_id' => $categoryId,
+			'group_id' => $groupId,
+			'image' => $image,
+			'background_color' => $this->_bookmarkColor($value('background', $current['background_color'] ?? '')) ?: self::DEFAULT_BACKGROUND,
+			'text_color' => $this->_bookmarkColor($value('text', $current['text_color'] ?? '')) ?: self::DEFAULT_TEXT,
+			'enabled' => filter_var($value('enabled', $current['enabled'] ?? true), FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+		];
+	}
+
+	private function _bookmarkFind($id)
+	{
+		$bookmark = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `BOOKMARK-tabs` WHERE `id` = ?', (int)$id]
+		]]);
+		if (!$bookmark) {
+			$this->setAPIResponse('error', 'Bookmark not found', 404);
+		}
+		return $bookmark;
+	}
+
+	public function _bookmarkAdd($data)
+	{
+		$row = $this->_bookmarkClean($data);
+		if (!$row) {
+			return false;
+		}
+		$row['order'] = $this->_bookmarkNext('BOOKMARK-tabs', 'order');
+		$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [BOOKMARK-tabs]', $row]]]);
+		$this->setAPIResponse('success', 'Bookmark added', 200);
+		return true;
+	}
+
+	public function _bookmarkUpdate($id, $data)
+	{
+		$current = $this->_bookmarkFind($id);
+		if (!$current) {
+			return false;
+		}
+		$row = $this->_bookmarkClean($data, $current);
+		if (!$row) {
+			return false;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['UPDATE [BOOKMARK-tabs] SET', $row, 'WHERE `id` = ?', (int)$id]]]);
+		$this->setAPIResponse('success', 'Bookmark saved', 200);
+		return true;
+	}
+
+	public function _bookmarkDelete($id)
+	{
+		if (!$this->_bookmarkFind($id)) {
+			return false;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `BOOKMARK-tabs` WHERE `id` = ?', (int)$id]]]);
+		$this->setAPIResponse('success', 'Bookmark deleted', 200);
+		return true;
+	}
+
+	/**
+	 * Order after dragging: [{id, categoryId}, ...] in the new order, for all bookmarks that moved or not.
+	 */
+	public function _bookmarkSort($data)
+	{
+		$items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+		$queries = [];
+		$order = 1;
+		foreach ($items as $item) {
+			$id = (int)($item['id'] ?? 0);
+			$categoryId = (int)($item['categoryId'] ?? 0);
+			if ($id <= 0 || !$this->_bookmarkCategoryById($categoryId)) {
+				continue;
+			}
+			$queries[] = ['function' => 'query', 'query' => ['UPDATE [BOOKMARK-tabs] SET', ['order' => $order++, 'category_id' => $categoryId], 'WHERE `id` = ?', $id]];
+		}
+		if ($queries) {
+			$this->processQueries($queries);
+		}
+		$this->setAPIResponse('success', 'Order saved', 200);
+		return true;
+	}
+
+	/* ===================== categories ===================== */
+
+	private function _bookmarkFindCategory($id)
+	{
+		$category = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `BOOKMARK-categories` WHERE `id` = ?', (int)$id]
+		]]);
+		if (!$category) {
+			$this->setAPIResponse('error', 'Category not found', 404);
+		}
+		return $category;
+	}
+
+	private function _bookmarkCategoryName($data, $exceptId = null)
+	{
+		$name = trim((string)($data['name'] ?? ''));
+		if ($name === '' || mb_strlen($name) > self::MAX_NAME) {
+			$this->setAPIResponse('error', 'Give the category a name of at most ' . self::MAX_NAME . ' characters', 422);
+			return false;
+		}
+		if ($this->_bookmarkCategoryNameTaken($name, $exceptId)) {
+			$this->setAPIResponse('error', 'There is already a category with that name', 409);
+			return false;
+		}
+		return $name;
+	}
+
+	public function _bookmarkAddCategory($data)
+	{
+		$name = $this->_bookmarkCategoryName($data);
+		if ($name === false) {
+			return false;
+		}
+		$first = !$this->_bookmarkCategories();
+		$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [BOOKMARK-categories]', [
+			'order' => $this->_bookmarkNext('BOOKMARK-categories', 'order'),
+			'category' => $name,
+			'category_id' => $this->_bookmarkNext('BOOKMARK-categories', 'category_id'),
+			'default' => $first ? 1 : 0,
+		]]]]);
+		$this->setAPIResponse('success', 'Category added', 200);
+		return true;
+	}
+
+	public function _bookmarkUpdateCategory($id, $data)
+	{
+		$category = $this->_bookmarkFindCategory($id);
+		if (!$category) {
+			return false;
+		}
+		$name = array_key_exists('name', $data) ? $this->_bookmarkCategoryName($data, $id) : $category['category'];
+		if ($name === false) {
+			return false;
+		}
+		$queries = [];
+		// one default category: new bookmarks without a category, and bookmarks of a deleted category, go there
+		if (!empty($data['default']) && !$category['default']) {
+			$queries[] = ['function' => 'query', 'query' => ['UPDATE [BOOKMARK-categories] SET', ['default' => 0]]];
+		}
+		$queries[] = ['function' => 'query', 'query' => ['UPDATE [BOOKMARK-categories] SET', [
+			'category' => $name,
+			'default' => (!empty($data['default']) || $category['default']) ? 1 : 0,
+		], 'WHERE `id` = ?', (int)$id]];
+		$this->processQueries($queries);
+		$this->setAPIResponse('success', 'Category saved', 200);
+		return true;
+	}
+
+	public function _bookmarkDeleteCategory($id)
+	{
+		$category = $this->_bookmarkFindCategory($id);
+		if (!$category) {
+			return false;
+		}
+		if ($category['default']) {
+			$this->setAPIResponse('error', 'The default category cannot be deleted. Make another category the default first.', 409);
+			return false;
+		}
+		$defaultCategoryId = $this->_bookmarkDefaultCategoryId();
+		$this->processQueries([
+			['function' => 'query', 'query' => ['UPDATE [BOOKMARK-tabs] SET', ['category_id' => $defaultCategoryId], 'WHERE `category_id` = ?', (int)$category['category_id']]],
+			['function' => 'query', 'query' => ['DELETE FROM `BOOKMARK-categories` WHERE `id` = ?', (int)$id]],
+		]);
+		$this->setAPIResponse('success', 'Category deleted; its bookmarks moved to the default category', 200);
+		return true;
+	}
+
+	// Category ids in the new order
+	public function _bookmarkSortCategories($data)
+	{
+		$ids = isset($data['ids']) && is_array($data['ids']) ? $data['ids'] : [];
+		$queries = [];
+		foreach (array_values($ids) as $index => $id) {
+			$queries[] = ['function' => 'query', 'query' => ['UPDATE [BOOKMARK-categories] SET', ['order' => $index + 1], 'WHERE `id` = ?', (int)$id]];
+		}
+		if ($queries) {
+			$this->processQueries($queries);
+		}
+		$this->setAPIResponse('success', 'Order saved', 200);
+		return true;
+	}
+
+	/* ===================== tab & settings ===================== */
+
+	private function _bookmarkTab()
+	{
+		return $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `tabs` WHERE `url` = ?', self::PAGE_URL]
+		]]);
+	}
+
+	/**
+	 * Creates the Bookmarks tab (a Londerland page) and a first category when they are missing.
+	 */
+	public function _bookmarkSetup()
+	{
+		$this->_bookmarkEnsureTables();
+		$done = [];
+		if (!$this->_bookmarkTab()) {
+			$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [tabs]', [
+				'order' => $this->getNextTabOrder() + 1,
+				'category_id' => $this->getDefaultCategoryId(),
+				'name' => 'Bookmarks',
+				'url' => self::PAGE_URL,
+				'default' => 0,
+				'enabled' => 1,
+				'group_id' => $this->getDefaultGroupId(),
+				'image' => 'fontawesome::bookmark',
+				'type' => 0,
+			]]]]);
+			$done[] = 'created the Bookmarks tab';
+		}
+		if (!$this->_bookmarkCategories()) {
+			$this->_bookmarkCreateDefaultCategory();
+			$done[] = 'created a first category';
+		}
+		$message = $done ? 'Setup ' . implode(' and ', $done) . '. Reload Londerland to see the tab.' : 'Everything was already set up';
+		$this->setAPIResponse('success', $message, 200);
+		return true;
+	}
+
+	public function _bookmarkGetSettings()
+	{
+		$tab = $this->hasDB() ? $this->_bookmarkTab() : false;
+		$status = $tab
+			? '<li><i class="fa fa-check text-success"></i> <span lang="en">The Bookmarks tab exists</span> (' . htmlspecialchars((string)$tab['name'], ENT_QUOTES) . ').</li>'
+			: '<li><i class="fa fa-exclamation-triangle text-warning"></i> <span lang="en">There is no Bookmarks tab yet: click Set up below.</span></li>';
 		return array(
 			'custom' => '
 				<div class="row">
-					<div class="col-xl-6 col-md-12 col-lg-6">
-						<div class="white-box">
-							<h3 class="box-title" lang="en">Automatic Setup Tasks</h3>
-							<ul class="feeds">
-								<li class="bookmark-check-tab">
-									<div class="bg-info">
-										<i class="sticon ti-layout-tab-v text-white"></i>
-									</div>
-									<small lang="en">Checking for Bookmark tab...</small>
-									<span class="text-muted result"><i class="fa fa-spin fa-refresh"></i></span>
-								</li>
-								<li class="bookmark-check-category">
-									<div class="bg-success">
-										<i class="ti-layout-list-thumb text-white"></i>
-									</div>
-									<small lang="en">Checking for bookmark default category...</small>
-									<span class="text-muted result"><i class="fa fa-spin fa-refresh"></i></span>
-								</li>
-							</ul>
-						</div>
-					</div>
-					<div class="col-xl-6 col-md-12 col-lg-6">
+					<div class="col-xl-12">
 						<div class="card card-info">
-							<div class="card-header">
-								<span lang="en">Notice</span>
-							</div>
+							<div class="card-header"><span lang="en">How it works</span></div>
 							<div class="card-wrapper collapse show" aria-expanded="true">
 								<div class="card-body">
 									<ul class="list-icons">
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Add tab that points to <i>api/v2/plugins/bookmark/page</i> and set it\'s type to <i>Londerland</i>.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Create Bookmark categories in the new area in <i>Tab Editor</i>.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Create Bookmark tabs in the new area in <i>Tab Editor</i>.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Open your custom Bookmark page via menu.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Bookmarks are shown on a Londerland tab that points to api/v2/plugins/bookmark/page. Set up creates it; change its name, icon and groups in the Tab Editor like any other tab.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Admins add, change, delete and sort bookmarks and categories on the Bookmarks page itself, with the Edit button at the top.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Every bookmark has a group: users of that group and higher groups see it.</span></li>
+										' . $status . '
 									</ul>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			'
+				</div>',
+			'Options' => array(
+				array(
+					'type' => 'switch',
+					'name' => 'BOOKMARK-newWindow-include',
+					'label' => 'Open bookmarks in a new browser tab',
+					'help' => 'Off: a bookmark opens in the same window, which leaves Londerland.',
+					'value' => $this->config['BOOKMARK-newWindow-include']
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'BOOKMARK-search-include',
+					'label' => 'Search box',
+					'help' => 'Filters the bookmarks while typing; Enter opens the first one. Press / to jump to it.',
+					'value' => $this->config['BOOKMARK-search-include']
+				),
+				array(
+					'type' => 'select',
+					'name' => 'BOOKMARK-layout-include',
+					'label' => 'Layout',
+					'value' => $this->config['BOOKMARK-layout-include'],
+					'options' => array(
+						['name' => 'Tiles (icon and name)', 'value' => 'tiles'],
+						['name' => 'List (with the address)', 'value' => 'list'],
+						['name' => 'Compact (small tiles)', 'value' => 'compact'],
+					)
+				),
+				array(
+					'type' => 'button',
+					'label' => 'Set up',
+					'class' => ' bookmarkSetup',
+					'icon' => 'fa fa-magic',
+					'text' => 'Create the tab and a first category'
+				),
+			)
 		);
-	}
-
-	public function _getPage()
-	{
-		$bookmarks = '<div id="BOOKMARK-wrapper">';
-		foreach ($this->_getAllCategories() as $category) {
-			$tabs = $this->_getRelevantTabsForCategory($category['category_id']);
-			if (count($tabs) == 0) continue;
-			$bookmarks .= '<div class="BOOKMARK-category">
-				<div class="BOOKMARK-category-title">
-					' . $category['category'] . '
-				</div>
-				<div class="BOOKMARK-category-content">';
-			foreach ($tabs as $tab) {
-				$bookmarks .= '<a href="' . $tab['url'] . '" target="_BLANK">
-					<div class="BOOKMARK-tab"
-						style="border-color: ' . $this->adjustBrightness($tab['background_color'], 0.3) . '; background: linear-gradient(90deg, ' . $this->adjustBrightness($tab['background_color'], -0.3) . ' 0%, ' . $tab['background_color'] . ' 70%, ' . $this->adjustBrightness($tab['background_color'], 0.1) . ' 100%);">
-						<span class="BOOKMARK-tab-image">' . $this->_iconPrefix($tab['image']) . '</span>
-						<span class="BOOKMARK-tab-title" style="color: ' . $tab['text_color'] . ';">' . $tab['name'] . '</span>
-					</div>
-				</a>';
-			}
-			$bookmarks .= '</div></div>';
-		}
-		$bookmarks .= '</div>';
-		return $bookmarks;
-	}
-
-	protected function _iconPrefix($source)
-	{
-		$tabIcon = explode("::", $source);
-		$icons = array(
-			"materialize" => "mdi mdi-",
-			"fontawesome" => "fa fa-",
-			"fontawesome-brands" => "fa-brands fa-",
-			"themify" => "ti-",
-			"simpleline" => "icon-",
-			"weathericon" => "wi wi-",
-			"alphanumeric" => "fa-fw",
-		);
-		if (is_array($tabIcon) && count($tabIcon) == 2) {
-			if ($tabIcon[0] !== 'url' && $tabIcon[0] !== 'alphanumeric') {
-				return '<i class="' . $icons[$tabIcon[0]] . $tabIcon[1] . '"></i>';
-			} else if ($tabIcon[0] == 'alphanumeric') {
-				return '<i>' . $tabIcon[1] . '</i>';
-			} else {
-				return '<img src="' . $tabIcon[1] . '" alt="tabIcon" />';
-			}
-		} else {
-			return '<img src="' . $source . '" alt="tabIcon" />';
-		}
-	}
-
-	protected function _getAllCategories()
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM `BOOKMARK-categories` ORDER BY `order` ASC'
-			)
-		];
-		return $this->processQueries($response);
-	}
-
-	protected function _getRelevantTabsForCategory($category_id)
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => array(
-					"SELECT * FROM `BOOKMARK-tabs` WHERE `enabled`='1' AND `category_id`=? AND `group_id`>=? ORDER BY `order` ASC",
-					$category_id,
-					$this->getUserLevel()
-				)
-			)
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _getTabs()
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM `BOOKMARK-tabs` ORDER BY `order` ASC',
-				'key' => 'tabs'
-			),
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM `BOOKMARK-categories` ORDER BY `order` ASC',
-				'key' => 'categories'
-			),
-			array(
-				'function' => 'fetchAll',
-				'query' => 'SELECT * FROM `groups` ORDER BY `group_id` ASC',
-				'key' => 'groups'
-			)
-		];
-		return $this->processQueries($response);
-	}
-
-	// Tabs
-	public function _getSettingsTabEditorBookmarkTabsPage()
-	{
-		$iconSelectors = '
-			initRemoteChooser(".bookmarkTabIconIconList", "api/v2/icon", formatIcon, "Search for an icon");
-			initRemoteChooser(".bookmarkTabIconImageList", "api/v2/image/select", formatImage, "Search for an image");
-		';
-		return '
-		<script>
-		buildBookmarkTabEditor();
-		londerlandLoadLibrary("sortable").then(function() {
-		new Sortable(document.getElementById("bookmarkTabEditorTable"), {
-			animation: 150,
-			onEnd: function () {
-				$(\'input.order\').each(function(idx) {
-					$(this).val(idx + 1);
-				});
-				var newTabs = $( "#submit-bookmark-tabs-form" ).serializeToJSON();
-				newBookmarkTabsGlobal = newTabs;
-				$(\'.saveBookmarkTabOrderButton\').removeClass(\'hidden\');
-				//submitTabOrder(newTabs);
-			}
-		});
-		});
-		' . $iconSelectors . '
-		</script>
-		<div class="card bg-org card-info">
-			<div class="card-header">
-				<span lang="en">Bookmark Tab Editor</span>
-				<button type="button" class="btn btn-info btn-circle float-end popup-with-form m-r-5" href="#new-bookmark-tab-form" onclick="newBookmarkTabForm()" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
-				<button onclick="submitBookmarkTabOrder(newBookmarkTabsGlobal)" class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end animated loop-animation rubberBand m-r-20 saveBookmarkTabOrderButton hidden" type="button"><span class="btn-label"><i class="fa fa-save"></i></span><span lang="en">Save Tab Order</span></button>
-			</div>
-			<div class="table-responsive">
-				<form id="submit-bookmark-tabs-form" onsubmit="return false;">
-					<table class="table table-hover manage-u-table">
-						<thead>
-							<tr>
-								<th width="70" class="text-center">#</th>
-								<th lang="en">NAME</th>
-								<th lang="en">CATEGORY</th>
-								<th lang="en">GROUP</th>
-								<th lang="en" style="text-align:center">ACTIVE</th>
-								<th lang="en" style="text-align:center">EDIT</th>
-								<th lang="en" style="text-align:center">DELETE</th>
-							</tr>
-						</thead>
-						<tbody id="bookmarkTabEditorTable">
-							<td class="text-center" colspan="12"><i class="fa fa-spin fa-spinner"></i></td>
-						</tbody>
-					</table>
-				</form>
-			</div>
-		</div>
-		<form id="new-bookmark-tab-form" class="mfp-hide white-popup-block mfp-with-anim">
-			<h1 lang="en">Add New Tab</h1>
-			<fieldset style="border:0;">
-				<div class="form-group">
-					<label class="form-label" for="new-bookmark-tab-form-inputName" lang="en">Tab Name</label>
-					<input type="text" class="form-control" id="new-bookmark-tab-form-inputName" name="name" required="" autofocus>
-				</div>
-				<div class="form-group">
-					<label class="form-label" for="new-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
-					<input type="text" class="form-control" id="new-bookmark-tab-form-inputURL" name="url"  required="">
-				</div>
-				<div class="row">
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
-						<select class="form-control bookmarkTabIconImageList" id="new-bookmark-tab-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
-						<select class="form-control bookmarkTabIconIconList" id="new-bookmark-tab-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
-						<button id="new-bookmark-tab-form-chooseBlackberry" class="btn btn-sm btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'new-bookmark-tab-form-inputImageNew\');" type="button">
-							<i class="fa fa-search"></i>&nbsp; <span lang="en">Choose</span>
-						</button>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="form-label" for="new-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
-					<input type="text" class="form-control" id="new-bookmark-tab-form-inputImage" name="image" required="">
-				</div>
-				<div class="row">
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
-						<input type="text" class="form-control bookmark-pick-a-color" id="new-bookmark-tab-form-inputBackgroundColor" name="background_color" required="" value="#fff">
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
-						<input type="text" class="form-control bookmark-pick-a-color" id="new-bookmark-tab-form-inputTextColor" name="text_color" required="" value="#000">
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="new-bookmark-preview" lang="en">Preview</label>
-						<div id="new-bookmark-preview"></div>
-					</div>
-				</div>
-			</fieldset>
-			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none addNewBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Tab</span></button>
-			<div class="clearfix"></div>
-		</form>
-		<form id="edit-bookmark-tab-form" class="mfp-hide white-popup-block mfp-with-anim">
-			<input type="hidden" name="id" value="x">
-			<span class="hidden" id="originalBookmarkTabName"></span>
-			<h1 lang="en">Edit Tab</h1>
-			<fieldset style="border:0;">
-				<div class="form-group">
-					<label class="form-label" for="edit-bookmark-tab-form-inputName" lang="en">Tab Name</label>
-					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputName" name="name" required="" autofocus>
-				</div>
-				<div class="form-group">
-					<label class="form-label" for="edit-bookmark-tab-form-inputURL" lang="en">Tab URL</label>
-					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputURL" name="url"  required="">
-				</div>
-				<div class="row">
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-tab-form-chooseImage" lang="en">Choose Image</label>
-						<select class="form-control bookmarkTabIconImageList" id="edit-bookmark-tab-form-chooseImage" name="chooseImage"><option lang="en">Select or type Image</option></select>
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-tab-form-chooseIcon" lang="en">Choose Icon</label>
-						<select class="form-control bookmarkTabIconIconList" id="edit-bookmark-tab-form-chooseIcon" name="chooseIcon"><option lang="en">Select or type Icon</option></select>
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-tab-form-chooseBlackberry" lang="en">Choose Blackberry Theme Icon</label>
-						<button id="edit-bookmark-tab-form-chooseBlackberry" class="btn btn-sm btn-primary waves-effect waves-light form-control" onclick="showBlackberryThemes(\'edit-bookmark-tab-form-inputImage\');" type="button">
-							<i class="fa fa-search"></i>&nbsp; <span lang="en">Choose</span>
-						</button>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="form-label" for="edit-bookmark-tab-form-inputImage" lang="en">Tab Image</label>
-					<input type="text" class="form-control" id="edit-bookmark-tab-form-inputImage" name="image"  required="">
-				</div>
-				<div class="row">
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-tab-form-inputBackgroundColor" lang="en">Background Color</label>
-						<input type="text" class="form-control bookmark-pick-a-color" id="edit-bookmark-tab-form-inputBackgroundColor" name="background_color" required="">
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-tab-form-inputTextColor" lang="en">Text Color</label>
-						<input type="text" class="form-control bookmark-pick-a-color" id="edit-bookmark-tab-form-inputTextColor" name="text_color" required="">
-					</div>
-					<div class="form-group col-xl-4">
-						<label class="form-label" for="edit-bookmark-preview" lang="en">Preview</label>
-						<div id="edit-bookmark-preview"></div>
-					</div>
-				</div>
-			</fieldset>
-			<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none editBookmarkTab" type="button"><span class="btn-label"><i class="fa fa-check"></i></span><span lang="en">Edit Tab</span></button>
-			<div class="clearfix"></div>
-		</form>
-		';
-	}
-
-	public function _isBookmarkTabNameTaken($name, $id = null)
-	{
-		if ($id) {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						'SELECT * FROM `BOOKMARK-tabs` WHERE `name` LIKE ? AND `id` != ?',
-						$name,
-						$id
-					)
-				),
-			];
-		} else {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						'SELECT * FROM `BOOKMARK-tabs` WHERE `name` LIKE ?',
-						$name
-					)
-				),
-			];
-		}
-		return $this->processQueries($response);
-	}
-
-	public function _getNextBookmarkTabOrder()
-	{
-		$response = [
-			array(
-				'function' => 'fetchSingle',
-				'query' => array(
-					'SELECT `order` from `BOOKMARK-tabs` ORDER BY `order` DESC'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _getBookmarkTabById($id)
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => array(
-					'SELECT * FROM `BOOKMARK-tabs` WHERE `id` = ?',
-					$id
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _getTabByIdCheckUser($id)
-	{
-		$tabInfo = $this->_getBookmarkTabById($id);
-		if ($tabInfo) {
-			if ($this->qualifyRequest($tabInfo['group_id'], true)) {
-				return $tabInfo;
-			}
-		} else {
-			$this->setAPIResponse('error', 'id not found', 404);
-			return false;
-		}
-	}
-
-	public function _deleteTab($id)
-	{
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'DELETE FROM `BOOKMARK-tabs` WHERE id = ?',
-					$id
-				)
-			),
-		];
-		$tabInfo = $this->_getBookmarkTabById($id);
-		if ($tabInfo) {
-
-			$this->setLoggerChannel('Bookmark')->info('Deleted Bookmark [' . $tabInfo['name'] . ']');
-			$this->setAPIResponse('success', 'Tab deleted', 204);
-			return $this->processQueries($response);
-		} else {
-			$this->setAPIResponse('error', 'id not found', 404);
-			return false;
-		}
-	}
-
-	public function _addTab($array)
-	{
-		if (!$array) {
-			$this->setAPIResponse('error', 'no data was sent', 422);
-			return null;
-		}
-		$array = $this->checkKeys($this->getTableColumnsFormatted('BOOKMARK-tabs'), $array);
-		$array['group_id'] = ($array['group_id']) ?? $this->getDefaultGroupId();
-		$array['category_id'] = ($array['category_id']) ?? $this->_getDefaultBookmarkCategoryId();
-		$array['enabled'] = ($array['enabled']) ?? 0;
-		$array['order'] = ($array['order']) ?? $this->_getNextBookmarkTabOrder() + 1;
-		if (array_key_exists('name', $array)) {
-			$array['name'] = $this->sanitizeUserString($array['name']);
-			if ($this->_isBookmarkTabNameTaken($array['name'])) {
-				$this->setAPIResponse('error', 'Tab name: ' . $array['name'] . ' is already taken', 409);
-				return false;
-			}
-			if (!$this->qualifyLength($array['name'], 50, true)) {
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Tab name was not supplied', 422);
-			return false;
-		}
-		if (!array_key_exists('url', $array)) {
-			$this->setAPIResponse('error', 'Tab url was not supplied', 422);
-			return false;
-		}
-		if (!array_key_exists('image', $array)) {
-			$this->setAPIResponse('error', 'Tab image was not supplied', 422);
-			return false;
-		} else {
-			$array['image'] = $this->sanitizeUserString($array['image']);
-		}
-		if (array_key_exists('background_color', $array)) {
-			$array['background_color'] = $this->sanitizeUserString($array['background_color']);
-			if (!$this->_checkColorHexCode($array['background_color'])) {
-				$this->setAPIResponse('error', 'Tab background color is invalid', 422);
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Tab background color was not supplied', 422);
-			return false;
-		}
-		if (array_key_exists('text_color', $array)) {
-			$array['text_color'] = $this->sanitizeUserString($array['text_color']);
-			if (!$this->_checkColorHexCode($array['text_color'])) {
-				$this->setAPIResponse('error', 'Tab text color is invalid', 422);
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Tab text color was not supplied', 422);
-			return false;
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'INSERT INTO [BOOKMARK-tabs]',
-					$array
-				)
-			),
-		];
-		$this->setAPIResponse(null, 'Tab added');
-		$this->setLoggerChannel('Bookmark')->info('Added Bookmark [' . $array['name'] . ']');
-		return $this->processQueries($response);
-	}
-
-	public function _updateTab($id, $array)
-	{
-		if (!$id || $id == '') {
-			$this->setAPIResponse('error', 'id was not set', 422);
-			return null;
-		}
-		if (!$array) {
-			$this->setAPIResponse('error', 'no data was sent', 422);
-			return null;
-		}
-		$tabInfo = $this->_getBookmarkTabById($id);
-		if ($tabInfo) {
-			$array = $this->checkKeys($tabInfo, $array);
-		} else {
-			$this->setAPIResponse('error', 'No tab info found', 404);
-			return false;
-		}
-		if (array_key_exists('name', $array)) {
-			$array['name'] = $this->sanitizeUserString($array['name']);
-			if ($this->_isBookmarkTabNameTaken($array['name'], $id)) {
-				$this->setAPIResponse('error', 'Tab name: ' . $array['name'] . ' is already taken', 409);
-				return false;
-			}
-			if (!$this->qualifyLength($array['name'], 50, true)) {
-				return false;
-			}
-		}
-		if (array_key_exists('background_color', $array)) {
-			$array['background_color'] = $this->sanitizeUserString($array['background_color']);
-			if (!$this->_checkColorHexCode($array['background_color'])) {
-				$this->setAPIResponse('error', 'Tab background color is invalid', 422);
-				return false;
-			}
-		}
-		if (array_key_exists('text_color', $array)) {
-			$array['text_color'] = $this->sanitizeUserString($array['text_color']);
-			if (!$this->_checkColorHexCode($array['text_color'])) {
-				$this->setAPIResponse('error', 'Tab text color is invalid', 422);
-				return false;
-			}
-		}
-		if (array_key_exists('image', $array)) {
-			$array['image'] = $this->sanitizeUserString($array['image']);
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'UPDATE `BOOKMARK-tabs` SET',
-					$array,
-					'WHERE id = ?',
-					$id
-				)
-			),
-		];
-		$this->setAPIResponse(null, 'Tab info updated');
-		$this->setLoggerChannel('Bookmark')->info('Edited Bookmark [' . $tabInfo['name'] . ']');
-		return $this->processQueries($response);
-	}
-
-	public function _updateTabOrder($array)
-	{
-		if (count($array) >= 1) {
-			foreach ($array as $tab) {
-				if (count($tab) !== 2) {
-					$this->setAPIResponse('error', 'data is malformed', 422);
-					break;
-				}
-				$id = $tab['id'] ?? null;
-				$order = $tab['order'] ?? null;
-				if ($id && $order) {
-					$response = [
-						array(
-							'function' => 'query',
-							'query' => array(
-								'UPDATE `BOOKMARK-tabs` set `order` = ? WHERE `id` = ?',
-								$order,
-								$id
-							)
-						),
-					];
-					$this->processQueries($response);
-					$this->setAPIResponse(null, 'Tab Order updated');
-				} else {
-					$this->setAPIResponse('error', 'data is malformed', 422);
-				}
-			}
-		} else {
-			$this->setAPIResponse('error', 'data is empty or not in array', 422);
-			return false;
-		}
-	}
-
-	// Categories
-	public function _getSettingsTabEditorBookmarkCategoriesPage()
-	{
-		return '
-	<script>
-	buildBookmarkCategoryEditor();
-	londerlandLoadLibrary("sortable").then(function() {
-	new Sortable(document.getElementById("bookmarkCategoryEditorTable"), {
-		animation: 150,
-		onEnd: function () {
-			var inputs = $(\'input.order\');
-			var nbElems = inputs.length;
-			inputs.each(function(idx) {
-				$(this).val(idx + 1);
-			});
-			submitBookmarkCategoryOrder();
-		}
-	});
-	});
-	</script>
-	<div class="card bg-org card-info">
-		<div class="card-header">
-			<span lang="en">Bookmark Category Editor</span>
-			<button type="button" class="btn btn-info btn-circle float-end popup-with-form m-r-5" href="#new-bookmark-category-form" data-effect="mfp-3d-unfold"><i class="fa fa-plus"></i> </button>
-		</div>
-		<div class="table-responsive">
-			<form id="submit-bookmark-categories-form" onsubmit="return false;">
-				<table class="table table-hover manage-u-table">
-					<thead>
-						<tr>
-							<th lang="en">NAME</th>
-							<th lang="en" style="text-align:center">TABS</th>
-							<th lang="en" style="text-align:center">DEFAULT</th>
-							<th lang="en" style="text-align:center">EDIT</th>
-							<th lang="en" style="text-align:center">DELETE</th>
-						</tr>
-					</thead>
-					<tbody id="bookmarkCategoryEditorTable"><td class="text-center" colspan="6"><i class="fa fa-spin fa-spinner"></i></td></tbody>
-				</table>
-			</form>
-		</div>
-	</div>
-	<form id="new-bookmark-category-form" class="mfp-hide white-popup-block mfp-with-anim">
-		<h1 lang="en">Add New Bookmark Category</h1>
-		<fieldset style="border:0;">
-			<div class="form-group">
-				<label class="form-label" for="new-bookmark-category-form-inputName" lang="en">Category Name</label>
-				<input type="text" class="form-control" id="new-bookmark-category-form-inputName" name="category" required="" autofocus>
-			</div>
-		</fieldset>
-		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none addNewBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Add Category</span></button>
-		<div class="clearfix"></div>
-	</form>
-	<form id="edit-bookmark-category-form" class="mfp-hide white-popup-block mfp-with-anim">
-		<input type="hidden" name="id" value="">
-		<h1 lang="en">Edit Category</h1>
-		<fieldset style="border:0;">
-			<div class="form-group">
-				<label class="form-label" for="edit-bookmark-category-form-inputName" lang="en">Category Name</label>
-				<input type="text" class="form-control" id="edit-bookmark-category-form-inputName" name="category" required="" autofocus>
-			</div>
-		</fieldset>
-		<button class="btn btn-sm btn-info btn-rounded waves-effect waves-light float-end row b-none editBookmarkCategory" type="button"><span class="btn-label"><i class="fa fa-plus"></i></span><span lang="en">Edit Category</span></button>
-		<div class="clearfix"></div>
-	</form>
-	';
-	}
-
-	public function _getDefaultBookmarkCategoryId()
-	{
-		$response = [
-			array(
-				'function' => 'fetchSingle',
-				'query' => array(
-					'SELECT `category_id` FROM `BOOKMARK-categories` WHERE `default` = 1'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _getNextBookmarkCategoryOrder()
-	{
-		$response = [
-			array(
-				'function' => 'fetchSingle',
-				'query' => array(
-					'SELECT `order` from `BOOKMARK-categories` ORDER BY `order` DESC'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _getNextBookmarkCategoryId()
-	{
-		$response = [
-			array(
-				'function' => 'fetchSingle',
-				'query' => array(
-					'SELECT `category_id` from `BOOKMARK-categories` ORDER BY `category_id` DESC'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _isBookmarkCategoryNameTaken($name, $id = null)
-	{
-		if ($id) {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						'SELECT * FROM `BOOKMARK-categories` WHERE `category` LIKE ? AND `id` != ?',
-						$name,
-						$id
-					)
-				),
-			];
-		} else {
-			$response = [
-				array(
-					'function' => 'fetchAll',
-					'query' => array(
-						'SELECT * FROM `BOOKMARK-categories` WHERE `category` LIKE ?',
-						$name
-					)
-				),
-			];
-		}
-		return $this->processQueries($response);
-	}
-
-	public function _getBookmarkCategoryById($id)
-	{
-		$response = [
-			array(
-				'function' => 'fetch',
-				'query' => array(
-					'SELECT * FROM `BOOKMARK-categories` WHERE `id` = ?',
-					$id
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _clearBookmarkCategoryDefault()
-	{
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'UPDATE `BOOKMARK-categories` SET `default` = 0'
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _addCategory($array)
-	{
-		if (!$array) {
-			$this->setAPIResponse('error', 'no data was sent', 422);
-			return null;
-		}
-		$array = $this->checkKeys($this->getTableColumnsFormatted('BOOKMARK-categories'), $array);
-		$array['default'] = ($array['default']) ?? 0;
-		$array['order'] = ($array['order']) ?? $this->_getNextBookmarkCategoryOrder() + 1;
-		$array['category_id'] = ($array['category_id']) ?? $this->_getNextBookmarkCategoryId() + 1;
-		if (array_key_exists('category', $array)) {
-			$array['category'] = $this->sanitizeUserString($array['category']);
-			if ($this->_isBookmarkCategoryNameTaken($array['category'])) {
-				$this->setAPIResponse('error', 'Category name: ' . $array['category'] . ' is already taken', 409);
-				return false;
-			}
-			if (!$this->qualifyLength($array['category'], 50, true)) {
-				return false;
-			}
-		} else {
-			$this->setAPIResponse('error', 'Category name was not supplied', 422);
-			return false;
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'INSERT INTO [BOOKMARK-categories]',
-					$array
-				)
-			),
-		];
-		$this->setAPIResponse(null, 'Category added');
-		$this->setLoggerChannel('Bookmark')->info('Added Bookmark Category [' . $array['category'] . ']');
-		$result = $this->processQueries($response);
-		$this->_correctDefaultCategory();
-		return $result;
-	}
-
-	public function _updateCategory($id, $array)
-	{
-		if (!$id || $id == '') {
-			$this->setAPIResponse('error', 'id was not set', 422);
-			return null;
-		}
-		if (!$array) {
-			$this->setAPIResponse('error', 'no data was sent', 422);
-			return null;
-		}
-		$categoryInfo = $this->_getBookmarkCategoryById($id);
-		if ($categoryInfo) {
-			$array = $this->checkKeys($categoryInfo, $array);
-		} else {
-			$this->setAPIResponse('error', 'No category info found', 404);
-			return false;
-		}
-		if (array_key_exists('category', $array)) {
-			$array['category'] = $this->sanitizeUserString($array['category']);
-			if ($this->_isBookmarkCategoryNameTaken($array['category'], $id)) {
-				$this->setAPIResponse('error', 'Category name: ' . $array['category'] . ' is already taken', 409);
-				return false;
-			}
-			if (!$this->qualifyLength($array['category'], 50, true)) {
-				return false;
-			}
-		}
-		if (array_key_exists('default', $array)) {
-			if ($array['default']) {
-				$this->_clearBookmarkCategoryDefault();
-			}
-		}
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'UPDATE `BOOKMARK-categories` SET',
-					$array,
-					'WHERE id = ?',
-					$id
-				)
-			),
-		];
-		$this->setAPIResponse(null, 'Category info updated');
-		$this->setLoggerChannel('Bookmark')->info('Edited Bookmark Category [' . $categoryInfo['category'] . ']');
-		$result = $this->processQueries($response);
-		$this->_correctDefaultCategory();
-		return $result;
-	}
-
-	public function _updateCategoryOrder($array)
-	{
-		if (count($array) >= 1) {
-			foreach ($array as $category) {
-				if (count($category) !== 2) {
-					$this->setAPIResponse('error', 'data is malformed', 422);
-					break;
-				}
-				$id = $category['id'] ?? null;
-				$order = $category['order'] ?? null;
-				if ($id && $order) {
-					$response = [
-						array(
-							'function' => 'query',
-							'query' => array(
-								'UPDATE `BOOKMARK-categories` set `order` = ? WHERE `id` = ?',
-								$order,
-								$id
-							)
-						),
-					];
-					$this->processQueries($response);
-					$this->setAPIResponse(null, 'Category Order updated');
-				} else {
-					$this->setAPIResponse('error', 'data is malformed', 422);
-				}
-			}
-		} else {
-			$this->setAPIResponse('error', 'data is empty or not in array', 422);
-			return false;
-		}
-	}
-
-	public function _deleteCategory($id)
-	{
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'DELETE FROM `BOOKMARK-categories` WHERE id = ?',
-					$id
-				)
-			),
-		];
-		$categoryInfo = $this->_getBookmarkCategoryById($id);
-		if ($categoryInfo) {
-			$this->setLoggerChannel('Bookmark')->info('Deleted Bookmark Category [' . $categoryInfo['category'] . ']');
-			$this->setAPIResponse('success', 'Category deleted', 204);
-			$result = $this->processQueries($response);
-			$this->_correctDefaultCategory();
-			return $result;
-		} else {
-			$this->setAPIResponse('error', 'id not found', 404);
-			return false;
-		}
-	}
-
-	protected function _correctDefaultCategory()
-	{
-		if ($this->_getDefaultBookmarkCategoryId() == null) {
-			$response = [
-				array(
-					'function' => 'query',
-					'query' => 'UPDATE `BOOKMARK-categories` SET `default` = 1 WHERE `category_id` = (SELECT `category_id` FROM `BOOKMARK-categories` ORDER BY `category_id` ASC LIMIT 0,1)'
-				)
-			];
-			return $this->processQueries($response);
-		}
-	}
-
-	protected function _checkColorHexCode($hex)
-	{
-		return preg_match('/^\#([0-9a-fA-F]{3}){1,2}$/', $hex);
-	}
-
-	/**
-	 * Increases or decreases the brightness of a color by a percentage of the current brightness.
-	 *
-	 * @param string $hexCode Supported formats: `#FFF`, `#FFFFFF`, `FFF`, `FFFFFF`
-	 * @param float $adjustPercent A number between -1 and 1. E.g. 0.3 = 30% lighter; -0.4 = 40% darker.
-	 *
-	 * @return  string
-	 *
-	 * @author  maliayas
-	 * @link    https://stackoverflow.com/questions/3512311/how-to-generate-lighter-darker-color-with-php
-	 */
-	protected function adjustBrightness($hexCode, $adjustPercent)
-	{
-		$hexCode = ltrim($hexCode, '#');
-		if (strlen($hexCode) == 3) {
-			$hexCode = $hexCode[0] . $hexCode[0] . $hexCode[1] . $hexCode[1] . $hexCode[2] . $hexCode[2];
-		}
-		$hexCode = array_map('hexdec', str_split($hexCode, 2));
-		foreach ($hexCode as &$color) {
-			$adjustableLimit = $adjustPercent < 0 ? $color : 255 - $color;
-			$adjustAmount = ceil($adjustableLimit * $adjustPercent);
-			$color = str_pad(dechex($color + $adjustAmount), 2, '0', STR_PAD_LEFT);
-		}
-		return '#' . implode($hexCode);
-	}
-
-	public function _checkForBookmarkTab()
-	{
-		$response = [
-			array(
-				'function' => 'fetchAll',
-				'query' => array(
-					'SELECT * FROM tabs',
-					'WHERE url = ?',
-					'api/v2/plugins/bookmark/page'
-				)
-			),
-		];
-		$tab = $this->processQueries($response);
-		if ($tab) {
-			$this->setAPIResponse('success', 'Tab already exists', 200);
-			return $tab;
-		} else {
-			$createTab = $this->_createBookmarkTab();
-			if ($createTab) {
-				$tab = $this->processQueries($response);
-				$this->setAPIResponse('success', 'Tab created', 200);
-				return $tab;
-			} else {
-				$this->setAPIResponse('error', 'Tab creation error', 500);
-			}
-		}
-	}
-
-	public function _createBookmarkTab()
-	{
-		$tabInfo = [
-			'order' => $this->getNextTabOrder() + 1,
-			'category_id' => $this->getDefaultCategoryId(),
-			'name' => 'Bookmarks',
-			'url' => 'api/v2/plugins/bookmark/page',
-			'default' => false,
-			'enabled' => true,
-			'group_id' => $this->getDefaultGroupId(),
-			'image' => 'fontawesome::book',
-			'type' => 0
-		];
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'INSERT INTO [tabs]',
-					$tabInfo
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
-	public function _checkForBookmarkCategories()
-	{
-		$categories = $this->_getAllCategories();
-		if ($categories) {
-			$this->setAPIResponse('success', 'Categories already exists', 200);
-			return $categories;
-		} else {
-			$createCategory = $this->_addCategory(['category' => 'Unsorted', 'default' => 1]);
-			if ($createCategory) {
-				$categories = $this->_getAllCategories();
-				$this->setAPIResponse('success', 'Category created', 200);
-				return $categories;
-			} else {
-				$this->setAPIResponse('error', 'Category creation error', 500);
-			}
-		}
 	}
 }

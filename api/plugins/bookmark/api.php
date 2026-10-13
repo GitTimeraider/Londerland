@@ -1,205 +1,99 @@
 <?php
+/*
+ * Bookmarks routes. page and list are for everyone who can open the Bookmarks tab (the list only holds the bookmarks
+ * of their group); everything that changes bookmarks or categories is for admins.
+ */
+function bookmarkJsonResponse($response)
+{
+	$response->getBody()->write(jsonE($GLOBALS['api']));
+	return $response
+		->withHeader('Content-Type', 'application/json;charset=UTF-8')
+		->withStatus($GLOBALS['responseCode']);
+}
+
 $app->get('/plugins/bookmark/settings', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getSettings();
-		}
+	if ($Bookmark->_bookmarkSettingsAccess($request)) {
+		$GLOBALS['api']['response']['data'] = $Bookmark->_bookmarkGetSettings();
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
+$app->post('/plugins/bookmark/setup', function ($request, $response, $args) {
+	$Bookmark = new Bookmark();
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkSetup();
+	}
+	return bookmarkJsonResponse($response);
+});
+// The Londerland tab (type Londerland) loads this; main.js fills it
 $app->get('/plugins/bookmark/page', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest($Bookmark->_bookmarkGetLonderlandTabInfo(), true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getPage();
-		}
+	if ($Bookmark->_bookmarkReady($request)) {
+		$GLOBALS['api']['response']['data'] = '<div class="bookmarks-app"><div class="bookmarks-loading"><i class="fa fa-spinner fa-pulse fa-2x"></i></div></div>';
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-$app->get('/plugins/bookmark/setup/tab', function ($request, $response, $args) {
+$app->get('/plugins/bookmark/list', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_checkForBookmarkTab();
-		}
+	if ($Bookmark->_bookmarkReady($request)) {
+		$GLOBALS['api']['response']['data'] = $Bookmark->_bookmarkList(!empty($request->getQueryParams()['all']));
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-$app->get('/plugins/bookmark/setup/category', function ($request, $response, $args) {
+$app->post('/plugins/bookmark/bookmarks', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_checkForBookmarkCategories();
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkAdd($Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-$app->get('/plugins/bookmark/settings_tab_editor_bookmark_tabs', function ($request, $response, $args) {
+// before {id}, so "order" is not taken for an id
+$app->put('/plugins/bookmark/bookmarks/order', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getSettingsTabEditorBookmarkTabsPage();
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkSort($Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-$app->get('/plugins/bookmark/settings_tab_editor_bookmark_categories', function ($request, $response, $args) {
+$app->put('/plugins/bookmark/bookmarks/{id}', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getSettingsTabEditorBookmarkCategoriesPage();
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkUpdate($args['id'], $Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-// TABS
-$app->get('/plugins/bookmark/tabs', function ($request, $response, $args) {
+$app->delete('/plugins/bookmark/bookmarks/{id}', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getTabs();
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkDelete($args['id']);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->get('/plugins/bookmark/tabs/{id}', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		$GLOBALS['api']['response']['data'] = $Bookmark->_getTabByIdCheckUser($args['id']);
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->post('/plugins/bookmark/tabs', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_addTab($Bookmark->apiData($request));
-		}
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->put('/plugins/bookmark/tabs', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_updateTabOrder($Bookmark->apiData($request));
-		}
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->put('/plugins/bookmark/tabs/{id}', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_updateTab($args['id'], $Bookmark->apiData($request));
-		}
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
-});
-$app->delete('/plugins/bookmark/tabs/{id}', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_deleteTab($args['id']);
-		}
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
-});
-// CATEGORIES
-$app->get('/plugins/bookmark/categories', function ($request, $response, $args) {
-	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$GLOBALS['api']['response']['data'] = $Bookmark->_getTabs();
-		}
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
 $app->post('/plugins/bookmark/categories', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_addCategory($Bookmark->apiData($request));
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkAddCategory($Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
-$app->put('/plugins/bookmark/categories', function ($request, $response, $args) {
+$app->put('/plugins/bookmark/categories/order', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_updateCategoryOrder($Bookmark->apiData($request));
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkSortCategories($Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
 $app->put('/plugins/bookmark/categories/{id}', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_updateCategory($args['id'], $Bookmark->apiData($request));
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkUpdateCategory($args['id'], $Bookmark->apiData($request) ?? []);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });
 $app->delete('/plugins/bookmark/categories/{id}', function ($request, $response, $args) {
 	$Bookmark = new Bookmark();
-	if ($Bookmark->_checkRequest($request) && $Bookmark->checkRoute($request)) {
-		if ($Bookmark->qualifyRequest(1, true)) {
-			$Bookmark->_deleteCategory($args['id']);
-		}
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkDeleteCategory($args['id']);
 	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json')
-		->withStatus($GLOBALS['responseCode']);
+	return bookmarkJsonResponse($response);
 });

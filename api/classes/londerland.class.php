@@ -26,7 +26,7 @@ class Londerland
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.3';
+	public $version = '2.2.4';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -1162,6 +1162,30 @@ class Londerland
 		$userPlugins = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins';
 		$files .= $this->pluginFilesFromDirectory($userPlugins, 'data/plugins/', $type, $settings);
 		return $files;
+	}
+
+	/**
+	 * The settings.js files of the plugins, for the Settings page. That page is put in place with jQuery's .html(),
+	 * which would fetch <script src> tags synchronously (refused under a Permissions-Policy with sync-xhr=()) and run
+	 * them again every time Settings opens. This adds each file as a normal, asynchronous script, once per page.
+	 */
+	public function pluginSettingsScripts()
+	{
+		preg_match_all('/<script src="([^"]+)"/', $this->pluginFiles('js', true), $matches);
+		if (!$matches[1]) {
+			return '';
+		}
+		return '<script>
+	(' . json_encode(array_values(array_map('html_entity_decode', $matches[1]))) . ').forEach(function (src) {
+		if (!document.querySelector(\'script[data-plugin-settings="\' + src + \'"]\')) {
+			var script = document.createElement("script");
+			script.src = src;
+			script.setAttribute("data-plugin-settings", src);
+			document.head.appendChild(script);
+		}
+	});
+</script>
+';
 	}
 
 	public function formKey($script = true)
@@ -3369,18 +3393,6 @@ HTML;
 			),
 			array(
 				'function' => 'query',
-				'query' => 'CREATE TABLE `chatroom` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`username`	TEXT,
-					`gravatar`	TEXT,
-					`uid`	TEXT,
-					`date` DATETIME,
-					`ip` TEXT,
-					`message` TEXT
-				);'
-			),
-			array(
-				'function' => 'query',
 				'query' => 'CREATE TABLE `tokens` (
 					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 					`token`	TEXT UNIQUE,
@@ -3444,47 +3456,6 @@ HTML;
 					`value`	TEXT
 				);'
 			),
-			array(
-				'function' => 'query',
-				'query' => 'CREATE TABLE `invites` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`code`	TEXT UNIQUE,
-					`date`	DATETIME,
-					`email`	TEXT,
-					`username`	TEXT,
-					`dateused`	TIMESTAMP,
-					`usedby`	TEXT,
-					`ip`	TEXT,
-					`valid`	TEXT,
-					`type` TEXT,
-					`invitedby` TEXT
-				);'
-			),
-			array(
-				'function' => 'query',
-				'query' => 'CREATE TABLE `BOOKMARK-categories` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`order`	INTEGER,
-					`category`	TEXT UNIQUE,
-					`category_id`	INTEGER,
-					`default` INTEGER
-				);'
-			),
-			array(
-				'function' => 'query',
-				'query' => 'CREATE TABLE `BOOKMARK-tabs` (
-					`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-					`order`	INTEGER,
-					`category_id`	INTEGER,
-					`name`	TEXT,
-					`url`	TEXT,
-					`enabled`	INTEGER,
-					`group_id`	INTEGER,
-					`image`	TEXT,
-					`background_color` TEXT,
-					`text_color` TEXT
-				);'
-			)
 		];
 	}
 
@@ -3734,7 +3705,6 @@ HTML;
 						'subject' => 'We noticed a login attempt to your account on a new device.',
 						'user' => $result['username'],
 						'password' => null,
-						'inviteCode' => null,
 					);
 
 					$emailTemplate = $PhpMailer->_phpMailerPluginEmailTemplate($emailTemplate);
@@ -4145,7 +4115,6 @@ HTML;
 					'subject' => $this->config['PHPMAILER-emailTemplateResetSubject'],
 					'user' => $isUser['username'],
 					'password' => $newPassword,
-					'inviteCode' => null,
 				);
 				$emailTemplate = $PhpMailer->_phpMailerPluginEmailTemplate($emailTemplate);
 				$sendEmail = array(
@@ -4224,7 +4193,6 @@ HTML;
 					'subject' => $this->config['PHPMAILER-emailTemplateRegisterUserSubject'],
 					'user' => $username,
 					'password' => null,
-					'inviteCode' => null,
 				);
 				$emailTemplate = $PhpMailer->_phpMailerPluginEmailTemplate($emailTemplate);
 				$sendEmail = array(
@@ -4432,7 +4400,7 @@ HTML;
 		return $url !== '' && $url !== null & $url !== 'null' ? $this->qualifyURL($url, false, true) : '';
 	}
 
-	// Refresh times (settings ending in "Refresh", for example CHAT-userRefreshTimeout), sent to the browser as settings.refresh
+	// Refresh times (settings ending in "Refresh"), sent to the browser as settings.refresh
 	public function refreshList()
 	{
 		return array_filter($this->config, function ($value, $key) {
@@ -4561,7 +4529,6 @@ HTML;
 				'groupDefaultTab' => (string)($this->config['defaultTabGroup-' . (int)($this->user['groupID'] ?? 999)] ?? ''),
 				'authType' => $this->config['authType'],
 				'authBackend' => $this->config['authBackend'],
-				'newMessageSound' => (isset($this->config['CHAT-newMessageSound-include'])) ? $this->config['CHAT-newMessageSound-include'] : '',
 				'uuid' => ($this->config['uuid']) ?? null,
 				'docker' => $this->qualifyRequest(1) ? $this->docker : '',
 				'githubCommit' => $this->qualifyRequest(1) ? $this->commit : '',

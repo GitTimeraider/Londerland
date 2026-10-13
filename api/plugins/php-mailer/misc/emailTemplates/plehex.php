@@ -1,19 +1,5 @@
 <?php
 switch ($extra) {
-	case 'invite':
-		$button = '
-		<tr>
-			<td align="center" valign="top">
-				<div>
-					<a href="' . $this->getServerPath(true) . '?invite=' . $email['inviteCode'] . '" rel="noopener noreferrer" style="background-color: #e5a00d; border: 2px solid #E5A00D; border-radius: 100px; color: #ffffff; display: inline-block; font-family: \'Roboto\', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: bold; line-height: 44px; text-align: center; text-decoration: none; width: 260px; -webkit-text-size-adjust: none; mso-hide: all;">Use Invite Code</a>
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td align="center" style="padding-top: 30px;" valign="top"></td>
-		</tr>
-        ';
-		break;
 	case 'reset':
 		$button = '
 		<tr>

@@ -726,10 +726,6 @@ td span.label.text-bg-warning {
   opacity: 0;
 }
 
-input#inviteCodeInput {
-  font-size: 400%;
-  height: 100%;
-}
 .bg-org-alt {
   background: #2d2c2c;
 }

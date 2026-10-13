@@ -57,7 +57,6 @@ const assets = [
 	['sortablejs/Sortable.min.js', 'sortablejs/Sortable.min.js'],
 	['overlayscrollbars/browser/overlayscrollbars.browser.es6.min.js', 'overlayscrollbars/overlayscrollbars.browser.es6.min.js'],
 	['overlayscrollbars/styles/overlayscrollbars.min.css', 'overlayscrollbars/overlayscrollbars.min.css'],
-	['pusher-js/dist/web/pusher.min.js', 'pusher-js/pusher.min.js'],
 	['rapidoc/dist/rapidoc-min.js', 'rapidoc/rapidoc-min.js'],
 	['swagger-ui-dist/swagger-ui-bundle.js', 'swagger-ui/swagger-ui-bundle.js'],
 	['swagger-ui-dist/swagger-ui-standalone-preset.js', 'swagger-ui/swagger-ui-standalone-preset.js'],

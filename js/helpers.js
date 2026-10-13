@@ -340,7 +340,6 @@ const londerlandLibraries = {
 	dropzone: { js: ['assets/vendor/dropzone/dropzone-min.js'], css: ['assets/vendor/dropzone/dropzone.css'] },
 	datatables: { js: ['assets/vendor/datatables/dataTables.min.js', 'assets/vendor/datatables/dataTables.bootstrap5.min.js'], css: ['assets/vendor/datatables/dataTables.bootstrap5.min.css'] },
 	sortable: { js: ['assets/vendor/sortablejs/Sortable.min.js'], css: [] },
-	pusher: { js: ['assets/vendor/pusher-js/pusher.min.js'], css: [] },
 	sweetalert2: { js: ['assets/vendor/sweetalert2/sweetalert2.all.min.js'], css: [] },
 	alertify: { js: ['assets/vendor/alertifyjs/alertify.min.js'], css: ['assets/vendor/alertifyjs/css/alertify.min.css', 'assets/vendor/alertifyjs/css/themes/default.min.css'] },
 	tomselect: { js: ['assets/vendor/tom-select/tom-select.complete.min.js'], css: ['assets/vendor/tom-select/tom-select.bootstrap5.min.css'] },
