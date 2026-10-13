@@ -9,5 +9,8 @@ return array(
 	// Top 10 of all users on the My Stats page
 	'ACHIEVEMENTS-leaderboard-include' => false,
 	// Achievement keys that are switched off (comma separated)
-	'ACHIEVEMENTS-disabled' => ''
+	'ACHIEVEMENTS-disabled' => '',
+	// Set by the plugin: its table exists (version), and AI Chat's tables exist; saves checking on every request
+	'ACHIEVEMENTS-dbVersion' => '',
+	'ACHIEVEMENTS-aiTables' => false
 );

@@ -25,6 +25,8 @@ $GLOBALS['plugins']['Achievements'] = array( // Plugin Name
 class Achievements extends Londerland
 {
 	private const TABLE = 'ACHIEVEMENTS-users';
+	// Stored as ACHIEVEMENTS-dbVersion once the table exists; raise it when the table changes
+	private const DB_VERSION = '1';
 	// Caps so a user cannot grow their row without limit
 	private const MAX_TABS_TRACKED = 500;
 	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
@@ -173,8 +175,15 @@ class Achievements extends Londerland
 		return (bool)$this->processQueries([['function' => 'fetchSingle', 'query' => $query]]);
 	}
 
-	private function _achEnsureTable()
+	/**
+	 * Creates the table on first use. Once it exists, ACHIEVEMENTS-dbVersion remembers that, so later requests skip
+	 * the check; $force checks anyway (a read failed, for example after restoring an older database).
+	 */
+	private function _achEnsureTable($force = false)
 	{
+		if (!$force && ($this->config['ACHIEVEMENTS-dbVersion'] ?? '') === self::DB_VERSION) {
+			return;
+		}
 		if (!$this->_achTableExists(self::TABLE)) {
 			$this->processQueries([[
 				'function' => 'query',
@@ -186,16 +195,25 @@ class Achievements extends Londerland
 				);'
 			]]);
 		}
+		if (($this->config['ACHIEVEMENTS-dbVersion'] ?? '') !== self::DB_VERSION) {
+			$this->updateConfig(['ACHIEVEMENTS-dbVersion' => self::DB_VERSION]);
+		}
 	}
 
 	/* ===================== storage ===================== */
 
 	private function _achLoad($userId)
 	{
-		$row = $this->processQueries([[
+		$query = [[
 			'function' => 'fetch',
 			'query' => ['SELECT * FROM `ACHIEVEMENTS-users` WHERE `user_id` = ?', (int)$userId]
-		]]);
+		]];
+		$row = $this->processQueries($query);
+		// false = the query failed (no row is null): the table is gone, so create it again
+		if ($row === false) {
+			$this->_achEnsureTable(true);
+			$row = $this->processQueries($query);
+		}
 		$stats = $row ? json_decode((string)$row['stats'], true) : null;
 		$unlocked = $row ? json_decode((string)$row['unlocked'], true) : null;
 		return [is_array($stats) ? $stats : [], is_array($unlocked) ? $unlocked : []];
@@ -345,13 +363,16 @@ class Achievements extends Londerland
 				$stats['tab_counts'] = $counts;
 				break;
 			case 'ai':
-				// counted below, like on every event
+				// counted below
 				break;
 			default:
 				// fullscreen, lock, split, popout, reload, bookmark: counters; konami, logo, marathon: only need to happen once
 				$this->_achIncrement($stats, $event);
 		}
-		$this->_achCountAiChat($stats);
+		// new AI chats and messages are reported with "ai"; a visit catches up on ones from other devices
+		if ($event === 'ai' || $event === 'visit') {
+			$this->_achCountAiChat($stats);
+		}
 		$new = $this->_achEvaluate($stats, $unlocked);
 		$this->_achSave($this->_achUserId(), $stats, $unlocked);
 		$this->setAPIResponse('success', null, 200, ['unlocked' => $new]);
@@ -363,11 +384,11 @@ class Achievements extends Londerland
 	/**
 	 * AI chats and messages, kept as the highest number ever seen in the AI Chat tables: deleting chats, editing a
 	 * question or answering again removes rows there, but must not lower the count or undo progress.
-	 * The browser reports every new chat and message, so this runs right after each one.
+	 * The browser reports every new chat and message ("ai"), so this runs right after each one, and on visits.
 	 */
 	private function _achCountAiChat(&$stats)
 	{
-		if (empty($this->config['AICHAT-enabled']) || !$this->_achTableExists('AICHAT-chats') || !$this->_achTableExists('AICHAT-messages')) {
+		if (empty($this->config['AICHAT-enabled']) || !$this->_achAiTablesExist()) {
 			return;
 		}
 		$chats = (int)$this->processQueries([[
@@ -380,6 +401,19 @@ class Achievements extends Londerland
 		]]);
 		$stats['ai_chats'] = max((int)($stats['ai_chats'] ?? 0), $chats);
 		$stats['ai_messages'] = max((int)($stats['ai_messages'] ?? 0), $messages);
+	}
+
+	// AI Chat creates its tables on first use; once they exist, ACHIEVEMENTS-aiTables remembers that
+	private function _achAiTablesExist()
+	{
+		if (!empty($this->config['ACHIEVEMENTS-aiTables'])) {
+			return true;
+		}
+		if (!$this->_achTableExists('AICHAT-chats') || !$this->_achTableExists('AICHAT-messages')) {
+			return false;
+		}
+		$this->updateConfig(['ACHIEVEMENTS-aiTables' => true]);
+		return true;
 	}
 
 	/**
