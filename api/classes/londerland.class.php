@@ -1164,6 +1164,30 @@ class Londerland
 		return $files;
 	}
 
+	/**
+	 * The settings.js files of the plugins, for the Settings page. That page is put in place with jQuery's .html(),
+	 * which would fetch <script src> tags synchronously (refused under a Permissions-Policy with sync-xhr=()) and run
+	 * them again every time Settings opens. This adds each file as a normal, asynchronous script, once per page.
+	 */
+	public function pluginSettingsScripts()
+	{
+		preg_match_all('/<script src="([^"]+)"/', $this->pluginFiles('js', true), $matches);
+		if (!$matches[1]) {
+			return '';
+		}
+		return '<script>
+	(' . json_encode(array_values(array_map('html_entity_decode', $matches[1]))) . ').forEach(function (src) {
+		if (!document.querySelector(\'script[data-plugin-settings="\' + src + \'"]\')) {
+			var script = document.createElement("script");
+			script.src = src;
+			script.setAttribute("data-plugin-settings", src);
+			document.head.appendChild(script);
+		}
+	});
+</script>
+';
+	}
+
 	public function formKey($script = true)
 	{
 		if (isset($this->config['londerlandHash'])) {

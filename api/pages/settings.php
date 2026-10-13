@@ -14,7 +14,7 @@ function get_page_settings($Londerland)
 	$Londerland->setLoggerChannel('Londerland');
 	$Londerland->logger->notice('Accessed admin settings page');
 	$systemMenus = $Londerland->systemMenuLists();
-	return $Londerland->pluginFiles('js', true) . '
+	return $Londerland->pluginSettingsScripts() . '
 <script>
 	(function() {
 		authDebugCheck();
