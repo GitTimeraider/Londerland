@@ -36,13 +36,6 @@
 		buildDom();
 		hookFunctions();
 		track('visit');
-		// Seasonal Themes tells which season is showing (it may have loaded before or after this file)
-		if (window.LonderlandSeason) {
-			track('season', { season: window.LonderlandSeason });
-		}
-		$(document).on('londerland:season', function (event, season) {
-			track('season', { season: season });
-		});
 	}
 
 	/* ===================== helpers ===================== */

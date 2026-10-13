@@ -28,8 +28,7 @@ class Achievements extends Londerland
 	// Caps so a user cannot grow their row without limit
 	private const MAX_TABS_TRACKED = 500;
 	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
-	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'season', 'ai'];
-	private const SEASONS = ['newyear', 'valentine', 'easter', 'aprilfools', 'kingsday', 'sysadminday', 'programmersday', 'halloween', 'christmas'];
+	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai'];
 
 	/* ===================== achievements ===================== */
 
@@ -71,7 +70,6 @@ class Achievements extends Londerland
 			['key' => 'hex_100', 'name' => '0x100', 'description' => 'Visit on Programmers\' Day (day 256 of the year)', 'icon' => '💾', 'category' => 'Special days', 'stat' => 'day_programmers', 'target' => 1],
 			['key' => 'spooky_scripts', 'name' => 'Spooky Scripts', 'description' => 'Visit on Halloween', 'icon' => '🎃', 'category' => 'Special days', 'stat' => 'day_halloween', 'target' => 1],
 			['key' => 'merry_uptime', 'name' => 'Merry Uptime', 'description' => 'Visit during Christmas (24 to 26 December)', 'icon' => '🎄', 'category' => 'Special days', 'stat' => 'day_xmas', 'target' => 1],
-			['key' => 'seasoned', 'name' => 'Seasoned', 'description' => 'See 3 different seasonal themes', 'icon' => '🍂', 'category' => 'Special days', 'stat' => 'seasons', 'target' => 3, 'requires' => 'SEASONAL'],
 			// AI Chat
 			['key' => 'prompt_engineer', 'name' => 'Prompt Engineer', 'description' => 'Start your first AI chat', 'icon' => '🤖', 'category' => 'AI Chat', 'stat' => 'ai_chats', 'target' => 1, 'requires' => 'AICHAT'],
 			['key' => 'token_burner', 'name' => 'Token Burner', 'description' => 'Send 100 messages to the AI', 'icon' => '🪙', 'category' => 'AI Chat', 'stat' => 'ai_messages', 'target' => 100, 'requires' => 'AICHAT'],
@@ -320,18 +318,6 @@ class Achievements extends Londerland
 				}
 				$stats['tab_counts'] = $counts;
 				break;
-			case 'season':
-				$season = (string)($data['season'] ?? '');
-				if (!in_array($season, self::SEASONS, true)) {
-					$this->setAPIResponse('error', 'Unknown season', 422);
-					return false;
-				}
-				$seen = (array)($stats['seasons_seen'] ?? []);
-				if (!in_array($season, $seen, true)) {
-					$seen[] = $season;
-				}
-				$stats['seasons_seen'] = $seen;
-				break;
 			case 'ai':
 				// counted below, like on every event
 				break;
@@ -382,7 +368,6 @@ class Achievements extends Londerland
 		$registered = $user && $user['register_date'] ? strtotime($this->_achDateString($user['register_date']) . ' UTC') : false;
 		$computed = [
 			'tabs_unique' => count((array)($stats['tab_counts'] ?? [])),
-			'seasons' => count((array)($stats['seasons_seen'] ?? [])),
 			'admin' => (int)($this->user['groupID'] ?? 999) <= 1 ? 1 : 0,
 			'account_days' => $registered ? (int)floor((time() - $registered) / 86400) : 0,
 		];
@@ -646,7 +631,7 @@ class Achievements extends Londerland
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen groups collect badges by using Londerland: visiting on several days, opening tabs, special days and a few secrets.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">They find their badges and statistics under My Stats in the user menu (top right).</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Guests have no account, so they never collect badges.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Seasoned only appears while the Seasonal Themes plugin is enabled; Prompt Engineer and Token Burner only while AI Chat is enabled.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Prompt Engineer and Token Burner only appear while AI Chat is enabled.</span></li>
 									</ul>
 								</div>
 							</div>
