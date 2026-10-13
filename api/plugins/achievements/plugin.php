@@ -27,7 +27,8 @@ class Achievements extends Londerland
 	private const TABLE = 'ACHIEVEMENTS-users';
 	// Caps so a user cannot grow their row without limit
 	private const MAX_TABS_TRACKED = 500;
-	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'season'];
+	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
+	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'season', 'ai'];
 	private const SEASONS = ['newyear', 'valentine', 'easter', 'aprilfools', 'kingsday', 'sysadminday', 'programmersday', 'halloween', 'christmas'];
 
 	/* ===================== achievements ===================== */
@@ -58,7 +59,7 @@ class Achievements extends Londerland
 			['key' => 'port_scanner', 'name' => 'Port Scanner', 'description' => 'Open 5 different tabs', 'icon' => '🔍', 'category' => 'Tabs', 'stat' => 'tabs_unique', 'target' => 5],
 			['key' => 'network_mapper', 'name' => 'Network Mapper', 'description' => 'Open 15 different tabs', 'icon' => '🗺️', 'category' => 'Tabs', 'stat' => 'tabs_unique', 'target' => 15],
 			['key' => 'kiosk_mode', 'name' => 'Kiosk Mode', 'description' => 'Switch to full screen', 'icon' => '🖥️', 'category' => 'Tabs', 'stat' => 'fullscreen', 'target' => 1],
-			['key' => 'screen_locker', 'name' => 'Screen Locker', 'description' => 'Lock your screen from the user menu', 'icon' => '🔒', 'category' => 'Tabs', 'stat' => 'lock', 'target' => 1],
+			['key' => 'screen_locker', 'name' => 'Screen Locker', 'description' => 'Lock your screen', 'icon' => '🔒', 'category' => 'Tabs', 'stat' => 'lock', 'target' => 1],
 			// Time of day
 			['key' => 'night_shift', 'name' => 'Night Shift', 'description' => 'Visit between midnight and 5 in the morning', 'icon' => '🦉', 'category' => 'Time', 'stat' => 'night', 'target' => 1],
 			['key' => 'early_cron', 'name' => 'Early Cron Job', 'description' => 'Visit between 5 and 7 in the morning', 'icon' => '🌅', 'category' => 'Time', 'stat' => 'early', 'target' => 1],
@@ -331,10 +332,14 @@ class Achievements extends Londerland
 				}
 				$stats['seasons_seen'] = $seen;
 				break;
+			case 'ai':
+				// counted below, like on every event
+				break;
 			default:
 				// fullscreen, lock: counters; konami, logo: secrets that only need to happen once
 				$this->_achIncrement($stats, $event);
 		}
+		$this->_achCountAiChat($stats);
 		$new = $this->_achEvaluate($stats, $unlocked);
 		$this->_achSave($this->_achUserId(), $stats, $unlocked);
 		$this->setAPIResponse('success', null, 200, ['unlocked' => $new]);
@@ -344,7 +349,29 @@ class Achievements extends Londerland
 	/* ===================== evaluation ===================== */
 
 	/**
-	 * Values that are not counted but looked up when needed (account age, AI Chat use, number of badges).
+	 * AI chats and messages, kept as the highest number ever seen in the AI Chat tables: deleting chats, editing a
+	 * question or answering again removes rows there, but must not lower the count or undo progress.
+	 * The browser reports every new chat and message, so this runs right after each one.
+	 */
+	private function _achCountAiChat(&$stats)
+	{
+		if (empty($this->config['AICHAT-enabled']) || !$this->_achTableExists('AICHAT-chats') || !$this->_achTableExists('AICHAT-messages')) {
+			return;
+		}
+		$chats = (int)$this->processQueries([[
+			'function' => 'fetchSingle',
+			'query' => ['SELECT COUNT(*) FROM `AICHAT-chats` WHERE `user_id` = ?', $this->_achUserId()]
+		]]);
+		$messages = (int)$this->processQueries([[
+			'function' => 'fetchSingle',
+			'query' => ['SELECT COUNT(*) FROM `AICHAT-messages` m INNER JOIN `AICHAT-chats` c ON c.`id` = m.`chat_id` WHERE c.`user_id` = ? AND m.`role` = %s', $this->_achUserId(), 'user']
+		]]);
+		$stats['ai_chats'] = max((int)($stats['ai_chats'] ?? 0), $chats);
+		$stats['ai_messages'] = max((int)($stats['ai_messages'] ?? 0), $messages);
+	}
+
+	/**
+	 * Values that are not counted but looked up when needed (account age, number of badges).
 	 */
 	private function _achComputedStats($stats)
 	{
@@ -358,19 +385,7 @@ class Achievements extends Londerland
 			'seasons' => count((array)($stats['seasons_seen'] ?? [])),
 			'admin' => (int)($this->user['groupID'] ?? 999) <= 1 ? 1 : 0,
 			'account_days' => $registered ? (int)floor((time() - $registered) / 86400) : 0,
-			'ai_chats' => 0,
-			'ai_messages' => 0,
 		];
-		if (!empty($this->config['AICHAT-enabled']) && $this->_achTableExists('AICHAT-chats') && $this->_achTableExists('AICHAT-messages')) {
-			$computed['ai_chats'] = (int)$this->processQueries([[
-				'function' => 'fetchSingle',
-				'query' => ['SELECT COUNT(*) FROM `AICHAT-chats` WHERE `user_id` = ?', $this->_achUserId()]
-			]]);
-			$computed['ai_messages'] = (int)$this->processQueries([[
-				'function' => 'fetchSingle',
-				'query' => ['SELECT COUNT(*) FROM `AICHAT-messages` m INNER JOIN `AICHAT-chats` c ON c.`id` = m.`chat_id` WHERE c.`user_id` = ? AND m.`role` = %s', $this->_achUserId(), 'user']
-			]]);
-		}
 		return $computed;
 	}
 
@@ -439,8 +454,10 @@ class Achievements extends Londerland
 	public function _achMyStats()
 	{
 		[$stats, $unlocked] = $this->_achLoad($this->_achUserId());
+		$before = $stats;
+		$this->_achCountAiChat($stats);
 		// Badges such as Sudoer or Year One can be earned without any new event
-		if ($this->_achEvaluate($stats, $unlocked)) {
+		if ($this->_achEvaluate($stats, $unlocked) || $stats !== $before) {
 			$this->_achSave($this->_achUserId(), $stats, $unlocked);
 		}
 		$all = $this->_achAllStats($stats, $unlocked);
@@ -478,8 +495,8 @@ class Achievements extends Londerland
 				'hours' => array_map('intval', array_pad(array_slice((array)($stats['hours'] ?? []), 0, 24), 24, 0)),
 				'weekdays' => array_map('intval', array_pad(array_slice((array)($stats['weekdays'] ?? []), 0, 7), 7, 0)),
 				'aiEnabled' => !empty($this->config['AICHAT-enabled']),
-				'aiChats' => $all['ai_chats'],
-				'aiMessages' => $all['ai_messages'],
+				'aiChats' => (int)($all['ai_chats'] ?? 0),
+				'aiMessages' => (int)($all['ai_messages'] ?? 0),
 			],
 			'achievements' => $achievements,
 			'leaderboard' => !empty($this->config['ACHIEVEMENTS-leaderboard-include']) ? $this->_achLeaderboard(10) : null,

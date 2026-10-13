@@ -145,14 +145,51 @@
 				track('tab', { tab: parseInt(tab.id, 10) });
 			}
 		});
-		wrap('toggleFullScreen', function () {
-			if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+		// Full screen, however it was entered: Londerland's button or its "f f" shortcut (fullscreenchange), or the
+		// browser's own full screen (F11), which only shows as a window as big as the screen
+		$(document).on('fullscreenchange.achievements webkitfullscreenchange.achievements', function () {
+			if (document.fullscreenElement || document.webkitFullscreenElement) {
 				track('fullscreen');
 			}
 		});
+		const screenSized = () => window.innerWidth >= screen.width && window.innerHeight >= screen.height;
+		let wasScreenSized = screenSized();
+		let resizeTimer = null;
+		$(window).on('resize.achievements', function () {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(function () {
+				const now = screenSized();
+				if (now && !wasScreenSized && !document.fullscreenElement && !document.webkitFullscreenElement) {
+					track('fullscreen');
+				}
+				wasScreenSized = now;
+			}, 300);
+		});
+		// Lock Screen (the user menu, or the automatic lock after idle time)
 		wrap('lock', function () {
 			track('lock');
 		});
+		// AI Chat: after a new chat or message the server counts again (only up, see _achCountAiChat)
+		if (typeof window.fetch === 'function') {
+			const originalFetch = window.fetch;
+			window.fetch = function (input, init) {
+				const result = originalFetch.apply(this, arguments);
+				try {
+					const url = typeof input === 'string' ? input : (input && input.url) || '';
+					const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+					if (method === 'POST' && /plugins\/aichat\/chats(\/\d+\/stream)?(\?|$)/.test(url)) {
+						result.then(function (response) {
+							if (response.ok) {
+								track('ai');
+							}
+						}, function () {});
+					}
+				} catch (e) {
+					console.error(e);
+				}
+				return result;
+			};
+		}
 		let konami = 0;
 		$(document).on('keydown.achievements', function (event) {
 			if ($(event.target).is('input, textarea, select, [contenteditable="true"]')) {
