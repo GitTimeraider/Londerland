@@ -2393,6 +2393,11 @@ td.mouse-grab.sort-tabs-handle {
 .hidden {
   display: none !important;
 }
+/* Magnific Popup's own stylesheet loads without blocking the first paint, so its hide rule is repeated here:
+   without it, popups that are in the page from the start (Account Settings) can show for a moment on load */
+.mfp-hide {
+  display: none !important;
+}
 @media (max-width: 767.98px) {
   .hidden-xs {
     display: none !important;
