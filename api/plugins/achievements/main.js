@@ -129,14 +129,43 @@
 	}
 
 	function hookFunctions() {
-		wrap('switchTab', function (id) {
+		wrap('switchTab', function (id, split) {
 			if (Date.now() - startedAt < IGNORE_TABS_FOR_MS) {
 				return;
 			}
 			const tab = typeof findTab === 'function' ? findTab(id) : null;
 			if (tab && parseInt(tab.id, 10) > 0) {
 				track('tab', { tab: parseInt(tab.id, 10) });
+				if (split) {
+					track('split');
+				}
 			}
+		});
+		// A tab in a new browser window: the top bar button, or Ctrl/middle-click on a tab
+		wrap('openInNewBrowserTab', function () {
+			track('popout');
+		});
+		wrap('popTab', function () {
+			track('popout');
+		});
+		// Reloading: the top bar button, or Shift+click on a tab
+		wrap('reloadCurrentTab', function () {
+			track('reload');
+		});
+		wrap('reloadTab', function () {
+			track('reload');
+		});
+		// Marathon: 4 hours with this page open and visible (time in a background browser tab does not count)
+		let visibleMinutes = 0;
+		const marathon = setInterval(function () {
+			if (!document.hidden && ++visibleMinutes >= 240) {
+				clearInterval(marathon);
+				track('marathon');
+			}
+		}, 60000);
+		// The Bookmarks plugin announces every bookmark that is opened
+		$(document).on('londerland:bookmark-open', function () {
+			track('bookmark');
 		});
 		// Full screen, however it was entered: Londerland's button or its "f f" shortcut (fullscreenchange), or the
 		// browser's own full screen (F11), which only shows as a window as big as the screen

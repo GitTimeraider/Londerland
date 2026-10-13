@@ -28,7 +28,7 @@ class Achievements extends Londerland
 	// Caps so a user cannot grow their row without limit
 	private const MAX_TABS_TRACKED = 500;
 	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
-	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai'];
+	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai', 'split', 'popout', 'reload', 'marathon', 'bookmark'];
 
 	/* ===================== achievements ===================== */
 
@@ -58,14 +58,23 @@ class Achievements extends Londerland
 			['key' => 'port_scanner', 'name' => 'Port Scanner', 'description' => 'Open 5 different tabs', 'icon' => '🔍', 'category' => 'Tabs', 'stat' => 'tabs_unique', 'target' => 5],
 			['key' => 'network_mapper', 'name' => 'Network Mapper', 'description' => 'Open 15 different tabs', 'icon' => '🗺️', 'category' => 'Tabs', 'stat' => 'tabs_unique', 'target' => 15],
 			['key' => 'kiosk_mode', 'name' => 'Kiosk Mode', 'description' => 'Switch to full screen', 'icon' => '🖥️', 'category' => 'Tabs', 'stat' => 'fullscreen', 'target' => 1],
+			['key' => 'split_brain', 'name' => 'Split Brain', 'description' => 'Open two tabs side by side (Ctrl+Alt+click a tab)', 'icon' => '🧠', 'category' => 'Tabs', 'stat' => 'split', 'target' => 1],
+			['key' => 'pop_out', 'name' => 'Pop-out', 'description' => 'Open a tab in a new browser window', 'icon' => '🪟', 'category' => 'Tabs', 'stat' => 'popout', 'target' => 1],
+			['key' => 'refresh_rate', 'name' => 'Refresh Rate', 'description' => 'Reload tabs 25 times', 'icon' => '🔄', 'category' => 'Tabs', 'stat' => 'reload', 'target' => 25],
 			['key' => 'screen_locker', 'name' => 'Screen Locker', 'description' => 'Lock your screen', 'icon' => '🔒', 'category' => 'Tabs', 'stat' => 'lock', 'target' => 1],
 			// Time of day
 			['key' => 'night_shift', 'name' => 'Night Shift', 'description' => 'Visit between midnight and 5 in the morning', 'icon' => '🦉', 'category' => 'Time', 'stat' => 'night', 'target' => 1],
 			['key' => 'early_cron', 'name' => 'Early Cron Job', 'description' => 'Visit between 5 and 7 in the morning', 'icon' => '🌅', 'category' => 'Time', 'stat' => 'early', 'target' => 1],
 			['key' => 'on_call', 'name' => 'On-Call Weekend', 'description' => 'Visit on 5 weekend days', 'icon' => '📟', 'category' => 'Time', 'stat' => 'weekend', 'target' => 5],
+			['key' => 'marathon', 'name' => 'Marathon Session', 'description' => 'Keep Londerland open for 4 hours in a row', 'icon' => '🏃', 'category' => 'Time', 'stat' => 'marathon', 'target' => 1],
+			['key' => 'friday_deploy', 'name' => 'Friday Deploy', 'description' => 'Use Londerland on a Friday after 17:00. Brave!', 'icon' => '🚀', 'category' => 'Time', 'stat' => 'friday_deploy', 'target' => 1],
 			// Special days
 			['key' => 'epoch_rollover', 'name' => 'Epoch Rollover', 'description' => 'Visit on New Year\'s Day', 'icon' => '🎆', 'category' => 'Special days', 'stat' => 'day_newyear', 'target' => 1],
+			['key' => 'leap_day', 'name' => 'Leap Day', 'description' => 'Visit on 29 February', 'icon' => '🐸', 'category' => 'Special days', 'stat' => 'day_leap', 'target' => 1],
+			['key' => 'pi_day', 'name' => 'Pi Day', 'description' => 'Visit on 14 March (3.14)', 'icon' => '🥧', 'category' => 'Special days', 'stat' => 'day_pi', 'target' => 1],
+			['key' => 'backup_day', 'name' => 'World Backup Day', 'description' => 'Visit on 31 March. Did you make a backup?', 'icon' => '💽', 'category' => 'Special days', 'stat' => 'day_backup', 'target' => 1],
 			['key' => 'fools_commit', 'name' => 'Fool\'s Commit', 'description' => 'Visit on April Fools\' Day', 'icon' => '🃏', 'category' => 'Special days', 'stat' => 'day_april1', 'target' => 1],
+			['key' => 'may_the_fourth', 'name' => 'May the 4th', 'description' => 'Visit on 4 May', 'icon' => '⭐', 'category' => 'Special days', 'stat' => 'day_may4', 'target' => 1],
 			['key' => 'thank_sysadmin', 'name' => 'Thank Your Sysadmin', 'description' => 'Visit on SysAdmin Day (last Friday of July)', 'icon' => '☕', 'category' => 'Special days', 'stat' => 'day_sysadmin', 'target' => 1],
 			['key' => 'hex_100', 'name' => '0x100', 'description' => 'Visit on Programmers\' Day (day 256 of the year)', 'icon' => '💾', 'category' => 'Special days', 'stat' => 'day_programmers', 'target' => 1],
 			['key' => 'spooky_scripts', 'name' => 'Spooky Scripts', 'description' => 'Visit on Halloween', 'icon' => '🎃', 'category' => 'Special days', 'stat' => 'day_halloween', 'target' => 1],
@@ -73,6 +82,8 @@ class Achievements extends Londerland
 			// AI Chat
 			['key' => 'prompt_engineer', 'name' => 'Prompt Engineer', 'description' => 'Start your first AI chat', 'icon' => '🤖', 'category' => 'AI Chat', 'stat' => 'ai_chats', 'target' => 1, 'requires' => 'AICHAT'],
 			['key' => 'token_burner', 'name' => 'Token Burner', 'description' => 'Send 100 messages to the AI', 'icon' => '🪙', 'category' => 'AI Chat', 'stat' => 'ai_messages', 'target' => 100, 'requires' => 'AICHAT'],
+			// Bookmarks
+			['key' => 'bookworm', 'name' => 'Bookworm', 'description' => 'Open 10 bookmarks', 'icon' => '📚', 'category' => 'Bookmarks', 'stat' => 'bookmark', 'target' => 10, 'requires' => 'BOOKMARK'],
 			// Secrets
 			['key' => 'konami', 'name' => '↑↑↓↓←→←→BA', 'description' => 'Enter the Konami code', 'icon' => '🎮', 'category' => 'Secrets', 'stat' => 'konami', 'target' => 1, 'secret' => true],
 			['key' => 'rubber_duck', 'name' => 'Rubber Duck Debugging', 'description' => 'Click the logo 10 times in a row', 'icon' => '🦆', 'category' => 'Secrets', 'stat' => 'logo', 'target' => 1, 'secret' => true],
@@ -234,6 +245,9 @@ class Achievements extends Londerland
 		$weekday = (int)$day->format('w');
 		$weekdays[$weekday] = (int)$weekdays[$weekday] + 1;
 		$stats['weekdays'] = array_map('intval', $weekdays);
+		if ($weekday === 5 && $hour >= 17) {
+			$stats['friday_deploy'] = 1;
+		}
 	}
 
 	private function _achTrackVisit(&$stats, DateTime $day, $hour)
@@ -272,8 +286,20 @@ class Achievements extends Londerland
 		if ($monthDay === '01-01') {
 			$days[] = 'newyear';
 		}
+		if ($monthDay === '02-29') {
+			$days[] = 'leap';
+		}
+		if ($monthDay === '03-14') {
+			$days[] = 'pi';
+		}
+		if ($monthDay === '03-31') {
+			$days[] = 'backup';
+		}
 		if ($monthDay === '04-01') {
 			$days[] = 'april1';
+		}
+		if ($monthDay === '05-04') {
+			$days[] = 'may4';
 		}
 		if ($monthDay === '10-31') {
 			$days[] = 'halloween';
@@ -322,7 +348,7 @@ class Achievements extends Londerland
 				// counted below, like on every event
 				break;
 			default:
-				// fullscreen, lock: counters; konami, logo: secrets that only need to happen once
+				// fullscreen, lock, split, popout, reload, bookmark: counters; konami, logo, marathon: only need to happen once
 				$this->_achIncrement($stats, $event);
 		}
 		$this->_achCountAiChat($stats);
@@ -631,7 +657,7 @@ class Achievements extends Londerland
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen groups collect badges by using Londerland: visiting on several days, opening tabs, special days and a few secrets.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">They find their badges and statistics under My Stats in the user menu (top right).</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Guests have no account, so they never collect badges.</span></li>
-										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Prompt Engineer and Token Burner only appear while AI Chat is enabled.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Prompt Engineer and Token Burner only appear while AI Chat is enabled, Bookworm only while Bookmarks is enabled.</span></li>
 									</ul>
 								</div>
 							</div>
