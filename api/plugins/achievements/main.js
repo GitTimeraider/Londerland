@@ -6,7 +6,6 @@
 	'use strict';
 
 	const API = 'api/v2/plugins/achievements/';
-	const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 	const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 	// the start tab that opens by itself when the page loads is not counted as "opened"
 	const IGNORE_TABS_FOR_MS = 4000;
@@ -262,25 +261,14 @@
 				return result;
 			};
 		}
-		let konami = 0;
-		$(document).on('keydown.achievements', function (event) {
-			if ($(event.target).is('input, textarea, select, [contenteditable="true"]')) {
-				return;
-			}
-			const key = event.key && event.key.length === 1 ? event.key.toLowerCase() : event.key;
-			konami = key === KONAMI[konami] ? konami + 1 : key === KONAMI[0] ? 1 : 0;
-			if (konami === KONAMI.length) {
-				konami = 0;
-				track('konami');
-			}
-		});
-		let clicks = [];
-		$(document).on('click.achievements', '.navbar-header .logo, #side-logo', function () {
-			const now = Date.now();
-			clicks = clicks.filter((time) => now - time < 4000).concat(now);
-			if (clicks.length >= 10) {
-				clicks = [];
-				track('logo');
+		// The easter eggs are listened for by Londerland itself (js/custom.js), which announces every find
+		const EGG_EVENTS = { konami: 'konami', duck: 'logo', matrix: 'matrix', sudo: 'sudo', roll: 'roll', teapot: 'teapot', answer: 'answer', xyzzy: 'xyzzy', party: 'party' };
+		document.addEventListener('londerland:easteregg', function (event) {
+			const detail = event.detail || {};
+			if (detail.egg === 'snake_score') {
+				track('snake');
+			} else if (EGG_EVENTS[detail.egg]) {
+				track(EGG_EVENTS[detail.egg]);
 			}
 		});
 	}

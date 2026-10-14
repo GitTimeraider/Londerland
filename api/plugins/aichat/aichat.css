@@ -1027,54 +1027,53 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   text-align: center;
 }
 
-/* Phones: full screen */
-@media (max-width: 767.98px) {
-  .aichat-launcher {
-    right: 16px;
-    bottom: 16px;
-    width: 60px;
-    height: 60px;
-  }
-  /* full screen chat: its own close button replaces the bubble */
-  .aichat-open .aichat-launcher {
-    display: none;
-  }
-  .aichat-tool-toggle span {
-    display: none;
-  }
-  .aichat-panel,
-  .aichat-panel.aichat-expanded {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    border-radius: 0;
-  }
-  .aichat-sidebar {
-    position: absolute;
-    inset: 0 auto 0 0;
-    z-index: 8;
-    width: 85%;
-    max-width: 320px;
-    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5);
-  }
-  /* Dims the chat while the history is open; tapping it closes the history */
-  .aichat-panel:not(.aichat-sidebar-hidden) .aichat-main::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 7;
-    background: rgba(0, 0, 0, 0.45);
-    cursor: pointer;
-  }
-  .aichat-model-wrap .ts-wrapper {
-    min-width: 130px;
-    max-width: 170px;
-  }
-  .aichat-hint,
-  .aichat-expand {
-    display: none !important;
-  }
+/* Phones, phones held sideways and tablets with the keyboard open: full screen.
+   main.js puts aichat-compact on the body (see isCompact()). */
+.aichat-compact .aichat-launcher {
+  right: 16px;
+  bottom: 16px;
+  width: 60px;
+  height: 60px;
+}
+/* full screen chat: its own close button replaces the bubble */
+.aichat-compact.aichat-open .aichat-launcher {
+  display: none;
+}
+.aichat-compact .aichat-tool-toggle span {
+  display: none;
+}
+.aichat-compact .aichat-panel,
+.aichat-compact .aichat-panel.aichat-expanded {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+.aichat-compact .aichat-sidebar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 8;
+  width: 85%;
+  max-width: 320px;
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5);
+}
+/* Dims the chat while the history is open; tapping it closes the history */
+.aichat-compact .aichat-panel:not(.aichat-sidebar-hidden) .aichat-main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.aichat-compact .aichat-model-wrap .ts-wrapper {
+  min-width: 130px;
+  max-width: 170px;
+}
+.aichat-compact .aichat-hint,
+.aichat-compact .aichat-expand {
+  display: none !important;
 }
 /* touch screens have no hover: keep the folder buttons visible */
 @media (hover: none) {

@@ -31,7 +31,9 @@ class Achievements extends Londerland
 	private const MAX_TABS_TRACKED = 500;
 	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
 	// palette: the command palette (Ctrl+K) was opened
-	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai', 'split', 'popout', 'reload', 'marathon', 'bookmark', 'palette'];
+	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai', 'split', 'popout', 'reload', 'marathon', 'bookmark', 'palette', 'matrix', 'sudo', 'roll', 'teapot', 'answer', 'xyzzy', 'party', 'snake'];
+	// The easter eggs (js/custom.js): the counters that count towards Egg Hunter
+	private const EASTER_EGGS = ['konami', 'logo', 'matrix', 'sudo', 'roll', 'teapot', 'answer', 'xyzzy', 'party', 'snake'];
 	// XP: a badge gives 50 (secret ones 100, unless the badge says otherwise), the first visit of a day 10 plus 2 per
 	// day of the streak (up to 20 more), and finishing all three daily quests 50 on top of the quests' own XP
 	private const XP_BADGE = 50;
@@ -106,6 +108,15 @@ class Achievements extends Londerland
 			// Secrets
 			['key' => 'konami', 'name' => '↑↑↓↓←→←→BA', 'description' => 'Enter the Konami code', 'icon' => '🎮', 'category' => 'Secrets', 'stat' => 'konami', 'target' => 1, 'secret' => true],
 			['key' => 'rubber_duck', 'name' => 'Rubber Duck Debugging', 'description' => 'Click the logo 10 times in a row', 'icon' => '🦆', 'category' => 'Secrets', 'stat' => 'logo', 'target' => 1, 'secret' => true],
+			['key' => 'red_pill', 'name' => 'Red Pill', 'description' => 'Type "matrix" (or find it in the command palette)', 'icon' => '💊', 'category' => 'Secrets', 'stat' => 'matrix', 'target' => 1, 'secret' => true],
+			['key' => 'incident_reported', 'name' => 'This Incident Will Be Reported', 'description' => 'Type "sudo"', 'icon' => '🚨', 'category' => 'Secrets', 'stat' => 'sudo', 'target' => 1, 'secret' => true],
+			['key' => 'barrel_roll', 'name' => 'Do a Barrel Roll', 'description' => 'Type "roll", or ask the command palette to do a barrel roll', 'icon' => '🛩️', 'category' => 'Secrets', 'stat' => 'roll', 'target' => 1, 'secret' => true],
+			['key' => 'teapot', 'name' => "I'm a Teapot", 'description' => 'Type "teapot", or ask the command palette for coffee', 'icon' => '🫖', 'category' => 'Secrets', 'stat' => 'teapot', 'target' => 1, 'secret' => true],
+			['key' => 'deep_thought', 'name' => 'Deep Thought', 'description' => 'Type "42"', 'icon' => '🌌', 'category' => 'Secrets', 'stat' => 'answer', 'target' => 1, 'secret' => true],
+			['key' => 'adventurer', 'name' => 'Nothing Happens', 'description' => 'Type "xyzzy"', 'icon' => '🗺️', 'category' => 'Secrets', 'stat' => 'xyzzy', 'target' => 1, 'secret' => true],
+			['key' => 'party_mode', 'name' => 'Party Mode', 'description' => 'Type "party"', 'icon' => '🎉', 'category' => 'Secrets', 'stat' => 'party', 'target' => 1, 'secret' => true],
+			['key' => 'snake_charmer', 'name' => 'Snake Charmer', 'description' => 'Score 15 or more in Snake (type "snake")', 'icon' => '🐍', 'category' => 'Secrets', 'stat' => 'snake', 'target' => 1, 'secret' => true],
+			['key' => 'egg_hunter', 'name' => 'Egg Hunter', 'description' => 'Find 8 of the easter eggs', 'icon' => '🥚', 'category' => 'Secrets', 'stat' => 'easter_eggs', 'target' => 8, 'secret' => true, 'xp' => 250],
 			// Meta
 			['key' => 'completionist', 'name' => 'Achievement Hunter', 'description' => 'Unlock 15 other badges', 'icon' => '🏆', 'category' => 'Meta', 'stat' => 'unlocked', 'target' => 15, 'xp' => 250],
 		];
@@ -579,7 +590,7 @@ class Achievements extends Londerland
 				// counted below
 				break;
 			default:
-				// fullscreen, lock, split, popout, reload, bookmark, palette: counters; konami, logo, marathon: only need to happen once
+				// fullscreen, lock, split, popout, reload, bookmark, palette: counters; marathon and the easter eggs only need to happen once
 				$this->_achIncrement($stats, $event);
 		}
 		if ($xpOn && $event !== 'tab') {
@@ -678,6 +689,9 @@ class Achievements extends Londerland
 			'admin' => (int)($this->user['groupID'] ?? 999) <= 1 ? 1 : 0,
 			'account_days' => $registered ? (int)floor((time() - $registered) / 86400) : 0,
 			'level' => $this->_achLevel((int)($stats['xp'] ?? 0)),
+			'easter_eggs' => count(array_filter(self::EASTER_EGGS, function ($egg) use ($stats) {
+				return (int)($stats[$egg] ?? 0) > 0;
+			})),
 		];
 		return $computed;
 	}
