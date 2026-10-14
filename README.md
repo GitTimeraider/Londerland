@@ -386,7 +386,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - A "Thinking" section for reasoning models.
 - **Search** button (globe): the web is searched first. The answer cites its sources as clickable [1], [2] links, with a list of sources under it.
 - **Image** button: your message becomes a picture, shown in the chat with a download button. "Answer again" creates a new version.
-- A full-screen layout on phones (also when held sideways) and on tablets while the on-screen keyboard is open.
+- A full-screen layout on phones (also when held sideways). On tablets the chat window replaces the chat bubble and moves above the on-screen keyboard.
 - **Share** (in the chat's ⋮ menu, when the admin allows it): makes a link anyone can open without logging in. Choose how long
   it works (1 day to 1 year, or until you stop it), then copy it. The link shows the questions and answers as they are
   when you make it: no attached files or pictures, no custom instructions, no reasoning and not your name. **Update with

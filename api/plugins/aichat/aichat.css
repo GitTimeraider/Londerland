@@ -105,6 +105,8 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   display: none;
   width: min(980px, calc(100vw - 96px));
   height: min(720px, calc(100vh - 160px));
+  /* the part of the screen that is visible: on tablets 100vh can include the space under the browser's toolbars */
+  height: min(720px, calc(100dvh - 160px));
   overflow: hidden;
   color: var(--aichat-text);
   background: var(--aichat-bg);
@@ -1027,7 +1029,22 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
   text-align: center;
 }
 
-/* Phones, phones held sideways and tablets with the keyboard open: full screen.
+/* Tablets (main.js puts aichat-touch on the body): the chat has its own close button, so the bubble is hidden while
+   the chat is open and the window uses its place at the bottom */
+.aichat-touch.aichat-open .aichat-launcher {
+  display: none;
+}
+.aichat-touch .aichat-panel {
+  bottom: 24px;
+  height: min(760px, calc(100vh - 80px));
+  height: min(760px, calc(100dvh - 80px));
+}
+.aichat-touch .aichat-panel.aichat-expanded {
+  bottom: 24px;
+  height: auto;
+}
+
+/* Phones and phones held sideways: full screen.
    main.js puts aichat-compact on the body (see isCompact()). */
 .aichat-compact .aichat-launcher {
   right: 16px;
