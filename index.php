@@ -1,6 +1,7 @@
 <?php
 include 'api/functions.php';
 $Londerland = new Londerland(true);
+$Londerland->seoHeaders();
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark" ontouchmove>

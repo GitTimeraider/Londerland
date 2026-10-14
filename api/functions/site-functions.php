@@ -252,6 +252,14 @@ html.has-announcement .split-pane{top:calc(40px + var(--announcement-h,0px))}
 		return ($this->config['seoRobots'] ?? 'index') === 'noindex';
 	}
 
+	// Response headers for index.php, sent before any of the page is
+	public function seoHeaders()
+	{
+		if ($this->hasDB() && $this->seoNoIndex() && !headers_sent()) {
+			header('X-Robots-Tag: noindex, nofollow');
+		}
+	}
+
 	/**
 	 * Tags for the <head> of index.php: author, robots, canonical, Open Graph, X/Twitter, verification codes, JSON-LD.
 	 */
@@ -271,9 +279,6 @@ html.has-announcement .split-pane{top:calc(40px + var(--announcement-h,0px))}
 		$tags = [];
 		$tags[] = '<meta name="author" content="' . $e($author) . '">';
 		$tags[] = '<meta name="robots" content="' . ($this->seoNoIndex() ? 'noindex, nofollow' : 'index, follow') . '">';
-		if ($this->seoNoIndex() && !headers_sent()) {
-			header('X-Robots-Tag: noindex, nofollow');
-		}
 		if ($siteUrl !== '') {
 			$tags[] = '<link rel="canonical" href="' . $e($siteUrl) . '">';
 			$tags[] = '<meta property="og:url" content="' . $e($siteUrl) . '">';
