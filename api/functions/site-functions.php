@@ -1,10 +1,9 @@
 <?php
 
 /**
- * Settings > Customize > Website: the announcement bar, search engine and link preview tags, robots.txt and sitemap.xml,
- * and installing Londerland as an app (web app manifest and a service worker with an offline page).
- * Everything here is written into index.php by the server, so a site without an announcement or with SEO and the app
- * switched off sends no extra bytes and makes no extra requests.
+ * Settings > Customize > Website: the announcement bar, search engine and link preview tags, robots.txt and sitemap.xml.
+ * Everything here is written into index.php by the server, so a site without an announcement sends no extra bytes
+ * and makes no extra requests.
  */
 trait SiteFunctions
 {
@@ -53,18 +52,6 @@ trait SiteFunctions
 				$this->settingsOption('switch', 'seoStructuredData', ['label' => 'Structured data (JSON-LD)', 'help' => 'Tells search engines the name and address of the site.']),
 				$this->settingsOption('switch', 'seoSitemap', ['label' => 'sitemap.xml', 'help' => 'Served at /sitemap.xml and listed in robots.txt. Needs the public address above.']),
 				$this->siteOption('textbox', 'seoRobotsTxt', ['label' => 'Own robots.txt', 'override' => 12, 'attr' => 'rows="6" spellcheck="false"', 'placeholder' => "User-agent: *\nDisallow: /api/", 'help' => 'Leave empty for a generated one that follows the Search engines setting. Served at /robots.txt.']),
-			],
-			'Install as App' => [
-				$this->settingsOption('switch', 'pwaEnabled', ['label' => 'Can be installed as an app', 'help' => 'Browsers offer to install Londerland (Install app in the user menu, the install icon in the address bar, or Add to Home Screen on phones). It then opens in its own window without the browser bars. Browsers only allow this over HTTPS (or on localhost).']),
-				$this->settingsOption('switch', 'pwaOffline', ['label' => 'Offline page', 'help' => 'Shows a page with a retry button instead of the browser error when the server cannot be reached. Nothing else is stored: pages and data always come from the server.']),
-				$this->siteOption('input', 'pwaName', ['label' => 'App name', 'placeholder' => htmlspecialchars((string)$this->config['title'], ENT_QUOTES), 'help' => 'Empty = the Londerland Title.']),
-				$this->siteOption('input', 'pwaShortName', ['label' => 'Short name', 'placeholder' => htmlspecialchars((string)$this->config['title'], ENT_QUOTES), 'help' => 'Shown under the icon on phones; 12 characters or less fits.']),
-				$this->settingsOption('select', 'pwaDisplay', ['label' => 'Window', 'options' => [['name' => 'Own window (standalone)', 'value' => 'standalone'], ['name' => 'Full screen', 'value' => 'fullscreen'], ['name' => 'Own window with back and reload buttons', 'value' => 'minimal-ui']]]),
-				$this->settingsOption('select', 'pwaOrientation', ['label' => 'Orientation on phones', 'options' => [['name' => 'Any', 'value' => 'any'], ['name' => 'Portrait', 'value' => 'portrait'], ['name' => 'Landscape', 'value' => 'landscape']]]),
-				$this->settingsOption('color', 'pwaThemeColor', ['label' => 'Title bar colour', 'help' => 'Empty = the Nav Bar Color, else dark grey.']),
-				$this->settingsOption('color', 'pwaBackgroundColor', ['label' => 'Start screen colour']),
-				$this->siteOption('input', 'pwaIcon192', ['label' => 'Icon 192 x 192 (PNG)', 'placeholder' => 'plugins/images/favicon/android-chrome-192x192.png', 'help' => 'Empty = the Londerland icon. Upload your own with the Image Manager (data/userTabs/...).']),
-				$this->siteOption('input', 'pwaIcon512', ['label' => 'Icon 512 x 512 (PNG)', 'placeholder' => 'plugins/images/favicon/android-chrome-512x512.png']),
 			],
 		];
 	}
@@ -353,102 +340,5 @@ html.has-announcement .split-pane{top:calc(40px + var(--announcement-h,0px))}
 			. '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n"
 			. "\t<url><loc>" . htmlspecialchars($siteUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc></url>\n"
 			. "</urlset>\n";
-	}
-
-	/* ===================== install as app ===================== */
-
-	public function pwaEnabled()
-	{
-		return $this->hasDB() && !empty($this->config['pwaEnabled']);
-	}
-
-	public function pwaThemeColor()
-	{
-		$color = trim((string)($this->config['pwaThemeColor'] ?? '')) ?: trim((string)($this->config['headerColor'] ?? ''));
-		return preg_match('/^#[0-9a-f]{3,8}$/i', $color) ? $color : '#2b2f36';
-	}
-
-	/**
-	 * <head> tags: the manifest, theme colour, and registering (or, once switched off, removing) the service worker.
-	 */
-	public function pwaHead()
-	{
-		// A service worker from earlier (app or offline page switched off since) would keep showing the offline page
-		$unregister = '<script>if (navigator.serviceWorker && navigator.serviceWorker.controller) { navigator.serviceWorker.getRegistrations().then(function (r) { r.forEach(function (w) { w.unregister(); }); }); }</script>' . "\n";
-		if (!$this->pwaEnabled()) {
-			return $unregister;
-		}
-		$color = htmlspecialchars($this->pwaThemeColor(), ENT_QUOTES);
-		// Browsers do not need a service worker to install an app any more; it is only there for the offline page
-		$serviceWorker = !empty($this->config['pwaOffline'])
-			? 'if ("serviceWorker" in navigator) {
-			window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js?v=' . rawurlencode($this->fileHash) . '").catch(function () {}); });
-		}'
-			: '';
-		return '<link rel="manifest" href="api/v2/pwa/manifest" crossorigin="use-credentials">
-	<meta name="theme-color" content="' . $color . '">
-	<meta name="mobile-web-app-capable" content="yes">
-	' . ($serviceWorker === '' ? $unregister : '') . '<script>
-		' . $serviceWorker . '
-		// Chrome and Edge offer installing through this event; the user menu shows "Install app" while it is available
-		window.addEventListener("beforeinstallprompt", function (event) {
-			event.preventDefault();
-			window.londerlandInstallPrompt = event;
-			document.documentElement.classList.add("can-install-app");
-		});
-		window.addEventListener("appinstalled", function () {
-			window.londerlandInstallPrompt = null;
-			document.documentElement.classList.remove("can-install-app");
-		});
-	</script>
-';
-	}
-
-	/**
-	 * The favicon tags without their own manifest link while the app is switched on (the first manifest link wins).
-	 */
-	public function siteFavIcons()
-	{
-		$icons = $this->favIcons();
-		if ($this->pwaEnabled()) {
-			$icons = preg_replace('#<link[^>]+rel=["\']manifest["\'][^>]*>\s*#i', '', $icons);
-			$icons = preg_replace('#<meta[^>]+name=["\']theme-color["\'][^>]*>\s*#i', '', $icons);
-		}
-		return $icons;
-	}
-
-	public function pwaManifest()
-	{
-		$title = trim(strip_tags((string)$this->config['title'])) ?: 'Londerland';
-		$name = trim((string)($this->config['pwaName'] ?? '')) ?: $title;
-		$shortName = trim((string)($this->config['pwaShortName'] ?? '')) ?: $name;
-		$display = in_array($this->config['pwaDisplay'] ?? '', ['standalone', 'fullscreen', 'minimal-ui'], true) ? $this->config['pwaDisplay'] : 'standalone';
-		$orientation = in_array($this->config['pwaOrientation'] ?? '', ['any', 'portrait', 'landscape'], true) ? $this->config['pwaOrientation'] : 'any';
-		$background = trim((string)($this->config['pwaBackgroundColor'] ?? ''));
-		$background = preg_match('/^#[0-9a-f]{3,8}$/i', $background) ? $background : (($this->config['style'] ?? 'dark') === 'light' ? '#ffffff' : '#1f2329');
-		// The manifest is served from api/v2/pwa/, so its addresses go two folders up to the site
-		$icon = function ($configured, $default) {
-			$configured = trim((string)$configured);
-			if ($configured === '') {
-				return '../../../' . $default;
-			}
-			return preg_match('#^(https?:)?//#i', $configured) || strpos($configured, '/') === 0 ? $configured : '../../../' . $configured;
-		};
-		return [
-			'id' => '../../../',
-			'name' => $name,
-			'short_name' => $shortName,
-			'description' => strip_tags((string)$this->config['description']),
-			'start_url' => '../../../',
-			'scope' => '../../../',
-			'display' => $display,
-			'orientation' => $orientation,
-			'theme_color' => $this->pwaThemeColor(),
-			'background_color' => $background,
-			'icons' => [
-				['src' => $icon($this->config['pwaIcon192'] ?? '', 'plugins/images/favicon/android-chrome-192x192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
-				['src' => $icon($this->config['pwaIcon512'] ?? '', 'plugins/images/favicon/android-chrome-512x512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
-			],
-		];
 	}
 }

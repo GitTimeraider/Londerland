@@ -13,8 +13,7 @@ $Londerland->seoHeaders();
           name="viewport">
     <meta content="<?php echo $Londerland->config['description']; ?>" name="description">
 	<?php echo $Londerland->seoHead(); ?>
-	<?php echo $Londerland->siteFavIcons(); ?>
-	<?php echo $Londerland->pwaHead(); ?>
+	<?php echo $Londerland->favIcons(); ?>
     <title><?php echo $Londerland->config['title']; ?></title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
