@@ -30,8 +30,8 @@ website, not like a wall of server tiles.
   using `api/v2/auth`.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
-- **Website**: an announcement bar, search engine and link preview settings with robots.txt and sitemap.xml, and installing
-  Londerland as an app on phones and computers ([details below](#website-announcement-seo-and-install-as-app)).
+- **Website**: an announcement bar, and search engine and link preview settings with robots.txt and sitemap.xml
+  ([details below](#website-announcement-and-seo)).
 - **Command palette**: press Ctrl+K (Cmd+K on a Mac) to jump to any tab, bookmark, settings page or action ([details below](#command-palette)).
 - **AI Chat** with web search, reading web pages, image generation and read-only public links to a chat ([details below](#ai-chat)).
 - **Achievements and My Stats**: badges, XP, levels and daily quests for using Londerland, and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
@@ -49,7 +49,7 @@ website, not like a wall of server tiles.
 4. Add the pages visitors should see as tabs under **Settings > Tab Editor** and set their group to **Guest**.
    Mark one of them as the default tab: that is the page visitors land on. Everything else stays for members only.
 5. Under **Settings > Customize > Website > SEO & Sharing**, fill in the public address of the site so link previews,
-   the canonical link and the sitemap use it ([details below](#website-announcement-seo-and-install-as-app)).
+   the canonical link and the sitemap use it ([details below](#website-announcement-and-seo)).
 
 ## Install with Docker
 
@@ -278,9 +278,9 @@ RewriteRule ^(robots\.txt|sitemap\.xml)$ api/v2/index.php [L]
 rewrite ^/(robots\.txt|sitemap\.xml)$ /api/v2/index.php last;
 ```
 
-## Website: announcement, SEO and install as app
+## Website: announcement and SEO
 
-In Londerland, open **Settings > Customize > Website**. It has three parts; click **Save** after a change.
+In Londerland, open **Settings > Customize > Website**. It has two parts; click **Save** after a change.
 
 **Announcement** puts a coloured bar with a message under the top bar.
 
@@ -298,23 +298,13 @@ In Londerland, open **Settings > Customize > Website**. It has three parts; clic
 - **Structured data (JSON-LD)** and **sitemap.xml** (served at `/sitemap.xml`).
 - **Own robots.txt**: leave empty for a generated one, served at `/robots.txt`.
 
-**Install as App** lets visitors install Londerland like an app, with its own window and icon.
-
-- Switch on **Can be installed as an app**. Browsers only allow this over HTTPS (or on `localhost`).
-- Chrome and Edge then show **Install app** in the user menu (your name, top right) and an install icon in the address bar.
-  On an iPhone or iPad: Safari > Share > **Add to Home Screen**. On Android: Chrome menu > **Install app** / **Add to Home screen**.
-- **Offline page**: shows a page with a retry button instead of the browser's error when the server cannot be reached.
-  Nothing else is stored on the device: pages and data always come from the server.
-- App name and short name, window style, orientation, title bar and start screen colours, and your own 192 x 192 and
-  512 x 512 PNG icons (upload them with the Image Manager and use their `data/userTabs/...` address).
-
 ## Command palette
 
 Press **Ctrl+K** (**Cmd+K** on a Mac) anywhere in Londerland, or click the magnifying glass in the top bar, and type:
 
 - your **tabs** (Enter opens it, **Shift+Enter** opens it in a new browser tab),
 - **bookmarks** of your group (when the Bookmarks plugin is on),
-- **actions**: reload or close the open tab, full screen, account settings, My Stats, install app, lock screen, log out,
+- **actions**: reload or close the open tab, full screen, account settings, My Stats, lock screen, log out,
 - **settings pages** (admins), for example "website", "users" or "audit".
 
 Use the arrow keys and Enter, or click. What you picked recently is at the top. The palette is only downloaded the first

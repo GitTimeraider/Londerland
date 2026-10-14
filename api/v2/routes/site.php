@@ -1,18 +1,8 @@
 <?php
 /*
- * Public files of Settings > Customize > Website: the web app manifest, robots.txt and sitemap.xml.
+ * Public files of Settings > Customize > Website: robots.txt and sitemap.xml.
  * Apache hands /robots.txt and /sitemap.xml at the root of the site to the API (docker/apache-londerland.conf).
  */
-$app->get('/pwa/manifest', function ($request, $response, $args) {
-	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
-	if (!$Londerland->pwaEnabled()) {
-		return $response->withStatus(404);
-	}
-	$response->getBody()->write(json_encode($Londerland->pwaManifest(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-	return $response
-		->withHeader('Content-Type', 'application/manifest+json;charset=UTF-8')
-		->withHeader('Cache-Control', 'no-cache');
-});
 $robotsTxt = function ($request, $response, $args) {
 	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$response->getBody()->write($Londerland->hasDB() ? $Londerland->seoRobotsTxt() : "User-agent: *\nDisallow: /\n");
