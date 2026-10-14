@@ -201,10 +201,11 @@
 		wrap('reloadTab', function () {
 			track('reload');
 		});
-		// Marathon: 4 hours with this page open and visible (time in a background browser tab does not count)
-		let visibleMinutes = 0;
+		// Marathon: this page open for an hour. Measured on the clock instead of counting timer ticks, as browsers slow
+		// down or pause timers in background tabs and while the computer sleeps
+		const openedAt = Date.now();
 		const marathon = setInterval(function () {
-			if (!document.hidden && ++visibleMinutes >= 240) {
+			if (Date.now() - openedAt >= 3600000) {
 				clearInterval(marathon);
 				track('marathon');
 			}
