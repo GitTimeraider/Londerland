@@ -30,7 +30,17 @@ class Achievements extends Londerland
 	// Caps so a user cannot grow their row without limit
 	private const MAX_TABS_TRACKED = 500;
 	// ai: AI Chat created a chat or sent a message; only makes the server look at the AI Chat tables again
-	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai', 'split', 'popout', 'reload', 'marathon', 'bookmark'];
+	// palette: the command palette (Ctrl+K) was opened
+	private const EVENTS = ['visit', 'tab', 'fullscreen', 'lock', 'konami', 'logo', 'ai', 'split', 'popout', 'reload', 'marathon', 'bookmark', 'palette'];
+	// XP: a badge gives 50 (secret ones 100, unless the badge says otherwise), the first visit of a day 10 plus 2 per
+	// day of the streak (up to 20 more), and finishing all three daily quests 50 on top of the quests' own XP
+	private const XP_BADGE = 50;
+	private const XP_SECRET_BADGE = 100;
+	private const XP_DAILY_VISIT = 10;
+	private const XP_STREAK_STEP = 2;
+	private const XP_STREAK_MAX = 10;
+	private const XP_ALL_QUESTS = 50;
+	private const QUESTS_PER_DAY = 3;
 
 	/* ===================== achievements ===================== */
 
@@ -45,14 +55,14 @@ class Achievements extends Londerland
 			// Getting started
 			['key' => 'hello_world', 'name' => 'Hello World', 'description' => 'Visit Londerland for the first time', 'icon' => '👋', 'category' => 'Getting started', 'stat' => 'visits', 'target' => 1],
 			['key' => 'sudoer', 'name' => 'Sudoer', 'description' => 'Be a member of the Admin or Co-Admin group', 'icon' => '🔑', 'category' => 'Getting started', 'stat' => 'admin', 'target' => 1],
-			['key' => 'year_one', 'name' => 'Year One', 'description' => 'Have an account for a year', 'icon' => '🎂', 'category' => 'Getting started', 'stat' => 'account_days', 'target' => 365],
+			['key' => 'year_one', 'name' => 'Year One', 'description' => 'Have an account for a year', 'icon' => '🎂', 'category' => 'Getting started', 'stat' => 'account_days', 'target' => 365, 'xp' => 250],
 			// Loyalty
 			['key' => 'regular', 'name' => 'Regular', 'description' => 'Use Londerland on 7 different days', 'icon' => '📅', 'category' => 'Loyalty', 'stat' => 'days', 'target' => 7],
 			['key' => 'uptime', 'name' => 'Uptime 99.9%', 'description' => 'Use Londerland on 30 different days', 'icon' => '📈', 'category' => 'Loyalty', 'stat' => 'days', 'target' => 30],
-			['key' => 'lts', 'name' => 'Long-Term Support', 'description' => 'Use Londerland on 100 different days', 'icon' => '🏛️', 'category' => 'Loyalty', 'stat' => 'days', 'target' => 100],
+			['key' => 'lts', 'name' => 'Long-Term Support', 'description' => 'Use Londerland on 100 different days', 'icon' => '🏛️', 'category' => 'Loyalty', 'stat' => 'days', 'target' => 100, 'xp' => 250],
 			['key' => 'warm_cache', 'name' => 'Warm Cache', 'description' => 'Visit 3 days in a row', 'icon' => '🔥', 'category' => 'Loyalty', 'stat' => 'best_streak', 'target' => 3],
 			['key' => 'always_on', 'name' => 'Always On', 'description' => 'Visit 7 days in a row', 'icon' => '⚡', 'category' => 'Loyalty', 'stat' => 'best_streak', 'target' => 7],
-			['key' => 'no_downtime', 'name' => 'No Downtime', 'description' => 'Visit 30 days in a row', 'icon' => '🛡️', 'category' => 'Loyalty', 'stat' => 'best_streak', 'target' => 30],
+			['key' => 'no_downtime', 'name' => 'No Downtime', 'description' => 'Visit 30 days in a row', 'icon' => '🛡️', 'category' => 'Loyalty', 'stat' => 'best_streak', 'target' => 30, 'xp' => 250],
 			// Tabs
 			['key' => 'tab_hopper', 'name' => 'Tab Hopper', 'description' => 'Open 10 tabs', 'icon' => '🗂️', 'category' => 'Tabs', 'stat' => 'tabs', 'target' => 10],
 			['key' => 'ctrl_tab', 'name' => 'Ctrl+Tab Master', 'description' => 'Open 100 tabs', 'icon' => '⌨️', 'category' => 'Tabs', 'stat' => 'tabs', 'target' => 100],
@@ -64,6 +74,7 @@ class Achievements extends Londerland
 			['key' => 'pop_out', 'name' => 'Pop-out', 'description' => 'Open a tab in a new browser window', 'icon' => '🪟', 'category' => 'Tabs', 'stat' => 'popout', 'target' => 1],
 			['key' => 'refresh_rate', 'name' => 'Refresh Rate', 'description' => 'Reload tabs 25 times', 'icon' => '🔄', 'category' => 'Tabs', 'stat' => 'reload', 'target' => 25],
 			['key' => 'screen_locker', 'name' => 'Screen Locker', 'description' => 'Lock your screen', 'icon' => '🔒', 'category' => 'Tabs', 'stat' => 'lock', 'target' => 1],
+			['key' => 'power_user', 'name' => 'Power User', 'description' => 'Open the command palette (Ctrl+K) 10 times', 'icon' => '⌘', 'category' => 'Tabs', 'stat' => 'palette', 'target' => 10],
 			// Time of day
 			['key' => 'night_shift', 'name' => 'Night Shift', 'description' => 'Visit between midnight and 5 in the morning', 'icon' => '🦉', 'category' => 'Time', 'stat' => 'night', 'target' => 1],
 			['key' => 'early_cron', 'name' => 'Early Cron Job', 'description' => 'Visit between 5 and 7 in the morning', 'icon' => '🌅', 'category' => 'Time', 'stat' => 'early', 'target' => 1],
@@ -86,11 +97,17 @@ class Achievements extends Londerland
 			['key' => 'token_burner', 'name' => 'Token Burner', 'description' => 'Send 100 messages to the AI', 'icon' => '🪙', 'category' => 'AI Chat', 'stat' => 'ai_messages', 'target' => 100, 'requires' => 'AICHAT'],
 			// Bookmarks
 			['key' => 'bookworm', 'name' => 'Bookworm', 'description' => 'Open 10 bookmarks', 'icon' => '📚', 'category' => 'Bookmarks', 'stat' => 'bookmark', 'target' => 10, 'requires' => 'BOOKMARK'],
+			// Levels & quests (only while XP, levels and daily quests are switched on)
+			['key' => 'first_quest', 'name' => 'Side Quest', 'description' => 'Complete a daily quest', 'icon' => '📜', 'category' => 'Levels & quests', 'stat' => 'quests_done', 'target' => 1, 'requires' => 'XP'],
+			['key' => 'quest_log', 'name' => 'Quest Log', 'description' => 'Complete 25 daily quests', 'icon' => '🗒️', 'category' => 'Levels & quests', 'stat' => 'quests_done', 'target' => 25, 'requires' => 'XP'],
+			['key' => 'perfect_day', 'name' => 'Perfect Day', 'description' => 'Complete all three daily quests on one day', 'icon' => '🌟', 'category' => 'Levels & quests', 'stat' => 'perfect_days', 'target' => 1, 'requires' => 'XP'],
+			['key' => 'level_5', 'name' => 'Promoted', 'description' => 'Reach level 5', 'icon' => '🎖️', 'category' => 'Levels & quests', 'stat' => 'level', 'target' => 5, 'requires' => 'XP'],
+			['key' => 'level_10', 'name' => 'Double Digits', 'description' => 'Reach level 10', 'icon' => '🔟', 'category' => 'Levels & quests', 'stat' => 'level', 'target' => 10, 'requires' => 'XP', 'xp' => 250],
 			// Secrets
 			['key' => 'konami', 'name' => '↑↑↓↓←→←→BA', 'description' => 'Enter the Konami code', 'icon' => '🎮', 'category' => 'Secrets', 'stat' => 'konami', 'target' => 1, 'secret' => true],
 			['key' => 'rubber_duck', 'name' => 'Rubber Duck Debugging', 'description' => 'Click the logo 10 times in a row', 'icon' => '🦆', 'category' => 'Secrets', 'stat' => 'logo', 'target' => 1, 'secret' => true],
 			// Meta
-			['key' => 'completionist', 'name' => 'Achievement Hunter', 'description' => 'Unlock 15 other badges', 'icon' => '🏆', 'category' => 'Meta', 'stat' => 'unlocked', 'target' => 15],
+			['key' => 'completionist', 'name' => 'Achievement Hunter', 'description' => 'Unlock 15 other badges', 'icon' => '🏆', 'category' => 'Meta', 'stat' => 'unlocked', 'target' => 15, 'xp' => 250],
 		];
 		if ($all) {
 			return $definitions;
@@ -100,8 +117,192 @@ class Achievements extends Londerland
 			if (in_array($definition['key'], $disabled, true)) {
 				return false;
 			}
+			if (($definition['requires'] ?? '') === 'XP') {
+				return $this->_achXpEnabled();
+			}
 			return !isset($definition['requires']) || !empty($this->config[$definition['requires'] . '-enabled']);
 		}));
+	}
+
+	/* ===================== XP, levels & daily quests ===================== */
+
+	public function _achXpEnabled()
+	{
+		return !array_key_exists('ACHIEVEMENTS-xp-include', $this->config) || filter_var($this->config['ACHIEVEMENTS-xp-include'], FILTER_VALIDATE_BOOLEAN);
+	}
+
+	private function _achBadgeXp($definition)
+	{
+		return (int)($definition['xp'] ?? (!empty($definition['secret']) ? self::XP_SECRET_BADGE : self::XP_BADGE));
+	}
+
+	// Total XP needed for a level: 0, 100, 300, 600, 1000, ... (each level asks 100 more than the one before)
+	public function _achXpForLevel($level)
+	{
+		return 50 * $level * ($level - 1);
+	}
+
+	public function _achLevel($xp)
+	{
+		$level = 1;
+		while ($level < 999 && $xp >= $this->_achXpForLevel($level + 1)) {
+			$level++;
+		}
+		return $level;
+	}
+
+	public function _achLevelTitle($level)
+	{
+		$titles = [1 => 'Guest Account', 2 => 'Intern', 3 => 'Helpdesk', 4 => 'Junior Admin', 6 => 'Sysadmin', 9 => 'Senior Sysadmin', 12 => 'DevOps Engineer', 16 => 'Site Reliability Engineer', 20 => 'Architect', 25 => 'Root', 30 => 'Kernel Hacker', 40 => 'Uptime Legend'];
+		$title = $titles[1];
+		foreach ($titles as $from => $name) {
+			if ($level >= $from) {
+				$title = $name;
+			}
+		}
+		return $title;
+	}
+
+	private function _achLevelInfo($xp)
+	{
+		$level = $this->_achLevel($xp);
+		$from = $this->_achXpForLevel($level);
+		$to = $this->_achXpForLevel($level + 1);
+		return ['level' => $level, 'title' => $this->_achLevelTitle($level), 'xp' => $xp, 'levelXp' => $xp - $from, 'levelSize' => $to - $from, 'nextLevelXp' => $to];
+	}
+
+	/**
+	 * Daily quests: what counts today (counter) and how often (target). requires: only while that plugin is enabled.
+	 */
+	private function _achQuestPool()
+	{
+		$pool = [
+			['key' => 'visits', 'name' => 'Check In', 'description' => 'Open Londerland 2 times today', 'icon' => '👋', 'counter' => 'visit', 'target' => 2, 'xp' => 20],
+			['key' => 'tabs', 'name' => 'Busy Day', 'description' => 'Open 8 tabs today', 'icon' => '🗂️', 'counter' => 'tab', 'target' => 8, 'xp' => 30],
+			['key' => 'tabs_unique', 'name' => 'Explorer', 'description' => 'Open 3 different tabs today', 'icon' => '🧭', 'counter' => 'tab_unique', 'target' => 3, 'xp' => 30],
+			['key' => 'reload', 'name' => 'Turn It Off and On Again', 'description' => 'Reload a tab 3 times today', 'icon' => '🔄', 'counter' => 'reload', 'target' => 3, 'xp' => 20],
+			['key' => 'split', 'name' => 'Multitasker', 'description' => 'Open two tabs side by side (Ctrl+Alt+click a tab)', 'icon' => '🧠', 'counter' => 'split', 'target' => 1, 'xp' => 40],
+			['key' => 'popout', 'name' => 'Pop-out', 'description' => 'Open a tab in a new browser window', 'icon' => '🪟', 'counter' => 'popout', 'target' => 1, 'xp' => 30],
+			['key' => 'palette', 'name' => 'Keyboard Warrior', 'description' => 'Open the command palette (Ctrl+K) 2 times', 'icon' => '⌨️', 'counter' => 'palette', 'target' => 2, 'xp' => 30],
+			['key' => 'fullscreen', 'name' => 'Big Screen', 'description' => 'Switch to full screen', 'icon' => '🖥️', 'counter' => 'fullscreen', 'target' => 1, 'xp' => 30],
+			['key' => 'mystats', 'name' => 'Status Report', 'description' => 'Look at My Stats', 'icon' => '📊', 'counter' => 'mystats', 'target' => 1, 'xp' => 20],
+			['key' => 'bookmarks', 'name' => 'Bookworm', 'description' => 'Open 2 bookmarks today', 'icon' => '📚', 'counter' => 'bookmark', 'target' => 2, 'xp' => 30, 'requires' => 'BOOKMARK'],
+			['key' => 'ai', 'name' => 'Ask the Oracle', 'description' => 'Send 3 messages to the AI today', 'icon' => '🤖', 'counter' => 'ai', 'target' => 3, 'xp' => 40, 'requires' => 'AICHAT'],
+		];
+		return array_values(array_filter($pool, function ($quest) {
+			return !isset($quest['requires']) || !empty($this->config[$quest['requires'] . '-enabled']);
+		}));
+	}
+
+	/**
+	 * Today's quests are picked from the pool by the user and the date, so they stay the same all day and differ
+	 * per user and per day; a new local day starts new quests.
+	 */
+	private function _achToday(&$stats, DateTime $day)
+	{
+		$date = $day->format('Y-m-d');
+		$today = $stats['today'] ?? null;
+		if (!is_array($today) || ($today['date'] ?? '') !== $date) {
+			$pool = $this->_achQuestPool();
+			$seed = $this->_achUserId() . '|' . $date;
+			usort($pool, function ($a, $b) use ($seed) {
+				return strcmp(hash('sha256', $seed . '|' . $a['key']), hash('sha256', $seed . '|' . $b['key']));
+			});
+			$today = [
+				'date' => $date,
+				'counts' => [],
+				'tabs' => [],
+				'quests' => array_slice(array_column($pool, 'key'), 0, self::QUESTS_PER_DAY),
+				'done' => [],
+				'bonus' => false,
+			];
+		}
+		$stats['today'] = $today;
+	}
+
+	private function _achCountToday(&$stats, $counter, $tabId = null)
+	{
+		$counts = (array)($stats['today']['counts'] ?? []);
+		$counts[$counter] = (int)($counts[$counter] ?? 0) + 1;
+		if ($tabId) {
+			$tabs = array_map('intval', (array)($stats['today']['tabs'] ?? []));
+			if (!in_array($tabId, $tabs, true) && count($tabs) < 100) {
+				$tabs[] = $tabId;
+			}
+			$stats['today']['tabs'] = $tabs;
+			$counts['tab_unique'] = count($tabs);
+		}
+		$stats['today']['counts'] = $counts;
+	}
+
+	private function _achQuestList($stats)
+	{
+		$pool = [];
+		foreach ($this->_achQuestPool() as $quest) {
+			$pool[$quest['key']] = $quest;
+		}
+		$today = (array)($stats['today'] ?? []);
+		$list = [];
+		foreach ((array)($today['quests'] ?? []) as $key) {
+			if (!isset($pool[$key])) {
+				continue;
+			}
+			$quest = $pool[$key];
+			$progress = (int)(((array)($today['counts'] ?? []))[$quest['counter']] ?? 0);
+			$list[] = [
+				'key' => $key,
+				'name' => $quest['name'],
+				'description' => $quest['description'],
+				'icon' => $quest['icon'],
+				'xp' => $quest['xp'],
+				'target' => $quest['target'],
+				'progress' => min($quest['target'], $progress),
+				'done' => in_array($key, (array)($today['done'] ?? []), true),
+			];
+		}
+		return $list;
+	}
+
+	/**
+	 * Marks finished quests as done and gives their XP (and the bonus when all are done). Returns what to announce.
+	 */
+	private function _achCompleteQuests(&$stats)
+	{
+		$announce = [];
+		$quests = $this->_achQuestList($stats);
+		foreach ($quests as $quest) {
+			if (!$quest['done'] && $quest['progress'] >= $quest['target']) {
+				$stats['today']['done'][] = $quest['key'];
+				$stats['xp'] = (int)($stats['xp'] ?? 0) + $quest['xp'];
+				$this->_achIncrement($stats, 'quests_done');
+				$announce[] = ['type' => 'quest', 'name' => $quest['name'], 'icon' => $quest['icon'], 'xp' => $quest['xp']];
+			}
+		}
+		$allDone = $quests && count(array_intersect(array_column($quests, 'key'), (array)$stats['today']['done'])) === count($quests);
+		if ($allDone && empty($stats['today']['bonus'])) {
+			$stats['today']['bonus'] = true;
+			$stats['xp'] = (int)($stats['xp'] ?? 0) + self::XP_ALL_QUESTS;
+			$this->_achIncrement($stats, 'perfect_days');
+			$announce[] = ['type' => 'bonus', 'name' => 'All daily quests done', 'icon' => '🌟', 'xp' => self::XP_ALL_QUESTS];
+		}
+		return $announce;
+	}
+
+	/**
+	 * Accounts from before XP existed start with the XP of their badges and active days.
+	 */
+	private function _achMigrateXp(&$stats, $unlocked)
+	{
+		if (isset($stats['xp'])) {
+			return;
+		}
+		$xp = (int)($stats['days'] ?? 0) * self::XP_DAILY_VISIT;
+		foreach ($this->_achDefinitions(true) as $definition) {
+			if (isset($unlocked[$definition['key']])) {
+				$xp += $this->_achBadgeXp($definition);
+			}
+		}
+		$stats['xp'] = $xp;
 	}
 
 	/* ===================== access & setup ===================== */
@@ -283,6 +484,9 @@ class Achievements extends Londerland
 			$stats['streak'] = ($lastDay === $yesterday) ? (int)($stats['streak'] ?? 0) + 1 : 1;
 			$stats['best_streak'] = max((int)($stats['best_streak'] ?? 0), $stats['streak']);
 			$stats['last_day'] = $today;
+			if ($this->_achXpEnabled()) {
+				$stats['xp'] = (int)($stats['xp'] ?? 0) + self::XP_DAILY_VISIT + self::XP_STREAK_STEP * min(self::XP_STREAK_MAX, $stats['streak'] - 1);
+			}
 			if ((int)$day->format('w') === 0 || (int)$day->format('w') === 6) {
 				$this->_achIncrement($stats, 'weekend');
 			}
@@ -344,6 +548,12 @@ class Achievements extends Londerland
 		}
 		[$day, $hour] = $this->_achLocalTime($data['local'] ?? null);
 		[$stats, $unlocked] = $this->_achLoad($this->_achUserId());
+		$xpOn = $this->_achXpEnabled();
+		if ($xpOn) {
+			$this->_achMigrateXp($stats, $unlocked);
+			$this->_achToday($stats, $day);
+		}
+		$levelBefore = $this->_achLevel((int)($stats['xp'] ?? 0));
 		switch ($event) {
 			case 'visit':
 				$this->_achTrackVisit($stats, $day, $hour);
@@ -356,6 +566,9 @@ class Achievements extends Londerland
 				}
 				$this->_achIncrement($stats, 'tabs');
 				$this->_achCountActivity($stats, $day, $hour);
+				if ($xpOn) {
+					$this->_achCountToday($stats, 'tab', $tabId);
+				}
 				$counts = (array)($stats['tab_counts'] ?? []);
 				if (isset($counts[$tabId]) || count($counts) < self::MAX_TABS_TRACKED) {
 					$counts[$tabId] = (int)($counts[$tabId] ?? 0) + 1;
@@ -366,17 +579,51 @@ class Achievements extends Londerland
 				// counted below
 				break;
 			default:
-				// fullscreen, lock, split, popout, reload, bookmark: counters; konami, logo, marathon: only need to happen once
+				// fullscreen, lock, split, popout, reload, bookmark, palette: counters; konami, logo, marathon: only need to happen once
 				$this->_achIncrement($stats, $event);
+		}
+		if ($xpOn && $event !== 'tab') {
+			$this->_achCountToday($stats, $event);
 		}
 		// new AI chats and messages are reported with "ai"; a visit catches up on ones from other devices
 		if ($event === 'ai' || $event === 'visit') {
 			$this->_achCountAiChat($stats);
 		}
-		$new = $this->_achEvaluate($stats, $unlocked);
+		[$new, $quests, $levelUp] = $this->_achProgress($stats, $unlocked, $levelBefore);
 		$this->_achSave($this->_achUserId(), $stats, $unlocked);
-		$this->setAPIResponse('success', null, 200, ['unlocked' => $new]);
+		$this->setAPIResponse('success', null, 200, ['unlocked' => $new, 'quests' => $quests, 'levelUp' => $levelUp]);
 		return $new;
+	}
+
+	/**
+	 * After counting: finished quests, new badges (with their XP), and a level up. Badges can bring enough XP for a
+	 * level badge, so it looks again until nothing changes.
+	 */
+	private function _achProgress(&$stats, &$unlocked, $levelBefore)
+	{
+		$xpOn = $this->_achXpEnabled();
+		$quests = $xpOn ? $this->_achCompleteQuests($stats) : [];
+		$new = [];
+		for ($round = 0; $round < 5; $round++) {
+			$found = $this->_achEvaluate($stats, $unlocked);
+			if (!$found) {
+				break;
+			}
+			foreach ($found as $badge) {
+				if ($xpOn) {
+					$stats['xp'] = (int)($stats['xp'] ?? 0) + $badge['xp'];
+				}
+				$new[] = $badge;
+			}
+		}
+		$levelUp = null;
+		if ($xpOn) {
+			$level = $this->_achLevel((int)($stats['xp'] ?? 0));
+			if ($level > $levelBefore) {
+				$levelUp = ['level' => $level, 'title' => $this->_achLevelTitle($level)];
+			}
+		}
+		return [$new, $quests, $levelUp];
 	}
 
 	/* ===================== evaluation ===================== */
@@ -430,6 +677,7 @@ class Achievements extends Londerland
 			'tabs_unique' => count((array)($stats['tab_counts'] ?? [])),
 			'admin' => (int)($this->user['groupID'] ?? 999) <= 1 ? 1 : 0,
 			'account_days' => $registered ? (int)floor((time() - $registered) / 86400) : 0,
+			'level' => $this->_achLevel((int)($stats['xp'] ?? 0)),
 		];
 		return $computed;
 	}
@@ -491,18 +739,28 @@ class Achievements extends Londerland
 			'target' => $definition['target'],
 			'progress' => $hidden ? 0 : min($definition['target'], (int)($all[$definition['stat']] ?? 0)),
 			'unlocked' => $isUnlocked ? $unlocked[$definition['key']] : null,
+			'xp' => $this->_achBadgeXp($definition),
 		];
 	}
 
 	/* ===================== My Stats ===================== */
 
-	public function _achMyStats()
+	public function _achMyStats($local = null)
 	{
 		[$stats, $unlocked] = $this->_achLoad($this->_achUserId());
 		$before = $stats;
+		$xpOn = $this->_achXpEnabled();
 		$this->_achCountAiChat($stats);
+		if ($xpOn) {
+			$this->_achMigrateXp($stats, $unlocked);
+			[$day] = $this->_achLocalTime($local);
+			$this->_achToday($stats, $day);
+			// looking at this page is one of the quests
+			$this->_achCountToday($stats, 'mystats');
+		}
 		// Badges such as Sudoer or Year One can be earned without any new event
-		if ($this->_achEvaluate($stats, $unlocked) || $stats !== $before) {
+		[$new, $quests, $levelUp] = $this->_achProgress($stats, $unlocked, $this->_achLevel((int)($stats['xp'] ?? 0)));
+		if ($new || $stats !== $before) {
 			$this->_achSave($this->_achUserId(), $stats, $unlocked);
 		}
 		$all = $this->_achAllStats($stats, $unlocked);
@@ -544,6 +802,11 @@ class Achievements extends Londerland
 				'aiMessages' => (int)($all['ai_messages'] ?? 0),
 			],
 			'achievements' => $achievements,
+			'level' => $xpOn ? $this->_achLevelInfo((int)($stats['xp'] ?? 0)) : null,
+			'quests' => $xpOn ? $this->_achQuestList($stats) : null,
+			'questsBonus' => $xpOn ? ['done' => !empty($stats['today']['bonus']), 'xp' => self::XP_ALL_QUESTS] : null,
+			'questsDone' => (int)($stats['quests_done'] ?? 0),
+			'announce' => ['unlocked' => $new, 'quests' => $quests, 'levelUp' => $levelUp],
 			'leaderboard' => !empty($this->config['ACHIEVEMENTS-leaderboard-include']) ? $this->_achLeaderboard(10) : null,
 		];
 		$this->setAPIResponse('success', null, 200, $data);
@@ -629,13 +892,16 @@ class Achievements extends Londerland
 				'image' => $row['image'],
 				'group' => $row['group'],
 				'badges' => count(array_intersect(array_keys($unlocked), $keys)),
+				'xp' => (int)($stats['xp'] ?? 0),
+				'level' => $this->_achLevel((int)($stats['xp'] ?? 0)),
 				'days' => (int)($stats['days'] ?? 0),
 				'tabs' => (int)($stats['tabs'] ?? 0),
 				'lastVisit' => !empty($stats['last_visit']) ? $this->_achIsoDate($stats['last_visit']) : null,
 			];
 		}
-		usort($board, function ($a, $b) {
-			return [$b['badges'], $b['days']] <=> [$a['badges'], $a['days']];
+		$byXp = $this->_achXpEnabled();
+		usort($board, function ($a, $b) use ($byXp) {
+			return $byXp ? [$b['xp'], $b['badges']] <=> [$a['xp'], $a['badges']] : [$b['badges'], $b['days']] <=> [$a['badges'], $a['days']];
 		});
 		return $limit ? array_slice($board, 0, $limit) : $board;
 	}
@@ -659,14 +925,14 @@ class Achievements extends Londerland
 		$board = $this->_achLeaderboard();
 		$total = count($this->_achDefinitions());
 		if (!$board) {
-			$rows = '<tr><td colspan="5" lang="en">Nobody has collected anything yet.</td></tr>';
+			$rows = '<tr><td colspan="6" lang="en">Nobody has collected anything yet.</td></tr>';
 		} else {
 			$rows = '';
 			foreach ($board as $entry) {
-				$rows .= '<tr><td>' . htmlspecialchars((string)$entry['username'], ENT_QUOTES) . '</td><td>' . htmlspecialchars((string)$entry['group'], ENT_QUOTES) . '</td><td>' . $entry['badges'] . ' / ' . $total . '</td><td>' . $entry['days'] . '</td><td>' . $entry['tabs'] . '</td></tr>';
+				$rows .= '<tr><td>' . htmlspecialchars((string)$entry['username'], ENT_QUOTES) . '</td><td>' . htmlspecialchars((string)$entry['group'], ENT_QUOTES) . '</td><td>' . $entry['level'] . ' (' . number_format($entry['xp']) . ' XP)</td><td>' . $entry['badges'] . ' / ' . $total . '</td><td>' . $entry['days'] . '</td><td>' . $entry['tabs'] . '</td></tr>';
 			}
 		}
-		return '<div class="table-responsive"><table class="table table-sm"><thead><tr><th lang="en">User</th><th lang="en">Group</th><th lang="en">Badges</th><th lang="en">Active days</th><th lang="en">Tabs opened</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+		return '<div class="table-responsive"><table class="table table-sm"><thead><tr><th lang="en">User</th><th lang="en">Group</th><th lang="en">Level</th><th lang="en">Badges</th><th lang="en">Active days</th><th lang="en">Tabs opened</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
 	}
 
 	public function _achGetSettings()
@@ -712,6 +978,13 @@ class Achievements extends Londerland
 				),
 				array(
 					'type' => 'switch',
+					'name' => 'ACHIEVEMENTS-xp-include',
+					'label' => 'XP, levels and daily quests',
+					'help' => 'Users earn XP for badges, for every day they visit (more during a streak) and for three daily quests that change every day, and climb levels with titles. My Stats shows their level and today\'s quests.',
+					'value' => $this->_achXpEnabled()
+				),
+				array(
+					'type' => 'switch',
 					'name' => 'ACHIEVEMENTS-notify-include',
 					'label' => 'Show a message when a badge is unlocked',
 					'value' => $this->config['ACHIEVEMENTS-notify-include']
@@ -720,7 +993,7 @@ class Achievements extends Londerland
 					'type' => 'switch',
 					'name' => 'ACHIEVEMENTS-leaderboard-include',
 					'label' => 'Show a leaderboard on My Stats',
-					'help' => 'Shows the 10 users with the most badges (name, picture and number of badges) to everyone who collects badges.',
+					'help' => 'Shows the 10 users with the most XP (or the most badges while XP is off), with their name, picture, level and number of badges, to everyone who collects badges.',
 					'value' => $this->config['ACHIEVEMENTS-leaderboard-include']
 				),
 				array(

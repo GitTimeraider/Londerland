@@ -464,6 +464,8 @@
 			return;
 		}
 		previousFocus = document.activeElement;
+		// counts for Achievements (Power User badge, a daily quest)
+		$(document).trigger('londerland:palette-open');
 		buildItems();
 		$root.removeClass('hidden');
 		$root.find('.palette-input').val('').trigger('focus');
