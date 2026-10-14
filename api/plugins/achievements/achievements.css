@@ -326,3 +326,91 @@
     visibility: visible;
   }
 }
+
+/* Level (XP) in the header */
+.achievements-level {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+.achievements-level-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--achievements-accent);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+.achievements-level-badge small {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+.achievements-level-text {
+  flex: 1;
+  min-width: 0;
+}
+.achievements-level-title {
+  font-weight: 600;
+}
+.achievements-xp-bar span {
+  background: var(--achievements-gold);
+}
+
+/* Daily quests */
+.achievements-quests {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.achievements-quest {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--achievements-surface);
+  border: 1px solid var(--achievements-border);
+  border-radius: 10px;
+}
+.achievements-quest.is-done {
+  border-color: color-mix(in srgb, var(--achievements-gold) 60%, transparent);
+}
+.achievements-quest.is-done .achievements-progress span {
+  background: var(--achievements-gold);
+}
+.achievements-quest-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.achievements-quest-text {
+  flex: 1;
+  min-width: 0;
+}
+.achievements-quest-name {
+  font-weight: 600;
+}
+.achievements-quest-xp,
+.achievements-badge-xp {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--achievements-gold);
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .achievements-header {
+    flex-wrap: wrap;
+  }
+  .achievements-level {
+    order: 3;
+    width: 100%;
+  }
+}

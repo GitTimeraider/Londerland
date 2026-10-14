@@ -55,5 +55,8 @@ return array(
 	'AICHAT-usage-include' => 'off',
 	'AICHAT-usageUrl' => '',
 	'AICHAT-usageApiKey' => '',
-	'AICHAT-usageProviders' => ''
+	'AICHAT-usageProviders' => '',
+	// Public read-only links to chats (off by default) and the groups that may make them (comma separated, '' = all with AI Chat)
+	'AICHAT-share-include' => false,
+	'AICHAT-shareGroups-include' => ''
 );

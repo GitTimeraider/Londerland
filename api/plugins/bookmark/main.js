@@ -137,6 +137,8 @@
 				${setting('search') ? `<div class="bookmarks-search-wrap"><i class="ti-search"></i><input type="search" class="form-control bookmarks-search" placeholder="${esc(t('Search bookmarks'))}  ( / )" value="${esc(state.query)}" autocomplete="off"></div>` : '<div></div>'}
 				<div class="bookmarks-actions">
 					${state.editing ? `<button type="button" class="btn btn-sm btn-success bookmarks-add-category"><i class="fa fa-plus"></i> <span lang="en">Category</span></button>` : ''}
+					${state.editing ? `<button type="button" class="btn btn-sm btn-secondary bookmarks-import" title="${esc(t('Import a bookmarks file from your browser'))}"><i class="fa fa-upload"></i> <span lang="en">Import</span></button>` : ''}
+					${data.bookmarks.length ? `<a class="btn btn-sm btn-secondary bookmarks-export" href="${API}export" download title="${esc(t('Download as a bookmarks file for your browser'))}"><i class="fa fa-download"></i> <span lang="en">Export</span></a>` : ''}
 					${data.canEdit ? `<button type="button" class="btn btn-sm ${state.editing ? 'btn-info' : 'btn-secondary'} bookmarks-edit-toggle"><i class="fa ${state.editing ? 'fa-check' : 'fa-pencil'}"></i> <span lang="en">${state.editing ? 'Done' : 'Edit'}</span></button>` : ''}
 				</div>
 			</div>`;
@@ -465,6 +467,65 @@
 		);
 	}
 
+	// A bookmarks file exported by a browser (Chrome, Edge, Firefox, Safari: "Export bookmarks" gives an .html file)
+	function importBookmarks() {
+		const data = state.data;
+		const options = (data.groups || []).map((group) => `<option value="${group.id}" ${group.id === data.defaultGroup ? 'selected' : ''}>${esc(group.name)}</option>`).join('');
+		const $modal = modal(
+			t('Import bookmarks'),
+			`
+			<div class="row g-3">
+				<div class="col-12">
+					<label class="form-label" lang="en">Bookmarks file (.html)</label>
+					<input class="form-control" type="file" name="file" accept=".html,.htm,text/html" required>
+					<div class="form-text" lang="en">In your browser: Bookmarks manager > Export bookmarks. Chrome, Edge, Firefox and Safari all make this file.</div>
+				</div>
+				<div class="col-sm-6"><label class="form-label" lang="en">Visible for (and higher groups)</label><select class="form-select" name="groupId">${options}</select></div>
+				<div class="col-sm-6">
+					<label class="form-label" lang="en">Categories</label>
+					<select class="form-select" name="mode">
+						<option value="folders" lang="en">One per folder</option>
+						<option value="one" lang="en">All in one category</option>
+					</select>
+				</div>
+				<div class="col-12 bookmarks-import-category hidden"><label class="form-label" lang="en">Category name</label><input class="form-control" name="category" maxlength="100" value="${esc(t('Imported'))}"></div>
+				<div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="skipDuplicates" id="bookmarks-skip-duplicates" checked><label class="form-check-label" for="bookmarks-skip-duplicates" lang="en">Skip links that are already a bookmark</label></div></div>
+			</div>`,
+			function ($form) {
+				const deferred = $.Deferred();
+				const file = $form.find('[name="file"]')[0].files[0];
+				if (!file) {
+					return deferred.reject({ responseJSON: { response: { message: t('Choose a bookmarks file') } } }).promise();
+				}
+				const reader = new FileReader();
+				reader.onload = function () {
+					londerlandAPI2('POST', API + 'import', {
+						html: String(reader.result || ''),
+						groupId: parseInt($form.find('[name="groupId"]').val(), 10),
+						category: $form.find('[name="mode"]').val() === 'one' ? $form.find('[name="category"]').val() : '',
+						skipDuplicates: $form.find('[name="skipDuplicates"]').is(':checked'),
+					})
+						.done(function (result) {
+							messageSingle(t('Import bookmarks'), result.response.message, activeInfo.settings.notifications.position, '#FFF', 'success', '8000');
+							deferred.resolve(result);
+						})
+						.fail(function (xhr) {
+							deferred.reject(xhr);
+						});
+				};
+				reader.onerror = function () {
+					deferred.reject({ responseJSON: { response: { message: t('The file could not be read') } } });
+				};
+				reader.readAsText(file, 'UTF-8');
+				return deferred.promise();
+			}
+		);
+		$modal.find('[type="submit"]').text(t('Import'));
+		$modal.find('[name="mode"]').on('change', function () {
+			$modal.find('.bookmarks-import-category').toggleClass('hidden', $(this).val() !== 'one');
+		});
+	}
+
 	function categoryOf(element) {
 		const id = $(element).closest('.bookmarks-category').data('id');
 		return state.data.categories.find((category) => category.id === id);
@@ -472,6 +533,9 @@
 
 	$(document).on('click', '.bookmarks-add-category', function () {
 		editCategory(null);
+	});
+	$(document).on('click', '.bookmarks-import', function () {
+		importBookmarks();
 	});
 	$(document).on('click', '.bookmarks-edit-category', function () {
 		editCategory(categoryOf(this));

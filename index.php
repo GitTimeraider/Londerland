@@ -1,6 +1,7 @@
 <?php
 include 'api/functions.php';
 $Londerland = new Londerland(true);
+$Londerland->seoHeaders();
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark" ontouchmove>
@@ -11,8 +12,9 @@ $Londerland = new Londerland(true);
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
           name="viewport">
     <meta content="<?php echo $Londerland->config['description']; ?>" name="description">
-    <meta content="Londerland" name="author">
-	<?php echo $Londerland->favIcons(); ?>
+	<?php echo $Londerland->seoHead(); ?>
+	<?php echo $Londerland->siteFavIcons(); ?>
+	<?php echo $Londerland->pwaHead(); ?>
     <title><?php echo $Londerland->config['title']; ?></title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -97,6 +99,8 @@ $Londerland = new Londerland(true);
                                 class="ti-close"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light open-in-new-tab" onclick="openInNewBrowserTab();" title="Open in a new browser tab"> <i
                                 class="ti-new-window"></i></a></li>
+                <li class=""><a class="dropdown-toggle waves-effect waves-light" onclick="openCommandPalette();" title="Search (Ctrl+K)" aria-label="Search"> <i
+                                class="ti-search"></i></a></li>
                 <li class=""><a class="dropdown-toggle waves-effect waves-light hidden" onclick="splashMenu();"> <i
                                 class="ti-layout-grid2"></i></a></li>
             </ul>
@@ -122,6 +126,7 @@ $Londerland = new Londerland(true);
         </div>
     </nav>
     <!-- End Top Navigation -->
+	<?php echo $Londerland->announcementHTML(); ?>
     <!-- ============================================================== -->
     <!-- Left Sidebar - style you can find in sidebar.scss  -->
     <!-- ============================================================== -->

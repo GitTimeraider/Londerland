@@ -87,8 +87,7 @@
 			const done = $.Deferred();
 			londerlandAPI2('POST', API + 'track', body)
 				.done(function (data) {
-					const unlocked = (data.response && data.response.data && data.response.data.unlocked) || [];
-					unlocked.forEach(announce);
+					announceAll((data.response && data.response.data) || {});
 				})
 				.always(function () {
 					done.resolve();
@@ -97,13 +96,60 @@
 		});
 	}
 
+	function xpOn() {
+		return (activeInfo.plugins.includes || {})['ACHIEVEMENTS-xp-include'] !== false;
+	}
+
+	// New badges, finished daily quests and a new level, from a track or My Stats response
+	function announceAll(result) {
+		(result.unlocked || []).forEach(announce);
+		(result.quests || []).forEach(announceQuest);
+		if (result.levelUp) {
+			announceLevel(result.levelUp);
+		}
+	}
+
+	function notifyOn() {
+		return activeInfo.plugins.includes['ACHIEVEMENTS-notify-include'] !== false;
+	}
+
+	function announceQuest(quest) {
+		$('.achievements-menu-dot').removeClass('hidden');
+		if (!notifyOn()) {
+			return;
+		}
+		message(
+			quest.icon + ' ' + t(quest.type === 'bonus' ? 'Bonus' : 'Quest complete'),
+			'<strong>' + esc(t(quest.name)) + '</strong><br>+' + number(quest.xp) + ' XP',
+			activeInfo.settings.notifications.position,
+			'#FFF',
+			'info',
+			'8000'
+		);
+	}
+
+	function announceLevel(levelUp) {
+		$('.achievements-menu-dot').removeClass('hidden');
+		if (!notifyOn()) {
+			return;
+		}
+		message(
+			'🎉 ' + t('Level up!'),
+			'<strong>' + t('Level') + ' ' + number(levelUp.level) + '</strong> · ' + esc(t(levelUp.title)),
+			activeInfo.settings.notifications.position,
+			'#FFF',
+			'success',
+			'10000'
+		);
+	}
+
 	function announce(badge) {
-		if (activeInfo.plugins.includes['ACHIEVEMENTS-notify-include'] === false) {
+		if (!notifyOn()) {
 			return;
 		}
 		message(
 			badge.icon + ' ' + t('Badge unlocked'),
-			'<strong>' + esc(t(badge.name)) + '</strong><br>' + esc(t(badge.description)),
+			'<strong>' + esc(t(badge.name)) + '</strong><br>' + esc(t(badge.description)) + (xpOn() && badge.xp ? '<br>+' + number(badge.xp) + ' XP' : ''),
 			activeInfo.settings.notifications.position,
 			'#FFF',
 			'success',
@@ -163,9 +209,12 @@
 				track('marathon');
 			}
 		}, 60000);
-		// The Bookmarks plugin announces every bookmark that is opened
+		// The Bookmarks plugin announces every bookmark that is opened, the command palette (Ctrl+K) every time it opens
 		$(document).on('londerland:bookmark-open', function () {
 			track('bookmark');
+		});
+		$(document).on('londerland:palette-open', function () {
+			track('palette');
 		});
 		// Full screen, however it was entered: Londerland's button or its "f f" shortcut (fullscreenchange), or the
 		// browser's own full screen (F11), which only shows as a window as big as the screen
@@ -263,10 +312,12 @@
 		if (!$page.children().length) {
 			$page.html('<div class="achievements-loading"><i class="fa fa-spinner fa-pulse fa-2x"></i></div>');
 		}
-		londerlandAPI2('GET', API + 'stats')
+		const local = localTime();
+		londerlandAPI2('GET', API + 'stats?' + $.param({ date: local.date, hour: local.hour }))
 			.done(function (data) {
 				$page.html(renderPage(data.response.data));
 				pageLoad();
+				announceAll(data.response.data.announce || {});
 			})
 			.fail(function (xhr) {
 				LonderlandApiError(xhr, 'My Stats');
@@ -288,6 +339,7 @@
 					<div class="achievements-muted">${esc(account.group)}${account.email ? ' · ' + esc(account.email) : ''}</div>
 					<div class="achievements-muted"><span lang="en">Member since</span> ${formatDate(account.registered)}</div>
 				</div>
+				${data.level ? renderLevel(data.level) : ''}
 				<div class="achievements-score" title="${unlocked} / ${badges.length}">
 					<div class="achievements-score-value">${unlocked}<small>/${badges.length}</small></div>
 					<div class="achievements-muted" lang="en">badges</div>
@@ -295,6 +347,7 @@
 				</div>
 				<button type="button" class="btn btn-sm btn-secondary achievements-refresh" title="${esc(t('Refresh'))}"><i class="ti-reload"></i></button>
 			</div>
+			${data.quests ? renderQuests(data.quests, data.questsBonus, data.questsDone) : ''}
 			<h3 class="achievements-title" lang="en">Account</h3>
 			<div class="achievements-tiles">
 				${tile('🗓️', t('Account age'), days(account.accountDays))}
@@ -330,6 +383,57 @@
 			${renderBadges(badges)}
 			${data.leaderboard ? renderLeaderboard(data.leaderboard, badges.length) : ''}
 		`;
+	}
+
+	function renderLevel(level) {
+		const percent = level.levelSize ? Math.min(100, Math.round((level.levelXp / level.levelSize) * 100)) : 100;
+		return `
+			<div class="achievements-level" title="${number(level.levelXp)} / ${number(level.levelSize)} XP">
+				<div class="achievements-level-badge"><small lang="en">Level</small>${number(level.level)}</div>
+				<div class="achievements-level-text">
+					<div class="achievements-level-title">${esc(t(level.title))}</div>
+					<div class="achievements-progress achievements-xp-bar"><span style="width:${percent}%"></span></div>
+					<div class="achievements-muted">${number(level.xp)} XP · ${number(level.nextLevelXp - level.xp)} ${esc(t('XP to level'))} ${number(level.level + 1)}</div>
+				</div>
+			</div>`;
+	}
+
+	// Time left until the next local midnight, when new quests start
+	function untilMidnight() {
+		const now = new Date();
+		const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+		const minutes = Math.max(1, Math.round((midnight - now) / 60000));
+		const hours = Math.floor(minutes / 60);
+		return hours ? hours + ' h ' + (minutes % 60) + ' min' : minutes + ' min';
+	}
+
+	function renderQuests(quests, bonus, total) {
+		if (!quests.length) {
+			return '';
+		}
+		const done = quests.filter((quest) => quest.done).length;
+		const cards = quests
+			.map((quest) => {
+				const percent = Math.round((quest.progress / quest.target) * 100);
+				return `
+				<div class="achievements-quest ${quest.done ? 'is-done' : ''}">
+					<div class="achievements-quest-icon">${quest.done ? '✅' : quest.icon}</div>
+					<div class="achievements-quest-text">
+						<div class="achievements-quest-name">${esc(t(quest.name))} <span class="achievements-quest-xp">+${number(quest.xp)} XP</span></div>
+						<div class="achievements-muted">${esc(t(quest.description))}</div>
+						<div class="achievements-progress" title="${number(quest.progress)} / ${number(quest.target)}"><span style="width:${percent}%"></span></div>
+						<div class="achievements-badge-date">${number(quest.progress)} / ${number(quest.target)}</div>
+					</div>
+				</div>`;
+			})
+			.join('');
+		return `
+			<div class="achievements-badges-head">
+				<h3 class="achievements-title" lang="en">Daily quests</h3>
+				<span class="achievements-muted">${number(done)} / ${quests.length} · ${esc(t('New quests in'))} ${untilMidnight()}</span>
+			</div>
+			<div class="achievements-quests">${cards}</div>
+			<p class="achievements-muted achievements-note">${bonus && bonus.done ? '🌟 ' + esc(t('All done for today, bonus collected!')) : '🌟 ' + esc(t('Finish all three for a bonus of')) + ' ' + number(bonus ? bonus.xp : 0) + ' XP.'} ${esc(t('Quests completed so far'))}: ${number(total)}.</p>`;
 	}
 
 	function signInName(signIn) {
@@ -392,11 +496,12 @@
 							: badge.target > 1
 								? `<div class="achievements-progress" title="${number(badge.progress)} / ${number(badge.target)}"><span style="width:${percent}%"></span></div><div class="achievements-badge-date">${number(badge.progress)} / ${number(badge.target)}</div>`
 								: '';
+						const xp = xpOn() && badge.xp && !(badge.secret && !badge.unlocked) ? `<span class="achievements-badge-xp">+${number(badge.xp)} XP</span>` : '';
 						return `
 						<div class="achievements-badge ${badge.unlocked ? 'is-unlocked' : 'is-locked'}">
 							<div class="achievements-badge-icon">${badge.icon}</div>
 							<div class="achievements-badge-text">
-								<div class="achievements-badge-name">${esc(t(badge.name))}</div>
+								<div class="achievements-badge-name">${esc(t(badge.name))} ${xp}</div>
 								<div class="achievements-muted">${esc(t(badge.description))}</div>
 								${footer}
 							</div>
@@ -416,6 +521,7 @@
 				<tr class="${entry.username === me ? 'achievements-me' : ''}">
 					<td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>
 					<td><img class="achievements-board-avatar" src="${esc(entry.image)}" alt=""> ${esc(entry.username)}</td>
+					${xpOn() ? `<td>${number(entry.level)} <span class="achievements-muted">(${number(entry.xp)} XP)</span></td>` : ''}
 					<td>${number(entry.badges)} / ${number(total)}</td>
 					<td>${number(entry.days)}</td>
 				</tr>`
@@ -424,7 +530,7 @@
 		return `
 			<h3 class="achievements-title" lang="en">Leaderboard</h3>
 			<div class="table-responsive"><table class="table achievements-board">
-				<thead><tr><th>#</th><th lang="en">User</th><th lang="en">Badges</th><th lang="en">Active days</th></tr></thead>
+				<thead><tr><th>#</th><th lang="en">User</th>${xpOn() ? '<th lang="en">Level</th>' : ''}<th lang="en">Badges</th><th lang="en">Active days</th></tr></thead>
 				<tbody>${rows}</tbody>
 			</table></div>`;
 	}

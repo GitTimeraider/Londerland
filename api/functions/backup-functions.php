@@ -22,6 +22,7 @@ trait BackupFunctions
 		if ($ext == 'zip') {
 			if (file_exists($filename)) {
 				$this->setLoggerChannel('Backup')->info('Deleted Backup [' . pathinfo($filename, PATHINFO_BASENAME) . ']');
+				$this->audit('backup.delete', pathinfo($filename, PATHINFO_BASENAME));
 				$this->setAPIResponse(null, pathinfo($filename, PATHINFO_BASENAME) . ' has been deleted', null);
 				return (unlink($filename));
 			} else {
@@ -86,6 +87,7 @@ trait BackupFunctions
 		}
 		$zip->close();
 		$this->setLoggerChannel('Backup')->notice('Backup process finished');
+		$this->audit('backup.create', basename($zipName));
 		$this->setAPIResponse('success', 'Backup has been created', 200);
 		$this->deleteBackupsLimit();
 		return true;
