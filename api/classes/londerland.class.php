@@ -1274,6 +1274,12 @@ class Londerland
 			$file = fopen($path, 'w');
 			fwrite($file, $output);
 			fclose($file);
+			// The config is read with include, which OPcache serves from memory and only checks for changes every few
+			// seconds: without this, requests in that time read the old values, and one that saves writes them back
+			if (function_exists('opcache_invalidate')) {
+				@opcache_invalidate($path, true);
+			}
+			clearstatcache(true, $path);
 			if (file_exists($path)) {
 				return true;
 			}
