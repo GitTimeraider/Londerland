@@ -79,7 +79,7 @@ class Achievements extends Londerland
 			['key' => 'night_shift', 'name' => 'Night Shift', 'description' => 'Visit between midnight and 5 in the morning', 'icon' => '🦉', 'category' => 'Time', 'stat' => 'night', 'target' => 1],
 			['key' => 'early_cron', 'name' => 'Early Cron Job', 'description' => 'Visit between 5 and 7 in the morning', 'icon' => '🌅', 'category' => 'Time', 'stat' => 'early', 'target' => 1],
 			['key' => 'on_call', 'name' => 'On-Call Weekend', 'description' => 'Visit on 5 weekend days', 'icon' => '📟', 'category' => 'Time', 'stat' => 'weekend', 'target' => 5],
-			['key' => 'marathon', 'name' => 'Marathon Session', 'description' => 'Keep Londerland open for 4 hours in a row', 'icon' => '🏃', 'category' => 'Time', 'stat' => 'marathon', 'target' => 1],
+			['key' => 'marathon', 'name' => 'Marathon Session', 'description' => 'Keep Londerland open for an hour', 'icon' => '🏃', 'category' => 'Time', 'stat' => 'marathon', 'target' => 1],
 			['key' => 'friday_deploy', 'name' => 'Friday Deploy', 'description' => 'Use Londerland on a Friday after 17:00. Brave!', 'icon' => '🚀', 'category' => 'Time', 'stat' => 'friday_deploy', 'target' => 1],
 			// Special days
 			['key' => 'epoch_rollover', 'name' => 'Epoch Rollover', 'description' => 'Visit on New Year\'s Day', 'icon' => '🎆', 'category' => 'Special days', 'stat' => 'day_newyear', 'target' => 1],
