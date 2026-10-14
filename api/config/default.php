@@ -186,6 +186,10 @@ return [
 	'logLiveUpdateRefresh' => '5000',
 	'logPageSize' => '50',
 	'includeDatabaseQueriesInDebug' => false,
+	// Settings > System Settings > Audit Log: keep entries this many days (0 = forever); the table version is set by Londerland
+	'auditLogEnabled' => true,
+	'auditLogDays' => '365',
+	'auditLogDbVersion' => '',
 	'autoBackupCronEnabled' => false,
 	'autoBackupCronSchedule' => '@weekly',
 	'keepBackupsCountCron' => '20',

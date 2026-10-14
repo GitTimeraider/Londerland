@@ -3037,3 +3037,37 @@ select.form-control:not([multiple]):not([size]) {
 html.can-install-app .install-app-item {
   display: list-item;
 }
+
+/* Settings > System Settings > Audit Log */
+.audit-log-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.audit-log-actions {
+  display: flex;
+  gap: 8px;
+}
+.audit-log-table td {
+  vertical-align: top;
+}
+.audit-log-details {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.audit-log-detail {
+  display: inline-block;
+  margin-right: 10px;
+}
+.audit-log-bad .audit-log-action {
+  color: #e74c3c;
+}
+.audit-log-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}

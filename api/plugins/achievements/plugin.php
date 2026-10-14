@@ -646,6 +646,7 @@ class Achievements extends Londerland
 	{
 		$this->_achEnsureTable();
 		$this->processQueries([['function' => 'query', 'query' => 'DELETE FROM `ACHIEVEMENTS-users`']]);
+		$this->audit('plugin.reset', 'Achievements', ['what' => 'all badges and statistics']);
 		$this->setAPIResponse('success', 'All achievements and statistics were reset', 200);
 		return true;
 	}
