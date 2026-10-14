@@ -500,6 +500,7 @@
 		$panel = $('.aichat-panel');
 		loadCollapsed();
 		bindEvents();
+		updateCompact();
 	}
 
 	/* ===================== opening ===================== */
@@ -508,7 +509,7 @@
 		applyThemeAccent();
 		$('body').addClass('aichat-open');
 		$('.aichat-launcher').attr({ 'aria-expanded': 'true', 'aria-label': t('Close AI Chat') });
-		if (window.innerWidth < 768) {
+		if (isCompact()) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
 		fitToScreen();
@@ -538,16 +539,41 @@
 	}
 
 	/**
+	 * Full screen chat instead of the floating window: on narrow screens, and on touch screens that are low, such as a
+	 * phone held sideways (wider than 768px, but too low for the floating window, which then lost its top) or a tablet
+	 * with the on-screen keyboard open. The body gets the class aichat-compact, which aichat.css uses.
+	 */
+	function isCompact() {
+		if (window.innerWidth < 768) {
+			return true;
+		}
+		const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+		return touchTyping() && height < 600;
+	}
+
+	function updateCompact() {
+		const compact = isCompact();
+		const $body = $('body');
+		if (compact && !$body.hasClass('aichat-compact') && $panel) {
+			// the history covers the whole chat in full screen: start with it closed
+			$panel.addClass('aichat-sidebar-hidden');
+		}
+		$body.toggleClass('aichat-compact', compact);
+		return compact;
+	}
+
+	/**
 	 * Phones: an on-screen keyboard covers the bottom of the screen, and the browser then pushes the whole page up,
 	 * so the chat's header went out of sight. The full screen chat is fitted to the part of the screen that is still
 	 * visible instead: the header stays on top, the message list gets shorter and keeps showing its latest lines.
 	 */
 	function fitToScreen() {
 		const viewport = window.visualViewport;
+		const compact = updateCompact();
 		if (!viewport || !$panel) {
 			return;
 		}
-		if (!$('body').hasClass('aichat-open') || window.innerWidth >= 768) {
+		if (!$('body').hasClass('aichat-open') || !compact) {
 			$panel.css({ top: '', height: '' });
 			return;
 		}
@@ -822,7 +848,7 @@
 		updateKeepLabel();
 		renderMessages();
 		renderChatList();
-		if (window.innerWidth < 768) {
+		if (isCompact()) {
 			$panel.addClass('aichat-sidebar-hidden');
 		}
 		updateSendState();
@@ -1869,7 +1895,7 @@
 		});
 		// On phones the history covers the chat: a tap on the dimmed chat (the backdrop of .aichat-main) closes it
 		$panel.on('click', '.aichat-main', function (e) {
-			if (e.target === this && window.innerWidth < 768) {
+			if (e.target === this && isCompact()) {
 				$panel.addClass('aichat-sidebar-hidden');
 			}
 		});
@@ -1877,7 +1903,7 @@
 			if (!state.controller) {
 				showWelcome();
 				$panel.find('.aichat-input').trigger('focus');
-				if (window.innerWidth < 768) {
+				if (isCompact()) {
 					$panel.addClass('aichat-sidebar-hidden');
 				}
 			}

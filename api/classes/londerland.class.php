@@ -2223,7 +2223,7 @@ class Londerland
 			],
 			'Options' => [
 				$this->settingsOption('switch', 'debugErrors', ['label' => 'Show Debug Errors']),
-				$this->settingsOption('switch', 'easterEggs', ['label' => 'Show Easter Eggs']),
+				$this->settingsOption('switch', 'easterEggs', ['label' => 'Show Easter Eggs', 'help' => 'Hidden surprises for visitors to find, such as the Konami code, ten clicks on the logo and a few words to type. Achievements badges for them are still given while this is off']),
 				$this->settingsOption('input', 'gaTrackingID', ['label' => 'Google Analytics Tracking ID', 'placeholder' => 'e.g. UA-XXXXXXXXX-X']),
 			],
 			'Colors & Themes' => [
@@ -4435,6 +4435,7 @@ HTML;
 				'return' => $_SERVER['HTTP_REFERER'] ?? false,
 				'authDebug' => $this->config['authDebug'],
 				'minimalLoginScreen' => $this->config['minimalLoginScreen'],
+				'easterEggs' => (bool)$this->config['easterEggs'],
 				'unsortedTabs' => $this->config['unsortedTabs'],
 				'groupDefaultTab' => (string)($this->config['defaultTabGroup-' . (int)($this->user['groupID'] ?? 999)] ?? ''),
 				'authType' => $this->config['authType'],

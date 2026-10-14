@@ -36,6 +36,7 @@ website, not like a wall of server tiles.
 - **AI Chat** with web search, reading web pages, image generation and read-only public links to a chat ([details below](#ai-chat)).
 - **Achievements and My Stats**: badges, XP, levels and daily quests for using Londerland, and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
 - **Bookmarks**: a page with your favourite links in categories, with icons, colours, search, and import and export of browser bookmark files ([details below](#bookmarks)).
+- **Easter eggs**: a few hidden surprises for visitors and members to find ([details below](#easter-eggs)).
 - **Works on phones and tablets.**
 - **Admin tools**: scheduled backups, a log viewer, an audit log of who changed what ([details below](#audit-log)), an image manager
   and a built-in API with documentation (`/docs`).
@@ -318,6 +319,18 @@ Use the arrow keys and Enter, or click. What you picked recently is at the top. 
 time you open it, so it adds nothing to the normal loading time. Inside a tab that shows another website, click Londerland's
 top bar first: keys pressed inside another site stay in that site.
 
+## Easter eggs
+
+Londerland hides a few surprises. Try **↑ ↑ ↓ ↓ ← → ← → B A** on your keyboard (not while typing in a field), click
+the logo ten times, or open the browser console (F12) for a hint. Some words typed anywhere on the page and some phrases
+in the command palette (Ctrl+K, which also works on phones and tablets) do something too. The rest is up to you to find.
+
+- With the **Achievements** plugin on, every egg found is a secret badge, and finding eight of them gives one more.
+- To switch the effects off, open **Settings > Customize > Appearance > Options**, turn off **Show Easter Eggs** and click
+  **Save**. The badges can still be earned then.
+- The eggs are only downloaded the first time one is found, so they add nothing to the normal loading time.
+  Visitors whose device asks for less motion do not get the spinning effect.
+
 ## Audit Log
 
 In Londerland, open **Settings > System Settings > Audit Log** (admins only; co-admins do not see it). It lists who did
@@ -373,7 +386,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - A "Thinking" section for reasoning models.
 - **Search** button (globe): the web is searched first. The answer cites its sources as clickable [1], [2] links, with a list of sources under it.
 - **Image** button: your message becomes a picture, shown in the chat with a download button. "Answer again" creates a new version.
-- A full-screen layout on phones.
+- A full-screen layout on phones (also when held sideways) and on tablets while the on-screen keyboard is open.
 - **Share** (in the chat's ⋮ menu, when the admin allows it): makes a link anyone can open without logging in. Choose how long
   it works (1 day to 1 year, or until you stop it), then copy it. The link shows the questions and answers as they are
   when you make it: no attached files or pictures, no custom instructions, no reasoning and not your name. **Update with
