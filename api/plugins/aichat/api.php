@@ -198,3 +198,49 @@ $app->get('/plugins/aichat/files/{id}', function ($request, $response, $args) {
 	}
 	return aiChatJsonResponse($response);
 });
+// Public read-only link of a chat: the owner's current link, make a (new) one, or stop it
+$app->get('/plugins/aichat/chats/{id}/share', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatShareAccess($request)) {
+		$AiChat->_aiChatShareGet($args['id']);
+	}
+	return aiChatJsonResponse($response);
+});
+$app->post('/plugins/aichat/chats/{id}/share', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatShareAccess($request)) {
+		$AiChat->_aiChatShareCreate($args['id'], $AiChat->apiData($request) ?? []);
+	}
+	return aiChatJsonResponse($response);
+});
+$app->delete('/plugins/aichat/chats/{id}/share', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	// stopping a link is always allowed, also after sharing was switched off for the group
+	if ($AiChat->_aiChatAccess($request)) {
+		$AiChat->_aiChatShareDelete($args['id']);
+	}
+	return aiChatJsonResponse($response);
+});
+$app->delete('/plugins/aichat/shares/{id}', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAdminAccess($request)) {
+		$AiChat->_aiChatAdminRevokeShare($args['id']);
+	}
+	return aiChatJsonResponse($response);
+});
+// The public page: no login. Only the copy made when the link was created, under a strict Content-Security-Policy.
+$app->get('/plugins/aichat/shared/{token}', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	$chat = $AiChat->_aiChatSharedChat($args['token']);
+	$response->getBody()->write($AiChat->_aiChatSharedPageHtml($chat));
+	return $response
+		->withStatus($chat === null ? 404 : 200)
+		->withHeader('Content-Type', 'text/html;charset=UTF-8')
+		->withHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+		->withHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+		->withHeader('Referrer-Policy', 'no-referrer')
+		->withHeader('X-Content-Type-Options', 'nosniff')
+		->withHeader('X-Frame-Options', 'DENY')
+		->withHeader('Cross-Origin-Opener-Policy', 'same-origin')
+		->withHeader('Cache-Control', 'no-store');
+});

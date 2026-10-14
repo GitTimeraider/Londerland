@@ -6,7 +6,7 @@ class Londerland
 {
 	// Use Custom Functions From Traits;
 	use TwoFAFunctions;
-	use ApiFunctions;
+	use AuditFunctions;
 	use AuthFunctions;
 	use BackupFunctions;
 	use ConfigFunctions;
@@ -16,9 +16,8 @@ class Londerland
 	use OptionsFunction;
 	use LonderlandFunctions;
 	use LoginNetworkFunctions;
-	use PluginFunctions;
-	use StaticFunctions;
 	use SSOFunctions;
+	use SiteFunctions;
 	use TokenFunctions;
 	use UpgradeFunctions;
 
@@ -1272,6 +1271,12 @@ class Londerland
 			$file = fopen($path, 'w');
 			fwrite($file, $output);
 			fclose($file);
+			// The config is read with include, which OPcache serves from memory and only checks for changes every few
+			// seconds: without this, requests in that time read the old values, and one that saves writes them back
+			if (function_exists('opcache_invalidate')) {
+				@opcache_invalidate($path, true);
+			}
+			clearstatcache(true, $path);
 			if (file_exists($path)) {
 				return true;
 			}
@@ -2065,6 +2070,7 @@ class Londerland
 			if (file_exists(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $removeImage)) {
 				$this->setLoggerChannel('Image Manager');
 				$this->logger->info('Image Manager Function -  Deleted Image [' . pathinfo($image, PATHINFO_BASENAME) . ']');
+				$this->audit('image.delete', pathinfo($image, PATHINFO_BASENAME));
 				$this->setAPIResponse(null, pathinfo($image, PATHINFO_BASENAME) . ' has been deleted', null);
 				return (unlink(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $removeImage));
 			} else {
@@ -2107,7 +2113,11 @@ class Londerland
 		$this->makeDir($targetPath);
 		$targetFile = $targetPath . $this->sanitizeUserString($_FILES['file']['name']);
 		$this->setAPIResponse(null, pathinfo($_FILES['file']['name'], PATHINFO_BASENAME) . ' has been uploaded', null);
-		return move_uploaded_file($tempFile, $targetFile);
+		$moved = move_uploaded_file($tempFile, $targetFile);
+		if ($moved) {
+			$this->audit('image.upload', basename($targetFile));
+		}
+		return $moved;
 	}
 
 	public function formatPingHost($host)
@@ -2887,6 +2897,12 @@ HTML;
 				'anchor' => 'settings-customize-appearance-anchor',
 				'name' => 'Appearance',
 			],
+			[
+				'active' => false,
+				'api' => 'api/v2/page/settings_customize_site',
+				'anchor' => 'settings-customize-site-anchor',
+				'name' => 'Website',
+			],
 		];
 		$tabEditorMenu = [
 			[
@@ -2934,6 +2950,15 @@ HTML;
 				'name' => 'Backup'
 			],
 		];
+		// Co-admins see the settings, but who did what is for admins
+		if ($this->qualifyRequest(0)) {
+			$systemSettingsMenu[] = [
+				'active' => false,
+				'api' => 'api/v2/page/settings_settings_audit',
+				'anchor' => 'settings-settings-audit-anchor',
+				'name' => 'Audit Log'
+			];
+		}
 		$systemMenus['system_settings'] = $this->buildSettingsMenus($systemSettingsMenu, 'System Settings');
 		$systemMenus['tab_editor'] = $this->buildSettingsMenus($tabEditorMenu, 'Tab Editor');
 		$systemMenus['customize'] = $this->buildSettingsMenus($customizeMenu, 'Customize');
@@ -2946,6 +2971,11 @@ HTML;
 	{
 		if (!count($array)) {
 			$this->setAPIResponse('error', 'No data submitted', 409);
+			return false;
+		}
+		// Co-admins may change settings, but not the audit log that records what they change
+		if ((array_key_exists('auditLogEnabled', $array) || array_key_exists('auditLogDays', $array)) && !$this->qualifyRequest(0)) {
+			$this->setAPIResponse('error', 'Only admins can change the audit log settings', 401);
 			return false;
 		}
 		$newItems = [];
@@ -2988,6 +3018,17 @@ HTML;
 		}
 		$this->setAPIResponse('success', 'Config items updated', 200);
 		$this->setLoggerChannel('Config')->notice('Config items updated', ['items' => array_keys($updatedItems)]);
+		// Switching a plugin on or off is the setting <PREFIX>-enabled
+		foreach ($updatedItems as $key => $value) {
+			if (preg_match('/^([A-Z0-9_]+)-enabled$/', (string)$key, $match)) {
+				$this->audit($value ? 'plugin.enable' : 'plugin.disable', $this->auditPluginName($match[1]));
+				unset($updatedItems[$key]);
+			}
+		}
+		if ($updatedItems) {
+			// Only the names: values can be passwords or API keys
+			$this->audit('settings.update', '', ['settings' => array_keys($updatedItems)], null, array_key_exists('auditLogEnabled', $updatedItems));
+		}
 		return (bool)$this->updateConfig($newItems);
 	}
 
@@ -3688,6 +3729,8 @@ HTML;
 		$query = $this->processQueries($response);
 		if ($token) {
 			$this->logger->debug('Token has been created');
+			// Every way of signing in ends here (password, OpenID Connect, Plex, registering, the setup wizard)
+			$this->audit('auth.login', $result['username'], ['days' => (int)$days, 'browser' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 200)], ['id' => $result['id'], 'username' => $result['username']]);
 			if ($this->isNewLoginDevice($result['id'], $_SERVER['HTTP_USER_AGENT'] ?? '') && $this->newDeviceEmailWanted($this->userIP())) {
 				if ($this->config['PHPMAILER-enabled']) {
 					$PhpMailer = new PhpMailer();
@@ -3773,6 +3816,7 @@ HTML;
 		if ($loginAttempts > $this->config['loginAttempts'] || isset($_COOKIE['lockout'])) {
 			$this->coookieSeconds('set', 'lockout', $this->config['loginLockout'], $this->config['loginLockout']);
 			$this->logger->warning('User is locked out');
+			$this->audit('auth.locked_out', (string)$username, null, ['id' => null, 'username' => '']);
 			$this->setAPIResponse('error', 'User is locked out', 403);
 			return false;
 		}
@@ -3929,6 +3973,7 @@ HTML;
 						} else {
 							if (!$this->verify2FA($TFA[1], $tfaCode, $TFA[0])) {
 								$this->logger->warning('Incorrect 2FA');
+								$this->audit('auth.2fa_failed', $result['username'], null, ['id' => $result['id'], 'username' => $result['username']]);
 								$this->setAPIResponse('error', 'Wrong 2FA', 422);
 								return false;
 							} else {
@@ -3959,6 +4004,7 @@ HTML;
 			// authentication failed
 			$this->setLoggerChannel('Authentication', $username);
 			$this->logger->warning('Wrong Password');
+			$this->audit('auth.login_failed', (string)$username, null, ['id' => null, 'username' => '']);
 			if ($loginAttempts >= $this->config['loginAttempts']) {
 				$this->logger->warning('User exceeded maximum login attempts');
 				$this->coookieSeconds('set', 'lockout', $this->config['loginLockout'], $this->config['loginLockout']);
@@ -4071,6 +4117,7 @@ HTML;
 		$this->setLoggerChannel('Authentication');
 		$this->logger->debug('Starting log out process');
 		$this->logger->info('User has logged out');
+		$this->audit('auth.logout', $this->user['username'] ?? '');
 		$this->coookie('delete', $this->cookieName);
 		$this->coookie('delete', 'mpt');
 		$this->coookie('delete', 'Auth');
@@ -4107,6 +4154,7 @@ HTML;
 			$this->updateUserPassword($newPassword, $isUser['id']);
 			$this->setLoggerChannel('User Management');
 			$this->logger->info('User Management Function - User: ' . $isUser['username'] . '\'s password was reset');
+			$this->audit('user.password_reset', $isUser['username'], null, ['id' => $isUser['id'], 'username' => $isUser['username']]);
 			if ($this->config['PHPMAILER-enabled']) {
 				$PhpMailer = new PhpMailer();
 				$emailTemplate = array(
@@ -4967,6 +5015,7 @@ HTML;
 		if ($tabInfo) {
 			$this->setLoggerChannel('Tab Management');
 			$this->logger->debug('Deleted Tab [' . $tabInfo['name'] . ']');
+			$this->audit('tab.delete', $tabInfo['name'], ['url' => $tabInfo['url']]);
 			$this->setAPIResponse('success', 'Tab deleted', 204);
 			return $this->processQueries($response);
 		} else {
@@ -5023,6 +5072,7 @@ HTML;
 		$this->setAPIResponse(null, 'Tab added');
 		$this->setLoggerChannel('Tab Management');
 		$this->logger->debug('Added Tab for [' . $array['name'] . ']');
+		$this->audit('tab.create', $array['name'], ['url' => $array['url'] ?? ($array['url_local'] ?? ''), 'group' => $array['group_id']]);
 		return $this->processQueries($response);
 	}
 
@@ -5089,6 +5139,7 @@ HTML;
 		$this->setAPIResponse(null, 'Tab info updated');
 		$this->setLoggerChannel('Tab Management');
 		$this->logger->debug('Edited Tab Info for [' . $tabInfo['name'] . ']');
+		$this->audit('tab.update', $tabInfo['name'], ['changed' => $this->auditChangedKeys($tabInfo, $array)]);
 		return $this->processQueries($response);
 	}
 
@@ -5115,9 +5166,13 @@ HTML;
 					];
 					$this->processQueries($response);
 					$this->setAPIResponse(null, 'Tab Order updated');
+					$tabsSorted = ($tabsSorted ?? 0) + 1;
 				} else {
 					$this->setAPIResponse('error', 'data is malformed', 422);
 				}
+			}
+			if (!empty($tabsSorted)) {
+				$this->audit('tab.reorder', '', ['tabs' => $tabsSorted]);
 			}
 		} else {
 			$this->setAPIResponse('error', 'data is empty or not in array', 422);
@@ -5166,6 +5221,7 @@ HTML;
 		$this->setAPIResponse(null, 'Category added');
 		$this->setLoggerChannel('Category Management');
 		$this->logger->debug('Added Category for [' . $array['category'] . ']');
+		$this->audit('category.create', $array['category']);
 		return $this->processQueries($response);
 	}
 
@@ -5218,6 +5274,7 @@ HTML;
 		$this->setAPIResponse(null, 'Category info updated');
 		$this->setLoggerChannel('Category Management');
 		$this->logger->debug('Edited Category [' . $categoryInfo['category'] . ']');
+		$this->audit('category.update', $categoryInfo['category'], ['changed' => $this->auditChangedKeys($categoryInfo, $array)]);
 		return $this->processQueries($response);
 	}
 
@@ -5244,9 +5301,13 @@ HTML;
 					];
 					$this->processQueries($response);
 					$this->setAPIResponse(null, 'Category Order updated');
+					$categoriesSorted = ($categoriesSorted ?? 0) + 1;
 				} else {
 					$this->setAPIResponse('error', 'data is malformed', 422);
 				}
+			}
+			if (!empty($categoriesSorted)) {
+				$this->audit('category.reorder', '', ['categories' => $categoriesSorted]);
 			}
 		} else {
 			$this->setAPIResponse('error', 'data is empty or not in array', 422);
@@ -5714,6 +5775,7 @@ HTML;
 		$this->setAPIResponse(null, 'User info updated', null, array_key_exists('image', $array) ? ['image' => $array['image']] : null);
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('Updated User Info for [' . $user['username'] . ']');
+		$this->audit('user.update', $user['username'], ['changed' => array_values(array_diff($this->auditChangedKeys($user, $array), ['password'])), 'password' => array_key_exists('password', $array) ? 'changed' : null]);
 		return $this->processQueries($response);
 	}
 
@@ -5739,6 +5801,7 @@ HTML;
 		}
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('Deleted User [' . $userInfo['username'] . ']');
+		$this->audit('user.delete', $userInfo['username'], ['email' => $userInfo['email']]);
 		$this->revokeTokensByUserId($id);
 		$this->setAPIResponse('success', 'User deleted', 204);
 		return $this->processQueries($response);
@@ -5789,6 +5852,7 @@ HTML;
 		$this->setLoggerChannel('User Management');
 		if ($this->createUser($username, $password, $email)) {
 			$this->logger->info('Account created for [' . $username . ']');
+			$this->audit('user.create', $username, ['email' => $email]);
 			return true;
 		} else {
 			$this->logger->warning('An error occurred');
@@ -5922,6 +5986,7 @@ HTML;
 		$this->setAPIResponse(null, 'Group info updated');
 		$this->setLoggerChannel('Group Management');
 		$this->logger->info('Edited Group Info for [' . $groupInfo['group'] . ']');
+		$this->audit('group.update', $groupInfo['group'], ['changed' => $this->auditChangedKeys($groupInfo, $array)]);
 		return $this->processQueries($response);
 	}
 
@@ -5948,6 +6013,7 @@ HTML;
 		if ($groupInfo) {
 			$this->setLoggerChannel('Group Management');
 			$this->logger->info('Deleted Group [' . $groupInfo['group'] . ']');
+			$this->audit('group.delete', $groupInfo['group']);
 			$this->setAPIResponse('success', 'Group deleted', 204);
 			return $this->processQueries($response);
 		} else {
@@ -6000,6 +6066,7 @@ HTML;
 		$this->setAPIResponse(null, 'Group added');
 		$this->setLoggerChannel('Group Management');
 		$this->logger->info('Added Group for [' . $array['group'] . ']');
+		$this->audit('group.create', $array['group']);
 		return $this->processQueries($response);
 	}
 
@@ -6174,6 +6241,7 @@ HTML;
 		];
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('User: ' . $user['username'] . ' account locked');
+		$this->audit('user.lock', $user['username']);
 		$this->setAPIResponse('success', 'User account locked', 200);
 		return $this->processQueries($response);
 	}
@@ -6212,6 +6280,7 @@ HTML;
 		];
 		$this->setLoggerChannel('User Management');
 		$this->logger->info('User: ' . $user['username'] . ' account unlocked');
+		$this->audit('user.unlock', $user['username']);
 		$this->setAPIResponse('success', 'User account unlocked', 200);
 		return $this->processQueries($response);
 	}

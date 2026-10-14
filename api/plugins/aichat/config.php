@@ -40,6 +40,8 @@ return array(
 	'AICHAT-searchResults' => '5',
 	// Model may use the web by itself: fetch_url (read a page) always, web_search too when a Search Provider is set
 	'AICHAT-searchAuto' => false,
+	// Tool calls (search, read page, image) the model may make per answer before it has to answer
+	'AICHAT-toolRounds' => '6',
 	// Off = pages on private/local addresses (192.168.x, 10.x, localhost, ...) are refused
 	'AICHAT-fetchAllowPrivate' => false,
 	// Image generation through an OpenAI-compatible /images/generations endpoint
@@ -53,5 +55,8 @@ return array(
 	'AICHAT-usage-include' => 'off',
 	'AICHAT-usageUrl' => '',
 	'AICHAT-usageApiKey' => '',
-	'AICHAT-usageProviders' => ''
+	'AICHAT-usageProviders' => '',
+	// Public read-only links to chats (off by default) and the groups that may make them (comma separated, '' = all with AI Chat)
+	'AICHAT-share-include' => false,
+	'AICHAT-shareGroups-include' => ''
 );

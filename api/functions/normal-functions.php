@@ -667,48 +667,6 @@ function caBundlePath()
 	return __DIR__ . DIRECTORY_SEPARATOR . 'cert' . DIRECTORY_SEPARATOR . 'cacert-initial.pem';
 }
 
-// Leave for deluge class
-function getCert()
-{
-	return caBundlePath();
-}
-
-// Leave for deluge class
-function localURL($url, $force = false)
-{
-	if ($force) {
-		return true;
-	}
-	if (strpos($url, 'https') !== false) {
-		preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/", $url, $result);
-		$result = (!empty($result) ? true : false);
-		return $result;
-	}
-	return false;
-}
-
-// Maybe use later?
-// Maybe use later?
-// Maybe use later?
-function download($url, $path)
-{
-	ini_set('max_execution_time', 0);
-	set_time_limit(0);
-	$ch = curl_init($url);
-	curl_setopt($ch, CURLOPT_HEADER, 1);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-	curl_setopt($ch, CURLOPT_CAINFO, getCert());
-	if (localURL($url)) {
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-	}
-	$raw_file_data = curl_exec($ch);
-	curl_close($ch);
-	file_put_contents($path, $raw_file_data);
-	return (filesize($path) > 0) ? true : false;
-}
-
 // swagger
 function getServerPath($over = false)
 {

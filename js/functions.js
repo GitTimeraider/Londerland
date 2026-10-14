@@ -1423,6 +1423,21 @@ function buildFormItem(item) {
         attr +
         ' autocomplete="new-password" />'
       );
+    case "datetime":
+      return (
+        smallLabel +
+        '<input data-changed="false" type="datetime-local" class="form-control' +
+        extraClass +
+        '"' +
+        value +
+        id +
+        name +
+        disabled +
+        type +
+        label +
+        attr +
+        " />"
+      );
     case "textbox":
       return (
         smallLabel +
@@ -1997,6 +2012,21 @@ function buildCustomizeAppearance() {
         londerlandCatchError(e, data);
       }
       $("#customize-appearance-form").html(buildFormGroup(response.data));
+      initColorPickers("input.pick-a-color-custom-options");
+    })
+    .fail(function (xhr) {
+      LonderlandApiError(xhr);
+    });
+}
+function buildCustomizeSite() {
+  londerlandAPI2("GET", "api/v2/settings/site")
+    .done(function (data) {
+      try {
+        var response = data.response;
+      } catch (e) {
+        londerlandCatchError(e, data);
+      }
+      $("#customize-site-form").html(buildFormGroup(response.data));
       initColorPickers("input.pick-a-color-custom-options");
     })
     .fail(function (xhr) {
@@ -3912,6 +3942,229 @@ function submitCategoryOrder() {
     })
     .fail(function (xhr) {
       LonderlandApiError(xhr, "Update Error");
+    });
+}
+// Settings > System Settings > Audit Log
+var auditLogState = { page: 1, search: "", category: "", timer: null };
+var auditLogLabels = {
+  "auth.login": "Signed in",
+  "auth.login_failed": "Sign-in failed",
+  "auth.2fa_failed": "Wrong two-factor code",
+  "auth.locked_out": "Locked out (too many attempts)",
+  "auth.logout": "Signed out",
+  "settings.update": "Changed settings",
+  "tab.create": "Added tab",
+  "tab.update": "Changed tab",
+  "tab.delete": "Deleted tab",
+  "tab.reorder": "Sorted tabs",
+  "category.create": "Added category",
+  "category.update": "Changed category",
+  "category.delete": "Deleted category",
+  "category.reorder": "Sorted categories",
+  "user.create": "Added user",
+  "user.update": "Changed user",
+  "user.delete": "Deleted user",
+  "user.lock": "Locked user",
+  "user.unlock": "Unlocked user",
+  "user.password_reset": "Password reset by e-mail",
+  "group.create": "Added group",
+  "group.update": "Changed group",
+  "group.delete": "Deleted group",
+  "plugin.enable": "Enabled plugin",
+  "plugin.disable": "Disabled plugin",
+  "plugin.reset": "Reset plugin data",
+  "image.upload": "Uploaded image",
+  "image.delete": "Deleted image",
+  "backup.create": "Created backup",
+  "backup.delete": "Deleted backup",
+  "audit.clear": "Cleared the audit log",
+};
+function auditLogEscape(value) {
+  return $("<div>")
+    .text(value == null ? "" : String(value))
+    .html();
+}
+function auditLogDetails(details) {
+  if (!details) {
+    return "";
+  }
+  return Object.keys(details)
+    .map(function (key) {
+      var value = details[key];
+      var text = Array.isArray(value)
+        ? value.join(", ")
+        : typeof value === "object"
+          ? JSON.stringify(value)
+          : String(value);
+      return (
+        '<span class="audit-log-detail"><span class="text-muted">' +
+        auditLogEscape(window.lang.translate(key)) +
+        ":</span> " +
+        auditLogEscape(text) +
+        "</span>"
+      );
+    })
+    .join(" ");
+}
+function auditLogQuery() {
+  return $.param({
+    search: auditLogState.search,
+    category: auditLogState.category,
+    page: auditLogState.page,
+  });
+}
+function loadAuditLog() {
+  londerlandAPI2("GET", "api/v2/audit?" + auditLogQuery())
+    .done(function (data) {
+      var log = data.response.data;
+      var rows = log.entries
+        .map(function (entry) {
+          var bad = /failed|locked_out/.test(entry.action);
+          var label = auditLogLabels[entry.action] || entry.action;
+          return (
+            "<tr" +
+            (bad ? ' class="audit-log-bad"' : "") +
+            '><td class="text-nowrap" title="' +
+            auditLogEscape(entry.created) +
+            '">' +
+            auditLogEscape(
+              entry.created
+                ? new Date(entry.created).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
+                : "-"
+            ) +
+            "</td><td>" +
+            auditLogEscape(entry.username || "-") +
+            '</td><td><span class="audit-log-action">' +
+            auditLogEscape(window.lang.translate(label)) +
+            "</span>" +
+            (entry.target
+              ? ' <strong class="audit-log-target">' +
+                auditLogEscape(entry.target) +
+                "</strong>"
+              : "") +
+            '</td><td class="audit-log-details">' +
+            auditLogDetails(entry.details) +
+            '</td><td class="text-nowrap">' +
+            auditLogEscape(entry.ip) +
+            "</td></tr>"
+          );
+        })
+        .join("");
+      if (!rows) {
+        rows =
+          '<tr><td colspan="5" class="text-muted">' +
+          window.lang.translate(
+            log.enabled
+              ? "Nothing here yet."
+              : "The audit log is switched off."
+          ) +
+          "</td></tr>";
+      }
+      $("#audit-log-rows").html(rows);
+      var pages = Math.max(1, Math.ceil(log.total / log.pageSize));
+      $("#audit-log-page").text(
+        log.page + " / " + pages + " (" + log.total + ")"
+      );
+      $("#audit-log-prev").prop("disabled", log.page <= 1);
+      $("#audit-log-next").prop("disabled", log.page >= pages);
+      $("#audit-log-export").attr(
+        "href",
+        "api/v2/audit/export?" +
+          $.param({
+            search: auditLogState.search,
+            category: auditLogState.category,
+          })
+      );
+    })
+    .fail(function (xhr) {
+      LonderlandApiError(xhr, "Audit Log");
+    });
+}
+function buildAuditLog() {
+  auditLogState.page = 1;
+  auditLogState.search = "";
+  auditLogState.category = "";
+  $(document)
+    .off(".auditLog")
+    .on("input.auditLog", "#audit-log-search", function () {
+      var value = $(this).val();
+      clearTimeout(auditLogState.timer);
+      auditLogState.timer = setTimeout(function () {
+        auditLogState.search = value;
+        auditLogState.page = 1;
+        loadAuditLog();
+      }, 300);
+    })
+    .on("change.auditLog", "#audit-log-category", function () {
+      auditLogState.category = $(this).val();
+      auditLogState.page = 1;
+      loadAuditLog();
+    })
+    .on("click.auditLog", "#audit-log-prev", function () {
+      auditLogState.page = Math.max(1, auditLogState.page - 1);
+      loadAuditLog();
+    })
+    .on("click.auditLog", "#audit-log-next", function () {
+      auditLogState.page++;
+      loadAuditLog();
+    });
+  loadAuditLog();
+}
+function saveAuditLogOptions() {
+  londerlandAPI2(
+    "PUT",
+    "api/v2/config",
+    {
+      auditLogEnabled: $("#audit-log-enabled").prop("checked"),
+      auditLogDays: String(
+        Math.max(0, parseInt($("#audit-log-days").val(), 10) || 0)
+      ),
+    },
+    true
+  )
+    .done(function (data) {
+      message(
+        "Audit Log",
+        data.response.message,
+        activeInfo.settings.notifications.position,
+        "#FFF",
+        "success",
+        "5000"
+      );
+      loadAuditLog();
+    })
+    .fail(function (xhr) {
+      LonderlandApiError(xhr, "Audit Log");
+    });
+}
+function clearAuditLog() {
+  if (
+    !confirm(
+      window.lang.translate(
+        "Remove every entry from the audit log? This cannot be undone."
+      )
+    )
+  ) {
+    return;
+  }
+  londerlandAPI2("DELETE", "api/v2/audit")
+    .done(function (data) {
+      message(
+        "Audit Log",
+        data.response.message,
+        activeInfo.settings.notifications.position,
+        "#FFF",
+        "success",
+        "5000"
+      );
+      auditLogState.page = 1;
+      loadAuditLog();
+    })
+    .fail(function (xhr) {
+      LonderlandApiError(xhr, "Audit Log");
     });
 }
 function getLonderlandBackups() {

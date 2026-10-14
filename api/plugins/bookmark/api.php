@@ -97,3 +97,24 @@ $app->delete('/plugins/bookmark/categories/{id}', function ($request, $response,
 	}
 	return bookmarkJsonResponse($response);
 });
+// A browser bookmarks file (Netscape format) with the bookmarks this user may see; admins get all of them
+$app->get('/plugins/bookmark/export', function ($request, $response, $args) {
+	$Bookmark = new Bookmark();
+	if (!$Bookmark->_bookmarkReady($request)) {
+		return bookmarkJsonResponse($response);
+	}
+	$response->getBody()->write($Bookmark->_bookmarkExportHtml());
+	return $response
+		->withHeader('Content-Type', 'text/html;charset=UTF-8')
+		->withHeader('Content-Disposition', 'attachment; filename="bookmarks-' . gmdate('Y-m-d') . '.html"')
+		->withHeader('X-Content-Type-Options', 'nosniff')
+		->withHeader('Content-Security-Policy', "default-src 'none'")
+		->withHeader('Cache-Control', 'no-store');
+});
+$app->post('/plugins/bookmark/import', function ($request, $response, $args) {
+	$Bookmark = new Bookmark();
+	if ($Bookmark->_bookmarkAdminAccess($request)) {
+		$Bookmark->_bookmarkImportHtml($Bookmark->apiData($request) ?? []);
+	}
+	return bookmarkJsonResponse($response);
+});

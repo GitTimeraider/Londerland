@@ -1370,7 +1370,17 @@ function shortcut(handler) {
         handler(event);
     };
 }
+// Ctrl+K / Cmd+K, also while typing: the command palette (js/palette.js, loaded the first time)
+function openCommandPalette() {
+    londerlandLoadLibrary('palette').then(function() {
+        window.londerlandPalette.open();
+    });
+}
 tinykeys.tinykeys(window, {
+    '$mod+KeyK': function(event) {
+        event.preventDefault();
+        openCommandPalette();
+    },
     'r r': shortcut(function() { reloadCurrentTab() }),
     'c c': shortcut(function(event) { closeCurrentTab(event) }),
     's s': shortcut(function() { openSettings() }),

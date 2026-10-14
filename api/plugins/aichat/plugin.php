@@ -181,6 +181,18 @@ class AiChat extends Londerland
 				`system_prompt`	TEXT,
 				`send_on_enter`	INTEGER DEFAULT 1,
 				`web_tools`	INTEGER DEFAULT 1
+			);',
+			// Public read-only links: a copy of the questions and answers when the link was made (see _aiChatShareCreate)
+			'AICHAT-shares' => 'CREATE TABLE `AICHAT-shares` (
+				`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+				`token`	TEXT UNIQUE,
+				`chat_id`	INTEGER,
+				`user_id`	INTEGER,
+				`title`	TEXT,
+				`messages`	LONGTEXT,
+				`created`	DATETIME,
+				`expires`	DATETIME,
+				`views`	INTEGER DEFAULT 0
 			);'
 		];
 		foreach ($tables as $name => $create) {
@@ -472,6 +484,14 @@ class AiChat extends Londerland
 					'value' => $this->config['AICHAT-searchAuto']
 				),
 				array(
+					'type' => 'number',
+					'name' => 'AICHAT-toolRounds',
+					'label' => 'Tool Steps per Answer',
+					'value' => $this->config['AICHAT-toolRounds'],
+					'placeholder' => '6',
+					'help' => 'How many times the model may search, read a page or create an image before it has to answer with what it found (1 to 20).'
+				),
+				array(
 					'type' => 'switch',
 					'name' => 'AICHAT-fetchAllowPrivate',
 					'label' => 'Allow Reading Local Addresses',
@@ -607,6 +627,38 @@ class AiChat extends Londerland
 					'text' => 'Test (save first)'
 				),
 			),
+			'Sharing' => array(
+				array(
+					'type' => 'html',
+					'override' => 12,
+					'label' => 'Public links',
+					'html' => '<p lang="en">Users can make a read-only link to one of their chats (Share in the chat\'s menu) that anyone with the link can open, without logging in. The link shows a copy of the questions and answers as they were when the link was made: no attached files or pictures, no custom instructions, no reasoning and no name of the user. Links can expire, are removed when the chat is deleted, stop working when the user\'s group may no longer share, and all stop at once when this is switched off. Search engines are asked not to index them.</p>'
+				),
+				array(
+					'type' => 'switch',
+					'name' => 'AICHAT-share-include',
+					'label' => 'Allow public links',
+					'value' => $this->config['AICHAT-share-include']
+				),
+				array(
+					'type' => 'select2',
+					'class' => 'select2-multiple',
+					'id' => 'AICHAT-shareGroups-include-select',
+					'name' => 'AICHAT-shareGroups-include',
+					'label' => 'Groups that may share',
+					'value' => (string)($this->config['AICHAT-shareGroups-include'] ?? ''),
+					'options' => array_values(array_filter(array_map(function ($group) {
+						return (int)$group['value'] < 999 ? ['name' => $group['name'], 'value' => (string)$group['value']] : null;
+					}, $this->groupSelect()))),
+					'help' => 'Empty = every group with AI Chat.'
+				),
+				array(
+					'type' => 'html',
+					'override' => 12,
+					'label' => 'Shared chats',
+					'html' => $this->_aiChatSharesHtml()
+				),
+			),
 			'Chat Button' => array(
 				array(
 					'type' => 'input',
@@ -627,6 +679,248 @@ class AiChat extends Londerland
 				),
 			)
 		);
+	}
+
+	/* ===================== public links ===================== */
+
+	// Sharing is switched on and this user's group may share (the group must also still have AI Chat)
+	private function _aiChatShareAllowedFor($groupId)
+	{
+		if (empty($this->config['AICHAT-share-include']) || !$this->_aiChatGroupAllowed($groupId)) {
+			return false;
+		}
+		$groups = $this->_aiChatSplitList($this->config['AICHAT-shareGroups-include'] ?? '');
+		return !$groups || in_array((string)(int)$groupId, $groups, true);
+	}
+
+	public function _aiChatShareAccess($request)
+	{
+		if (!$this->_aiChatAccess($request)) {
+			return false;
+		}
+		if (!$this->_aiChatShareAllowedFor((int)$this->user['groupID'])) {
+			$this->setAPIResponse('error', 'Sharing chats is not allowed for your group', 403);
+			return false;
+		}
+		return true;
+	}
+
+	private function _aiChatShareUrl($token)
+	{
+		return 'api/v2/plugins/aichat/shared/' . $token;
+	}
+
+	private function _aiChatFormatShare($share)
+	{
+		if (!$share) {
+			return null;
+		}
+		return [
+			'url' => $this->_aiChatShareUrl($share['token']),
+			'created' => $this->_aiChatIsoDate($share['created']),
+			'expires' => $this->_aiChatIsoDate($share['expires']),
+			'views' => (int)$share['views'],
+		];
+	}
+
+	public function _aiChatShareGet($chatId)
+	{
+		if (!$this->_aiChatFindChat($chatId)) {
+			return false;
+		}
+		$share = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `AICHAT-shares` WHERE `chat_id` = ? AND `user_id` = ?', (int)$chatId, $this->_aiChatUserId()]
+		]]);
+		$this->setAPIResponse('success', null, 200, $this->_aiChatFormatShare($share));
+		return true;
+	}
+
+	/**
+	 * Makes (or makes again, with a new address) the public link of a chat. The link shows a copy of the chat as it is
+	 * now: only the text of the questions and answers. Making it again replaces the copy and the old address stops working.
+	 */
+	public function _aiChatShareCreate($chatId, $data)
+	{
+		$chat = $this->_aiChatFindChat($chatId);
+		if (!$chat) {
+			return false;
+		}
+		$messages = [];
+		$size = 0;
+		foreach ($this->_aiChatMessages($chatId) as $message) {
+			if (!in_array($message['role'], ['user', 'assistant'], true) || trim((string)$message['content']) === '') {
+				continue;
+			}
+			$content = (string)$message['content'];
+			$size += strlen($content);
+			if ($size > 2 * 1024 * 1024) {
+				$this->setAPIResponse('error', 'This chat is too long to share', 413);
+				return false;
+			}
+			$messages[] = ['role' => $message['role'], 'content' => $content, 'created' => $this->_aiChatIsoDate($message['created'])];
+		}
+		if (!$messages) {
+			$this->setAPIResponse('error', 'There is nothing in this chat to share yet', 422);
+			return false;
+		}
+		$days = (int)($data['days'] ?? 0);
+		$days = in_array($days, [1, 7, 30, 90, 365], true) ? $days : 0;
+		$share = [
+			// 256 random bits: an address nobody can guess
+			'token' => rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '='),
+			'chat_id' => (int)$chatId,
+			'user_id' => $this->_aiChatUserId(),
+			'title' => mb_substr((string)$chat['title'], 0, 200),
+			'messages' => json_encode($messages, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+			'created' => $this->_aiChatNow(),
+			'expires' => $days ? gmdate('Y-m-d H:i:s', time() + $days * 86400) : null,
+			'views' => 0,
+		];
+		$this->processQueries([
+			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-shares` WHERE `chat_id` = ? AND `user_id` = ?', (int)$chatId, $this->_aiChatUserId()]],
+			['function' => 'query', 'query' => ['INSERT INTO [AICHAT-shares]', $share]],
+		]);
+		$this->setLoggerChannel('AI Chat')->info('Chat shared with a public link', ['chat' => (int)$chatId]);
+		$this->setAPIResponse('success', 'Public link created', 200, $this->_aiChatFormatShare($share));
+		return true;
+	}
+
+	public function _aiChatShareDelete($chatId)
+	{
+		if (!$this->_aiChatFindChat($chatId)) {
+			return false;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-shares` WHERE `chat_id` = ? AND `user_id` = ?', (int)$chatId, $this->_aiChatUserId()]]]);
+		$this->setAPIResponse('success', 'The link no longer works', 200);
+		return true;
+	}
+
+	/**
+	 * The shared chat for a public address, or null: unknown or expired link, sharing switched off, AI Chat off, or the
+	 * owner's account gone, locked or in a group that may no longer share.
+	 */
+	public function _aiChatSharedChat($token)
+	{
+		$token = (string)$token;
+		if (!$this->hasDB() || empty($this->config['AICHAT-enabled']) || empty($this->config['AICHAT-share-include']) || !preg_match('/^[A-Za-z0-9_-]{43}$/', $token)) {
+			return null;
+		}
+		if (!$this->_aiChatTableExists('AICHAT-shares')) {
+			return null;
+		}
+		$share = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT * FROM `AICHAT-shares` WHERE `token` = ?', $token]
+		]]);
+		// the database may compare text without regard to case (MySQL); the address has to match exactly
+		if (!$share || !hash_equals((string)$share['token'], $token)) {
+			return null;
+		}
+		$expires = $this->_aiChatIsoDate($share['expires']);
+		if ($expires && strtotime($expires) <= time()) {
+			return null;
+		}
+		$owner = $this->processQueries([[
+			'function' => 'fetch',
+			'query' => ['SELECT `group_id`, `locked` FROM `users` WHERE `id` = ?', (int)$share['user_id']]
+		]]);
+		if (!$owner || !empty($owner['locked']) || !$this->_aiChatShareAllowedFor((int)$owner['group_id'])) {
+			return null;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['UPDATE `AICHAT-shares` SET `views` = `views` + 1 WHERE `id` = ?', (int)$share['id']]]]);
+		$messages = json_decode((string)$share['messages'], true);
+		return [
+			'title' => (string)$share['title'],
+			'created' => $this->_aiChatIsoDate($share['created']),
+			'messages' => is_array($messages) ? $messages : [],
+		];
+	}
+
+	/**
+	 * The public page. Everything in it is text the server escaped; js/aichat-share.js (same origin, the only script the page's
+	 * Content-Security-Policy allows) turns the answers' Markdown into sanitized HTML without images.
+	 */
+	public function _aiChatSharedPageHtml($chat)
+	{
+		$e = function ($value) {
+			return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+		};
+		// the page is at api/v2/plugins/aichat/shared/<token>, five folders below the site
+		$root = '../../../../../';
+		$site = trim(strip_tags((string)$this->config['title'])) ?: 'Londerland';
+		$version = rawurlencode((string)$this->fileHash);
+		if ($chat === null) {
+			$body = '<main class="shared-missing"><h1>' . $e('This link does not work') . '</h1><p>' . $e('The chat was not found. The link may have expired, or it was turned off.') . '</p></main>';
+			$title = $site;
+		} else {
+			$items = '';
+			foreach ($chat['messages'] as $message) {
+				$isUser = $message['role'] === 'user';
+				$items .= '<article class="shared-message ' . ($isUser ? 'is-user' : 'is-assistant') . '"><div class="shared-role">' . $e($isUser ? 'Question' : 'Answer') . '</div><div class="shared-content" data-markdown="' . ($isUser ? '0' : '1') . '">' . $e($message['content']) . '</div></article>';
+			}
+			$body = '<main><header class="shared-head"><h1>' . $e($chat['title']) . '</h1><p class="shared-meta">' . $e('A conversation with AI, shared from ' . $site) . ' · <time datetime="' . $e($chat['created']) . '">' . $e(substr((string)$chat['created'], 0, 10)) . '</time></p></header>' . $items . '<footer class="shared-foot">' . $e('Answers were written by AI and can be wrong.') . '</footer></main>';
+			$title = $chat['title'] . ' - ' . $site;
+		}
+		return '<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>' . $e($title) . '</title>
+<link rel="stylesheet" href="' . $root . 'css/aichat-share.css?v=' . $version . '">
+</head>
+<body>
+' . $body . '
+<script src="' . $root . 'assets/vendor/marked/marked.umd.js?v=' . $version . '"></script>
+<script src="' . $root . 'assets/vendor/dompurify/purify.min.js?v=' . $version . '"></script>
+<script src="' . $root . 'js/aichat-share.js?v=' . $version . '"></script>
+</body>
+</html>';
+	}
+
+	/* ----- admin ----- */
+
+	private function _aiChatSharesHtml()
+	{
+		if (!$this->hasDB() || !$this->_aiChatTableExists('AICHAT-shares')) {
+			return '<p lang="en">No chats are shared.</p>';
+		}
+		$shares = $this->processQueries([[
+			'function' => 'fetchAll',
+			'query' => 'SELECT s.`id`, s.`token`, s.`title`, s.`created`, s.`expires`, s.`views`, u.`username` FROM `AICHAT-shares` s LEFT JOIN `users` u ON u.`id` = s.`user_id` ORDER BY s.`id` DESC'
+		]]) ?: [];
+		if (!$shares) {
+			return '<p lang="en">No chats are shared.</p>';
+		}
+		$e = function ($value) {
+			return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+		};
+		$rows = '';
+		foreach ($shares as $share) {
+			$expires = $this->_aiChatIsoDate($share['expires']);
+			$rows .= '<tr><td><a href="' . $e($this->_aiChatShareUrl($share['token'])) . '" target="_blank" rel="noopener noreferrer">' . $e($share['title']) . '</a></td><td>' . $e($share['username'] ?? '-') . '</td><td>' . $e(substr((string)$this->_aiChatIsoDate($share['created']), 0, 10)) . '</td><td>' . ($expires ? $e(substr($expires, 0, 10)) : '<span lang="en">never</span>') . '</td><td>' . (int)$share['views'] . '</td><td><button type="button" class="btn btn-sm btn-danger aichatRevokeShare" data-id="' . (int)$share['id'] . '"><i class="fa fa-ban"></i> <span lang="en">Stop</span></button></td></tr>';
+		}
+		return '<div class="table-responsive"><table class="table table-sm"><thead><tr><th lang="en">Chat</th><th lang="en">User</th><th lang="en">Shared</th><th lang="en">Expires</th><th lang="en">Views</th><th></th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+	}
+
+	public function _aiChatAdminRevokeShare($id)
+	{
+		if (!$this->_aiChatTableExists('AICHAT-shares')) {
+			$this->setAPIResponse('error', 'Not found', 404);
+			return false;
+		}
+		$share = $this->processQueries([['function' => 'fetch', 'query' => ['SELECT `title` FROM `AICHAT-shares` WHERE `id` = ?', (int)$id]]]);
+		if (!$share) {
+			$this->setAPIResponse('error', 'Not found', 404);
+			return false;
+		}
+		$this->processQueries([['function' => 'query', 'query' => ['DELETE FROM `AICHAT-shares` WHERE `id` = ?', (int)$id]]]);
+		$this->audit('plugin.share_revoke', 'AI Chat', ['chat' => $share['title']]);
+		$this->setAPIResponse('success', 'The link no longer works', 200);
+		return true;
 	}
 
 	/* ===================== upstream API ===================== */
@@ -1243,6 +1537,8 @@ class AiChat extends Londerland
 		$this->processQueries([
 			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-messages` WHERE `chat_id` IN %in', $chatIds]],
 			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-chats` WHERE `id` IN %in AND `user_id` = ?', $chatIds, $userId]],
+			// a deleted chat's public link stops working with it
+			['function' => 'query', 'query' => ['DELETE FROM `AICHAT-shares` WHERE `chat_id` IN %in AND `user_id` = ?', $chatIds, $userId]],
 		]);
 		foreach (array_unique($fileIds) as $fileId) {
 			$this->_aiChatDeleteFile($fileId, $userId);
@@ -1661,9 +1957,19 @@ class AiChat extends Londerland
 		// with summaries off, a summary made before is not sent anymore either
 		$summary = $this->config['AICHAT-summarizeDropped'] ? trim((string)($chat['summary'] ?? '')) : '';
 		$until = (int)($chat['summary_until'] ?? 0);
-		$history = array_values(array_filter($this->_aiChatMessages($chatId), function ($message) use ($until) {
-			return (int)$message['id'] > $until && in_array($message['role'], ['user', 'assistant'], true);
-		}));
+		$all = $this->_aiChatMessages($chatId);
+		$history = [];
+		foreach ($all as $index => $message) {
+			if ((int)$message['id'] <= $until || !in_array($message['role'], ['user', 'assistant'], true)) {
+				continue;
+			}
+			// a question that never got an answer (the AI failed or was stopped) is left out, otherwise the model
+			// answers the old question along with the new one
+			if ($message['role'] === 'user' && isset($all[$index + 1]) && $all[$index + 1]['role'] !== 'assistant') {
+				continue;
+			}
+			$history[] = $message;
+		}
 		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
 		if (count($history) <= $limit) {
 			return [$summary, $history];
@@ -2553,21 +2859,62 @@ class AiChat extends Londerland
 		$images = [];
 		$aborted = false;
 		$error = null;
-		for ($round = 0; $round < 5; $round++) {
-			$body = ['model' => $model, 'messages' => $messages, 'stream' => true];
+		$toolRounds = min(20, max(1, (int)($this->config['AICHAT-toolRounds'] ?? 6) ?: 6));
+		$usedTools = false;
+		$retriedEmpty = false;
+		$retryEmpty = false;
+		$noToolChoice = false;
+		for ($round = 0; $round <= $toolRounds; $round++) {
+			$lastRound = $round === $toolRounds;
+			$send = $messages;
+			$notes = [];
+			if ($lastRound && $usedTools) {
+				$notes[] = 'You have used all the tool steps for this question. Answer now with what you found so far; do not call any more tools.';
+			}
+			if ($retryEmpty) {
+				$notes[] = "Your previous reply was empty. Answer the user's last question now, in text.";
+			}
+			if ($notes) {
+				$send[] = ['role' => 'user', 'content' => '(Note from the chat app: ' . implode(' ', $notes) . ')'];
+			}
+			$body = ['model' => $model, 'messages' => $send, 'stream' => true];
 			if (is_numeric($this->config['AICHAT-temperature'])) {
 				$body['temperature'] = (float)$this->config['AICHAT-temperature'];
 			}
 			if ((int)$this->config['AICHAT-maxTokens'] > 0) {
 				$body['max_tokens'] = (int)$this->config['AICHAT-maxTokens'];
 			}
-			// The last round never offers tools, so the model has to answer
-			$offerTools = $tools && $round < 4;
+			$offerTools = $tools && !$lastRound;
 			if ($offerTools) {
 				$body['tools'] = $tools;
+			} elseif ($tools && $usedTools && !$noToolChoice) {
+				// The last round keeps the tool list, because the conversation holds tool calls now and some servers
+				// (Claude, also through OmniRoute) answer with nothing when those come without it; tool_choice none
+				// makes the model answer instead of calling another tool
+				$body['tools'] = $tools;
+				$body['tool_choice'] = 'none';
 			}
 			$result = $this->_aiChatStreamRound($body);
 			$error = $this->_aiChatRoundError($result);
+			$produced = $result['answer'] !== '' || $result['toolCalls'];
+			if ($error && isset($body['tool_choice']) && !$produced && in_array($result['code'], [400, 404, 422, 500], true)) {
+				// Server without tool_choice: the last round again without the tool list
+				$noToolChoice = true;
+				$round--;
+				continue;
+			}
+			// Nothing at all came back (the model only thought, or the server says the content was empty):
+			// ask once more, with a note that an answer is needed
+			$empty = !$produced && !$result['aborted'] && ($error === null || preg_match('/empty (content|response|answer)/i', $error));
+			if ($empty && $answer === '' && !$images && !$retriedEmpty) {
+				$this->setLoggerChannel('AI Chat')->warning('The AI returned an empty answer, asking again', ['model' => $model, 'round' => $round, 'error' => $error]);
+				$retriedEmpty = true;
+				$retryEmpty = true;
+				$reasoning .= $result['reasoning'];
+				$round--;
+				continue;
+			}
+			$retryEmpty = false;
 			if ($error && $offerTools && $round === 0 && $result['answer'] === '' && in_array($result['code'], [400, 404, 422, 500], true)) {
 				// Model or server without tool support: ask again without tools, and say so
 				$this->setLoggerChannel('AI Chat')->warning('The AI server refused the tools, retrying without them: ' . $error, ['model' => $model]);
@@ -2587,6 +2934,7 @@ class AiChat extends Londerland
 				break;
 			}
 			// Run the tools the model asked for and give it the results
+			$usedTools = true;
 			$calls = [];
 			foreach ($result['toolCalls'] as $index => $call) {
 				$calls[] = ['id' => $call['id'] ?: 'call_' . $round . '_' . $index, 'type' => 'function', 'function' => ['name' => $call['name'], 'arguments' => $call['arguments'] !== '' ? $call['arguments'] : '{}']];
@@ -2603,9 +2951,14 @@ class AiChat extends Londerland
 			}
 		}
 
-		if ($error && $answer === '' && !$images) {
+		if (!$aborted && trim($answer) === '' && !$images && (!$error || preg_match('/empty (content|response|answer)/i', $error))) {
+			$error = 'The AI gave an empty answer, also when asked again. Use "Answer again", or ask in other words.' . ($error ? ' (' . $error . ')' : '');
+		}
+		if ($error && trim($answer) === '' && !$images) {
 			$this->setLoggerChannel('AI Chat')->warning($error, ['model' => $model]);
-			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error]);
+			// kept in the chat, so after a reload it is still clear this question got no answer (with "Answer again")
+			$stored = $this->_aiChatInsertMessage($chatId, 'error', $error, [], $model);
+			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error, 'stored' => $stored]);
 			exit;
 		}
 		$meta = [];

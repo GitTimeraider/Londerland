@@ -77,6 +77,8 @@ const ownFiles = [
 	['js/functions.js', 'js/functions.min.js'],
 	['js/helpers.js', 'js/helpers.min.js'],
 	['js/i18n.js', 'js/i18n.min.js'],
+	// not part of the start-up file: fetched the first time the command palette opens
+	['js/palette.js', 'js/palette.min.js'],
 ];
 
 

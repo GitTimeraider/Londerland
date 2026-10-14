@@ -31,3 +31,13 @@ $app->get('/settings/sso', function ($request, $response, $args) {
 });
 
 
+$app->get('/settings/site', function ($request, $response, $args) {
+	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
+	if ($Londerland->qualifyRequest(1, true)) {
+		$GLOBALS['api']['response']['data'] = $Londerland->getCustomizeSite();
+	}
+	$response->getBody()->write(jsonE($GLOBALS['api']));
+	return $response
+		->withHeader('Content-Type', 'application/json;charset=UTF-8')
+		->withStatus($GLOBALS['responseCode']);
+});

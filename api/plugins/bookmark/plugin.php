@@ -518,6 +518,183 @@ class Bookmark extends Londerland
 		return true;
 	}
 
+	/* ===================== import & export ===================== */
+
+	/**
+	 * The bookmarks as a browser bookmarks file (the Netscape format every browser imports): one folder per category.
+	 * Admins get every bookmark, everyone else the ones of their group.
+	 */
+	public function _bookmarkExportHtml()
+	{
+		$list = $this->_bookmarkList($this->qualifyRequest(1));
+		$e = function ($value) {
+			return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+		};
+		$now = time();
+		$html = "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<!-- This is an automatically generated file.\n     It will be read and overwritten.\n     DO NOT EDIT! -->\n"
+			. "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>" . $e($this->config['title'] ?? 'Bookmarks') . "</H1>\n<DL><p>\n";
+		foreach ($list['categories'] as $category) {
+			$bookmarks = array_filter($list['bookmarks'], function ($bookmark) use ($category) {
+				return $bookmark['categoryId'] === $category['categoryId'];
+			});
+			if (!$bookmarks) {
+				continue;
+			}
+			$html .= "\t<DT><H3 ADD_DATE=\"" . $now . "\">" . $e($category['name']) . "</H3>\n\t<DL><p>\n";
+			foreach ($bookmarks as $bookmark) {
+				$html .= "\t\t<DT><A HREF=\"" . $e($bookmark['url']) . "\" ADD_DATE=\"" . $now . "\">" . $e($bookmark['name']) . "</A>\n";
+			}
+			$html .= "\t</DL><p>\n";
+		}
+		return $html . "</DL><p>\n";
+	}
+
+	/**
+	 * Bookmarks from a browser bookmarks file. Each folder becomes a category (an existing category with the same name
+	 * is used), or everything goes into one category; links already in Londerland are skipped. Icons in the file are
+	 * pictures inside the file (data: addresses), which bookmarks do not take, so imported bookmarks show their letter.
+	 */
+	public function _bookmarkImportHtml($data)
+	{
+		$html = (string)($data['html'] ?? '');
+		if ($html === '' || strlen($html) > 10 * 1024 * 1024) {
+			$this->setAPIResponse('error', 'Choose a bookmarks file (.html) of at most 10 MB', 422);
+			return false;
+		}
+		$groupId = $this->_bookmarkGroupId($data['groupId'] ?? $this->getDefaultGroupId());
+		if ($groupId === null) {
+			$this->setAPIResponse('error', 'Choose an existing group', 422);
+			return false;
+		}
+		$oneCategory = trim((string)($data['category'] ?? ''));
+		if (mb_strlen($oneCategory) > self::MAX_NAME) {
+			$this->setAPIResponse('error', 'Give the category a name of at most ' . self::MAX_NAME . ' characters', 422);
+			return false;
+		}
+		$skipDuplicates = !array_key_exists('skipDuplicates', $data) || filter_var($data['skipDuplicates'], FILTER_VALIDATE_BOOLEAN);
+		$links = $this->_bookmarkParseHtml($html);
+		if (!$links) {
+			$this->setAPIResponse('error', 'No bookmarks found in this file', 422);
+			return false;
+		}
+		$existing = [];
+		foreach ($this->processQueries([['function' => 'fetchAll', 'query' => 'SELECT `url` FROM `BOOKMARK-tabs`']]) ?: [] as $row) {
+			$existing[mb_strtolower(trim((string)$row['url']))] = true;
+		}
+		$categories = [];
+		foreach ($this->_bookmarkCategories() as $category) {
+			$categories[mb_strtolower($category['category'])] = (int)$category['category_id'];
+		}
+		$categoryFor = function ($name) use (&$categories) {
+			$name = mb_substr(trim($name), 0, self::MAX_NAME) ?: 'Imported';
+			$key = mb_strtolower($name);
+			if (!isset($categories[$key])) {
+				$categoryId = $this->_bookmarkNext('BOOKMARK-categories', 'category_id');
+				$this->processQueries([['function' => 'query', 'query' => ['INSERT INTO [BOOKMARK-categories]', [
+					'order' => $this->_bookmarkNext('BOOKMARK-categories', 'order'),
+					'category' => $name,
+					'category_id' => $categoryId,
+					'default' => $categories ? 0 : 1,
+				]]]]);
+				$categories[$key] = $categoryId;
+			}
+			return $categories[$key];
+		};
+		$order = $this->_bookmarkNext('BOOKMARK-tabs', 'order');
+		$added = 0;
+		$skipped = 0;
+		$queries = [];
+		foreach ($links as $link) {
+			$url = $this->_bookmarkUrl($link['url']);
+			$key = $url === false ? '' : mb_strtolower($url);
+			if ($url === false || ($skipDuplicates && isset($existing[$key]))) {
+				$skipped++;
+				continue;
+			}
+			$existing[$key] = true;
+			$name = mb_substr(trim($link['name']) ?: (parse_url($url, PHP_URL_HOST) ?: $url), 0, self::MAX_NAME);
+			$queries[] = ['function' => 'query', 'query' => ['INSERT INTO [BOOKMARK-tabs]', [
+				'order' => $order++,
+				'category_id' => $categoryFor($oneCategory !== '' ? $oneCategory : $link['folder']),
+				'name' => $name,
+				'url' => $url,
+				'enabled' => 1,
+				'group_id' => $groupId,
+				'image' => '',
+				'background_color' => self::DEFAULT_BACKGROUND,
+				'text_color' => self::DEFAULT_TEXT,
+			]]];
+			$added++;
+		}
+		// In batches, so a big file does not become one huge request to the database
+		foreach (array_chunk($queries, 200) as $batch) {
+			$this->processQueries($batch);
+		}
+		$this->audit('plugin.import', 'Bookmarks', ['added' => $added, 'skipped' => $skipped]);
+		$this->setAPIResponse('success', 'Imported ' . $added . ' bookmarks' . ($skipped ? ', skipped ' . $skipped . ' (already there or not allowed)' : ''), 200, ['added' => $added, 'skipped' => $skipped]);
+		return true;
+	}
+
+	/**
+	 * [['name', 'url', 'folder'], ...] from a bookmarks file. The folder is the innermost folder (H3) the link is in;
+	 * links that are only in a browser's own top folder (Bookmarks bar, Other bookmarks, ...) get folder ''.
+	 */
+	private function _bookmarkParseHtml($html)
+	{
+		$document = new DOMDocument();
+		$previous = libxml_use_internal_errors(true);
+		// The file is UTF-8 (its META says so); without this line libxml would read it as Latin-1
+		$document->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NONET | LIBXML_COMPACT);
+		libxml_clear_errors();
+		libxml_use_internal_errors($previous);
+		$links = [];
+		foreach ($document->getElementsByTagName('a') as $anchor) {
+			$url = trim((string)$anchor->getAttribute('href'));
+			if ($url === '') {
+				continue;
+			}
+			$links[] = ['name' => trim($anchor->textContent), 'url' => $url, 'folder' => $this->_bookmarkFolderOf($anchor)];
+			if (count($links) >= 5000) {
+				break;
+			}
+		}
+		return $links;
+	}
+
+	private function _bookmarkFolderOf(DOMNode $node)
+	{
+		for ($parent = $node->parentNode; $parent; $parent = $parent->parentNode) {
+			if (strtolower($parent->nodeName) !== 'dl') {
+				continue;
+			}
+			// A folder is an H3 followed by its list (DL). The files leave <DT> open, so libxml nests every following
+			// item inside the one before it: the folder's H3 is then the last H3 in the element just before the list.
+			for ($sibling = $parent->previousSibling; $sibling; $sibling = $sibling->previousSibling) {
+				if (!($sibling instanceof DOMElement) || strtolower($sibling->nodeName) === 'p') {
+					continue;
+				}
+				if (strtolower($sibling->nodeName) === 'h3') {
+					return $this->_bookmarkFolderName($sibling);
+				}
+				$headings = $sibling->getElementsByTagName('h3');
+				if ($headings->length) {
+					return $this->_bookmarkFolderName($headings->item($headings->length - 1));
+				}
+				break;
+			}
+		}
+		return '';
+	}
+
+	private function _bookmarkFolderName(DOMElement $heading)
+	{
+		// Chrome, Edge, Firefox and Safari mark their own top folders; their links go to the "Imported" category
+		if ($heading->hasAttribute('personal_toolbar_folder') || $heading->hasAttribute('unfiled_bookmarks_folder')) {
+			return '';
+		}
+		return trim($heading->textContent);
+	}
+
 	public function _bookmarkGetSettings()
 	{
 		$tab = $this->hasDB() ? $this->_bookmarkTab() : false;

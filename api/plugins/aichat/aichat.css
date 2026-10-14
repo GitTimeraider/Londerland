@@ -1085,3 +1085,12 @@ body.aichat-enabled .toast-container.bottom-0.end-0 {
     display: none;
   }
 }
+
+/* Share dialog (public read-only link) */
+.aichat-share-body p {
+  color: var(--aichat-text);
+}
+.aichat-share-note {
+  color: var(--aichat-muted) !important;
+  font-size: 12px;
+}

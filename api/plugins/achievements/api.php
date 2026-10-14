@@ -28,7 +28,9 @@ $app->post('/plugins/achievements/track', function ($request, $response, $args) 
 $app->get('/plugins/achievements/stats', function ($request, $response, $args) {
 	$Achievements = new Achievements();
 	if ($Achievements->_achAccess($request)) {
-		$Achievements->_achMyStats();
+		$query = $request->getQueryParams();
+		// the browser's local date: today's quests follow the user's day
+		$Achievements->_achMyStats(['date' => (string)($query['date'] ?? ''), 'hour' => (int)($query['hour'] ?? date('G'))]);
 	}
 	return achievementsJsonResponse($response);
 });
