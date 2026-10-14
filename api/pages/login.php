@@ -26,9 +26,6 @@ function get_page_login($Londerland)
 </section>
 ';
 	}
-	$hideLonderlandLogin = ($Londerland->checkoAuth()) ? 'collapse' : 'collapse show';
-	$hideLonderlandLoginHeader = ($Londerland->checkoAuthOnly()) ? 'hidden' : '';
-	$hideLonderlandLoginHeader2 = ($Londerland->checkoAuth()) ? '' : 'hidden';
 	$hideLonderlandRecoveryPassword = ($Londerland->config['disableRecoverPass']) ? 'hidden' : '';
 	$customForgotPasswordText = (empty($Londerland->config['customForgotPassText'])) ? 'Enter your Email and instructions will be sent to you!' : $Londerland->config['customForgotPassText'];
 	$customForgotPasswordText = ($Londerland->config['disableRecoverPass']) ? 'Disabled' : $customForgotPasswordText;
@@ -55,13 +52,6 @@ if(activeInfo.settings.login.rememberMe){
 			<form class="form-horizontal" id="loginform" onsubmit="return false;">
 				<input id="login-attempts" class="form-control" name="loginAttempts" type="hidden">
 				' . $Londerland->logoOrText() . '
-				<div id="oAuth-div" class="form-group hidden">
-					<div class="col-12">
-						<div class="card card-success animated tada">
-							<div class="card-header">oAuth Successful - Please wait...</div>
-						</div>
-					</div>
-				</div>
 				<div id="tfa-div" class="form-group hidden">
 					<div class="col-12">
 						<div class="card card-warning animated tada">
@@ -85,14 +75,14 @@ if(activeInfo.settings.login.rememberMe){
 				<div class="card-stack" id="login-panels" data-type="accordion" aria-multiselectable="true" role="tablist">
 					<!-- LONDERLAND LOGIN -->
 					<div class="card">
-						<div class="card-header bg-org ' . $hideLonderlandLoginHeader . ' ' . $hideLonderlandLoginHeader2 . '" id="londerland-login-heading" role="tab">
+						<div class="card-header bg-org hidden" id="londerland-login-heading" role="tab">
 							<a class="card-title collapsed" data-bs-toggle="collapse" href="#londerland-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="londerland-login-collapse">
 								<img class="lazyload loginTitle" data-src="plugins/images/londerland/logo-no-border.png"> &nbsp;
 								<span class="text-uppercase fw300" lang="en">Login with Londerland</span>
 							</a>
 							<div class="clearfix"></div>
 						</div>
-						<div class="card-collapse ' . $hideLonderlandLogin . '" id="londerland-login-collapse" aria-labelledby="londerland-login-heading" role="tabpanel">
+						<div class="card-collapse collapse show" id="londerland-login-collapse" aria-labelledby="londerland-login-heading" role="tabpanel">
 							<div class="card-body">
 							
 								<div class="form-group">
@@ -120,8 +110,6 @@ if(activeInfo.settings.login.rememberMe){
 								</div>
 								<div class="form-group m-b-0">
 									<div class="col-md-12 text-center">
-										<input id="oAuth-Input" class="form-control" name="oAuth" type="hidden">
-										<input id="oAuthType-Input" class="form-control" name="oAuthType" type="hidden">
 										' . $Londerland->showLogin() . '
 									</div>
 								</div>
@@ -129,9 +117,6 @@ if(activeInfo.settings.login.rememberMe){
 						</div>
 					</div>
 					<!-- END LONDERLAND LOGIN -->
-					<!-- PLEX OAUTH LOGIN -->
-					' . $Londerland->showoAuth() . '
-					<!-- END PLEX OAUTH LOGIN -->
 					<!-- OIDC SSO LOGIN -->
 					' . $Londerland->showoAuthOIDC() . '
 					<!-- END OIDC SSO LOGIN -->

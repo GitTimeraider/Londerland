@@ -161,8 +161,6 @@ function getDebugPreInfo() {
     activeInfo.theme +
     "<br/>Local: " +
     activeInfo.settings.user.local +
-    "<br/>oAuth: " +
-    activeInfo.settings.user.oAuthLogin +
     "<br/>Agent: " +
     activeInfo.settings.user.agent;
   formatted =
@@ -278,10 +276,7 @@ function timerIncrement() {
   }
   idleTime = idleTime + 1;
   if (typeof activeInfo !== "undefined") {
-    if (
-      activeInfo.settings.lockout.enabled &&
-      activeInfo.settings.user.oAuthLogin !== true
-    ) {
+    if (activeInfo.settings.lockout.enabled) {
       if (
         idleTime > activeInfo.settings.lockout.timer &&
         $("#lockScreen").length !== 1
@@ -2538,46 +2533,6 @@ function buildActiveTokens(array) {
   );
 }
 function accountManager(user) {
-  var passwordMessage = "";
-  switch (activeInfo.settings.misc.authBackend) {
-    case "plex":
-      passwordMessage = `
-                <div class="col-xl-12">
-                    <div class="card card-info">
-                        <div class="card-header"> <span lang="en">Password Notice</span>
-                            <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-plus"></i></a> </div>
-                        </div>
-                        <div class="card-wrapper collapse" aria-expanded="true">
-                            <div class="card-body bg-org">
-                                <p lang="en">If you signed in with a Plex Acct... Please use the following link to change your password there:</p><br>
-                                <p><a href="https://app.plex.tv/auth#?resetPassword" target="_blank" lang="en">Change Password on Plex Website</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-      break;
-    case "emby":
-      passwordMessage = `
-                <div class="col-xl-12">
-                    <div class="card card-info">
-                        <div class="card-header"> <span lang="en">Password Notice</span>
-                            <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-minus"></i></a> <a href="#" data-perform="card-dismiss"><i class="ti-close"></i></a> </div>
-                        </div>
-                        <div class="card-wrapper collapse show" aria-expanded="true">
-                            <div class="card-body bg-org">
-                                <p lang="en">If you signed in with a Emby Acct... Please use the following link to change your password there:</p><br>
-                                <p><a href="https://emby.media/community/index.php?app=core&module=global&section=lostpass" target="_blank">Change Password on Emby Website</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-      break;
-    default:
-      passwordMessage = "";
-      break;
-  }
   if (user.data.user.loggedin === true) {
     var twoFADisable =
       buildTwoFA(user.data.user.authService) == "internal" ? "" : "disabled";
@@ -2662,7 +2617,6 @@ function accountManager(user) {
 										<div class="row">
 											` +
       activeTokens +
-      passwordMessage +
       `
 										</div>
 										<!--/row-->
@@ -5217,14 +5171,10 @@ function setSSO() {
       local("r", i);
     }
   });
-  // other items to remove
-  $.each(localStorage, function (i, v) {
-    if (typeof v == "string") {
-      if (i.startsWith("user-")) {
-        if (typeof activeInfo.sso[i] == "undefined") {
-          local("r", i);
-        }
-      }
+  // left over from the removed Plex and Jellyfin SSO
+  $.each(Object.keys(localStorage), function (i, key) {
+    if (key === "myPlexAccessToken" || key === "jellyfin_credentials" || key.startsWith("user-")) {
+      local("r", key);
     }
   });
 }
@@ -5287,271 +5237,6 @@ function testAPIConnection(service, data = "") {
       LonderlandApiError(xhr, "API Error");
     });
 }
-// Thanks Swifty!
-function PopupCenter(url, title, w, h) {
-  // Fixes dual-screen position                         Most browsers      Firefox
-  var dualScreenLeft =
-    window.screenLeft != undefined ? window.screenLeft : window.screenX;
-  var dualScreenTop =
-    window.screenTop != undefined ? window.screenTop : window.screenY;
-  var width = window.innerWidth
-    ? window.innerWidth
-    : document.documentElement.clientWidth
-    ? document.documentElement.clientWidth
-    : screen.width;
-  var height = window.innerHeight
-    ? window.innerHeight
-    : document.documentElement.clientHeight
-    ? document.documentElement.clientHeight
-    : screen.height;
-  var left = width / 2 - w / 2 + dualScreenLeft;
-  var top = height / 2 - h / 2 + dualScreenTop;
-  var newWindow = window.open(
-    url,
-    title,
-    "scrollbars=yes, width=" +
-      w +
-      ", height=" +
-      h +
-      ", top=" +
-      top +
-      ", left=" +
-      left
-  );
-  // Puts focus on the newWindow
-  if (window.focus) {
-    newWindow.focus();
-  }
-  return newWindow;
-}
-function getPlexHeaders() {
-  let plexTitle =
-    activeInfo.appearance.title == ""
-      ? "Londerland"
-      : cleanClass(activeInfo.appearance.title);
-  return {
-    Accept: "application/json",
-    "X-Plex-Product": plexTitle,
-    "X-Plex-Version": "2.0",
-    "X-Plex-Client-Identifier": activeInfo.settings.misc.uuid,
-    "X-Plex-Model": "Plex OAuth",
-    "X-Plex-Platform": activeInfo.osName,
-    "X-Plex-Platform-Version": activeInfo.osVersion,
-    "X-Plex-Device": activeInfo.browserName,
-    "X-Plex-Device-Name": activeInfo.browserVersion,
-    "X-Plex-Device-Screen-Resolution":
-      window.screen.width + "x" + window.screen.height,
-    "X-Plex-Language": "en",
-  };
-}
-var plex_oauth_window = null;
-const plex_oauth_loader =
-  "<style>" +
-  ".login-loader-container {" +
-  'font-family: "Open Sans", Arial, sans-serif;' +
-  "position: absolute;" +
-  "top: 0;" +
-  "right: 0;" +
-  "bottom: 0;" +
-  "left: 0;" +
-  "}" +
-  ".login-loader-message {" +
-  "color: #282A2D;" +
-  "text-align: center;" +
-  "position: absolute;" +
-  "left: 50%;" +
-  "top: 25%;" +
-  "transform: translate(-50%, -50%);" +
-  "}" +
-  ".login-loader {" +
-  "border: 5px solid #ccc;" +
-  "-webkit-animation: spin 1s linear infinite;" +
-  "animation: spin 1s linear infinite;" +
-  "border-top: 5px solid #282A2D;" +
-  "border-radius: 50%;" +
-  "width: 50px;" +
-  "height: 50px;" +
-  "position: relative;" +
-  "left: calc(50% - 25px);" +
-  "}" +
-  "@keyframes spin {" +
-  "0% { transform: rotate(0deg); }" +
-  "100% { transform: rotate(360deg); }" +
-  "}" +
-  "</style>" +
-  '<div class="login-loader-container">' +
-  '<div class="login-loader-message">' +
-  '<div class="login-loader"></div>' +
-  "<br>" +
-  "Redirecting to the login page..." +
-  "</div>" +
-  "</div>";
-function closePlexOAuthWindow() {
-  if (plex_oauth_window) {
-    plex_oauth_window.close();
-  }
-}
-getPlexOAuthPin = function () {
-  var x_plex_headers = getPlexHeaders();
-  var deferred = $.Deferred();
-  $.ajax({
-    url: "https://plex.tv/api/v2/pins?strong=true",
-    type: "POST",
-    headers: x_plex_headers,
-    success: function (data) {
-      deferred.resolve({ pin: data.id, code: data.code });
-    },
-    error: function () {
-      closePlexOAuthWindow();
-      deferred.reject();
-    },
-  });
-  return deferred;
-};
-var polling = null;
-function PlexOAuth(
-  successCallback,
-  errorCallback,
-  maxRetryCallback,
-  pollingCallback,
-  preFunction,
-  clientID = null
-) {
-  if (typeof preFunction === "function") {
-    preFunction();
-  }
-  closePlexOAuthWindow();
-  plex_oauth_window = PopupCenter("", "Plex-OAuth", 600, 700);
-  $(plex_oauth_window.document.body).html(plex_oauth_loader);
-  getPlexOAuthPin().then(
-    function (data) {
-      var x_plex_headers = getPlexHeaders();
-      const pin = data.pin;
-      const code = data.code;
-      var oauth_params = {
-        clientID: x_plex_headers["X-Plex-Client-Identifier"],
-        "context[device][product]": x_plex_headers["X-Plex-Product"],
-        "context[device][version]": x_plex_headers["X-Plex-Version"],
-        "context[device][platform]": x_plex_headers["X-Plex-Platform"],
-        "context[device][platformVersion]":
-          x_plex_headers["X-Plex-Platform-Version"],
-        "context[device][device]": x_plex_headers["X-Plex-Device"],
-        "context[device][deviceName]": x_plex_headers["X-Plex-Device-Name"],
-        "context[device][model]": x_plex_headers["X-Plex-Model"],
-        "context[device][screenResolution]":
-          x_plex_headers["X-Plex-Device-Screen-Resolution"],
-        "context[device][layout]": "desktop",
-        code: code,
-      };
-      plex_oauth_window.location =
-        "https://app.plex.tv/auth/#!?" + encodeData(oauth_params);
-      polling = pin;
-      let maxPollCount = 120;
-      (function poll() {
-        maxPollCount--;
-        $.ajax({
-          url: "https://plex.tv/api/v2/pins/" + pin,
-          type: "GET",
-          headers: x_plex_headers,
-          success: function (data) {
-            if (data.authToken) {
-              polling = null;
-              closePlexOAuthWindow();
-              if (typeof successCallback === "function") {
-                successCallback("plex", data.authToken, clientID);
-              }
-            }
-          },
-          complete: function () {
-            if (maxPollCount <= 0) {
-              closePlexOAuthWindow();
-              if (typeof maxRetryCallback === "function") {
-                maxRetryCallback();
-              }
-            } else if (polling === pin) {
-              setTimeout(function () {
-                poll();
-              }, 1000);
-              if (typeof pollingCallback === "function") {
-                pollingCallback(maxPollCount);
-              }
-            }
-          },
-          timeout: 1000,
-        });
-      })();
-    },
-    function () {
-      closePlexOAuthWindow();
-      if (typeof errorCallback === "function") {
-        errorCallback();
-      }
-    }
-  );
-}
-function encodeData(data) {
-  return Object.keys(data)
-    .map(function (key) {
-      return [key, data[key]].map(encodeURIComponent).join("=");
-    })
-    .join("&");
-}
-function oAuthSuccess(type, token, id = null) {
-  switch (type) {
-    case "plex":
-      if (id) {
-        $(id).val(token);
-        $(id).change();
-        messageSingle(
-          "",
-          window.lang.translate("Grabbed Token - Please Save"),
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-      } else {
-        $("#oAuth-Input").val(token);
-        $("#oAuthType-Input").val(type);
-        $("#login-username-Input").addClass("hidden");
-        $("#login-password-Input").addClass("hidden");
-        $("#oAuth-div").removeClass("hidden");
-        $(".login-button").first().trigger("click");
-      }
-      break;
-    default:
-      break;
-  }
-}
-function oAuthError() {
-  messageSingle(
-    "",
-    window.lang.translate("Error Connecting to oAuth Provider"),
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "error",
-    "5000"
-  );
-}
-function oAuthMaxRetry() {
-  messageSingle(
-    "",
-    window.lang.translate("Max Retry Error Connecting to oAuth Provider"),
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "error",
-    "5000"
-  );
-}
-function oAuthStart(type) {
-  switch (type) {
-    case "plex":
-      PlexOAuth(oAuthSuccess, oAuthError, oAuthMaxRetry, null, null);
-      break;
-    default:
-      break;
-  }
-}
 function oidcStart(provider) {
   // Redirect in same window to OIDC provider
   window.location.href =
@@ -5612,60 +5297,11 @@ function generateCode() {
 // human filesize
 //youtube search
 // The admin's own TMDB key (Settings > System Settings > Main > The Movie Database)
-//Import Users
-function importUsers(type) {
-  $(".importUsersButton").attr("disabled", true);
-  messageSingle(
-    "",
-    window.lang.translate("Importing Users"),
-    activeInfo.settings.notifications.position,
-    "#FFF",
-    "success",
-    "5000"
-  );
-  londerlandAPI2("POST", "api/v2/users/import/" + type, { type: type })
-    .done(function (data) {
-      try {
-        var response = data.response;
-        message(
-          "User Import",
-          response.message,
-          activeInfo.settings.notifications.position,
-          "#FFF",
-          "success",
-          "5000"
-        );
-        $(".importUsersButton").attr("disabled", false);
-      } catch (e) {
-        londerlandCatchError(e, data);
-      }
-    })
-    .fail(function (xhr) {
-      LonderlandApiError(xhr, "Import Error");
-    });
-}
 //Settings change auth
 function changeAuth() {
   var type = $("#authSelect").val();
   var service = $("#authBackendSelect").val();
   switch (service) {
-    case "plex":
-      $(".switchAuth").parent().parent().parent().hide();
-      $(".backendAuth").parent().parent().parent().show();
-      $(".plexAuth").parent().parent().parent().show();
-      break;
-    case "emby_local":
-    case "emby_connect":
-    case "emby_all":
-      $(".switchAuth").parent().parent().parent().hide();
-      $(".backendAuth").parent().parent().parent().show();
-      $(".embyAuth").parent().parent().parent().show();
-      break;
-    case "jellyfin":
-      $(".switchAuth").parent().parent().parent().hide();
-      $(".backendAuth").parent().parent().parent().show();
-      $(".jellyfinAuth").parent().parent().parent().show();
-      break;
     case "ftp":
       $(".switchAuth").parent().parent().parent().hide();
       $(".backendAuth").parent().parent().parent().show();
@@ -6026,17 +5662,6 @@ function authDebugCheck() {
   }
 }
 function lock() {
-  if (activeInfo.settings.user.oAuthLogin == true) {
-    message(
-      "Lock Disabled",
-      "Lock function disabled if logged in via oAuth",
-      activeInfo.settings.notifications.position,
-      "#FFF",
-      "warning",
-      "5000"
-    );
-    return false;
-  }
   londerlandAPI2("POST", "api/v2/users/lock", "")
     .done(function (data) {
       try {
@@ -6241,9 +5866,6 @@ function toggleDebug() {
 	                                <li><a onclick="orgDebugList('activeInfo.settings.sso');"
 	                                       href="javascript:void(0)"
 	                                       lang="en">SSO</a></li>
-	                                <li><a onclick="orgDebugList('activeInfo.settings.sso.plex');"
-	                                       href="javascript:void(0)"
-	                                       lang="en">Plex SSO</a></li>
 	                                <li><a onclick="orgDebugList('activeInfo.settings.sso.tautulli');"
 	                                       href="javascript:void(0)"
 	                                       lang="en">Tautulli SSO</a></li>
@@ -6256,9 +5878,6 @@ function toggleDebug() {
 	                                <li><a onclick="orgDebugList('activeInfo.settings.sso.ombi');"
 	                                       href="javascript:void(0)"
 	                                       lang="en">Ombi SSO</a></li>
-	                                <li><a onclick="orgDebugList('activeInfo.settings.sso.jellyfin');"
-	                                       href="javascript:void(0)"
-	                                       lang="en">Jellyfin SSO</a></li>
 	                                <li><a onclick="orgDebugList('activeInfo.settings.sso.komga');"
 	                                       href="javascript:void(0)"
 	                                       lang="en">Komga SSO</a></li>
@@ -6357,64 +5976,6 @@ function showLDAPLoginTest() {
   });
 }
 
-function showPlexMachineForm(selector = null) {
-  var div = `
-		<form id="get-plex-machine-form">
-		    <h1 lang="en">Get Plex Machine</h1>
-		    <div class="card plexMachineHeader">
-		        <div class="card-header plexMachineMessage" lang="en">Contacting server...</div>
-		    </div>
-		    <fieldset style="border:0;">
-		        <div class="form-group">
-		            <label class="form-label" for="plex-machine-form-machine" lang="en">Plex Machine</label>
-		            <div class="plexMachineListing"></div>
-		        </div>
-		    </fieldset>
-		    <div class="clearfix"></div>
-		</form>
-	`;
-  Swal.fire({
-    html: createElementFromHTML(div),
-    showConfirmButton: false,
-    customClass: { popup: "bg-org" },
-  }).then(
-    londerlandAPI2("GET", "api/v2/plex/servers?owned")
-      .done(function (data) {
-        try {
-          let response = data.response;
-          $(".plexMachineMessage").text("Choose Plex Server");
-          $(".plexMachineHeader")
-            .addClass("card-success")
-            .removeClass("card-info")
-            .removeClass("card-warning");
-          let machines = '<option lang="en">Choose Plex Machine</option>';
-          $.each(response.data, function (i, v) {
-            let name = v.name;
-            let machine = v.machineIdentifier;
-            name = name + " [" + machine + "]";
-            machines += '<option value="' + machine + '">' + name + "</option>";
-          });
-          let listing =
-            '<select class="form-control" id="plexMachineSelector" data-selector="' +
-            selector +
-            '" data-type="select">' +
-            machines +
-            "</select>";
-          $(".plexMachineListing").html(listing);
-        } catch (e) {
-          londerlandCatchError(e, data);
-        }
-      })
-      .fail(function (xhr) {
-        LonderlandApiError(xhr, "API Error");
-        $(".plexMachineMessage").text("Plex Token Needed First");
-        $(".plexMachineHeader")
-          .addClass("card-warning")
-          .removeClass("card-info")
-          .removeClass("card-danger");
-      })
-  );
-}
 function bypassLocalLogin() {
   if (activeInfo.settings.user.bypass !== true) {
     return false;
@@ -6563,7 +6124,7 @@ function formatLogDetails(details) {
   items += `<li><div class="bg-warning"><i class="mdi mdi-robot text-white"></i></div> ${details.trace_id}<span class="text-muted" lang="en">Trace ID</span></li>`;
   items += `<li><div class="bg-primary"><i class="mdi mdi-account-box-outline text-white"></i></div> ${details.username}<span class="text-muted" lang="en">User</span></li>`;
   items += `<li><div class="bg-info"><i class="mdi mdi-function text-white"></i></div> ${details.channel}<span class="text-muted" lang="en">Function</span></li>`;
-  items += `<li><div class="bg-plex"><i class="mdi mdi-language-php text-white"></i></div> ${details.file}<code>#L${details.line}</code><span class="text-muted" lang="en">File</span></li>`;
+  items += `<li><div class="bg-success"><i class="mdi mdi-language-php text-white"></i></div> ${details.file}<code>#L${details.line}</code><span class="text-muted" lang="en">File</span></li>`;
   let items2 = "";
   items2 +=
     Object.keys(details.context).length > 0

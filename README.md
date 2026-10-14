@@ -25,7 +25,7 @@ website, not like a wall of server tiles.
   with a start tab per group.
 - **Visitors and members**: guest access, local accounts, e-mail (PHPMailer), groups that decide who sees what,
   login lockout after failed attempts and e-mails about new device logins.
-- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
+- **Sign in** with a local account, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
   with optional two-factor authentication, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth)
   using `api/v2/auth`.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
@@ -50,6 +50,11 @@ website, not like a wall of server tiles.
    Mark one of them as the default tab: that is the page visitors land on. Everything else stays for members only.
 5. Under **Settings > Customize > Website > SEO & Sharing**, fill in the public address of the site so link previews,
    the canonical link and the sitemap use it ([details below](#website-announcement-and-seo)).
+
+Visitors who are not logged in can only use the parts of the API that the site itself needs for them: the login page and
+its sign-in methods, the tabs open to guests (and, for a Bookmarks tab, its bookmarks), reverse proxy auth (`api/v2/auth`),
+`robots.txt`, the sitemap and shared AI chats. Everything else under `/api/v2/` (status, plugin list, settings and so on)
+answers `401 Not Authorized` unless you are logged in or send the API key. The API documentation (`/docs`) is for admins only.
 
 ## Install with Docker
 
@@ -159,8 +164,6 @@ In Docker Compose, put them under `cap_add:` (one per line, without `--cap-add=`
 Port 80 needs no capability on Docker 20.10 or newer; on older Docker, set `LONDERLAND_PORT` to a port above 1023.
 If a capability is missing, the container stops and `docker logs londerland` says which ones to add.
 
-The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
-
 ### Login only from your own networks
 
 Set `LONDERLAND_LOGIN_ALLOWED_IPS` to make logging in possible only from your home network, a VPN or a few fixed addresses:
@@ -171,7 +174,7 @@ Set `LONDERLAND_LOGIN_ALLOWED_IPS` to make logging in possible only from your ho
 ```
 
 Visitors from any other address see a **Login not allowed** page (with the address Londerland sees for them) instead of the
-login form. Every way of logging in is refused for them: username and password, Plex, Emby/Jellyfin, OpenID Connect,
+login form. Every way of logging in is refused for them: username and password, OpenID Connect,
 reverse proxy header login, registering, password recovery and the setup wizard. Pages and tabs meant for guests stay visible,
 so the public part of your site keeps working. People who are already logged in stay logged in until their login expires.
 Each refused attempt is written to Londerland's log.

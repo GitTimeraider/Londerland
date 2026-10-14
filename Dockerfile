@@ -96,8 +96,5 @@ RUN set -eux; \
 VOLUME ["/var/www/html/data"]
 EXPOSE 80
 
-HEALTHCHECK --interval=1m --timeout=10s --start-period=30s --retries=3 \
-    CMD php -r 'exit(@file_get_contents("http://127.0.0.1:" . getenv("LONDERLAND_PORT") . "/api/v2/status") === false ? 1 : 0);'
-
 ENTRYPOINT ["londerland-entrypoint"]
 CMD ["apache2-foreground"]

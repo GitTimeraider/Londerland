@@ -286,9 +286,8 @@ $(document).on("click", ".tfa-bypass-request", function(e) {
 });
 $(document).on("click", ".login-button", function(e) {
     e.preventDefault;
-    var oAuthEntered = $('#oAuth-Input').val();
     var usernameEntered = $('#login-username-Input').val();
-    if(oAuthEntered == '' && usernameEntered == ''){
+    if(usernameEntered == ''){
         message('Login Error', ' You need to enter a Username', activeInfo.settings.notifications.position, '#FFF', 'warning', '10000');
         $('#login-username-Input').focus();
         return false;
@@ -1190,12 +1189,6 @@ $(document).on('click', '.disablePlugin', function() {
 // AUTH BACKEND HIDE SHOW
 $(document).on('change', '#authSelect, #authBackendSelect', function(e) {
     changeAuth();
-});
-$(document).on('change', '#plexMachineSelector', function(e) {
-	let selector = $(this).attr('data-selector');
-	$(selector).val($(this).val());
-	$(selector).change();
-	messageSingle('Machine ID selected','Please save...',activeInfo.settings.notifications.position,'#FFF','success','5000');
 });
 $(document).on("click", ".closeErrorPage", function () {
     $('.error-page').html('');

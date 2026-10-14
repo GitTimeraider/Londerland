@@ -25,7 +25,7 @@ class Londerland
 
 	// ===================================
 	// Londerland Version
-	public $version = '2.2.4';
+	public $version = '2.2.5';
 	// ===================================
 	// Quick php Version check
 	public $minimumPHP = '7.4';
@@ -2593,14 +2593,6 @@ HTML;
 			'Authentication' => [
 				$this->settingsOption('select', 'authType', ['id' => 'authSelect', 'label' => 'Authentication Type', 'value' => $this->config['authType'], 'options' => $this->getAuthTypes()]),
 				$this->settingsOption('select', 'authBackend', ['id' => 'authBackendSelect', 'label' => 'Authentication Backend', 'class' => 'backendAuth switchAuth', 'value' => $this->config['authBackend'], 'options' => $this->getAuthBackends()]),
-				$this->settingsOption('token', 'plexToken', ['class' => 'plexAuth switchAuth']),
-				$this->settingsOption('button', '', ['class' => 'getPlexTokenAuth plexAuth switchAuth', 'label' => 'Get Plex Token', 'icon' => 'fa fa-ticket', 'text' => 'Retrieve', 'attr' => 'onclick="PlexOAuth(oAuthSuccess,oAuthError, oAuthMaxRetry, null, null, \'#settings-main-form [name=plexToken]\')"']),
-				$this->settingsOption('password-alt', 'plexID', ['class' => 'plexAuth switchAuth', 'label' => 'Plex Machine', 'placeholder' => 'Use Get Plex Machine Button']),
-				$this->settingsOption('button', '', ['class' => 'getPlexMachineAuth plexAuth switchAuth', 'label' => 'Get Plex Machine', 'icon' => 'fa fa-id-badge', 'text' => 'Retrieve', 'attr' => 'onclick="showPlexMachineForm(\'#settings-main-form [name=plexID]\')"']),
-				$this->settingsOption('input', 'plexAdmin', ['label' => 'Plex Admin Username or Email', 'class' => 'plexAuth switchAuth', 'placeholder' => 'Admin username for Plex']),
-				$this->settingsOption('switch', 'plexoAuth', ['label' => 'Enable Plex oAuth', 'class' => 'plexAuth switchAuth']),
-				$this->settingsOption('switch', 'ignoreTFAIfPlexOAuth', ['label' => 'Ignore 2FA if Plex OAuth ', 'class' => 'plexAuth switchAuth', 'help' => 'Enabling this will disable Londerland 2FA (If applicable) if User uses Plex OAuth to login']),
-				$this->settingsOption('switch', 'plexStrictFriends', ['label' => 'Strict Plex Friends ', 'class' => 'plexAuth switchAuth', 'help' => 'Enabling this will only allow Friends that have shares to the Machine ID entered above to login, Having this disabled will allow all Friends on your Friends list to login']),
 				$this->settingsOption('switch', 'ignoreTFALocal', ['label' => 'Ignore External 2FA on Local Subnet', 'help' => 'Enabling this will bypass external 2FA security if user is on local Subnet']),
 				$this->settingsOption('url', 'authBackendHost', ['class' => 'ldapAuth ftpAuth switchAuth', 'label' => 'Host Address', 'placeholder' => 'http(s) | ftp(s) | ldap(s)://hostname:port']),
 				$this->settingsOption('input', 'authBaseDN', ['class' => 'ldapAuth switchAuth', 'label' => 'Host Base DN', 'placeholder' => 'cn=%s,dc=sub,dc=domain,dc=com']),
@@ -2615,10 +2607,6 @@ HTML;
 				$this->settingsOption('switch', 'ldapSSL', ['class' => 'ldapAuth switchAuth', 'label' => 'Enable LDAP TLS', 'help' => 'This will enable the use of TLS for LDAP connections']),
 				$this->settingsOption('test', 'ldap', ['class' => 'ldapAuth switchAuth']),
 				$this->settingsOption('test', '', ['label' => 'Test Login', 'class' => 'ldapAuth switchAuth', 'text' => 'Test Login', 'attr' => 'onclick="showLDAPLoginTest()"']),
-				$this->settingsOption('url', 'embyURL', ['class' => 'embyAuth switchAuth', 'label' => 'Emby URL', 'help' => 'Please make sure to use local IP address and port - You also may use local dns name too.']),
-				$this->settingsOption('token', 'embyToken', ['class' => 'embyAuth switchAuth', 'label' => 'Emby Token']),
-				$this->settingsOption('url', 'jellyfinURL', ['class' => 'jellyfinAuth switchAuth', 'label' => 'Jellyfin URL', 'help' => 'Please make sure to use local IP address and port - You also may use local dns name too.']),
-				$this->settingsOption('token', 'jellyfinToken', ['class' => 'jellyfinAuth switchAuth', 'label' => 'Jellyfin Token']),
 			],
 			'Security' => [
 				$this->settingsOption('number', 'loginAttempts', ['label' => 'Max Login Attempts']),
@@ -2727,7 +2715,7 @@ HTML;
 										<div class="card-body">
 											<span lang="en">Using multiple SSO application will cause your Cookie Header item to increase.  If you haven\'t done so yet, increase the maximum request header size of your reverse proxy</span>
 											<br/><br/>
-											<span lang="en">This is not the same as database authentication - i.e. Plex Authentication | Emby Authentication | FTP Authentication<br/>Click Main on the sub-menu above.</span>
+											<span lang="en">This is not the same as database authentication - i.e. LDAP Authentication | FTP Authentication<br/>Click Main on the sub-menu above.</span>
 										</div>
 									</div>
 								</div>
@@ -2735,16 +2723,6 @@ HTML;
 						</div>'
 					]
 				),
-			],
-			'Plex' => [
-				$this->settingsOption('token', 'plexToken'),
-				$this->settingsOption('button', '', ['label' => 'Get Plex Token', 'icon' => 'fa fa-ticket', 'text' => 'Retrieve', 'attr' => 'onclick="PlexOAuth(oAuthSuccess,oAuthError, oAuthMaxRetry, null, null, \'#sso-form [name=plexToken]\')"']),
-				$this->settingsOption('password-alt', 'plexID', ['label' => 'Plex Machine']),
-				$this->settingsOption('button', '', ['label' => 'Get Plex Machine', 'icon' => 'fa fa-id-badge', 'text' => 'Retrieve', 'attr' => 'onclick="showPlexMachineForm(\'#sso-form [name=plexID]\')"']),
-				$this->settingsOption('input', 'plexAdmin', ['label' => 'Plex Admin Username or Email']),
-				$this->settingsOption('blank'),
-				$this->settingsOption('html', 'Plex Note', ['html' => '<span lang="en">Please make sure both Token and Machine are filled in</span>']),
-				$this->settingsOption('enable', 'ssoPlex'),
 			],
 			'Tautulli' => [
 				$this->settingsOption('multiple-url', 'tautulliURL'),
@@ -2771,11 +2749,6 @@ HTML;
 				$this->settingsOption('username', 'ombiFallbackUser', ['label' => 'Ombi Fallback Email', 'help' => 'DO NOT SET THIS TO YOUR ADMIN ACCOUNT. We recommend you create a local account as a "catch all" for when Londerland is unable to perform SSO.  Londerland will request a User Token based off of this user credentials']),
 				$this->settingsOption('password', 'ombiFallbackPassword', ['label' => 'Ombi Fallback Password']),
 				$this->settingsOption('enable', 'ssoOmbi'),
-			],
-			'Jellyfin' => [
-				$this->settingsOption('url', 'jellyfinURL', ['label' => 'Jellyfin API URL', 'help' => 'Please make sure to use the local address to the API']),
-				$this->settingsOption('url', 'jellyfinSSOURL', ['label' => 'Jellyfin SSO URL', 'help' => 'Please make sure to use the same (sub)domain to access Jellyfin as Londerland\'s']),
-				$this->settingsOption('enable', 'ssoJellyfin'),
 			],
 			'Komga' => [
 				$this->settingsOption('url', 'komgaURL'),
@@ -2882,12 +2855,6 @@ HTML;
 				'api' => 'api/v2/page/settings_user_manage_groups',
 				'anchor' => 'settings-user-manage-groups-anchor',
 				'name' => 'Manage Groups'
-			],
-			[
-				'active' => false,
-				'api' => false,
-				'anchor' => 'settings-user-import-users-anchor',
-				'name' => 'Import Users'
 			],
 		];
 		$customizeMenu = [
@@ -3422,7 +3389,6 @@ HTML;
 						`username`	TEXT UNIQUE,
 						`password`	TEXT,
 						`email`	TEXT,
-						`plex_token`	TEXT,
 						`group`	TEXT,
 						`group_id`	INTEGER,
 						`locked`	INTEGER,
@@ -3729,7 +3695,7 @@ HTML;
 		$query = $this->processQueries($response);
 		if ($token) {
 			$this->logger->debug('Token has been created');
-			// Every way of signing in ends here (password, OpenID Connect, Plex, registering, the setup wizard)
+			// Every way of signing in ends here (password, OpenID Connect, registering, the setup wizard)
 			$this->audit('auth.login', $result['username'], ['days' => (int)$days, 'browser' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 200)], ['id' => $result['id'], 'username' => $result['username']]);
 			if ($this->isNewLoginDevice($result['id'], $_SERVER['HTTP_USER_AGENT'] ?? '') && $this->newDeviceEmailWanted($this->userIP())) {
 				if ($this->config['PHPMAILER-enabled']) {
@@ -3788,26 +3754,23 @@ HTML;
 			if(key_exists('username', $array)){
 				$bypassLogin = false;
 			}
-			if(key_exists('oAuth', $array)){
-				$bypassLogin = false;
-			}
 		}
 		// Grab username, Password & other optional items from api call
 		$username = $array['username'] ?? null;
 		$password = $array['password'] ?? null;
-		$oAuth = $array['oAuth'] ?? null;
-		$oAuthType = $array['oAuthType'] ?? null;
 		$remember = $array['remember'] ?? null;
 		$tfaCode = $array['tfaCode'] ?? null;
 		$loginAttempts = $array['loginAttempts'] ?? null;
 		$output = $array['output'] ?? null;
-		$username = (strpos($this->config['authBackend'], 'emby') !== false) ? $username : strtolower($username);
+		$username = strtolower((string)$username);
 		$days = (isset($remember)) ? $this->config['rememberMeDays'] : 1;
 		// Set logger channel
 		$this->setLoggerChannel('Authentication', $username);
 		$this->logger->debug('Starting login function');
 		// Set  other variables
 		$function = 'plugin_auth_' . $this->config['authBackend'];
+		// A backend that no longer exists (Plex, Emby and Jellyfin were removed) signs in with Londerland passwords
+		$authType = method_exists($this, $function) ? $this->config['authType'] : 'internal';
 		$authSuccess = false;
 		$authProxy = false;
 		$addEmailToAuthProxy = true;
@@ -3841,12 +3804,11 @@ HTML;
 				}
 			}
 		}
-		// Check if Login method was an oAuth login
-		if (!$oAuth && !$bypassLogin) {
+		if (!$bypassLogin) {
 			$result = $this->getUserByUsernameAndEmail($username, $username);
 			$result['password'] = $result['password'] ?? '';
 			// Switch AuthType - internal - external - both
-			switch ($this->config['authType']) {
+			switch ($authType) {
 				case 'external':
 					if (method_exists($this, $function)) {
 						$authSuccess = $this->$function($username, $password);
@@ -3868,47 +3830,15 @@ HTML;
 					}
 			}
 			$authSuccess = ($authProxy) ? $addEmailToAuthProxy : $authSuccess;
-		} elseif ($bypassLogin){
+		} else {
 			$id = $this->config['localLoginUserId'];
 			$result = $this->getUserById($id);
 			$authSuccess = true;
-		} else {
-			// Has oAuth Token!
-			switch ($oAuthType) {
-				case 'plex':
-					if ($this->config['plexoAuth']) {
-						$this->logger->debug('Starting Plex oAuth verification');
-						$tokenInfo = $this->checkPlexToken($oAuth);
-						if ($tokenInfo) {
-							$authSuccess = [
-								'username' => $tokenInfo['user']['username'],
-								'email' => $tokenInfo['user']['email'],
-								'image' => $tokenInfo['user']['thumb'],
-								'token' => $tokenInfo['user']['authToken'],
-								'oauth' => 'plex'
-							];
-							$this->logger->debug('User\'s Plex Token has been verified');
-							$this->coookie('set', 'oAuth', 'true', $this->config['rememberMeDays']);
-							$authSuccess = ((!empty($this->config['plexAdmin']) && strtolower($this->config['plexAdmin']) == strtolower($tokenInfo['user']['username'])) || (!empty($this->config['plexAdmin']) && strtolower($this->config['plexAdmin']) == strtolower($tokenInfo['user']['email'])) || $this->checkPlexUser($tokenInfo['user']['username'])) ? $authSuccess : false;
-						} else {
-							$this->logger->warning('User\'s Plex Token has failed verification');
-						}
-					} else {
-						$this->logger->debug('Plex oAuth is not setup');
-						$this->setAPIResponse('error', 'Plex oAuth is not setup', 422);
-						return false;
-					}
-					break;
-				default:
-					return ($output) ? 'No oAuthType defined' : 'error';
-			}
-			$result = ($authSuccess) ? $this->getUserByUsernameAndEmail($authSuccess['username'], $authSuccess['email']) : '';
 		}
 		if ($authSuccess) {
 			// Make sure user exists in database
 			$userExists = false;
-			$passwordMatches = $oAuth || $authProxy;
-			$token = (is_array($authSuccess) && isset($authSuccess['token']) ? $authSuccess['token'] : '');
+			$passwordMatches = $authProxy;
 			if (isset($result['username'])) {
 				$userExists = true;
 				$username = $result['username'];
@@ -3923,27 +3853,12 @@ HTML;
 					$this->setLoggerChannel('Authentication', $username);
 					$this->logger->info('User Password updated from backend');
 				}
-				if ($token !== '') {
-					if ($token !== $result['plex_token']) {
-						$this->updateUserPlexToken($token, $result['id']);
-						$this->setLoggerChannel('Authentication', $username);
-						$this->logger->info('User Plex Token updated from backend');
-					}
-				}
 				// 2FA might go here
 				if ($this->twoFAType($result['auth_service']) !== null) {
 					$tfaProceed = true;
 					// Add check for local or not
 					if ($this->config['ignoreTFALocal'] !== false) {
 						$tfaProceed = !$this->isLocal();
-					}
-					// Is Plex Oauth?
-					if ($this->config['ignoreTFAIfPlexOAuth'] !== false) {
-						if (isset($authSuccess['oauth'])) {
-							if ($authSuccess['oauth'] == 'plex') {
-								$tfaProceed = false;
-							}
-						}
 					}
 					if ($bypassTFA) {
 						$tfaProceed = false;
@@ -3987,8 +3902,7 @@ HTML;
 				$createToken = $this->createToken($result['username'], $result['email'], $days);
 				if ($createToken) {
 					$this->logger->info('User has logged in');
-					$ssoUserObject = ($token !== '') ? $authSuccess : $result;
-					$this->ssoCheck($ssoUserObject, $password, $token); //need to work on this
+					$this->ssoCheck($result, $password);
 					return ($output) ? array('name' => $this->cookieName, 'token' => (string)$createToken) : true;
 				} else {
 					$this->setAPIResponse('error', 'Token creation error', 500);
@@ -3998,7 +3912,7 @@ HTML;
 				// Create User
 				$this->setLoggerChannel('Authentication', (is_array($authSuccess) && isset($authSuccess['username']) ? $authSuccess['username'] : $username));
 				$this->logger->debug('Starting Registration function');
-				return $this->authRegister((is_array($authSuccess) && isset($authSuccess['username']) ? $authSuccess['username'] : $username), $password, (is_array($authSuccess) && isset($authSuccess['email']) ? $authSuccess['email'] : ''), $token);
+				return $this->authRegister($username, $password, (is_array($authSuccess) && isset($authSuccess['email']) ? $authSuccess['email'] : ''));
 			}
 		} else {
 			// authentication failed
@@ -4119,13 +4033,10 @@ HTML;
 		$this->logger->info('User has logged out');
 		$this->audit('auth.logout', $this->user['username'] ?? '');
 		$this->coookie('delete', $this->cookieName);
-		$this->coookie('delete', 'mpt');
 		$this->coookie('delete', 'Auth');
-		$this->coookie('delete', 'oAuth');
 		$this->coookie('delete', 'connect.sid');
 		$this->coookie('delete', 'petio_jwt');
 		$this->clearTautulliTokens();
-		$this->clearJellyfinTokens();
 		$this->revokeTokenCurrentUser($this->user['token']);
 		$this->clearKomgaToken();
 		$this->refreshDeviceUUID();
@@ -4224,13 +4135,10 @@ HTML;
 		}
 	}
 
-	public function authRegister($username, $password, $email, $token = null)
+	public function authRegister($username, $password, $email)
 	{
 		$this->setLoggerChannel('Authentication', $username);
-		$this->ssoCheck($username, $password, $token);
-		if ($token && (!$password || $password == '')) {
-			$password = $this->random_ascii_string(10);
-		}
+		$this->ssoCheck($username, $password);
 		if ($this->createUser($username, $password, $email)) {
 			$this->logger->info('A User has registered');
 			if ($this->config['PHPMAILER-enabled'] && $email !== '') {
@@ -4345,22 +4253,6 @@ HTML;
 		return $this->processQueries($response);
 	}
 
-	public function updateUserPlexToken($token, $id)
-	{
-		$response = [
-			array(
-				'function' => 'query',
-				'query' => array(
-					'UPDATE users SET',
-					['plex_token' => $token],
-					'WHERE id = ?',
-					$id
-				)
-			),
-		];
-		return $this->processQueries($response);
-	}
-
 	public function getUserTabsAndCategories($type = null)
 	{
 		if (!$this->hasDB()) {
@@ -4464,19 +4356,6 @@ HTML;
 		}, ARRAY_FILTER_USE_KEY);
 	}
 
-	public function checkPlexAdminFilled()
-	{
-		if ($this->config['plexAdmin'] == '') {
-			return false;
-		} else {
-			if ((strpos($this->config['plexAdmin'], '@') !== false)) {
-				return 'email';
-			} else {
-				return 'username';
-			}
-		}
-	}
-
 	public function londerlandSpecialSettings()
 	{
 		// js activeInfo
@@ -4484,19 +4363,8 @@ HTML;
 			'refresh' => $this->refreshList(),
 			'sso' => [
 				'misc' => [
-					'oAuthLogin' => isset($_COOKIE['oAuth']),
 					'rememberMe' => $this->config['rememberMe'],
 					'rememberMeDays' => $this->config['rememberMeDays']
-				],
-				'plex' => [
-					'enabled' => (bool)$this->config['ssoPlex'],
-					'cookie' => isset($_COOKIE['mpt']),
-					'machineID' => strlen($this->config['plexID']) == 40,
-					'token' => $this->config['plexToken'] !== '',
-					'plexAdmin' => $this->checkPlexAdminFilled(),
-					'strict' => (bool)$this->config['plexStrictFriends'],
-					'oAuthEnabled' => (bool)$this->config['plexoAuth'],
-					'backend' => $this->config['authBackend'] == 'plex',
 				],
 				'tautulli' => [
 					'enabled' => (bool)$this->config['ssoTautulli'],
@@ -4520,11 +4388,6 @@ HTML;
 					'cookie' => isset($_COOKIE['Auth']),
 					'url' => ($this->config['ombiURL'] !== '') ? $this->config['ombiURL'] : false,
 					'api' => $this->config['ombiToken'] !== '',
-				],
-				'jellyfin' => [
-					'enabled' => (bool)$this->config['ssoJellyfin'],
-					'url' => ($this->config['jellyfinURL'] !== '') ? $this->config['jellyfinURL'] : false,
-					'ssoUrl' => ($this->config['jellyfinSSOURL'] !== '') ? $this->config['jellyfinSSOURL'] : false,
 				],
 				'komga' => [
 					'enabled' => (bool)$this->config['ssoKomga'],
@@ -4555,7 +4418,6 @@ HTML;
 			],
 			'user' => [
 				'agent' => isset($_SERVER ['HTTP_USER_AGENT']) ? $_SERVER ['HTTP_USER_AGENT'] : null,
-				'oAuthLogin' => isset($_COOKIE['oAuth']),
 				'local' => $this->isLocal(),
 				'ip' => $this->userIP(),
 				'bypass' => $this->config['bypassLoginForLocal'] && $this->config['localLoginUserId'] && $this->isLocal() == true
@@ -5459,188 +5321,6 @@ HTML;
 		return $this->processQueries($response);
 	}
 
-	public function importUsers($array)
-	{
-		$imported = 0;
-		if ($array) {
-			foreach ($array as $user) {
-				$password = $this->random_ascii_string(30);
-				if ($user['username'] !== '' && $user['email'] !== '' && $password !== '') {
-					$newUser = $this->createUser($user['username'], $password, $user['email']);
-					if (!$newUser) {
-						$this->setLoggerChannel('User Management');
-						$this->logger->warning('An error occurred during user import');
-					} else {
-						$imported++;
-					}
-				}
-			}
-		}
-		$this->setAPIResponse('success', 'Imported ' . $imported . ' users', 200);
-		return true;
-	}
-
-	public function importUsersType($type)
-	{
-		if ($type !== '') {
-			switch ($type) {
-				case 'plex':
-					return $this->importUsers($this->allPlexUsers(true));
-				case 'jellyfin':
-					return $this->importUsers($this->allJellyfinUsers(true));
-				case 'emby':
-					return $this->importUsers($this->allEmbyUsers(true));
-				default:
-					return false;
-			}
-		}
-		return false;
-	}
-
-	public function allPlexUsers($newOnly = false, $friendsOnly = false)
-	{
-		try {
-			if (!empty($this->config['plexToken'])) {
-				$url = 'https://plex.tv/api/users';
-				$headers = array(
-					'X-Plex-Token' => $this->config['plexToken'],
-				);
-				$response = \WpOrg\Requests\Requests::get($url, $headers);
-				if ($response->success) {
-					libxml_use_internal_errors(true);
-					$userXML = simplexml_load_string($response->body);
-					if (is_array($userXML) || is_object($userXML)) {
-						$results = array();
-						foreach ($userXML as $child) {
-							if (((string)$child['restricted'] == '0')) {
-								if ($newOnly) {
-									$taken = $this->usernameTaken((string)$child['username'], (string)$child['email']);
-									if (!$taken) {
-										$results[] = array(
-											'username' => (string)$child['username'],
-											'email' => (string)$child['email'],
-											'id' => (string)$child['id'],
-										);
-									}
-								} elseif ($friendsOnly) {
-									$machineMatches = false;
-									foreach ($child->Server as $server) {
-										if ((string)$server['machineIdentifier'] == $this->config['plexID']) {
-											$machineMatches = true;
-											$shareId = $server['id'];
-										}
-									}
-									if ($machineMatches) {
-										$results[] = array(
-											'username' => (string)$child['username'],
-											'email' => (string)$child['email'],
-											'id' => (string)$child['id'],
-											'shareId' => (string)$shareId
-										);
-									}
-								} else {
-									$results[] = array(
-										'username' => (string)$child['username'],
-										'email' => (string)$child['email'],
-										'id' => (string)$child['id'],
-									);
-								}
-							}
-						}
-						return $results;
-					}
-				}
-			}
-			return false;
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('User Management');
-			$this->logger->error($e);
-		}
-		return false;
-	}
-
-	public function allJellyfinUsers($newOnly = false)
-	{
-		try {
-			if (!empty($this->config['jellyfinURL']) && !empty($this->config['jellyfinToken'])) {
-				$url = $this->qualifyURL($this->config['jellyfinURL']) . '/Users?api_key=' . $this->config['jellyfinToken'];
-				$headers = array();
-				$response = \WpOrg\Requests\Requests::get($url, $headers);
-				if ($response->success) {
-					$users = json_decode($response->body, true);
-					if (is_array($users) || is_object($users)) {
-						$results = array();
-						foreach ($users as $child) {
-							// Jellyfin doesn't list emails for some reason
-							$email = $this->random_ascii_string(10) . '@placeholder.eml';
-							if ($newOnly) {
-								$taken = $this->usernameTaken((string)$child['Name'], $email);
-								if (!$taken) {
-									$results[] = array(
-										'username' => (string)$child['Name'],
-										'email' => $email
-									);
-								}
-							} else {
-								$results[] = array(
-									'username' => (string)$child['Name'],
-									'email' => $email,
-								);
-							}
-						}
-						return $results;
-					}
-				}
-			}
-			return false;
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('User Management');
-			$this->logger->error($e);
-		}
-		return false;
-	}
-
-	public function allEmbyUsers($newOnly = false)
-	{
-		try {
-			if (!empty($this->config['embyURL']) && !empty($this->config['embyToken'])) {
-				$url = $this->qualifyURL($this->config['embyURL']) . '/Users?api_key=' . $this->config['embyToken'];
-				$headers = array();
-				$response = \WpOrg\Requests\Requests::get($url, $headers);
-				if ($response->success) {
-					$users = json_decode($response->body, true);
-					if (is_array($users) || is_object($users)) {
-						$results = array();
-						foreach ($users as $child) {
-							// Emby doesn't list emails for some reason
-							$email = $this->random_ascii_string(10) . '@placeholder.eml';
-							if ($newOnly) {
-								$taken = $this->usernameTaken((string)$child['Name'], $email);
-								if (!$taken) {
-									$results[] = array(
-										'username' => (string)$child['Name'],
-										'email' => $email
-									);
-								}
-							} else {
-								$results[] = array(
-									'username' => (string)$child['Name'],
-									'email' => $email,
-								);
-							}
-						}
-						return $results;
-					}
-				}
-			}
-			return false;
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('User Management');
-			$this->logger->error($e);
-		}
-		return false;
-	}
-
 	public function validateEmail($email)
 	{
 		return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
@@ -6070,48 +5750,6 @@ HTML;
 		return $this->processQueries($response);
 	}
 
-	public function userList($type = null)
-	{
-		switch ($type) {
-			case 'plex':
-				if (!empty($this->config['plexToken']) && !empty($this->config['plexID'])) {
-					$url = 'https://plex.tv/api/servers/' . $this->config['plexID'] . '/shared_servers';
-					try {
-						$headers = array(
-							"Accept" => "application/json",
-							"X-Plex-Token" => $this->config['plexToken']
-						);
-						$response = \WpOrg\Requests\Requests::get($url, $headers, array());
-						libxml_use_internal_errors(true);
-						if ($response->success) {
-							$libraryList = array();
-							$plex = simplexml_load_string($response->body);
-							foreach ($plex->SharedServer as $child) {
-								if (!empty($child['username'])) {
-									$username = (string)strtolower($child['username']);
-									$email = (string)strtolower($child['email']);
-									$libraryList['users'][$username] = (string)$child['id'];
-									$libraryList['emails'][$email] = (string)$child['id'];
-									$libraryList['both'][$username] = $email;
-								}
-							}
-							$libraryList = array_change_key_case($libraryList, CASE_LOWER);
-							return $libraryList;
-						}
-					} catch (\WpOrg\Requests\Exception $e) {
-						$this->setLoggerChannel('User Management');
-						$this->logger->error($e);
-					}
-				}
-				break;
-			default:
-				# code...
-				break;
-		}
-		return false;
-	}
-
-
 	public function encrypt($password, $key = null)
 	{
 		$key = ($key) ? $key : ((isset($this->config['londerlandHash'])) ? $this->config['londerlandHash'] : null);
@@ -6145,70 +5783,6 @@ HTML;
 	{
 		$file = $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'Cron.txt';
 		return file_exists($file) && time() - 120 < filemtime($file);
-	}
-
-	public function plexJoinAPI($array)
-	{
-		$username = ($array['username']) ?? null;
-		$email = ($array['email']) ?? null;
-		$password = ($array['password']) ?? null;
-		if (!$username) {
-			$this->setAPIResponse('error', 'Username not supplied', 409);
-			return false;
-		}
-		if (!$email) {
-			$this->setAPIResponse('error', 'Email not supplied', 409);
-			return false;
-		}
-		if (!$password) {
-			$this->setAPIResponse('error', 'Password not supplied', 409);
-			return false;
-		}
-		return $this->plexJoin($username, $email, $password);
-	}
-
-	public function plexJoin($username, $email, $password)
-	{
-
-		try {
-			$url = 'https://plex.tv/api/v2/users';
-			$headers = array(
-				'Accept' => 'application/json',
-				'Content-Type' => 'application/x-www-form-urlencoded',
-				'X-Plex-Product' => 'Londerland',
-				'X-Plex-Version' => '2.0',
-				'X-Plex-Client-Identifier' => $this->config['uuid'],
-			);
-			$data = array(
-				'email' => $email,
-				'username' => $username,
-				'password' => $password,
-			);
-			$response = \WpOrg\Requests\Requests::post($url, $headers, $data, array());
-			$json = json_decode($response->body, true);
-			$errors = !empty($json['errors']);
-			$success = empty($json['errors']);
-			//Use This for later
-			$errorMessage = '';
-			if ($errors) {
-				foreach ($json['errors'] as $error) {
-					if (isset($error['message']) && isset($error['field'])) {
-						$errorMessage .= "[Plex.tv Error: " . $error['message'] . " for field: (" . $error['field'] . ")]";
-					}
-				}
-			}
-			$msg = (!empty($success) && empty($errors)) ? 'User has joined Plex' : $errorMessage;
-			$status = (!empty($success) && empty($errors)) ? 'success' : 'error';
-			$code = (!empty($success) && empty($errors)) ? 200 : 422;
-			$this->setAPIResponse($status, $msg, $code);
-			return (!empty($success) && empty($errors));
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('User Management');
-			$this->logger->error($e);
-			$this->setAPIResponse('error', 'An Error Occurred', 409);
-			return false;
-		}
-		return false;
 	}
 
 	public function lockCurrentUser()
@@ -6372,61 +5946,6 @@ HTML;
 		})( window );
 		</script>
 		';
-	}
-
-	public function getPlexServers()
-	{
-		if ($this->config['plexToken'] == '') {
-			$this->setAPIResponse('error', 'Plex Token cannot be empty', 422);
-			return false;
-		}
-		$ownedOnly = isset($_GET['owned']) ?? false;
-		$url = $this->qualifyURL('https://plex.tv/pms/servers');
-		$options = ($this->localURL($url)) ? array('verify' => false) : array();
-		$headers = [
-			'X-Plex-Product' => 'Londerland',
-			'X-Plex-Version' => '2.0',
-			'X-Plex-Client-Identifier' => '01010101-10101010',
-			'X-Plex-Token' => $this->config['plexToken'],
-		];
-		try {
-			$response = \WpOrg\Requests\Requests::get($url, $headers, $options);
-			libxml_use_internal_errors(true);
-			if ($response->success) {
-				$items = array();
-				$plex = simplexml_load_string($response->body);
-				foreach ($plex as $server) {
-					if ($ownedOnly) {
-						if ($server['owned'] == 1) {
-							$items[] = array(
-								'name' => (string)$server['name'],
-								'address' => (string)$server['address'],
-								'machineIdentifier' => (string)$server['machineIdentifier'],
-								'owned' => (float)$server['owned'],
-							);
-						}
-					} else {
-						$items[] = array(
-							'name' => (string)$server['name'],
-							'address' => (string)$server['address'],
-							'machineIdentifier' => (string)$server['machineIdentifier'],
-							'owned' => (float)$server['owned'],
-						);
-					}
-				}
-				$this->setResponse(200, null, $items);
-				return $items;
-			} else {
-				$message = $this->testAndFormatString($response->body);
-				$this->setResponse(500, 'Plex Error occurred', $message['data']);
-				$this->setLoggerChannel('Plex Connection')->warning('Plex Error', $message);
-				return $message;
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('Plex Connection')->error($e);
-			$this->setResponse(500, $e->getMessage());
-			return false;
-		}
 	}
 
 	public function getIcons()
