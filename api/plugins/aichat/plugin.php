@@ -472,6 +472,14 @@ class AiChat extends Londerland
 					'value' => $this->config['AICHAT-searchAuto']
 				),
 				array(
+					'type' => 'number',
+					'name' => 'AICHAT-toolRounds',
+					'label' => 'Tool Steps per Answer',
+					'value' => $this->config['AICHAT-toolRounds'],
+					'placeholder' => '6',
+					'help' => 'How many times the model may search, read a page or create an image before it has to answer with what it found (1 to 20).'
+				),
+				array(
 					'type' => 'switch',
 					'name' => 'AICHAT-fetchAllowPrivate',
 					'label' => 'Allow Reading Local Addresses',
@@ -1661,9 +1669,19 @@ class AiChat extends Londerland
 		// with summaries off, a summary made before is not sent anymore either
 		$summary = $this->config['AICHAT-summarizeDropped'] ? trim((string)($chat['summary'] ?? '')) : '';
 		$until = (int)($chat['summary_until'] ?? 0);
-		$history = array_values(array_filter($this->_aiChatMessages($chatId), function ($message) use ($until) {
-			return (int)$message['id'] > $until && in_array($message['role'], ['user', 'assistant'], true);
-		}));
+		$all = $this->_aiChatMessages($chatId);
+		$history = [];
+		foreach ($all as $index => $message) {
+			if ((int)$message['id'] <= $until || !in_array($message['role'], ['user', 'assistant'], true)) {
+				continue;
+			}
+			// a question that never got an answer (the AI failed or was stopped) is left out, otherwise the model
+			// answers the old question along with the new one
+			if ($message['role'] === 'user' && isset($all[$index + 1]) && $all[$index + 1]['role'] !== 'assistant') {
+				continue;
+			}
+			$history[] = $message;
+		}
 		$limit = max(1, (int)$this->config['AICHAT-contextMessages'] ?: 40);
 		if (count($history) <= $limit) {
 			return [$summary, $history];
@@ -2553,21 +2571,62 @@ class AiChat extends Londerland
 		$images = [];
 		$aborted = false;
 		$error = null;
-		for ($round = 0; $round < 5; $round++) {
-			$body = ['model' => $model, 'messages' => $messages, 'stream' => true];
+		$toolRounds = min(20, max(1, (int)($this->config['AICHAT-toolRounds'] ?? 6) ?: 6));
+		$usedTools = false;
+		$retriedEmpty = false;
+		$retryEmpty = false;
+		$noToolChoice = false;
+		for ($round = 0; $round <= $toolRounds; $round++) {
+			$lastRound = $round === $toolRounds;
+			$send = $messages;
+			$notes = [];
+			if ($lastRound && $usedTools) {
+				$notes[] = 'You have used all the tool steps for this question. Answer now with what you found so far; do not call any more tools.';
+			}
+			if ($retryEmpty) {
+				$notes[] = "Your previous reply was empty. Answer the user's last question now, in text.";
+			}
+			if ($notes) {
+				$send[] = ['role' => 'user', 'content' => '(Note from the chat app: ' . implode(' ', $notes) . ')'];
+			}
+			$body = ['model' => $model, 'messages' => $send, 'stream' => true];
 			if (is_numeric($this->config['AICHAT-temperature'])) {
 				$body['temperature'] = (float)$this->config['AICHAT-temperature'];
 			}
 			if ((int)$this->config['AICHAT-maxTokens'] > 0) {
 				$body['max_tokens'] = (int)$this->config['AICHAT-maxTokens'];
 			}
-			// The last round never offers tools, so the model has to answer
-			$offerTools = $tools && $round < 4;
+			$offerTools = $tools && !$lastRound;
 			if ($offerTools) {
 				$body['tools'] = $tools;
+			} elseif ($tools && $usedTools && !$noToolChoice) {
+				// The last round keeps the tool list, because the conversation holds tool calls now and some servers
+				// (Claude, also through OmniRoute) answer with nothing when those come without it; tool_choice none
+				// makes the model answer instead of calling another tool
+				$body['tools'] = $tools;
+				$body['tool_choice'] = 'none';
 			}
 			$result = $this->_aiChatStreamRound($body);
 			$error = $this->_aiChatRoundError($result);
+			$produced = $result['answer'] !== '' || $result['toolCalls'];
+			if ($error && isset($body['tool_choice']) && !$produced && in_array($result['code'], [400, 404, 422, 500], true)) {
+				// Server without tool_choice: the last round again without the tool list
+				$noToolChoice = true;
+				$round--;
+				continue;
+			}
+			// Nothing at all came back (the model only thought, or the server says the content was empty):
+			// ask once more, with a note that an answer is needed
+			$empty = !$produced && !$result['aborted'] && ($error === null || preg_match('/empty (content|response|answer)/i', $error));
+			if ($empty && $answer === '' && !$images && !$retriedEmpty) {
+				$this->setLoggerChannel('AI Chat')->warning('The AI returned an empty answer, asking again', ['model' => $model, 'round' => $round, 'error' => $error]);
+				$retriedEmpty = true;
+				$retryEmpty = true;
+				$reasoning .= $result['reasoning'];
+				$round--;
+				continue;
+			}
+			$retryEmpty = false;
 			if ($error && $offerTools && $round === 0 && $result['answer'] === '' && in_array($result['code'], [400, 404, 422, 500], true)) {
 				// Model or server without tool support: ask again without tools, and say so
 				$this->setLoggerChannel('AI Chat')->warning('The AI server refused the tools, retrying without them: ' . $error, ['model' => $model]);
@@ -2587,6 +2646,7 @@ class AiChat extends Londerland
 				break;
 			}
 			// Run the tools the model asked for and give it the results
+			$usedTools = true;
 			$calls = [];
 			foreach ($result['toolCalls'] as $index => $call) {
 				$calls[] = ['id' => $call['id'] ?: 'call_' . $round . '_' . $index, 'type' => 'function', 'function' => ['name' => $call['name'], 'arguments' => $call['arguments'] !== '' ? $call['arguments'] : '{}']];
@@ -2603,9 +2663,14 @@ class AiChat extends Londerland
 			}
 		}
 
-		if ($error && $answer === '' && !$images) {
+		if (!$aborted && trim($answer) === '' && !$images && (!$error || preg_match('/empty (content|response|answer)/i', $error))) {
+			$error = 'The AI gave an empty answer, also when asked again. Use "Answer again", or ask in other words.' . ($error ? ' (' . $error . ')' : '');
+		}
+		if ($error && trim($answer) === '' && !$images) {
 			$this->setLoggerChannel('AI Chat')->warning($error, ['model' => $model]);
-			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error]);
+			// kept in the chat, so after a reload it is still clear this question got no answer (with "Answer again")
+			$stored = $this->_aiChatInsertMessage($chatId, 'error', $error, [], $model);
+			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error, 'stored' => $stored]);
 			exit;
 		}
 		$meta = [];

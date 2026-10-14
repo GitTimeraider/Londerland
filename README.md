@@ -288,7 +288,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - Chat history with search, pin, rename, export (Markdown or JSON), delete and delete all.
 - Folders in the chat history: create, rename and delete them (their chats stay), and move chats in with drag and drop or **Move to folder**.
 - **Keep permanently** per chat when the admin set a retention period. A chat moved into a folder is kept automatically.
-- Editing a question, answering again, and copying.
+- Editing a question, answering again, and copying. When the AI fails or gives an empty answer, the chat asks once more by itself; if that fails too, the error stays in the chat with an **Answer again** button, and the unanswered question is not sent along with your next one.
 - Personal instructions sent with every chat.
 - Usage limits of the OmniRoute connections under **Settings**, with a bar per limit and when it resets (if the admin turned this on).
 - A "Thinking" section for reasoning models.

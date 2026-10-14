@@ -1175,8 +1175,12 @@
 							chat.title = event.title;
 							$panel.find('.aichat-title').text(event.title);
 							break;
-						case 'error':
-							throw new Error(event.message);
+						case 'error': {
+							// the server keeps the error in the chat; with its id "Answer again" works after a reload too
+							const failure = new Error(event.message);
+							failure.stored = event.stored;
+							throw failure;
+						}
 					}
 				}
 			}
@@ -1190,7 +1194,7 @@
 					chat.messages.push({ id: null, role: 'assistant', content: answer, reasoning: reasoning || null, model: body.model, created: new Date().toISOString(), attachments: [] });
 				}
 			} else {
-				chat.messages.push({ id: null, role: 'error', content: error.message, attachments: [] });
+				chat.messages.push(error.stored || { id: null, role: 'error', content: error.message, attachments: [] });
 			}
 		} finally {
 			state.controller = null;
