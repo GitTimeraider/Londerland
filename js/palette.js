@@ -301,6 +301,21 @@
 					return entry.item;
 				});
 		}
+		// a magic phrase finds an easter egg (custom.js knows which); it is not kept as a recent pick
+		const egg = typeof window.londerlandEasterEggPhrase === 'function' ? window.londerlandEasterEggPhrase(query) : null;
+		if (egg) {
+			results.unshift({
+				key: 'egg',
+				secret: true,
+				kind: t('Easter egg'),
+				title: t('You found something…'),
+				subtitle: t('Press Enter to see what it is'),
+				icon: '🥚',
+				run: function () {
+					window.londerlandEasterEgg(egg);
+				},
+			});
+		}
 		selected = 0;
 		render();
 	}
@@ -351,15 +366,17 @@
 		if (!item) {
 			return;
 		}
-		storage(
-			[item.key]
-				.concat(
-					storage().filter(function (key) {
-						return key !== item.key;
-					})
-				)
-				.slice(0, 8)
-		);
+		if (!item.secret) {
+			storage(
+				[item.key]
+					.concat(
+						storage().filter(function (key) {
+							return key !== item.key;
+						})
+					)
+					.slice(0, 8)
+			);
+		}
 		close(false);
 		try {
 			item.run(event);

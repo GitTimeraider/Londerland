@@ -1396,6 +1396,84 @@ tinykeys.tinykeys(window, {
         nextTab.trigger("click");
     }),
 });
+// Easter eggs. The triggers are listened for here; what they do (js/eastereggs.js) is only fetched once one is found.
+// Every find is announced as the "londerland:easteregg" event (the Achievements plugin turns finds into badges), also
+// while the admin switched the effects off (Settings > Customize > Appearance > Options > Show Easter Eggs).
+// Typed words have no double letters, because "r r", "c c", "s s", "f f" and "d d" are shortcuts.
+(function() {
+    var KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    var WORDS = { matrix: 'matrix', sudo: 'sudo', snake: 'snake', roll: 'roll', teapot: 'teapot', '42': 'answer', xyzzy: 'xyzzy', party: 'party' };
+    // the same eggs from the command palette (Ctrl+K), which also works on phones and tablets
+    var PHRASES = {
+        'konami': 'konami', 'up up down down left right left right b a': 'konami',
+        'matrix': 'matrix', 'red pill': 'matrix', 'follow the white rabbit': 'matrix',
+        'sudo': 'sudo', 'sudo make me a sandwich': 'sudo',
+        'snake': 'snake',
+        'do a barrel roll': 'roll', 'barrel roll': 'roll',
+        'teapot': 'teapot', '418': 'teapot', 'coffee': 'teapot', 'make me a coffee': 'teapot',
+        '42': 'answer', 'the answer to life the universe and everything': 'answer', 'meaning of life': 'answer',
+        'xyzzy': 'xyzzy', 'plugh': 'xyzzy',
+        'party': 'party', 'party time': 'party',
+        'quack': 'duck', 'rubber duck': 'duck'
+    };
+    var konami = 0;
+    var typed = '';
+    var logoClicks = [];
+    function effectsOn() {
+        return typeof activeInfo === 'undefined' || !activeInfo.settings || activeInfo.settings.misc.easterEggs !== false;
+    }
+    function found(egg, detail) {
+        document.dispatchEvent(new CustomEvent('londerland:easteregg', { detail: Object.assign({ egg: egg }, detail || {}) }));
+        if (!effectsOn()) {
+            return;
+        }
+        londerlandLoadLibrary('eastereggs').then(function() {
+            window.londerlandEasterEggs.run(egg);
+        });
+    }
+    window.londerlandEasterEgg = found;
+    // For the palette: the egg a search phrase finds, or null
+    window.londerlandEasterEggPhrase = function(query) {
+        var phrase = String(query || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+        return effectsOn() && Object.prototype.hasOwnProperty.call(PHRASES, phrase) ? PHRASES[phrase] : null;
+    };
+    $(document).on('keydown.eastereggs', function(event) {
+        if (event.ctrlKey || event.metaKey || event.altKey || $(event.target).is('input, textarea, select, [contenteditable="true"]')) {
+            return;
+        }
+        var key = event.key && event.key.length === 1 ? event.key.toLowerCase() : event.key;
+        konami = key === KONAMI[konami] ? konami + 1 : key === KONAMI[0] ? 1 : 0;
+        if (konami === KONAMI.length) {
+            konami = 0;
+            found('konami');
+            return;
+        }
+        if (!/^[a-z0-9]$/.test(key || '')) {
+            return;
+        }
+        typed = (typed + key).slice(-8);
+        for (var word in WORDS) {
+            if (typed.slice(-word.length) === word) {
+                typed = '';
+                found(WORDS[word]);
+                return;
+            }
+        }
+    });
+    // ten clicks (or taps) on the logo within four seconds
+    $(document).on('click.eastereggs', '.navbar-header .logo, #side-logo', function() {
+        var now = Date.now();
+        logoClicks = logoClicks.filter(function(time) { return now - time < 4000; }).concat(now);
+        if (logoClicks.length >= 10) {
+            logoClicks = [];
+            found('duck');
+        }
+    });
+    if (effectsOn() && window.console) {
+        console.log('%c  _                 _           _                 _ \n | |   ___  _ _  __| | ___  _ _ | | __ _  _ _   __| |\n | |__/ _ \\| \' \\/ _` |/ -_)| \'_|| |/ _` || \' \\ / _` |\n |____\\___/|_||_\\__,_|\\___||_|  |_|\\__,_||_||_|\\__,_|', 'font-family:monospace;color:#2cabe3');
+        console.log('Looking under the hood? Then you might like ↑ ↑ ↓ ↓ ← → ← → B A. There are more eggs hidden around here.');
+    }
+})();
 $(document).on('keyup', "#debug-input", function(e  ){
 	console.log(this);
     if(e.keyCode == 13) {
