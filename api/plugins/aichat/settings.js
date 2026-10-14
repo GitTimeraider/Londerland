@@ -55,3 +55,19 @@ $('body').arrive('#AICHAT-settings-items input.aichat-color-picker', function ()
 		swatches: ['#b39ddb', '#5e35b1', '#2cabe3', '#26a69a', '#66bb6a', '#ffa726', '#ef5350', '#ec407a', '#78909c', '#212121'],
 	});
 });
+// Sharing > Shared chats: "Stop" makes one public link stop working
+$(document).on('click', '.aichatRevokeShare', function () {
+	if (!confirm(window.lang.translate('Stop this public link? It stops working for everyone.'))) {
+		return;
+	}
+	const $button = $(this).prop('disabled', true);
+	londerlandAPI2('DELETE', 'api/v2/plugins/aichat/shares/' + parseInt($(this).data('id'), 10))
+		.done(function (data) {
+			messageSingle(data.response.message, '', activeInfo.settings.notifications.position, '#FFF', 'success', '5000');
+			$button.closest('tr').remove();
+		})
+		.fail(function (xhr) {
+			LonderlandApiError(xhr, 'AI Chat');
+			$button.prop('disabled', false);
+		});
+});

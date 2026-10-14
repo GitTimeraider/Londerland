@@ -428,6 +428,7 @@
 								<li><a class="dropdown-item aichat-pin" href="#"><i class="fa fa-thumb-tack fa-fw me-2"></i><span>${escapeHtml(t('Pin'))}</span></a></li>
 								${retentionDays() ? `<li><a class="dropdown-item aichat-keep" href="#"><i class="fa fa-bookmark-o fa-fw me-2"></i><span>${escapeHtml(t('Keep permanently'))}</span></a></li>` : ''}
 								<li><a class="dropdown-item aichat-move" href="#"><i class="fa fa-folder-o fa-fw me-2"></i>${escapeHtml(t('Move to folder'))}</a></li>
+								${shareAllowed() ? `<li><a class="dropdown-item aichat-share" href="#"><i class="fa fa-share-alt fa-fw me-2"></i>${escapeHtml(t('Share'))}</a></li>` : ''}
 								<li><a class="dropdown-item aichat-export-md" href="#"><i class="fa fa-file-text-o fa-fw me-2"></i>${escapeHtml(t('Export as Markdown'))}</a></li>
 								<li><a class="dropdown-item aichat-export-json" href="#"><i class="fa fa-file-code-o fa-fw me-2"></i>${escapeHtml(t('Export as JSON'))}</a></li>
 								<li><hr class="dropdown-divider"></li>
@@ -456,6 +457,15 @@
 						</div>
 					</div>
 					<div class="aichat-drop"><i class="fa fa-upload me-2"></i>${escapeHtml(t('Drop files to add them'))}</div>
+					<div class="aichat-overlay aichat-share-overlay">
+						<div class="aichat-dialog" role="dialog" aria-label="${escapeHtml(t('Share'))}">
+							<h4>${escapeHtml(t('Share this chat'))}</h4>
+							<div class="aichat-share-body"></div>
+							<div class="d-flex justify-content-end gap-2 mt-3">
+								<button type="button" class="btn btn-secondary btn-sm aichat-share-close">${escapeHtml(t('Close'))}</button>
+							</div>
+						</div>
+					</div>
 					<div class="aichat-overlay aichat-settings-overlay">
 						<div class="aichat-dialog">
 							<h4>${escapeHtml(t('Chat settings'))}</h4>
@@ -1603,6 +1613,102 @@
 		download(safe + '.md', lines.join('\n'), 'text/markdown');
 	}
 
+	/* ===================== public links ===================== */
+
+	// The server checks this too; here it only decides whether Share is in the menu
+	function shareAllowed() {
+		const includes = activeInfo.plugins.includes || {};
+		if (includes['AICHAT-share-include'] !== true) {
+			return false;
+		}
+		const groups = String(includes['AICHAT-shareGroups-include'] || '').trim();
+		return groups === '' || groups.split(',').map((id) => trim(id)).includes(String(parseInt(activeInfo.user.groupID, 10)));
+	}
+
+	function shareLink(share) {
+		return new URL(share.url, location.href).href;
+	}
+
+	function renderShare(share) {
+		const $body = $panel.find('.aichat-share-body');
+		if (!share) {
+			$body.html(`
+				<p>${escapeHtml(t('Anyone with the link can read this chat, without logging in. The link shows the questions and answers as they are now; later messages are not added.'))}</p>
+				<p class="aichat-share-note"><i class="fa fa-eye-slash me-1"></i>${escapeHtml(t('Not shared: attached files and pictures, your custom instructions, the AI\'s reasoning and your name.'))}</p>
+				<div class="form-group">
+					<label for="aichat-share-days">${escapeHtml(t('The link works for'))}</label>
+					<select id="aichat-share-days" class="form-select form-select-sm aichat-share-days">
+						<option value="1">${escapeHtml(t('1 day'))}</option>
+						<option value="7" selected>${escapeHtml(t('7 days'))}</option>
+						<option value="30">${escapeHtml(t('30 days'))}</option>
+						<option value="90">${escapeHtml(t('90 days'))}</option>
+						<option value="365">${escapeHtml(t('1 year'))}</option>
+						<option value="0">${escapeHtml(t('Until I stop it'))}</option>
+					</select>
+				</div>
+				<button type="button" class="btn btn-info btn-sm aichat-share-create"><i class="fa fa-link me-1"></i>${escapeHtml(t('Create link'))}</button>`);
+			return;
+		}
+		const link = shareLink(share);
+		const expires = share.expires ? t('Works until') + ' ' + formatTime(share.expires) : t('Works until you stop it');
+		$body.html(`
+			<div class="form-group">
+				<label for="aichat-share-link">${escapeHtml(t('Public link'))}</label>
+				<div class="input-group input-group-sm">
+					<input id="aichat-share-link" class="form-control aichat-share-link" readonly value="${escapeHtml(link)}">
+					<button type="button" class="btn btn-info aichat-share-copy" title="${escapeHtml(t('Copy'))}"><i class="fa fa-copy"></i></button>
+					<a class="btn btn-secondary" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(t('Open'))}"><i class="fa fa-external-link"></i></a>
+				</div>
+			</div>
+			<p class="aichat-share-note">${escapeHtml(t('Shared'))} ${escapeHtml(formatTime(share.created))} · ${escapeHtml(expires)} · ${escapeHtml(t('Opened'))} ${parseInt(share.views, 10) || 0}×</p>
+			<div class="d-flex flex-wrap gap-2">
+				<button type="button" class="btn btn-secondary btn-sm aichat-share-create" title="${escapeHtml(t('A new link with the chat as it is now; the old link stops working'))}"><i class="fa fa-refresh me-1"></i>${escapeHtml(t('Update with new messages'))}</button>
+				<button type="button" class="btn btn-danger btn-sm aichat-share-stop"><i class="fa fa-ban me-1"></i>${escapeHtml(t('Stop sharing'))}</button>
+			</div>
+			<input type="hidden" class="aichat-share-days" value="${share.expires ? Math.max(1, Math.round((new Date(share.expires) - new Date(share.created)) / 86400000)) : 0}">`);
+	}
+
+	async function openShare() {
+		if (!state.chat) {
+			notify(t('Send a message first; there is nothing to share yet.'), 'info');
+			return;
+		}
+		$panel.find('.aichat-share-body').html('<i class="fa fa-spinner fa-pulse"></i>');
+		$panel.find('.aichat-share-overlay').addClass('show');
+		try {
+			renderShare((await api('GET', 'chats/' + state.chat.id + '/share')).data);
+		} catch (error) {
+			$panel.find('.aichat-share-overlay').removeClass('show');
+			notify(error.message);
+		}
+	}
+
+	async function createShare() {
+		const days = parseInt($panel.find('.aichat-share-days').val(), 10) || 0;
+		const $button = $panel.find('.aichat-share-create').prop('disabled', true);
+		try {
+			const share = (await api('POST', 'chats/' + state.chat.id + '/share', { days: days })).data;
+			renderShare(share);
+			copyText(shareLink(share));
+		} catch (error) {
+			notify(error.message);
+			$button.prop('disabled', false);
+		}
+	}
+
+	async function stopShare() {
+		if (!(await confirmDialog(t('Stop sharing?'), t('The link stops working for everyone.'), t('Stop sharing')))) {
+			return;
+		}
+		try {
+			await api('DELETE', 'chats/' + state.chat.id + '/share');
+			renderShare(null);
+			notify(t('The link no longer works'), 'success');
+		} catch (error) {
+			notify(error.message);
+		}
+	}
+
 	function openSettings() {
 		const $select = $panel.find('.aichat-pref-model').empty();
 		$select.append($('<option value="">').text(t('Server default') + (state.defaultModel ? ' (' + state.defaultModel + ')' : '')));
@@ -1891,6 +1997,18 @@
 		$panel.on('click', '.aichat-export-md', function (e) {
 			e.preventDefault();
 			exportChat('md');
+		});
+		$panel.on('click', '.aichat-share', function (e) {
+			e.preventDefault();
+			openShare();
+		});
+		$panel.on('click', '.aichat-share-close', function () {
+			$panel.find('.aichat-share-overlay').removeClass('show');
+		});
+		$panel.on('click', '.aichat-share-create', createShare);
+		$panel.on('click', '.aichat-share-stop', stopShare);
+		$panel.on('click', '.aichat-share-copy', function () {
+			copyText($panel.find('.aichat-share-link').val());
 		});
 		$panel.on('click', '.aichat-export-json', function (e) {
 			e.preventDefault();
