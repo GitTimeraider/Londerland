@@ -6,7 +6,6 @@ class Londerland
 {
 	// Use Custom Functions From Traits;
 	use TwoFAFunctions;
-	use ApiFunctions;
 	use AuditFunctions;
 	use AuthFunctions;
 	use BackupFunctions;
@@ -17,8 +16,6 @@ class Londerland
 	use OptionsFunction;
 	use LonderlandFunctions;
 	use LoginNetworkFunctions;
-	use PluginFunctions;
-	use StaticFunctions;
 	use SSOFunctions;
 	use SiteFunctions;
 	use TokenFunctions;
