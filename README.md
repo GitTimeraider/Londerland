@@ -250,6 +250,10 @@ Things that change for existing setups:
 
 - Everybody has to log in once more, because the login cookies have new names.
 - Reverse proxy authentication sends `X-Londerland-User`, `X-Londerland-Email` and `X-Londerland-Group` instead of the old `X-Organizr-*` headers, and the `organizr-auth` route is now `londerland-auth`. Update your proxy configuration if you use them.
+- Logging in with Plex, Emby or Jellyfin, Plex and Jellyfin single sign-on, and importing users from them are not available.
+  If Organizr used one of them as its login backend, Londerland switches to its own passwords (their settings and saved Plex
+  tokens are removed). Users who only ever logged in that way need a Londerland password: an admin sets one under
+  **Settings > User Management > Manage Users**, or, when e-mail (PHPMailer) is set up, they use **Forgot pwd?** on the login page.
 - Plugins and themes downloaded from the Organizr marketplace are not supported. The marketplaces and the in-app updater are gone; update by pulling a new image.
 
 ## Run without Docker
