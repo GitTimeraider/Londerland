@@ -513,7 +513,10 @@
 			$panel.addClass('aichat-sidebar-hidden');
 		}
 		fitToScreen();
-		$panel.find('.aichat-input').trigger('focus');
+		// on touch screens a focused field opens the on-screen keyboard, which covers half the chat: wait for a tap
+		if (!touchTyping()) {
+			$panel.find('.aichat-input').trigger('focus');
+		}
 		if (state.initialized) {
 			return;
 		}
@@ -539,18 +542,21 @@
 	}
 
 	/**
-	 * Full screen chat instead of the floating window: on narrow screens, and on touch screens that are low, such as a
-	 * phone held sideways (wider than 768px, but too low for the floating window, which then lost its top) or a tablet
-	 * with the on-screen keyboard open. The body gets the class aichat-compact, which aichat.css uses.
+	 * Full screen chat instead of the floating window: on narrow screens, and on phones held sideways (wider than
+	 * 768px, but too low for the floating window, which then lost its top). Phones and tablets are told apart by the
+	 * screen's short side, which the on-screen keyboard does not change. The body gets the class aichat-compact.
 	 */
 	function isCompact() {
 		if (window.innerWidth < 768) {
 			return true;
 		}
-		const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-		return touchTyping() && height < 600;
+		return touchTyping() && Math.min(window.screen.width, window.screen.height) < 600;
 	}
 
+	/**
+	 * Sets the body classes aichat.css sizes the chat with: aichat-compact (full screen, see isCompact()) or
+	 * aichat-touch (tablets: the floating window without the chat bubble under it, which only took room there).
+	 */
 	function updateCompact() {
 		const compact = isCompact();
 		const $body = $('body');
@@ -558,14 +564,15 @@
 			// the history covers the whole chat in full screen: start with it closed
 			$panel.addClass('aichat-sidebar-hidden');
 		}
-		$body.toggleClass('aichat-compact', compact);
+		$body.toggleClass('aichat-compact', compact).toggleClass('aichat-touch', !compact && touchTyping());
 		return compact;
 	}
 
 	/**
-	 * Phones: an on-screen keyboard covers the bottom of the screen, and the browser then pushes the whole page up,
-	 * so the chat's header went out of sight. The full screen chat is fitted to the part of the screen that is still
+	 * Phones and tablets: an on-screen keyboard covers the bottom of the screen, and the browser then pushes the whole
+	 * page up, so the chat's header went out of sight. The chat is fitted to the part of the screen that is still
 	 * visible instead: the header stays on top, the message list gets shorter and keeps showing its latest lines.
+	 * Full screen on phones; on tablets only while the keyboard is open (the floating window fits otherwise).
 	 */
 	function fitToScreen() {
 		const viewport = window.visualViewport;
@@ -573,13 +580,15 @@
 		if (!viewport || !$panel) {
 			return;
 		}
-		if (!$('body').hasClass('aichat-open') || !compact) {
-			$panel.css({ top: '', height: '' });
+		const keyboard = !compact && touchTyping() && viewport.height < window.innerHeight - 80;
+		if (!$('body').hasClass('aichat-open') || (!compact && !keyboard)) {
+			$panel.css({ top: '', bottom: '', height: '' });
 			return;
 		}
 		const messages = $panel.find('.aichat-messages')[0];
 		const fromBottom = messages ? messages.scrollHeight - messages.scrollTop - messages.clientHeight : 0;
-		$panel.css({ top: viewport.offsetTop + 'px', height: viewport.height + 'px' });
+		const margin = compact ? 0 : 8;
+		$panel.css({ top: viewport.offsetTop + margin + 'px', bottom: 'auto', height: viewport.height - margin * 2 + 'px' });
 		if (messages) {
 			messages.scrollTop = messages.scrollHeight - messages.clientHeight - fromBottom;
 		}
