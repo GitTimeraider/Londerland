@@ -30,11 +30,15 @@ website, not like a wall of server tiles.
   using `api/v2/auth`.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
-- **AI Chat** with web search, reading web pages and image generation ([details below](#ai-chat)).
-- **Achievements and My Stats**: badges for using Londerland and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
-- **Bookmarks**: a page with your favourite links in categories, with icons, colours and search ([details below](#bookmarks)).
+- **Website**: an announcement bar, search engine and link preview settings with robots.txt and sitemap.xml, and installing
+  Londerland as an app on phones and computers ([details below](#website-announcement-seo-and-install-as-app)).
+- **Command palette**: press Ctrl+K (Cmd+K on a Mac) to jump to any tab, bookmark, settings page or action ([details below](#command-palette)).
+- **AI Chat** with web search, reading web pages, image generation and read-only public links to a chat ([details below](#ai-chat)).
+- **Achievements and My Stats**: badges, XP, levels and daily quests for using Londerland, and a page with statistics about your own account ([details below](#achievements-and-my-stats)).
+- **Bookmarks**: a page with your favourite links in categories, with icons, colours, search, and import and export of browser bookmark files ([details below](#bookmarks)).
 - **Works on phones and tablets.**
-- **Admin tools**: scheduled backups, a log viewer, an image manager and a built-in API with documentation (`/docs`).
+- **Admin tools**: scheduled backups, a log viewer, an audit log of who changed what ([details below](#audit-log)), an image manager
+  and a built-in API with documentation (`/docs`).
 
 ## Using it as a public website
 
@@ -44,6 +48,8 @@ website, not like a wall of server tiles.
 3. In Londerland, open **Settings > Customize** and set the title, description, logo, favicon, theme and login page.
 4. Add the pages visitors should see as tabs under **Settings > Tab Editor** and set their group to **Guest**.
    Mark one of them as the default tab: that is the page visitors land on. Everything else stays for members only.
+5. Under **Settings > Customize > Website > SEO & Sharing**, fill in the public address of the site so link previews,
+   the canonical link and the sitemap use it ([details below](#website-announcement-seo-and-install-as-app)).
 
 ## Install with Docker
 
@@ -259,6 +265,75 @@ npm ci && npm run build
 Point the web server at the repository folder and make the `data` folder writable for the web server user.
 Run `php cron.php` every minute (for example with cron) for scheduled jobs such as backups.
 
+`/robots.txt` and `/sitemap.xml` are made by Londerland. With Apache, add these lines inside the `<Directory>` block of
+the Londerland folder in the site's configuration (the Docker image already has them); with Nginx, add the `rewrite`
+line to the `server` block:
+
+```apache
+RewriteEngine On
+RewriteRule ^(robots\.txt|sitemap\.xml)$ api/v2/index.php [L]
+```
+
+```nginx
+rewrite ^/(robots\.txt|sitemap\.xml)$ /api/v2/index.php last;
+```
+
+## Website: announcement, SEO and install as app
+
+In Londerland, open **Settings > Customize > Website**. It has three parts; click **Save** after a change.
+
+**Announcement** puts a coloured bar with a message under the top bar.
+
+- **Show the announcement** switches it on. **Visitors can close it**: a closed bar stays closed in that browser until you change the message.
+- **Message**: plain text. `**text**` makes text bold, `[text](https://address)` makes a link, and addresses starting with `https://` become links by themselves.
+- **Colour**, **Shown to** (empty = everyone, guests included), and optional **Show from** / **Show until** times in the container's time zone (`TZ`).
+- Without an announcement to show, nothing extra is sent to the browser, so it costs no loading time.
+
+**SEO & Sharing** sets what search engines and link previews (chat apps, social media) see.
+
+- **Public address of the site** (for example `https://example.com/`): used for the canonical link, `og:url` and the sitemap.
+- **Search engines**: allow the site in search results, or keep it out (robots meta tag, `X-Robots-Tag` header and robots.txt).
+- **Author**, **Link preview image** (1200 x 630 pixels works everywhere), preview size and an X / Twitter account.
+- Verification codes for **Google Search Console** and **Bing Webmaster Tools** (only the code from `content="..."`).
+- **Structured data (JSON-LD)** and **sitemap.xml** (served at `/sitemap.xml`).
+- **Own robots.txt**: leave empty for a generated one, served at `/robots.txt`.
+
+**Install as App** lets visitors install Londerland like an app, with its own window and icon.
+
+- Switch on **Can be installed as an app**. Browsers only allow this over HTTPS (or on `localhost`).
+- Chrome and Edge then show **Install app** in the user menu (your name, top right) and an install icon in the address bar.
+  On an iPhone or iPad: Safari > Share > **Add to Home Screen**. On Android: Chrome menu > **Install app** / **Add to Home screen**.
+- **Offline page**: shows a page with a retry button instead of the browser's error when the server cannot be reached.
+  Nothing else is stored on the device: pages and data always come from the server.
+- App name and short name, window style, orientation, title bar and start screen colours, and your own 192 x 192 and
+  512 x 512 PNG icons (upload them with the Image Manager and use their `data/userTabs/...` address).
+
+## Command palette
+
+Press **Ctrl+K** (**Cmd+K** on a Mac) anywhere in Londerland, or click the magnifying glass in the top bar, and type:
+
+- your **tabs** (Enter opens it, **Shift+Enter** opens it in a new browser tab),
+- **bookmarks** of your group (when the Bookmarks plugin is on),
+- **actions**: reload or close the open tab, full screen, account settings, My Stats, install app, lock screen, log out,
+- **settings pages** (admins), for example "website", "users" or "audit".
+
+Use the arrow keys and Enter, or click. What you picked recently is at the top. The palette is only downloaded the first
+time you open it, so it adds nothing to the normal loading time. Inside a tab that shows another website, click Londerland's
+top bar first: keys pressed inside another site stay in that site.
+
+## Audit Log
+
+In Londerland, open **Settings > System Settings > Audit Log** (admins only; co-admins do not see it). It lists who did
+what and when, with their IP address:
+
+- sign-ins, failed sign-ins, wrong two-factor codes, lock-outs and sign-outs,
+- changed settings (only the names of the settings, never their values, which can be passwords or API keys),
+- added, changed, sorted and deleted tabs, categories, users and groups, locked and unlocked users,
+- plugins switched on or off, uploaded and deleted images, created and deleted backups, imported bookmarks and stopped chat links.
+
+Search and filter by type at the top, page through older entries, **Export CSV** to download them, or **Clear** the log.
+Choose how many days entries are kept (365 by default, 0 = forever) or switch the log off.
+
 ## AI Chat
 
 Londerland has a built-in AI chat for logged in users. It works with any server that speaks the OpenAI API (`/v1/chat/completions`):
@@ -276,6 +351,9 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
    - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search by themselves.
    - **Images (optional):** turn on image generation through an OpenAI-compatible `/images/generations` endpoint (for example `https://api.openai.com/v1` with `gpt-image-1`). Leave URL and key empty to use the chat server. Claude cannot create images, so use a different server here when chatting with Claude. Optionally let tool-calling models create images by themselves.
    - **Uploads:** whether users may add images and files, and the size limit.
+   - **Sharing (optional, off by default):** **Allow public links** lets users make a read-only link to one of their chats,
+     and **Groups that may share** limits who may (empty = every group with AI Chat). **Shared chats** lists every link
+     with its views, and **Stop** turns one off.
    - **Usage Limits (optional, [OmniRoute](https://github.com/diegosouzapw/OmniRoute) only):** show the used percentage of each OmniRoute connection (for example the 5 hour and weekly limits of Claude Code) to admins or to everyone. In the OmniRoute dashboard, under **API Manager**, open the API key Londerland uses and turn on **Own Cost and Token Usage** and **Shared Account Quota** (under Self-Service Visibility). A key with the `manage` scope also works and shows the connection names. Fill in the OmniRoute address only if the API Base URL is not OmniRoute (for example `http://omniroute:20128`), and `claude` under Providers to Show to list only Claude connections.
 3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
 
@@ -295,6 +373,11 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 - **Search** button (globe): the web is searched first. The answer cites its sources as clickable [1], [2] links, with a list of sources under it.
 - **Image** button: your message becomes a picture, shown in the chat with a download button. "Answer again" creates a new version.
 - A full-screen layout on phones.
+- **Share** (in the chat's ⋮ menu, when the admin allows it): makes a link anyone can open without logging in. Choose how long
+  it works (1 day to 1 year, or until you stop it), then copy it. The link shows the questions and answers as they are
+  when you make it: no attached files or pictures, no custom instructions, no reasoning and not your name. **Update with
+  new messages** makes a new link with the chat as it is now (the old link stops), and **Stop sharing** turns it off.
+  Deleting the chat also stops the link. Search engines are asked not to index shared chats.
 
 The API key stays on the Londerland server and is never sent to browsers. Chats and uploads are stored per user
 (uploads in `data/aichat`, readable only through Londerland's API).
@@ -306,17 +389,25 @@ Logged in users collect badges by using Londerland, and see statistics about the
 **Setting it up (as admin):** in Londerland, open **Settings > Plugins > Inactive** and enable **Achievements**.
 Then open **Settings > Plugins > Active** and click its settings icon to choose:
 
-- **Options:** which groups collect badges (guests have no account, so they never do), whether a message pops up when
-  a badge is unlocked, whether My Stats shows a leaderboard (top 10 by number of badges), and badges to switch off.
-- **Users:** how many badges, active days and opened tabs each user has, and a button that resets everything.
+- **Options:** which groups collect badges (guests have no account, so they never do), **XP, levels and daily quests**
+  (on by default), whether a message pops up when a badge is unlocked, a quest is done or a level is reached, whether
+  My Stats shows a leaderboard (top 10 by XP, or by badges while XP is off), and badges to switch off.
+- **Users:** the level, XP, badges, active days and opened tabs of each user, and a button that resets everything.
 
 **Using it:** open the user menu (your name, top right) and click **My Stats**. The page shows:
 
 - Account: account age, sign-in method (standard or OpenID Connect, with or without two-factor), signed-in devices, previous visit.
 - Activity: visits, active days, current and best streak (days in a row), tabs opened, different tabs, AI chats and messages (when AI Chat is enabled).
 - Charts of when you use Londerland (hour of the day, day of the week) and your most opened tabs.
-- All badges with their progress, for example Uptime 99.9% (30 active days), Port Scanner (5 different tabs),
-  Night Shift (a visit after midnight), Thank Your Sysadmin (SysAdmin Day) and a few secret ones.
+- Your **level** and title (from Intern and Sysadmin up to Root and Uptime Legend) with a bar showing the XP to the next level.
+- **Daily quests**: three small tasks that change every day at midnight (your own time), for example "Open 3 different
+  tabs", "Use split view once" or "Open the command palette twice". Each gives XP, and finishing all three gives a bonus.
+- All badges with their progress and XP, for example Uptime 99.9% (30 active days), Port Scanner (5 different tabs),
+  Night Shift (a visit after midnight), Thank Your Sysadmin (SysAdmin Day), Perfect Day (all quests in one day) and a few secret ones.
+
+XP comes from badges (50, more for secret and long-term ones), from the first visit of every day (10, plus 2 for every
+day of your streak, up to 30) and from daily quests. Accounts that had badges before XP existed start with the XP of
+their badges and active days.
 
 The browser only reports small events (a visit, a tab that was opened); counting and unlocking happens on the server, per user.
 
@@ -336,6 +427,18 @@ browser tab, whether there is a search box, and the layout (tiles, a list with t
   an icon (search Londerland's icons or images, or type an image address), colours, and on/off.
 - Click a bookmark to change or delete it, and drag bookmarks (also to another category) or categories to sort them.
 - Click **Done** when you are finished.
+
+**Importing bookmarks from your browser (as admin):** first export them from the browser, which gives an `.html` file:
+Chrome and Edge: Bookmarks manager (Ctrl+Shift+O) > ⋮ > **Export bookmarks**; Firefox: Bookmarks > Manage bookmarks
+(Ctrl+Shift+O) > Import and Backup > **Export Bookmarks to HTML**; Safari: File > **Export Bookmarks**. Then open the
+**Bookmarks** tab, click **Edit** and **Import**, choose the file and:
+
+- **Visible for**: the group that sees the imported bookmarks (and all higher groups).
+- **Categories**: one category per browser folder (folders with the same name as an existing category go into it), or all in one category.
+- **Skip links that are already a bookmark** (on by default). `javascript:` and `data:` links are always skipped.
+
+**Exporting:** the **Export** button downloads the bookmarks you can see as an `.html` file (admins get all of them, one
+folder per category) that every browser can import.
 
 **Using it:** everyone who may open the Bookmarks tab sees the bookmarks of their group. Type in the search box to
 filter (press `/` to jump there, Enter opens the first result), and click a category name to fold it away.

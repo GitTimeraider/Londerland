@@ -958,6 +958,7 @@ class Achievements extends Londerland
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Logged in users in the chosen groups collect badges by using Londerland: visiting on several days, opening tabs, special days and a few secrets.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">They find their badges and statistics under My Stats in the user menu (top right).</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Guests have no account, so they never collect badges.</span></li>
+										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">With XP, levels and daily quests on, badges, daily visits (more during a streak) and three daily quests give XP; levels go from Guest Account and Intern up to Root and Uptime Legend.</span></li>
 										<li><i class="fa fa-chevron-right text-info"></i> <span lang="en">Prompt Engineer and Token Burner only appear while AI Chat is enabled, Bookworm only while Bookmarks is enabled.</span></li>
 									</ul>
 								</div>
