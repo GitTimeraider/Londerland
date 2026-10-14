@@ -318,8 +318,9 @@ what and when, with their IP address:
 
 - sign-ins, failed sign-ins, wrong two-factor codes, lock-outs and sign-outs,
 - changed settings (only the names of the settings, never their values, which can be passwords or API keys),
-- added, changed, sorted and deleted tabs, categories, users and groups, locked and unlocked users,
-- plugins switched on or off, uploaded and deleted images, created and deleted backups, imported bookmarks and stopped chat links.
+- added, changed, sorted and deleted tabs, categories, users and groups, locked and unlocked users, passwords reset by e-mail,
+- plugins switched on or off, uploaded and deleted images, created and deleted backups, imported bookmarks, reset achievements
+  and chat links stopped by an admin.
 
 Search and filter by type at the top, page through older entries, **Export CSV** to download them, or **Clear** the log.
 Choose how many days entries are kept (365 by default, 0 = forever) or switch the log off.
@@ -333,17 +334,20 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
 
 1. In Londerland, open **Settings > Plugins > Inactive** and enable **AI Chat**.
 2. Open **Settings > Plugins > Active**, click the settings icon of **AI Chat** and fill in:
+   - **Groups:** switch AI Chat on or off per group (guests never get it), and optionally limit the models a group may use
+     (comma separated, `*` works as a wildcard; empty = every allowed model).
    - **Connection:** the API Base URL up to and including `/v1` (for example `https://api.openai.com/v1`, `https://api.anthropic.com/v1/` or `http://ollama:11434/v1`) and the API key (leave it empty for servers without one).
    - **Models:** the default model, and optionally which models users may pick (`*` works as a wildcard) or extra model IDs the server does not list.
-   - **Chat:** the minimum group that gets the chat (guests never do), a system prompt, temperature, answer length and how many earlier messages are sent along.
+   - **Chat:** a system prompt, temperature, answer length, how many earlier messages are sent along (and whether the dropped ones are summarized), and whether chats get a name automatically.
      **Delete Chats After** removes chats nobody wrote in for that many days (0 = never). Users can mark a chat as **Keep** to save it permanently.
      The check runs every hour through `cron.php` (the Docker image runs it by itself) and whenever a user opens the chat list.
-   - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search by themselves.
+   - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search and read pages by themselves; **Tool Steps per Answer** (default 6) is how often they may do that before they have to answer.
    - **Images (optional):** turn on image generation through an OpenAI-compatible `/images/generations` endpoint (for example `https://api.openai.com/v1` with `gpt-image-1`). Leave URL and key empty to use the chat server. Claude cannot create images, so use a different server here when chatting with Claude. Optionally let tool-calling models create images by themselves.
-   - **Uploads:** whether users may add images and files, and the size limit.
+   - **Uploads:** whether users may add images and files, the size limit, and how large and how many earlier images are sent along.
    - **Sharing (optional, off by default):** **Allow public links** lets users make a read-only link to one of their chats,
      and **Groups that may share** limits who may (empty = every group with AI Chat). **Shared chats** lists every link
      with its views, and **Stop** turns one off.
+   - **Chat Button:** a short name under "AI" on the chat button and its colour.
    - **Usage Limits (optional, [OmniRoute](https://github.com/diegosouzapw/OmniRoute) only):** show the used percentage of each OmniRoute connection (for example the 5 hour and weekly limits of Claude Code) to admins or to everyone. In the OmniRoute dashboard, under **API Manager**, open the API key Londerland uses and turn on **Own Cost and Token Usage** and **Shared Account Quota** (under Self-Service Visibility). A key with the `manage` scope also works and shows the connection names. Fill in the OmniRoute address only if the API Base URL is not OmniRoute (for example `http://omniroute:20128`), and `claude` under Providers to Show to list only Claude connections.
 3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
 
