@@ -3029,3 +3029,11 @@ select.form-control:not([multiple]):not([size]) {
   margin: 0;
 }
 
+
+/* User menu > Install app: only while the browser offers installing (Settings > Customize > Website > Install as App) */
+.install-app-item {
+  display: none;
+}
+html.can-install-app .install-app-item {
+  display: list-item;
+}

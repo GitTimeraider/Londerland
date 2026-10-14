@@ -1423,6 +1423,21 @@ function buildFormItem(item) {
         attr +
         ' autocomplete="new-password" />'
       );
+    case "datetime":
+      return (
+        smallLabel +
+        '<input data-changed="false" type="datetime-local" class="form-control' +
+        extraClass +
+        '"' +
+        value +
+        id +
+        name +
+        disabled +
+        type +
+        label +
+        attr +
+        " />"
+      );
     case "textbox":
       return (
         smallLabel +
@@ -2002,6 +2017,31 @@ function buildCustomizeAppearance() {
     .fail(function (xhr) {
       LonderlandApiError(xhr);
     });
+}
+function buildCustomizeSite() {
+  londerlandAPI2("GET", "api/v2/settings/site")
+    .done(function (data) {
+      try {
+        var response = data.response;
+      } catch (e) {
+        londerlandCatchError(e, data);
+      }
+      $("#customize-site-form").html(buildFormGroup(response.data));
+      initColorPickers("input.pick-a-color-custom-options");
+    })
+    .fail(function (xhr) {
+      LonderlandApiError(xhr);
+    });
+}
+// User menu > Install app: only shown while the browser offers it (beforeinstallprompt, see pwaHead() in PHP)
+function installApp() {
+  var prompt = window.londerlandInstallPrompt;
+  if (!prompt) {
+    return;
+  }
+  window.londerlandInstallPrompt = null;
+  document.documentElement.classList.remove("can-install-app");
+  prompt.prompt();
 }
 function buildSSO() {
   londerlandAPI2("GET", "api/v2/settings/sso")
@@ -2686,6 +2726,7 @@ function userMenu(user) {
 					<li><hr class="dropdown-divider"></li>
 					<li class="append-menu"><a class="inline-popups" href="#account-area" data-effect="mfp-zoom-out"><i class="ti-settings fa-fw"></i> <span lang="en">Account Settings</span></a></li>
 					<li><hr class="dropdown-divider"></li>
+					<li class="install-app-item"><a href="javascript:void(0)" onclick="installApp();"><i class="fa fa-download fa-fw"></i> <span lang="en">Install app</span></a></li>
 					<li><a href="javascript:void(0)" onclick="lock();"><i class="ti-lock fa-fw"></i> <span lang="en">Lock Screen</span></a></li>
 					${showDebug}
 					<li><a href="javascript:void(0)" onclick="logout();"><i class="fa fa-sign-out fa-fw"></i> <span lang="en">Logout</span></a></li>
@@ -2733,6 +2774,7 @@ function userMenu(user) {
 						</li>
 						<li><hr class="dropdown-divider"></li>
 						<li class="append-menu"><a href="javascript:void(0)" class="show-login"><i class="fa fa-sign-in fa-fw"></i> <span lang="en">Login/Register</span></a></li>
+						<li class="install-app-item"><a href="javascript:void(0)" onclick="installApp();"><i class="fa fa-download fa-fw"></i> <span lang="en">Install app</span></a></li>
 					</ul><!-- /.dropdown-user -->
 				</li><!-- /.dropdown -->
 		`;

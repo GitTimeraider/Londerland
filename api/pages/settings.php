@@ -75,6 +75,10 @@ function get_page_settings($Londerland)
 								<h2 lang="en">Loading...</h2>
 								<div class="clearfix"></div>
 							</div>
+							<div role="tabpanel" class="tab-pane fade" id="settings-customize-site">
+								<h2 lang="en">Loading...</h2>
+								<div class="clearfix"></div>
+							</div>
 						</div>
 					</section>
 					<! -- USER MANAGEMENT -->

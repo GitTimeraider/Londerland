@@ -19,6 +19,7 @@ class Londerland
 	use PluginFunctions;
 	use StaticFunctions;
 	use SSOFunctions;
+	use SiteFunctions;
 	use TokenFunctions;
 	use UpgradeFunctions;
 
@@ -2886,6 +2887,12 @@ HTML;
 				'api' => 'api/v2/page/settings_customize_appearance',
 				'anchor' => 'settings-customize-appearance-anchor',
 				'name' => 'Appearance',
+			],
+			[
+				'active' => false,
+				'api' => 'api/v2/page/settings_customize_site',
+				'anchor' => 'settings-customize-site-anchor',
+				'name' => 'Website',
 			],
 		];
 		$tabEditorMenu = [

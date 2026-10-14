@@ -11,8 +11,9 @@ $Londerland = new Londerland(true);
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
           name="viewport">
     <meta content="<?php echo $Londerland->config['description']; ?>" name="description">
-    <meta content="Londerland" name="author">
-	<?php echo $Londerland->favIcons(); ?>
+	<?php echo $Londerland->seoHead(); ?>
+	<?php echo $Londerland->siteFavIcons(); ?>
+	<?php echo $Londerland->pwaHead(); ?>
     <title><?php echo $Londerland->config['title']; ?></title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -122,6 +123,7 @@ $Londerland = new Londerland(true);
         </div>
     </nav>
     <!-- End Top Navigation -->
+	<?php echo $Londerland->announcementHTML(); ?>
     <!-- ============================================================== -->
     <!-- Left Sidebar - style you can find in sidebar.scss  -->
     <!-- ============================================================== -->
