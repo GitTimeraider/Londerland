@@ -24,7 +24,6 @@ $GLOBALS['bypass'] = array(
 	'/api/v2/login',
 	'/api/v2/wizard/path',
 	'/api/v2/login/api',
-	'/api/v2/plex/register',
 	'/api/v2/oidc/providers'
 );
 $GLOBALS['responseCode'] = 200;

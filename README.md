@@ -25,7 +25,7 @@ website, not like a wall of server tiles.
   with a start tab per group.
 - **Visitors and members**: guest access, local accounts, e-mail (PHPMailer), groups that decide who sees what,
   login lockout after failed attempts and e-mails about new device logins.
-- **Sign in** with a local account, Plex, Emby/Jellyfin, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
+- **Sign in** with a local account, LDAP, FTP or OpenID Connect (Authentik, Keycloak, PocketID, Zitadel),
   with optional two-factor authentication, and reverse proxy authentication (Nginx `auth_request`, Traefik/Caddy forward auth)
   using `api/v2/auth`.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
@@ -174,7 +174,7 @@ Set `LONDERLAND_LOGIN_ALLOWED_IPS` to make logging in possible only from your ho
 ```
 
 Visitors from any other address see a **Login not allowed** page (with the address Londerland sees for them) instead of the
-login form. Every way of logging in is refused for them: username and password, Plex, Emby/Jellyfin, OpenID Connect,
+login form. Every way of logging in is refused for them: username and password, OpenID Connect,
 reverse proxy header login, registering, password recovery and the setup wizard. Pages and tabs meant for guests stay visible,
 so the public part of your site keeps working. People who are already logged in stay logged in until their login expires.
 Each refused attempt is written to Londerland's log.

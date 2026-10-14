@@ -28,141 +28,6 @@ trait LonderlandFunctions
 		return ($file !== '') ? '<link href="' . $rootPath . $file . '?v=' . trim($this->fileHash) . '" rel="stylesheet">' . "\n" : '';
 	}
 
-	public function embyJoinAPI($array)
-	{
-		$username = ($array['username']) ?? null;
-		$email = ($array['email']) ?? null;
-		$password = ($array['password']) ?? null;
-		if (!$username) {
-			$this->setAPIResponse('error', 'Username not supplied', 422);
-			return false;
-		}
-		if (!$email) {
-			$this->setAPIResponse('error', 'Email not supplied', 422);
-			return false;
-		}
-		if (!$password) {
-			$this->setAPIResponse('error', 'Password not supplied', 422);
-			return false;
-		}
-		return $this->embyJoin($username, $email, $password);
-	}
-
-	public function embyJoin($username, $email, $password)
-	{
-		try {
-			#create user in emby.
-			$headers = array(
-				"Accept" => "application/json"
-			);
-			$data = array();
-			$url = $this->config['embyURL'] . '/emby/Users/New?name=' . $username . '&api_key=' . $this->config['embyToken'];
-			$response = \WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
-			$response = $response->body;
-			//return($response);
-			$response = json_decode($response, true);
-			//return($response);
-			$userID = $response["Id"];
-			//return($userID);
-			#authenticate as user to update password.
-			//randomizer four digits of DeviceId
-			// I dont think ther would be security problems with hardcoding deviceID but randomizing it would mitigate any issue.
-			$deviceIdSeceret = rand(0, 9) . "" . rand(0, 9) . "" . rand(0, 9) . "" . rand(0, 9);
-			//hardcoded device id with the first three digits random 0-9,0-9,0-9,0-9
-			$embyAuthHeader = 'MediaBrowser Client="Emby Mobile", Device="Firefox", DeviceId="' . $deviceIdSeceret . 'aWxssS81LgAggFdpbmRvd3MgTlQgMTAuMDsgV2luNjxx7IHf2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzcyLjAuMzYyNi4xMTkgU2FmYXJpLzUzNy4zNnwxNTUxNTczMTAyNDI4", Version="4.0.2.0"';
-			$headers = array(
-				"Accept" => "application/json",
-				"Content-Type" => "application/json",
-				"X-Emby-Authorization" => $embyAuthHeader
-			);
-			$data = array(
-				"Pw" => "",
-				"Username" => $username
-			);
-			$url = $this->config['embyURL'] . '/emby/Users/AuthenticateByName';
-			$response = \WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
-			$response = $response->body;
-			$response = json_decode($response, true);
-			$userToken = $response["AccessToken"];
-			#update password
-			$embyAuthHeader = 'MediaBrowser Client="Emby Mobile", Device="Firefox", Token="' . $userToken . '", DeviceId="' . $deviceIdSeceret . 'aWxssS81LgAggFdpbmRvd3MgTlQgMTAuMDsgV2luNjxx7IHf2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzcyLjAuMzYyNi4xMTkgU2FmYXJpLzUzNy4zNnwxNTUxNTczMTAyNDI4", Version="4.0.2.0"';
-			$headers = array(
-				"Accept" => "application/json",
-				"Content-Type" => "application/json",
-				"X-Emby-Authorization" => $embyAuthHeader
-			);
-			$data = array(
-				"CurrentPw" => "",
-				"NewPw" => $password,
-				"Id" => $userID
-			);
-			$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Password';
-			\WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
-			#update config
-			$headers = array(
-				"Accept" => "application/json",
-				"Content-Type" => "application/json"
-			);
-			$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Policy?api_key=' . $this->config['embyToken'];
-			$response = \WpOrg\Requests\Requests::Post($url, $headers, $this->getEmbyTemplateUserJson(), array());
-			#add emby.media
-			try {
-				#seperate because this is not required
-				$headers = array(
-					"Accept" => "application/json",
-					"X-Emby-Authorization" => $embyAuthHeader
-				);
-				$data = array(
-					"ConnectUsername " => $email
-				);
-				$url = $this->config['embyURL'] . '/emby/Users/' . $userID . '/Connect/Link';
-				\WpOrg\Requests\Requests::Post($url, $headers, json_encode($data), array());
-			} catch (\WpOrg\Requests\Exception $e) {
-				$this->setLoggerChannel('Emby')->error($e);
-				$this->setResponse(500, $e->getMessage());
-				return false;
-			}
-			$this->setAPIResponse('success', 'User has joined Emby', 200);
-			return true;
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('Emby')->error($e);
-			$this->setResponse(500, $e->getMessage());
-			return false;
-		}
-	}
-
-	/*loads users from emby and returns a correctly formated policy for a new user.
-	*/
-	public function getEmbyTemplateUserJson()
-	{
-		$headers = array(
-			"Accept" => "application/json"
-		);
-		$data = array();
-		$url = $this->config['embyURL'] . '/emby/Users?api_key=' . $this->config['embyToken'];
-		$response = \WpOrg\Requests\Requests::Get($url, $headers, array());
-		$response = $response->body;
-		$response = json_decode($response, true);
-		//$correct stores the template users object
-		$correct = null;
-		foreach ($response as $element) {
-			if ($element['Name'] == ($this->config['INVITES-EmbyTemplate'] ?? '')) {
-				$correct = $element;
-			}
-		}
-		if ($correct == null) {
-			//return empty JSON if user incorrectly configured template
-			return "{}";
-		}
-		//select policy section and remove possibly dangerous rows.
-		$policy = $correct['Policy'];
-		unset($policy['AuthenticationProviderId']);
-		unset($policy['InvalidLoginAttemptCount']);
-		unset($policy['DisablePremiumFeatures']);
-		unset($policy['DisablePremiumFeatures']);
-		return (json_encode($policy));
-	}
-
 	public function approvedFileExtension($filename, $type = 'image')
 	{
 		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
@@ -361,27 +226,6 @@ trait LonderlandFunctions
 		return $backendOptions;
 	}
 
-	public function importUserButtons()
-	{
-		$emptyButtons = '
-		<div class="col-lg-12">
-            <div class="white-box bg-org">
-                <h3 class="box-title m-0" lang="en">Currently User import is available for Plex only.</h3> </div>
-        </div>
-	';
-		$buttons = '';
-		if (!empty($this->config['plexToken'])) {
-			$buttons .= '<button class="btn m-b-20 m-r-20 bg-plex text-muted waves-effect waves-light importUsersButton" onclick="importUsers(\'plex\')" type="button"><span class="btn-label"><i class="mdi mdi-plex"></i></span><span lang="en">Import Plex Users</span></button>';
-		}
-		if (!empty($this->config['jellyfinURL']) && !empty($this->config['jellyfinToken'])) {
-			$buttons .= '<button class="btn m-b-20 m-r-20 bg-primary text-muted waves-effect waves-light importUsersButton" onclick="importUsers(\'jellyfin\')" type="button"><span class="btn-label"><i class="mdi mdi-fish"></i></span><span lang="en">Import Jellyfin Users</span></button>';
-		}
-		if (!empty($this->config['embyURL']) && !empty($this->config['embyToken'])) {
-			$buttons .= '<button class="btn m-b-20 m-r-20 bg-emby text-muted waves-effect waves-light importUsersButton" onclick="importUsers(\'emby\')" type="button"><span class="btn-label"><i class="mdi mdi-emby"></i></span><span lang="en">Import Emby Users</span></button>';
-		}
-		return ($buttons !== '') ? $buttons : $emptyButtons;
-	}
-
 	public function checkFrame($array, $url)
 	{
 		if (array_key_exists("x-frame-options", $array)) {
@@ -471,43 +315,6 @@ trait LonderlandFunctions
 		}
 	}
 
-	public function checkoAuth()
-	{
-		return $this->config['plexoAuth'] && $this->config['authBackend'] == 'plex' && $this->config['authType'] !== 'internal';
-	}
-
-	public function checkoAuthOnly()
-	{
-		return $this->config['plexoAuth'] && $this->config['authBackend'] == 'plex' && $this->config['authType'] == 'external';
-	}
-
-	public function showoAuth()
-	{
-		$buttons = '';
-		if ($this->config['plexoAuth'] && $this->config['authBackend'] == 'plex' && $this->config['authType'] !== 'internal') {
-			$buttons .= '<a href="javascript:void(0)" onclick="oAuthStart(\'plex\')" class="btn btn-lg w-100 text-uppercase waves-effect waves-light bg-plex text-muted" data-bs-toggle="tooltip" title="" data-bs-title="Login with Plex"> <span>Login</span><i aria-hidden="true" class="mdi mdi-plex m-l-5"></i> </a>';
-		}
-		return ($buttons) ? '
-		<div class="card">
-            <div class="card-header bg-org" id="plex-login-heading" role="tab">
-            	<a class="card-title" data-bs-toggle="collapse" href="#plex-login-collapse" data-bs-parent="#login-panels" aria-expanded="false" aria-controls="londerland-login-collapse">
-	                <img class="lazyload loginTitle" data-src="plugins/images/tabs/plex.png"> &nbsp;
-                    <span class="text-uppercase fw300" lang="en">Login with Plex</span>
-            	</a>
-            </div>
-            <div class="card-collapse collapse show" id="plex-login-collapse" aria-labelledby="plex-login-heading" role="tabpanel">
-                <div class="card-body">
-               		<div class="row">
-			            <div class="col-12 col-md-12 col-lg-12 text-center">
-			                <div class="social m-b-0">' . $buttons . '</div>
-			            </div>
-			        </div>
-               </div>
-            </div>
-        </div>
-	' : '';
-	}
-
 	public function logoOrText()
 	{
 		$showLogo = $this->config['minimalLoginScreen'] ? '' : 'visible-xs';
@@ -588,16 +395,6 @@ trait LonderlandFunctions
 				$this->coookie('delete', $v);
 			}
 		}
-	}
-
-	public function clearJellyfinTokens()
-	{
-		foreach (array_keys($_COOKIE) as $k => $v) {
-			if (strpos($v, 'user-') !== false) {
-				$this->coookie('delete', $v);
-			}
-		}
-		$this->coookie('delete', 'jellyfin_credentials');
 	}
 
 	public function clearKomgaToken()

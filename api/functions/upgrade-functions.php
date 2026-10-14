@@ -147,6 +147,14 @@ trait UpgradeFunctions
 				$this->upgradeToVersion($versionCheck);
 			}
 			// End Upgrade check start for version above
+			// Upgrade check start for version below
+			$versionCheck = '2.2.5';
+			if ($compare->lessThan($oldVer, $versionCheck)) {
+				$updateDB = false;
+				$oldVer = $versionCheck;
+				$this->upgradeToVersion($versionCheck);
+			}
+			// End Upgrade check start for version above
 			if ($updateDB == true) {
 				//return 'Upgraded Needed - Current Version '.$oldVer.' - New Version: '.$versionCheck;
 				// Upgrade database to latest version
@@ -505,6 +513,9 @@ trait UpgradeFunctions
 			case '2.2.4':
 				$this->removeRetiredPlugins();
 				break;
+			case '2.2.5':
+				$this->removeMediaServerLogins();
+				break;
 		}
 		$this->setLoggerChannel('Upgrade')->notice('Finished upgrade to version ' . $version);
 		$this->setAPIResponse('success', 'Ran update function for version: ' . $version, 200);
@@ -544,6 +555,30 @@ trait UpgradeFunctions
 			$this->removeConfigItem(array_values($remove));
 		}
 		$this->setLoggerChannel('Upgrade')->info('Removed ' . count($remove) . ' settings of the removed Chat, Health Checks, Invites, Shuck Stop and Speed Test plugins');
+	}
+
+	// Signing in and SSO with Plex, Emby and Jellyfin were removed: their settings go from config.php,
+	// the Plex tokens saved with each user are cleared and a removed login backend falls back to Londerland passwords
+	public function removeMediaServerLogins()
+	{
+		$keys = ['plexToken', 'plexAdmin', 'plexID', 'plexoAuth', 'plexStrictFriends', 'ignoreTFAIfPlexOAuth', 'ssoPlex', 'embyURL', 'embyToken', 'jellyfinURL', 'jellyfinToken', 'jellyfinSSOURL', 'ssoJellyfin'];
+		$remove = array_values(array_intersect($keys, array_keys($this->config)));
+		if ($remove) {
+			$this->removeConfigItem($remove);
+			// the API tokens are not kept in the backup of removed settings
+			$config = $this->config;
+			unset($config['deletedConfigItems']['plexToken'], $config['deletedConfigItems']['embyToken'], $config['deletedConfigItems']['jellyfinToken']);
+			$this->config = $config;
+			$this->createConfig($config);
+		}
+		if (in_array($this->config['authBackend'], ['plex', 'emby_local', 'emby_connect', 'emby_all', 'jellyfin'], true)) {
+			$this->updateConfig(['authBackend' => '', 'authType' => 'internal']);
+		}
+		$this->processQueries([[
+			'function' => 'query',
+			'query' => ['UPDATE users SET', ['plex_token' => null], 'WHERE plex_token IS NOT NULL']
+		]]);
+		$this->setLoggerChannel('Upgrade')->info('Removed ' . count($remove) . ' Plex, Emby and Jellyfin settings and the saved Plex tokens');
 	}
 
 	public function removeOIDCFromAuthService()
@@ -674,13 +709,6 @@ trait UpgradeFunctions
 			if ($rootFolderMade) {
 				// Migrate over plugins folder
 				$this->makeDir($this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins');
-				$plexLibraries = $this->root . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'plexLibraries';
-				if (file_exists($plexLibraries)) {
-					if (rename($plexLibraries, $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'plexLibraries')) {
-						$this->setLoggerChannel('Migration');
-						$this->logger->info('The plugin folder "plexLibraries" was migrated to new data folder');
-					}
-				}
 				$test = $this->root . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'test';
 				if (file_exists($test)) {
 					if (rename($test, $this->root . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'test')) {

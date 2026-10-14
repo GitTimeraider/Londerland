@@ -99,17 +99,6 @@ $app->post('/users/unlock/{id}', function ($request, $response, $args) {
 		->withStatus($GLOBALS['responseCode']);
 	
 });
-$app->post('/users/import/{type}', function ($request, $response, $args) {
-	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
-	if ($Londerland->qualifyRequest(1, true)) {
-		$Londerland->importUsersType($args['type']);
-	}
-	$response->getBody()->write(jsonE($GLOBALS['api']));
-	return $response
-		->withHeader('Content-Type', 'application/json;charset=UTF-8')
-		->withStatus($GLOBALS['responseCode']);
-	
-});
 $app->post('/users/register', function ($request, $response, $args) {
 	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$Londerland->register($Londerland->apiData($request));

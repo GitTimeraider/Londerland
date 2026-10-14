@@ -26,20 +26,7 @@ class PhpMailer extends Londerland
 
 	public function _phpMailerPluginGetEmails()
 	{
-		$type = null;
-		if ($this->config['authBackend']) {
-			if ($this->config['authBackend'] == 'plex') {
-				$type = 'plex';
-			}
-		}
-		if ($type == 'plex') {
-			$emails = array_merge($this->userList('plex')['both'], $this->_phpMailerPluginGetOrgUsers());
-		} elseif ($type == 'emby') {
-			$emails = $this->_phpMailerPluginGetOrgUsers();
-		} else {
-			$emails = $this->_phpMailerPluginGetOrgUsers();
-		}
-		return $emails;
+		return $this->_phpMailerPluginGetOrgUsers();
 	}
 
 	public function _phpMailerPluginGetOrgUsers()

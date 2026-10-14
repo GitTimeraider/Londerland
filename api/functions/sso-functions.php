@@ -4,22 +4,10 @@ trait SSOFunctions
 {
 	public function ssoCookies()
 	{
-		$cookies = array(
-			'myPlexAccessToken' => $_COOKIE['mpt'] ?? false,
+		return array(
 			'id_token' => $_COOKIE['Auth'] ?? false,
-			'jellyfin_credentials' => $_COOKIE['jellyfin_credentials'] ?? false,
 			'komga_token' => $_COOKIE['komga_token'] ?? false
 		);
-		// Jellyfin cookie
-		foreach (array_keys($_COOKIE) as $k => $v) {
-			if (strpos($v, 'user-') !== false) {
-				$cookiesToAdd = [
-					$v => $_COOKIE[$v]
-				];
-				$cookies = array_merge($cookies, $cookiesToAdd);
-			}
-		}
-		return $cookies;
 	}
 
 	public function getSSOList($enabledOnly = false)
@@ -59,7 +47,6 @@ trait SSOFunctions
 	public function getSSOUserFor($app, $userobj)
 	{
 		$map = array(
-			'jellyfin' => 'username',
 			'ombi' => 'username',
 			'overseerr' => 'email',
 			'tautulli' => 'username',
@@ -69,19 +56,15 @@ trait SSOFunctions
 		return (gettype($userobj) == 'string') ? $userobj : $userobj[$map[$app]];
 	}
 
-	public function ssoCheck($userobj, $password, $token = null)
+	public function ssoCheck($userobj, $password)
 	{
 		$this->setCurrentUser(false);
 		$this->setLoggerChannel('Authentication', $this->user['username']);
 		$this->logger->debug('Starting SSO check function');
-		if ($this->config['ssoPlex'] && $token) {
-			$this->logger->debug('Setting Plex SSO cookie');
-			$this->coookie('set', 'mpt', $token, $this->config['rememberMeDays'], false);
-		}
 		if ($this->config['ssoOmbi']) {
 			$this->logger->debug('Starting Ombi SSO check function');
 			$fallback = ($this->config['ombiFallbackUser'] !== '' && $this->config['ombiFallbackPassword'] !== '');
-			$ombiToken = $this->getOmbiToken($this->getSSOUserFor('ombi', $userobj), $password, $token, $fallback);
+			$ombiToken = $this->getOmbiToken($this->getSSOUserFor('ombi', $userobj), $password, $fallback);
 			if ($ombiToken) {
 				$this->logger->debug('Setting Ombi SSO cookie');
 				$this->coookie('set', 'Auth', $ombiToken, $this->config['rememberMeDays'], false);
@@ -91,7 +74,7 @@ trait SSOFunctions
 		}
 		if ($this->config['ssoTautulli'] && $this->qualifyRequest($this->config['ssoTautulliAuth'])) {
 			$this->logger->debug('Starting Tautulli SSO check function');
-			$tautulliToken = $this->getTautulliToken($this->getSSOUserFor('tautulli', $userobj), $password, $token);
+			$tautulliToken = $this->getTautulliToken($this->getSSOUserFor('tautulli', $userobj), $password);
 			if ($tautulliToken) {
 				foreach ($tautulliToken as $key => $value) {
 					$this->logger->debug('Setting Tautulli SSO cookie');
@@ -101,22 +84,10 @@ trait SSOFunctions
 				$this->logger->debug('No Tautulli token received from backend');
 			}
 		}
-		if ($this->config['ssoJellyfin']) {
-			$this->logger->debug('Starting Jellyfin SSO check function');
-			$jellyfinToken = $this->getJellyfinToken($this->getSSOUserFor('jellyfin', $userobj), $password);
-			if ($jellyfinToken) {
-				foreach ($jellyfinToken as $k => $v) {
-					$this->logger->debug('Setting Jellyfin SSO cookie');
-					$this->coookie('set', $k, $v, $this->config['rememberMeDays'], false);
-				}
-			} else {
-				$this->logger->debug('No Jellyfin token received from backend');
-			}
-		}
 		if ($this->config['ssoOverseerr']) {
 			$this->logger->debug('Starting Overseerr SSO check function');
 			$fallback = ($this->config['overseerrFallbackUser'] !== '' && $this->config['overseerrFallbackPassword'] !== '');
-			$overseerrToken = $this->getOverseerrToken($this->getSSOUserFor('overseerr', $userobj), $password, $token, $fallback);
+			$overseerrToken = $this->getOverseerrToken($this->getSSOUserFor('overseerr', $userobj), $password, $fallback);
 			if ($overseerrToken) {
 				$this->logger->debug('Setting Overseerr SSO cookie');
 				$this->coookie('set', 'connect.sid', $overseerrToken, $this->config['rememberMeDays'], false);
@@ -127,7 +98,7 @@ trait SSOFunctions
 		if ($this->config['ssoPetio']) {
 			$this->logger->debug('Starting Petio SSO check function');
 			$fallback = ($this->config['petioFallbackUser'] !== '' && $this->config['petioFallbackPassword'] !== '');
-			$petioToken = $this->getPetioToken($this->getSSOUserFor('petio', $userobj), $password, $token, $fallback);
+			$petioToken = $this->getPetioToken($this->getSSOUserFor('petio', $userobj), $password, $fallback);
 			if ($petioToken) {
 				$this->logger->debug('Setting Petio SSO cookie');
 				$this->coookie('set', 'petio_jwt', $petioToken, $this->config['rememberMeDays'], false);
@@ -196,42 +167,7 @@ trait SSOFunctions
 		}
 	}
 
-	public function getJellyfinToken($username, $password)
-	{
-		$token = null;
-		try {
-			$url = $this->qualifyURL($this->config['jellyfinURL']);
-			$ssoUrl = $this->qualifyURL($this->config['jellyfinSSOURL']);
-			$headers = array(
-				'X-Emby-Authorization' => 'MediaBrowser Client="Londerland Jellyfin Tab", Device="Londerland_PHP", DeviceId="Londerland_SSO", Version="1.0"',
-				"Accept" => "application/json",
-				"Content-Type" => "application/json",
-				"X-Forwarded-For" => $this->userIP()
-			);
-			$data = array(
-				"Username" => $username,
-				"Pw" => $password
-			);
-			$endpoint = '/Users/authenticatebyname';
-			$options = $this->requestOptions($url, $this->getSSOTimeout());
-			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
-			if ($response->success) {
-				$token = json_decode($response->body, true);
-				$this->setLoggerChannel('JellyFin')->info('Grabbed token');
-				$key = 'user-' . $token['User']['Id'] . '-' . $token['ServerId'];
-				$jellyfin[$key] = json_encode($token['User']);
-				$jellyfin['jellyfin_credentials'] = '{"Servers":[{"ManualAddress":"' . $ssoUrl . '","Id":"' . $token['ServerId'] . '","UserId":"' . $token['User']['Id'] . '","AccessToken":"' . $token['AccessToken'] . '"}]}';
-				return $jellyfin;
-			} else {
-				$this->setLoggerChannel('JellyFin')->warning('JellyFin did not return Token');
-			}
-		} catch (\WpOrg\Requests\Exception $e) {
-			$this->setLoggerChannel('Jellyfin')->error($e);
-		}
-		return false;
-	}
-
-	public function getOmbiToken($username, $password, $oAuthToken = null, $fallback = false)
+	public function getOmbiToken($username, $password, $fallback = false)
 	{
 		$token = null;
 		try {
@@ -242,12 +178,11 @@ trait SSOFunctions
 				"X-Forwarded-For" => $this->userIP()
 			);
 			$data = array(
-				"username" => ($oAuthToken ? "" : $username),
-				"password" => ($oAuthToken ? "" : $password),
-				"rememberMe" => "true",
-				"plexToken" => $oAuthToken
+				"username" => $username,
+				"password" => $password,
+				"rememberMe" => "true"
 			);
-			$endpoint = ($oAuthToken) ? '/api/v1/Token/plextoken' : '/api/v1/Token';
+			$endpoint = '/api/v1/Token';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
 			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
@@ -266,13 +201,13 @@ trait SSOFunctions
 		if ($token) {
 			return $token;
 		} elseif ($fallback) {
-			return $this->getOmbiToken($this->config['ombiFallbackUser'], $this->decrypt($this->config['ombiFallbackPassword']), null, false);
+			return $this->getOmbiToken($this->config['ombiFallbackUser'], $this->decrypt($this->config['ombiFallbackPassword']), false);
 		} else {
 			return false;
 		}
 	}
 
-	public function getTautulliToken($username, $password, $plexToken = null)
+	public function getTautulliToken($username, $password)
 	{
 		$token = null;
 		$tautulliURLList = explode(',', $this->config['tautulliURL']);
@@ -287,9 +222,8 @@ trait SSOFunctions
 						"X-Forwarded-For" => $this->userIP()
 					);
 					$data = array(
-						"username" => ($plexToken ? "" : $username),
-						"password" => ($plexToken ? "" : $password),
-						"token" => $plexToken,
+						"username" => $username,
+						"password" => $password,
 						"remember_me" => 1,
 					);
 					$options = $this->requestOptions($url, $this->getSSOTimeout());
@@ -312,7 +246,7 @@ trait SSOFunctions
 		return ($token) ? $token : false;
 	}
 
-	public function getOverseerrToken($email, $password, $oAuthToken = null, $fallback = false)
+	public function getOverseerrToken($email, $password, $fallback = false)
 	{
 		$token = null;
 		try {
@@ -322,11 +256,10 @@ trait SSOFunctions
 				"X-Forwarded-For" => $this->userIP()
 			);
 			$data = array(
-				"email" => ($oAuthToken ? "" : $email), // not needed yet
-				"password" => ($oAuthToken ? "" : $password), // not needed yet
-				"authToken" => $oAuthToken
+				"email" => $email,
+				"password" => $password
 			);
-			$endpoint = ($oAuthToken ? '/api/v1/auth/plex' : '/api/v1/auth/local');
+			$endpoint = '/api/v1/auth/local';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
 			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
@@ -346,13 +279,13 @@ trait SSOFunctions
 		if ($token) {
 			return urldecode($token);
 		} elseif ($fallback) {
-			return $this->getOverseerrToken($this->config['overseerrFallbackUser'], $this->decrypt($this->config['overseerrFallbackPassword']), null, false);
+			return $this->getOverseerrToken($this->config['overseerrFallbackUser'], $this->decrypt($this->config['overseerrFallbackPassword']), false);
 		} else {
 			return false;
 		}
 	}
 
-	public function getPetioToken($username, $password, $oAuthToken = null, $fallback = false)
+	public function getPetioToken($username, $password, $fallback = false)
 	{
 		$token = null;
 		try {
@@ -363,14 +296,13 @@ trait SSOFunctions
 			);
 			$data = array(
 				'user' => [
-					'username' => ($oAuthToken ? '' : $username),
-					'password' => ($oAuthToken ? '' : $password),
+					'username' => $username,
+					'password' => $password,
 					'type' => 1,
 				],
-				'authToken' => false,
-				'token' => $oAuthToken
+				'authToken' => false
 			);
-			$endpoint = ($oAuthToken) ? '/api/login/plex_login' : '/api/login';
+			$endpoint = '/api/login';
 			$options = $this->requestOptions($url, $this->getSSOTimeout());
 			$response = \WpOrg\Requests\Requests::post($url . $endpoint, $headers, json_encode($data), $options);
 			if ($response->success) {
@@ -390,7 +322,7 @@ trait SSOFunctions
 		if ($token) {
 			return $token;
 		} elseif ($fallback) {
-			return $this->getPetioToken($this->config['petioFallbackUser'], $this->decrypt($this->config['petioFallbackPassword']), null, false);
+			return $this->getPetioToken($this->config['petioFallbackUser'], $this->decrypt($this->config['petioFallbackPassword']), false);
 		} else {
 			return false;
 		}

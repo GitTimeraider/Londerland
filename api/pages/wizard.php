@@ -198,7 +198,7 @@ function get_page_wizard($Londerland)
                                     <div class="card-wrapper collapse show" aria-expanded="true">
                                         <div class="card-body">
                                             <p lang="en">Personal has everything unlocked - no restrictions</p>
-                                            <p lang="en">Business has Media items hidden [Plex, Emby etc...]</p>
+                                            <p lang="en">Business has Media items hidden</p>
                                         </div>
                                     </div>
                                 </div>
@@ -215,17 +215,6 @@ function get_page_wizard($Londerland)
                                 </div>
                             </div>
                             <div class="wizard-pane" role="tabpanel">
-                                <div class="card card-info">
-                                    <div class="card-header">
-                                        <i class="ti-alert fa-fw"></i> <span lang="en">Notice</span>
-                                        <div class="float-end"><a href="#" data-perform="card-collapse"><i class="ti-minus"></i></a> <a href="#" data-perform="card-dismiss"><i class="ti-close"></i></a> </div>
-                                    </div>
-                                    <div class="card-wrapper collapse show" aria-expanded="true">
-                                        <div class="card-body">
-                                            <p lang="en">If using Plex or Emby - It is suggested that you use the username and email of the Admin account.</p>
-                                        </div>
-                                    </div>
-                                </div>
                                 <div class="form-group">
                                     <label for="username" lang="en">Username</label>
                                     <div class="input-group">

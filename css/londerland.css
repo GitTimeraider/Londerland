@@ -683,14 +683,6 @@
   background-repeat: no-repeat;
 }
 
-.text-plex {
-  color: #e5a00d;
-}
-
-.text-emby {
-  color: #4caf50;
-}
-
 .mouse {
   cursor: pointer;
 }
@@ -812,10 +804,6 @@ td span.label.text-bg-warning {
   background: #2d2c2c;
 }
 
-.bg-plex {
-  background: #e5a00d;
-}
-
 .bg-oidc-authentik {
   background: #fd4b2d;
 }
@@ -830,13 +818,6 @@ td span.label.text-bg-warning {
 
 .bg-oidc-zitadel {
   background: #0d9488;
-}
-
-.bg-emby {
-  background: #4caf50;
-}
-.text-jellyfin {
-  background: #a15dc3;
 }
 
 .request-result-item {

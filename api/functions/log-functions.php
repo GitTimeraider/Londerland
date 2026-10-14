@@ -322,11 +322,11 @@ trait LogFunctions
 		Setup:
 		set the log channel before you send log (You can set an optional Username (2nd Variable) | If user is logged already logged in, it will use their username):
 		normal log:
-		$this->log('Plex Homepage')->info('test');
+		$this->log('Tabs')->info('test');
 		normal log with context ($context must be an array):
-		$this->log('Plex Homepage')->info('test', $context);
+		$this->log('Tabs')->info('test', $context);
 		exception:
-		$this->log('Plex Homepage')->critical($exception, $context);
+		$this->log('Tabs')->critical($exception, $context);
 		*/
 	}
 
