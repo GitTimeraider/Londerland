@@ -1,6 +1,13 @@
 <?php
 require_once '../api/functions.php';
 define("API_HOST", getServerPath(false) . '');
+// The API documentation is for admins only
+if (!(new Londerland())->qualifyRequest(1)) {
+	http_response_code(401);
+	header('Content-Type: text/plain;charset=UTF-8');
+	echo 'Not Authorized';
+	exit;
+}
 if (!isset($_GET['spec'])) {
 	header("Location: home/");
 	exit;

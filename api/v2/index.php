@@ -54,12 +54,88 @@ function overWriteURI()
 	}
 }
 
+/*
+ * Endpoints that visitors who are not logged in may use: the login page and its sign-in methods, reverse proxy auth,
+ * robots.txt/sitemap.xml and shared AI chats. Everything else needs a login or the API key (see apiGateAllows).
+ */
+$GLOBALS['publicRoutes'] = array(
+	array('GET', '#^/launch/?$#'),
+	array('GET', '#^/page/(login|tabs|error|dependencies)$#'),
+	array('GET', '#^/londerland/error(/.*)?$#'),
+	array('POST', '#^/login/?$#'),
+	array('GET', '#^/logout/?$#'),
+	array('GET', '#^/oidc/providers$#'),
+	array('GET', '#^/oidc/[^/]+/(authorize|callback)$#'),
+	array('POST', '#^/users/(register|recover)$#'),
+	// Nginx auth_request, Traefik/Caddy forward auth; these answer 401 themselves when nobody is logged in
+	array('ANY', '#^/?(londerland-)?auth([-/].*)?$#'),
+	// tab ping dots; the ping itself checks who may use it (Settings > Main > Ping)
+	array('GET', '#^/ping/[^/]+$#'),
+	array('GET', '#^/(seo/)?(robots\.txt|sitemap\.xml)$#'),
+	array('GET', '#^/plugins/aichat/shared/[^/]+$#'),
+);
+
+function apiGatePath($request)
+{
+	$path = $request->getUri()->getPath();
+	$base = getBasePath();
+	if ($base !== '' && stripos($path, $base) === 0) {
+		$path = substr($path, strlen($base));
+	}
+	return '/' . ltrim($path, '/');
+}
+
+// The api/v2 part of a tab's address, e.g. /plugins/bookmark/page, or null when the tab is not a Londerland page
+function apiGateTabPath($url)
+{
+	$path = (string)parse_url((string)$url, PHP_URL_PATH);
+	$position = stripos($path, 'api/v2/');
+	return $position === false ? null : '/' . substr($path, $position + strlen('api/v2/'));
+}
+
+/*
+ * Visitors who are not logged in only reach the public routes, plus what the tabs open to guests need:
+ * the tab's own page and, for a plugin tab (Bookmarks), the plugin's other GET endpoints. Those check the group themselves.
+ */
+function apiGateAllows($Londerland, $method, $path)
+{
+	// before the wizard has run there are no accounts yet
+	if (!$Londerland->hasDB()) {
+		return true;
+	}
+	// logged in, or the API key
+	if ($Londerland->getUserLevel() < 999) {
+		return true;
+	}
+	foreach ($GLOBALS['publicRoutes'] as $route) {
+		if (($route[0] === 'ANY' || $route[0] === $method) && preg_match($route[1], $path)) {
+			return true;
+		}
+	}
+	if ($method !== 'GET') {
+		return false;
+	}
+	foreach (($Londerland->getUserTabsAndCategories('tabs') ?: []) as $tab) {
+		$tabPath = apiGateTabPath($tab['access_url'] ?? $tab['url'] ?? '');
+		if ($tabPath === null) {
+			continue;
+		}
+		if ($tabPath === $path) {
+			return true;
+		}
+		if (preg_match('#^/plugins/[^/]+/#', $tabPath, $plugin) && stripos($path, $plugin[0]) === 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 overWriteURI();
 // Instantiate App
 $app = AppFactory::create();
-// Add error middleware
+// Add error middleware; error details (file paths, traces) go to the PHP error log, never to the visitor
 $app->addRoutingMiddleware();
-$app->addErrorMiddleware(true, true, true);
+$app->addErrorMiddleware(false, true, true);
 $app->setBasePath(getBasePath());
 $app->add(function ($request, $handler) {
 	// add the londerland to your request as [READ-ONLY]
@@ -67,6 +143,19 @@ $app->add(function ($request, $handler) {
 	$request = $request->withAttribute('Londerland', $Londerland);
 	// set custom error handler
 	set_error_handler([$Londerland, 'setAPIErrorResponse']);
+	if (!apiGateAllows($Londerland, strtoupper($request->getMethod()), apiGatePath($request))) {
+		$response = new \Slim\Psr7\Response();
+		$response->getBody()->write(jsonE(array(
+			'response' => array(
+				'result' => 'error',
+				'message' => 'Not Authorized',
+				'data' => null
+			)
+		)));
+		return $response
+			->withHeader('Content-Type', 'application/json;charset=UTF-8')
+			->withStatus(401);
+	}
 	return $handler->handle($request);
 });
 //$app->add(new Lowercase());

@@ -51,6 +51,11 @@ website, not like a wall of server tiles.
 5. Under **Settings > Customize > Website > SEO & Sharing**, fill in the public address of the site so link previews,
    the canonical link and the sitemap use it ([details below](#website-announcement-and-seo)).
 
+Visitors who are not logged in can only use the parts of the API that the site itself needs for them: the login page and
+its sign-in methods, the tabs open to guests (and, for a Bookmarks tab, its bookmarks), reverse proxy auth (`api/v2/auth`),
+`robots.txt`, the sitemap and shared AI chats. Everything else under `/api/v2/` (status, plugin list, settings and so on)
+answers `401 Not Authorized` unless you are logged in or send the API key. The API documentation (`/docs`) is for admins only.
+
 ## Install with Docker
 
 The image is built by this repository and published to the GitHub Container Registry as
@@ -158,8 +163,6 @@ to `www-data`, and `SETUID` and `SETGID` let the web server and the scheduled jo
 In Docker Compose, put them under `cap_add:` (one per line, without `--cap-add=`).
 Port 80 needs no capability on Docker 20.10 or newer; on older Docker, set `LONDERLAND_PORT` to a port above 1023.
 If a capability is missing, the container stops and `docker logs londerland` says which ones to add.
-
-The image has a health check, so `docker ps` shows whether Londerland is `healthy`.
 
 ### Login only from your own networks
 

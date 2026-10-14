@@ -1,3 +1,13 @@
+<?php
+require_once '../../api/functions.php';
+// The API documentation is for admins only
+if (!(new Londerland())->qualifyRequest(1)) {
+	http_response_code(401);
+	header('Content-Type: text/plain;charset=UTF-8');
+	echo 'Not Authorized';
+	exit;
+}
+?>
 <!doctype html>
 <html lang="en">
 <head>
