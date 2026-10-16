@@ -1,0 +1,51 @@
+Londerland
+Copyright (C) 2026 GitTimeraider
+https://github.com/GitTimeraider/Londerland
+
+Londerland is a self-hosted web portal: a website with public pages for visitors and members-only pages, tabs,
+groups, AI Chat, Achievements and Bookmarks.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program (the file LICENSE). If not,
+see <https://www.gnu.org/licenses/>.
+
+
+Based on Organizr
+-----------------
+
+Londerland is a modified version of Organizr (https://github.com/causefx/Organizr), copyright its authors
+(CauseFX and the Organizr contributors), licensed under the GNU General Public License version 3.
+
+Londerland was split off from Organizr and changed in 2026. The main changes:
+
+- renamed to Londerland, with its own name, logo, cookies and reverse proxy headers;
+- its own Docker image, which can run without root and downloads nothing when it starts;
+- frontend libraries updated and bundled with npm;
+- public website features: guest pages, announcement bar, search engine and link preview settings, robots.txt and
+  sitemap.xml;
+- new: AI Chat, Achievements and My Stats, the Bookmarks page, the command palette (Ctrl+K), split view, the audit
+  log, login only from your own networks, and easter eggs;
+- removed: the plugin and theme marketplaces, the in-app updater, donation features, and signing in with Plex, Emby
+  and Jellyfin.
+
+The full history of changes is in the Git history of the repository above.
+
+
+Third-party components
+----------------------
+
+Londerland includes or downloads at build time software by others, each under its own license:
+
+- PHP libraries installed with Composer (listed in api/composer.json, versions in api/composer.lock);
+- frontend libraries installed with npm (listed in package.json, versions in package-lock.json);
+- the Rubik font (css/fonts/rubik, SIL Open Font License 1.1, see css/fonts/rubik/LICENSE);
+- the Themify icon font (less/icons/themify-icons);
+- the CA certificate bundle in api/functions/cert.
+
+Their copyright notices and licenses are kept in their files and packages.
