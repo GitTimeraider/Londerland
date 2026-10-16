@@ -521,9 +521,8 @@ Bookmarks from the earlier Bookmark plugin are kept: it uses the same database t
 
 ## License
 
-Londerland is free software: you can redistribute it and/or modify it under the terms of the
-[GNU General Public License](LICENSE), version 3 or (at your option) any later version. It comes without any warranty.
+Londerland is free software under the [GNU General Public License v3.0](LICENSE).
 
-It is a modified version of [Organizr](https://github.com/causefx/Organizr) (GPL-3.0), split off and changed in 2026.
-[NOTICE](NOTICE) has Londerland's copyright notice, what changed compared to Organizr, and the third-party components
-with their own licenses. The original copyright notices are kept as the license requires.
+It is a modified version of Organizr (GPL-3.0), renamed and changed in 2026:
+new Docker image, frontend libraries, AI Chat, non-root container support, and removal of the marketplaces, updater and
+donation features. The original copyright notices are kept as the license requires.
