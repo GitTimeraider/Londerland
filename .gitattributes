@@ -1,19 +1,10 @@
-# Auto detect text files and perform LF normalization
+# Text files are stored with LF line endings in the repository; Git converts them on checkout where needed
 * text=auto
 
-# Custom for Visual Studio
-*.cs     diff=csharp
+# These run inside the Linux container and break with Windows line endings (CRLF), even when edited on Windows
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker/* text eol=lf
 
-# Standard to msysgit
-*.doc	 diff=astextplain
-*.DOC	 diff=astextplain
-*.docx diff=astextplain
-*.DOCX diff=astextplain
-*.dot  diff=astextplain
-*.DOT  diff=astextplain
-*.pdf  diff=astextplain
-*.PDF	 diff=astextplain
-*.rtf	 diff=astextplain
-*.RTF	 diff=astextplain
-*.css linguist-language=PHP
-bower_components/* linguist-vendored
+# Bundled third-party icon font: left out of GitHub's language statistics
+less/icons/** linguist-vendored
