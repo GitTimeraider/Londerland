@@ -44,6 +44,10 @@ return array(
 	'AICHAT-toolRounds' => '6',
 	// Off = pages on private/local addresses (192.168.x, 10.x, localhost, ...) are refused
 	'AICHAT-fetchAllowPrivate' => false,
+	// fetch_url on pages that need JavaScript: none, browserless (self-hosted headless Chrome) or jina (Jina Reader)
+	'AICHAT-renderer' => 'none',
+	'AICHAT-rendererUrl' => '',
+	'AICHAT-rendererKey' => '',
 	// Image generation through an OpenAI-compatible /images/generations endpoint
 	'AICHAT-images-include' => false,
 	'AICHAT-imageBaseUrl' => '',

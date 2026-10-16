@@ -29,6 +29,30 @@ $app->get('/plugins/aichat/test', function ($request, $response, $args) {
 	}
 	return aiChatJsonResponse($response);
 });
+$app->get('/plugins/aichat/test/reader', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAdminAccess($request)) {
+		if (!$AiChat->_aiChatRendererEnabled()) {
+			$AiChat->setAPIResponse('error', 'Choose and save a Reader for JavaScript Pages first', 409);
+		} else {
+			try {
+				// a page that is built with JavaScript: read directly it is (almost) empty
+				[$title, $url, $text] = $AiChat->_aiChatFetchRendered($request->getQueryParams()['url'] ?? 'https://quotes.toscrape.com/js/');
+				if (trim($text) === '') {
+					$AiChat->setAPIResponse('error', 'The reader answered, but the test page came back without text', 502);
+				} else {
+					$AiChat->setAPIResponse('success', 'The reader works: it read ' . mb_strlen($text) . ' characters from ' . $title, 200, mb_substr(trim(preg_replace('/\s+/', ' ', $text)), 0, 300));
+				}
+			} catch (RuntimeException $e) {
+				$AiChat->setAPIResponse('error', $e->getMessage(), 502);
+			}
+		}
+	}
+	$response->getBody()->write(jsonE($GLOBALS['api']));
+	return $response
+		->withHeader('Content-Type', 'application/json;charset=UTF-8')
+		->withStatus($GLOBALS['responseCode']);
+});
 $app->get('/plugins/aichat/test/search', function ($request, $response, $args) {
 	$AiChat = new AiChat();
 	if ($AiChat->_aiChatAdminAccess($request)) {

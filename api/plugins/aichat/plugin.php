@@ -38,6 +38,10 @@ class AiChat extends Londerland
 	// fetch_url: largest download and how much page text the model gets per call
 	private const MAX_FETCH_BYTES = 5242880;
 	private const MAX_PAGE_TEXT = 20000;
+	// A web page with less text than this (or one that asks for JavaScript) is read again with the JavaScript reader
+	private const MIN_PAGE_TEXT = 400;
+	// Exception code for links the chat may not read at all; those are never handed to the JavaScript reader either
+	private const FETCH_REFUSED = 1;
 	private const NEW_CHAT_TITLE = 'New chat';
 
 	/* ===================== access & setup ===================== */
@@ -497,6 +501,40 @@ class AiChat extends Londerland
 					'label' => 'Allow Reading Local Addresses',
 					'help' => 'Off = pages on localhost and private networks (192.168.x.x, 10.x.x.x, Docker networks, ...) are refused, so nobody can make the chat read your internal services. Only turn on if every chat user may see those.',
 					'value' => $this->config['AICHAT-fetchAllowPrivate']
+				),
+				array(
+					'type' => 'select',
+					'name' => 'AICHAT-renderer',
+					'label' => 'Reader for JavaScript Pages',
+					'value' => $this->config['AICHAT-renderer'],
+					'options' => [
+						['name' => 'Off', 'value' => 'none'],
+						['name' => 'Browserless (self-hosted Chrome)', 'value' => 'browserless'],
+						['name' => 'Jina Reader (online service)', 'value' => 'jina'],
+					],
+					'help' => 'Pages that build their content with JavaScript arrive empty when they are read the normal way. With a reader, such pages (little text, a "turn on JavaScript" message, or an error) are read again in a real browser that runs their scripts. Browserless runs on your own server; Jina Reader is an online service that receives the addresses of those pages.'
+				),
+				array(
+					'type' => 'input',
+					'name' => 'AICHAT-rendererUrl',
+					'label' => 'Reader URL',
+					'value' => $this->config['AICHAT-rendererUrl'],
+					'placeholder' => 'http://browserless:3000',
+					'help' => 'Browserless: its address. Jina Reader: leave empty to use https://r.jina.ai.'
+				),
+				array(
+					'type' => 'password-alt',
+					'name' => 'AICHAT-rendererKey',
+					'label' => 'Reader Token / API Key',
+					'value' => $this->config['AICHAT-rendererKey'],
+					'help' => 'Browserless: the TOKEN set on its container. Jina Reader: an API key from jina.ai (optional; without one only a few pages per minute are allowed).'
+				),
+				array(
+					'type' => 'button',
+					'label' => 'Test Page Reader',
+					'class' => ' aichatTestReader',
+					'icon' => 'fa fa-globe',
+					'text' => 'Test (save first)'
 				),
 				array(
 					'type' => 'button',
@@ -2400,9 +2438,124 @@ class AiChat extends Londerland
 	}
 
 	/**
-	 * Downloads a web page and returns [title, finalUrl, text]; throws RuntimeException with a message for the model
+	 * Reads a web page and returns [title, finalUrl, text, kind]; throws RuntimeException with a message for the model.
+	 * The page is downloaded directly first. When that gives (almost) no text, a "turn on JavaScript" message or an
+	 * error, and the admin set up a JavaScript reader, the page is read again in a browser that runs its scripts.
 	 */
 	private function _aiChatFetchPage($url)
+	{
+		if (!$this->_aiChatRendererEnabled()) {
+			return $this->_aiChatFetchDirect($url);
+		}
+		$page = null;
+		$failure = null;
+		try {
+			$page = $this->_aiChatFetchDirect($url);
+			if (!$this->_aiChatNeedsBrowser($page)) {
+				return $page;
+			}
+		} catch (RuntimeException $e) {
+			if ($e->getCode() === self::FETCH_REFUSED) {
+				throw $e;
+			}
+			$failure = $e;
+		}
+		$this->_aiChatSendEvent(['type' => 'status', 'text' => 'Opening ' . (parse_url($url, PHP_URL_HOST) ?: $url) . ' in a browser']);
+		try {
+			$rendered = $this->_aiChatFetchRendered($url);
+		} catch (RuntimeException $e) {
+			if ($page) {
+				$page[2] .= "\n\n[This page looked empty, so it was also opened in a browser to run its JavaScript, which failed: " . $e->getMessage() . ']';
+				return $page;
+			}
+			throw new RuntimeException($failure->getMessage() . '. Reading it in a browser failed too: ' . $e->getMessage());
+		}
+		// a reader that also found nothing better: keep what the direct download gave
+		return $page && mb_strlen($rendered[2]) <= mb_strlen($page[2]) ? $page : $rendered;
+	}
+
+	public function _aiChatRendererEnabled()
+	{
+		return in_array($this->config['AICHAT-renderer'] ?? 'none', ['browserless', 'jina'], true);
+	}
+
+	// A web page whose text is too short, or that asks for JavaScript, was most likely built by scripts
+	private function _aiChatNeedsBrowser($page)
+	{
+		if (($page[3] ?? '') !== 'html') {
+			return false;
+		}
+		$length = mb_strlen($page[2]);
+		return $length < self::MIN_PAGE_TEXT
+			|| ($length < 3000 && preg_match('/(enable|turn on|activate|requires?|needs?) (your )?javascript|javascript (is )?(disabled|required|needed)|without javascript/i', $page[2]));
+	}
+
+	/**
+	 * Reads a page with the JavaScript reader the admin chose: [title, finalUrl, text, 'html']
+	 */
+	public function _aiChatFetchRendered($url)
+	{
+		$key = trim((string)$this->config['AICHAT-rendererKey']);
+		$base = rtrim(trim((string)$this->config['AICHAT-rendererUrl']), '/');
+		if ($this->config['AICHAT-renderer'] === 'jina') {
+			$headers = ['Accept: application/json', 'X-Timeout: 30'];
+			if ($key !== '') {
+				$headers[] = 'Authorization: Bearer ' . $key;
+			}
+			[$code, $raw, $error] = $this->_aiChatHttp('GET', ($base !== '' ? $base : 'https://r.jina.ai') . '/' . $url, $headers, null, 60);
+			if ($error) {
+				throw new RuntimeException($this->_aiChatReaderError('Jina Reader', $error));
+			}
+			$data = json_decode((string)$raw, true)['data'] ?? null;
+			if (!is_array($data)) {
+				// an older or self-hosted reader answers with plain text
+				return [$url, $url, trim(mb_substr((string)$raw, 0, self::MAX_FETCH_BYTES)), 'html'];
+			}
+			$title = trim(preg_replace('/\s+/', ' ', (string)($data['title'] ?? ''))) ?: $url;
+			return [mb_substr($title, 0, 200), (string)($data['url'] ?? '') ?: $url, trim((string)($data['content'] ?? '')), 'html'];
+		}
+		if ($base === '') {
+			throw new RuntimeException('No Browserless address is configured');
+		}
+		$request = [
+			'url' => $url,
+			'gotoOptions' => ['waitUntil' => 'networkidle2', 'timeout' => 25000],
+			// Many pages fill themselves in a few seconds after loading (timers, data from a database): wait up to 10
+			// seconds for an amount of text, then take what the page shows
+			'waitForFunction' => ['fn' => '() => document.body && document.body.innerText.trim().length > ' . self::MIN_PAGE_TEXT, 'polling' => 500, 'timeout' => 10000],
+			// what the browser has when a wait runs out, also when the page never goes quiet
+			'bestAttempt' => true,
+			'rejectResourceTypes' => ['image', 'media', 'font'],
+		];
+		if (!$this->config['AICHAT-fetchAllowPrivate']) {
+			// The browser follows redirects and loads parts of the page by itself, so it is told not to open local and
+			// private addresses written as such (a name that leads to one is not caught: see the README)
+			$request['rejectRequestPattern'] = ['^[a-z]+://(localhost|[^/]*\.local|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|169\.254\.|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.|0\.|\[(::1|f[cd]|fe[89ab]))'];
+		}
+		[$code, $raw, $error] = $this->_aiChatHttp('POST', $base . '/content' . ($key !== '' ? '?token=' . rawurlencode($key) : ''), ['Content-Type: application/json', 'Accept: text/html'], json_encode($request), 60);
+		if ($error) {
+			throw new RuntimeException($this->_aiChatReaderError('Browserless', $error));
+		}
+		// When the page cannot be opened (or was blocked above) the browser shows its own "This site can't be reached"
+		// page, which is not the page's text
+		if (strpos((string)$raw, 'id="main-frame-error"') !== false) {
+			throw new RuntimeException('The browser could not open ' . $url . (preg_match('/net::(ERR_[A-Z_]+)|\b(ERR_[A-Z_]+)/', (string)$raw, $match) ? ' (' . ($match[1] ?: $match[2]) . ')' : ''));
+		}
+		$page = $this->_aiChatPageText($url, 'text/html', substr((string)$raw, 0, self::MAX_FETCH_BYTES));
+		$page[3] = 'html';
+		return $page;
+	}
+
+	// "Browserless answered 401: ..." or "Browserless: Failed to connect ..." (_aiChatHttp words errors for the AI server)
+	private function _aiChatReaderError($reader, $error)
+	{
+		return strpos($error, 'AI server answered') === 0 ? $reader . substr($error, strlen('AI server')) : $reader . ': ' . $error;
+	}
+
+	/**
+	 * Downloads a web page and returns [title, finalUrl, text, kind]; throws RuntimeException with a message for the model
+	 */
+	private function _aiChatFetchDirect($url)
 	{
 		$allowPrivate = (bool)$this->config['AICHAT-fetchAllowPrivate'];
 		// Redirects are followed by hand so every hop gets the address check
@@ -2411,17 +2564,17 @@ class AiChat extends Londerland
 			$scheme = strtolower($parts['scheme'] ?? '');
 			$host = $parts['host'] ?? '';
 			if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
-				throw new RuntimeException('Only http and https links can be read: ' . $url);
+				throw new RuntimeException('Only http and https links can be read: ' . $url, self::FETCH_REFUSED);
 			}
 			$port = (int)($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
 			$ips = $this->_aiChatResolveHost($host);
 			if (!$ips) {
-				throw new RuntimeException('Could not find the server ' . $host);
+				throw new RuntimeException('Could not find the server ' . $host, self::FETCH_REFUSED);
 			}
 			if (!$allowPrivate) {
 				foreach ($ips as $ip) {
 					if (!$this->_aiChatPublicIp($ip)) {
-						throw new RuntimeException('Reading pages on local or private addresses (' . $host . ') is turned off by the admin');
+						throw new RuntimeException('Reading pages on local or private addresses (' . $host . ') is turned off by the admin', self::FETCH_REFUSED);
 					}
 				}
 			}
@@ -2469,7 +2622,7 @@ class AiChat extends Londerland
 	}
 
 	/**
-	 * Turns a downloaded page into [title, url, text]
+	 * Turns a downloaded page into [title, url, text, kind] (kind: html, pdf or text)
 	 */
 	private function _aiChatPageText($url, $type, $body)
 	{
@@ -2481,7 +2634,7 @@ class AiChat extends Londerland
 			} catch (\Throwable $e) {
 				throw new RuntimeException('Could not read the PDF ' . $url . ': ' . $e->getMessage());
 			}
-			return [basename((string)parse_url($url, PHP_URL_PATH)) ?: $url, $url, trim($text)];
+			return [basename((string)parse_url($url, PHP_URL_PATH)) ?: $url, $url, trim($text), 'pdf'];
 		}
 		if (!$isHtml) {
 			if ($type !== '' && !preg_match('#^text/|json|xml|javascript|yaml|csv#', $type)) {
@@ -2490,7 +2643,7 @@ class AiChat extends Londerland
 			if (!mb_check_encoding($body, 'UTF-8')) {
 				$body = mb_convert_encoding($body, 'UTF-8', 'Windows-1252');
 			}
-			return [$url, $url, trim($body)];
+			return [$url, $url, trim($body), 'text'];
 		}
 		$dom = new DOMDocument();
 		libxml_use_internal_errors(true);
@@ -2507,7 +2660,7 @@ class AiChat extends Londerland
 		$text = $root ? $this->_aiChatNodeText($root) : '';
 		$text = preg_replace("/[ \t]+\n/", "\n", $text);
 		$text = trim(preg_replace("/\n{3,}/", "\n\n", $text));
-		return [mb_substr($title, 0, 200), $url, $text];
+		return [mb_substr($title, 0, 200), $url, $text, 'html'];
 	}
 
 	// Plain text of an HTML element, keeping headings, list items, paragraphs and table rows on their own lines
@@ -3012,7 +3165,7 @@ class AiChat extends Londerland
 					return $e->getMessage();
 				}
 				if ($text === '') {
-					return 'The page ' . $finalUrl . ' has no readable text (it may need JavaScript or a login).';
+					return 'The page ' . $finalUrl . ' has no readable text (it may need JavaScript or a login' . ($this->_aiChatRendererEnabled() ? '' : '; the admin can set up a Reader for JavaScript Pages under AI Chat > Web Search') . ').';
 				}
 				$length = mb_strlen($text);
 				$part = mb_substr($text, $offset, self::MAX_PAGE_TEXT);
