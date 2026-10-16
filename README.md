@@ -361,7 +361,7 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
    - **Chat:** a system prompt, temperature, answer length, how many earlier messages are sent along (and whether the dropped ones are summarized), and whether chats get a name automatically.
      **Delete Chats After** removes chats nobody wrote in for that many days (0 = never). Users can mark a chat as **Keep** to save it permanently.
      The check runs every hour through `cron.php` (the Docker image runs it by itself) and whenever a user opens the chat list.
-   - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search and read pages by themselves; **Tool Steps per Answer** (default 6) is how often they may do that before they have to answer.
+   - **Web Search (optional):** a provider (SearXNG, Brave, Tavily or DuckDuckGo) with its address or API key. SearXNG needs `json` in `search: formats` in its `settings.yml`. Optionally let tool-calling models search and read pages by themselves; **Tool Steps per Answer** (default 6) is how often they may do that before they have to answer. **Reader for JavaScript Pages** lets the chat read pages that only fill in with JavaScript ([details below](#pages-that-need-javascript)).
    - **Images (optional):** turn on image generation through an OpenAI-compatible `/images/generations` endpoint (for example `https://api.openai.com/v1` with `gpt-image-1`). Leave URL and key empty to use the chat server. Claude cannot create images, so use a different server here when chatting with Claude. Optionally let tool-calling models create images by themselves.
    - **Uploads:** whether users may add images and files, the size limit, and how large and how many earlier images are sent along.
    - **Sharing (optional, off by default):** **Allow public links** lets users make a read-only link to one of their chats,
@@ -369,7 +369,52 @@ OpenAI, Anthropic's OpenAI-compatible endpoint, Ollama, LM Studio, LiteLLM, Open
      with its views, and **Stop** turns one off.
    - **Chat Button:** a short name under "AI" on the chat button and its colour.
    - **Usage Limits (optional, [OmniRoute](https://github.com/diegosouzapw/OmniRoute) only):** show the used percentage of each OmniRoute connection (for example the 5 hour and weekly limits of Claude Code) to admins or to everyone. In the OmniRoute dashboard, under **API Manager**, open the API key Londerland uses and turn on **Own Cost and Token Usage** and **Shared Account Quota** (under Self-Service Visibility). A key with the `manage` scope also works and shows the connection names. Fill in the OmniRoute address only if the API Base URL is not OmniRoute (for example `http://omniroute:20128`), and `claude` under Providers to Show to list only Claude connections.
-3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider.
+3. Click **Save**, then **Test (save first)** to check the connection and see the available models. **Test Search** checks the search provider and **Test Page Reader** the reader for JavaScript pages.
+
+### Pages that need JavaScript
+
+The chat reads a web page by downloading it, which does not run the page's JavaScript. Many sites (web apps, build
+planners, shops, social media) send an almost empty page that only fills in with JavaScript, so the chat finds nothing
+there or gets an error. A **Reader for JavaScript Pages** opens such pages in a real browser that runs their scripts.
+The chat still downloads every page the normal way first and only uses the reader when a page has (almost) no text,
+asks for JavaScript or gives an error, so ordinary pages stay just as fast.
+
+**Option 1: Browserless (on your own server, nothing leaves your network).** Browserless is a headless Chrome in a container.
+
+1. On your Docker host, add it to the `docker-compose.yml` that runs Londerland (under `services:`, next to `londerland:`),
+   with a long random token of your own instead of `change-me`:
+
+   ```yaml
+     browserless:
+       image: ghcr.io/browserless/chromium:latest
+       container_name: browserless
+       environment:
+         - TOKEN=change-me
+         - CONCURRENT=2
+         - TIMEOUT=60000
+       restart: unless-stopped
+   ```
+
+   No `ports:` are needed: Londerland reaches it over the Compose network as `http://browserless:3000`.
+   Start it in the same folder with `docker compose up -d`.
+2. In Londerland, open **Settings > Plugins > Active**, click the settings icon of **AI Chat** and open **Web Search**:
+   set **Reader for JavaScript Pages** to **Browserless**, **Reader URL** to `http://browserless:3000` and
+   **Reader Token / API Key** to the token from step 1.
+3. Click **Save**, then **Test Page Reader**. It reads a test page that is built with JavaScript and says how much text it found.
+
+**Option 2: Jina Reader (online service, no setup).** In the same place choose **Jina Reader**, leave **Reader URL**
+empty and click **Save** and **Test Page Reader**. Without an API key Jina allows only a few pages per minute; a free key
+from [jina.ai](https://jina.ai/reader/) in **Reader Token / API Key** raises that. Jina receives the addresses of the
+pages it reads, so use Browserless for pages that should stay private.
+
+Notes:
+
+- **Model May Use the Web by Itself** must be on, and users must have the **Web** button on in the chat box.
+- With **Allow Reading Local Addresses** off, local and private addresses are never handed to the reader, and Browserless
+  is told not to open addresses such as `192.168.x.x`, `10.x.x.x`, `172.16-31.x.x` and `localhost` while it loads a page
+  (for example after a redirect). A public host name that points to a private address is not caught by that, so keep
+  Browserless on a network where it cannot reach services that chat users may not see.
+- Pages behind a login (your accounts on other sites) stay unreadable: the reader has no cookies of yours.
 
 **Using it:** logged in users get a large **AI** chat bubble in the bottom right corner of every Londerland page. The chat offers:
 

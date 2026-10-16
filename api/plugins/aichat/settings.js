@@ -31,6 +31,21 @@ $(document).on('click', '.aichatTestSearch', function () {
 			$button.prop('disabled', false);
 		});
 });
+// "Test page reader" reads a page that is built with JavaScript through the saved reader
+$(document).on('click', '.aichatTestReader', function () {
+	const $button = $(this).prop('disabled', true);
+	messageSingle(window.lang.translate('Opening a test page in the reader...'), '', activeInfo.settings.notifications.position, '#FFF', 'info', '10000');
+	londerlandAPI2('GET', 'api/v2/plugins/aichat/test/reader')
+		.done(function (data) {
+			messageSingle(data.response.message, $('<div>').text(data.response.data || '').html(), activeInfo.settings.notifications.position, '#FFF', 'success', '15000');
+		})
+		.fail(function (xhr) {
+			LonderlandApiError(xhr, 'AI Chat');
+		})
+		.always(function () {
+			$button.prop('disabled', false);
+		});
+});
 // "Test usage" asks OmniRoute for the used percentages of its connections
 $(document).on('click', '.aichatTestUsage', function () {
 	const $button = $(this).prop('disabled', true);
