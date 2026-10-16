@@ -396,7 +396,22 @@ asks for JavaScript or gives an error, so ordinary pages stay just as fast.
    ```
 
    No `ports:` are needed: Londerland reaches it over the Compose network as `http://browserless:3000`.
-   Start it in the same folder with `docker compose up -d`.
+   Start it in the same folder with `docker compose up -d`. (The example [`docker-compose.yml`](docker-compose.yml)
+   has the same lines, commented out.)
+
+   **With `docker run` instead of Compose**, the two containers need a shared network so Londerland can find
+   `browserless` by name. In a terminal on your Docker host:
+
+   ```bash
+   docker network create londerland
+   docker run -d --name browserless --network londerland \
+     -e TOKEN=change-me -e CONCURRENT=2 -e TIMEOUT=60000 \
+     --restart unless-stopped ghcr.io/browserless/chromium:latest
+   docker network connect londerland londerland
+   ```
+
+   The last line adds the running Londerland container to that network. Also add `--network londerland \` to your
+   Londerland `docker run` command (see [`docker-run.sh`](docker-run.sh)), so the container is on it again after an update.
 2. In Londerland, open **Settings > Plugins > Active**, click the settings icon of **AI Chat** and open **Web Search**:
    set **Reader for JavaScript Pages** to **Browserless**, **Reader URL** to `http://browserless:3000` and
    **Reader Token / API Key** to the token from step 1.
