@@ -38,3 +38,17 @@ services:
       # Settings, database, logs and uploaded images. Keep this folder to keep your setup across updates.
       - ./londerland-data:/var/www/html/data
     restart: unless-stopped
+
+  # Optional: a headless Chrome so AI Chat can read pages that need JavaScript
+  # (Settings > Plugins > Active > AI Chat > Web Search > Reader for JavaScript Pages: Browserless,
+  # Reader URL http://browserless:3000, Reader Token / API Key: the TOKEN below).
+  # Remove the # in front of the lines below and set your own long random TOKEN. No ports are needed:
+  # Londerland reaches it over the Compose network.
+  # browserless:
+  #   image: ghcr.io/browserless/chromium:latest
+  #   container_name: browserless
+  #   environment:
+  #     - TOKEN=change-me
+  #     - CONCURRENT=2
+  #     - TIMEOUT=60000
+  #   restart: unless-stopped
