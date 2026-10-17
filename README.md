@@ -19,6 +19,28 @@ website, not like a wall of server tiles.
 - **Members and groups.** Every tab is shown only to the groups you choose.
 - **AI Chat** for logged in members, with any OpenAI-compatible server.
 
+<p align="center"><img src=".github/screenshots/main.png" alt="Londerland main screen with a Bookmarks tab, in the dark style" width="900"></p>
+
+## Screenshots
+
+All screenshots use the default dark style. Click a picture to see it full size.
+
+| | |
+|---|---|
+| **Login page** (what visitors see) | **Side menu** with tabs sorted into categories |
+| [<img src=".github/screenshots/login.jpg" alt="Login page" width="430">](.github/screenshots/login.jpg) | [<img src=".github/screenshots/navigation.png" alt="Side menu opened with the Media and Infrastructure categories" width="430">](.github/screenshots/navigation.png) |
+| **Command palette** (Ctrl+K) | **AI Chat** |
+| [<img src=".github/screenshots/command-palette.png" alt="Command palette searching tabs, bookmarks and settings" width="430">](.github/screenshots/command-palette.png) | [<img src=".github/screenshots/ai-chat.png" alt="AI Chat panel with a conversation" width="430">](.github/screenshots/ai-chat.png) |
+| **My Stats** (achievements, level and daily quests) | **Settings > Tab Editor** |
+| [<img src=".github/screenshots/my-stats.png" alt="My Stats page" width="430">](.github/screenshots/my-stats.png) | [<img src=".github/screenshots/settings-tabs.png" alt="Tab Editor in the settings" width="430">](.github/screenshots/settings-tabs.png) |
+| **Settings > Customize** | **Settings > Plugins** |
+| [<img src=".github/screenshots/settings-customize.png" alt="Customize Appearance in the settings" width="430">](.github/screenshots/settings-customize.png) | [<img src=".github/screenshots/settings-plugins.png" alt="Active plugins in the settings" width="430">](.github/screenshots/settings-plugins.png) |
+
+<details>
+<summary><strong>On a phone</strong></summary>
+<p align="center"><img src=".github/screenshots/mobile.png" alt="Londerland on a phone" width="300"></p>
+</details>
+
 ## Features
 
 - **Tabs** for pages and web apps, shown inside Londerland (iFrame) or opened in a new window, sorted into categories,
