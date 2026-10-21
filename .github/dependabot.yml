@@ -28,10 +28,6 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-    ignore:
-      # Stay on PHP 8.5.x (patch releases only); moving to a new minor version is a manual step
-      - dependency-name: php
-        update-types: ['version-update:semver-major', 'version-update:semver-minor']
 
   # Actions used in .github/workflows
   - package-ecosystem: github-actions
