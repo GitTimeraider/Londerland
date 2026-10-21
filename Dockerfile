@@ -36,7 +36,9 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Stage 3: runtime image (Apache + PHP), everything baked in
 # ---------------------------------------------------------------------------
-FROM ${BASE_REGISTRY}/php:8.5-apache
+# Pinned to an exact PHP release so a security fix ships as soon as its image exists;
+# Dependabot opens a pull request for each new PHP release.
+FROM ${BASE_REGISTRY}/php:8.5.12-apache
 
 ARG LONDERLAND_COMMIT=unknown
 
