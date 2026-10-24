@@ -1627,8 +1627,11 @@ $(document).on('change', '[id*=-form-chooseI]', function (e) {
 });
 // SETTINGS DROPDOWN CHANGE
 $(document).on("change", ".settings-dropdown-box", function () {
-	let id = $(this).val();
-	$(id).click();
+	// Native click: jQuery's .click() skips the native event on links, so Bootstrap never switches the tab
+	let target = document.querySelector($(this).val());
+	if (target) {
+		target.click();
+	}
 });
 $(document).on('click', '.nav-non-mobile li a', function() {
 	let id = $(this).attr('id');
