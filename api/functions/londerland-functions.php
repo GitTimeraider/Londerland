@@ -358,36 +358,6 @@ trait LonderlandFunctions
 		';
 	}
 
-	public function settingsDocker()
-	{
-		$type = ($this->docker) ? 'Docker' : 'Native';
-		return '<li><div class="bg-info"><i class="mdi mdi-flag mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Install Type</span> ' . $type . '</li>';
-	}
-
-	public function settingsPathChecks()
-	{
-		$paths = $this->pathsWritable($this->paths);
-		$items = '';
-		$type = (array_search(false, $paths)) ? 'Not Writable' : 'Writable';
-		$result = '<li class="mouse" onclick="toggleWritableFolders();"><div class="bg-info"><i class="mdi mdi-folder mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Londerland Paths</span> ' . $type . '</li>';
-		foreach ($paths as $k => $v) {
-			$items .= '<li class="folders-writable hidden"><div class="bg-primary"><i class="mdi mdi-folder mdi-24px text-white"></i></div><a tabindex="0" type="button" class="btn btn-secondary btn-outline popover-info float-end clipboard" lang="en" data-bs-container="body" title="" data-bs-toggle="popover" data-bs-placement="left" data-content="' . $v['path'] . '" data-bs-title="File Path" data-clipboard-text="' . $v['path'] . '">' . $k . '</a> ' . (($v['writable']) ? 'Writable' : 'Not Writable') . '</li>';
-		}
-		return $result . $items;
-	}
-
-	public function pathsWritable($paths)
-	{
-		$results = array();
-		foreach ($paths as $k => $v) {
-			$results[$k] = [
-				'writable' => is_writable($v),
-				'path' => $v
-			];
-		}
-		return $results;
-	}
-
 	public function clearTautulliTokens()
 	{
 		foreach (array_keys($_COOKIE) as $k => $v) {

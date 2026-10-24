@@ -5723,9 +5723,6 @@ function orgErrorCode(code) {
     default:
   }
 }
-function toggleWritableFolders() {
-  $(".folders-writable").toggleClass("hidden");
-}
 function getAllTabNames() {
   var allTabs = $(".tabEditor");
   var tabList = [];

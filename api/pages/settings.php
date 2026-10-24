@@ -162,17 +162,6 @@ function get_page_settings($Londerland)
 											</div>
 										</div>
 									</div>
-									<div class="col-xl-6 col-md-12 col-lg-6">
-										<div class="white-box bg-org">
-											<h3 class="box-title" lang="en">Information</h3>
-											<ul class="feeds">
-												<li><div class="bg-info"><i class="mdi mdi-database mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">Database Driver</span> ' . $Londerland->config['driver'] . '&nbsp;<code><i class="fa fa-arrow-right"></i></code>&nbsp;<small>' . $Londerland->config['dbName'] . '</small></li>
-												' . $Londerland->settingsDocker() . $Londerland->settingsPathChecks() . '
-												<hr class="m-t-10">
-												<li><div class="bg-info"><i class="mdi mdi-card-account-details mdi-24px text-white"></i></div><span class="text-muted hidden-xs m-t-10" lang="en">License</span> ' . ucwords($Londerland->config['license']) . '</li>
-											</ul>
-										</div>
-									</div>
 								</div>
 								<div class="clearfix"></div>
 							</div>
