@@ -1,11 +1,10 @@
-# Where the official base images come from. Docker Hub by default; the image workflow switches to the same
-# images on Google's mirror of Docker Hub (mirror.gcr.io/library) when Docker Hub cannot be reached.
-ARG BASE_REGISTRY=docker.io/library
+# Base images are written out in full (no variables) so Dependabot can read and update them. When Docker Hub
+# cannot be reached, the image workflow takes the same images from Google's mirror of Docker Hub instead.
 
 # ---------------------------------------------------------------------------
 # Stage 1: install PHP dependencies from composer.lock
 # ---------------------------------------------------------------------------
-FROM ${BASE_REGISTRY}/composer:2.10 AS vendor
+FROM composer:2.10 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
@@ -21,7 +20,7 @@ RUN composer install \
 # ---------------------------------------------------------------------------
 # Stage 2: frontend libraries (package-lock.json) and minified Londerland CSS/JS
 # ---------------------------------------------------------------------------
-FROM ${BASE_REGISTRY}/node:26-alpine AS frontend
+FROM node:26-alpine AS frontend
 
 WORKDIR /build
 COPY package.json package-lock.json ./
@@ -38,7 +37,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Pinned to an exact PHP release so a security fix ships as soon as its image exists;
 # Dependabot opens a pull request for each new PHP release.
-FROM ${BASE_REGISTRY}/php:8.5.12-apache
+FROM php:8.5.12-apache
 
 ARG LONDERLAND_COMMIT=unknown
 
