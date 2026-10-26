@@ -96,9 +96,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             LONDERLAND_COMMIT=${{ github.sha }}
-            BASE_REGISTRY=docker.io/library
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Swaps every FROM image in the Dockerfile for the same image on Google's mirror of Docker Hub, so the
+      # Dockerfile itself keeps plain image names that Dependabot can update
+      - name: Point base images at Google's mirror of Docker Hub
+        id: mirror
+        if: steps.build.outcome != 'success'
+        run: |
+          {
+            echo 'contexts<<EOF'
+            awk 'toupper($1) == "FROM" { print $2 "=docker-image://mirror.gcr.io/library/" $2 }' Dockerfile
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable; a real build
       # error fails here the same way and stops the job
@@ -113,6 +124,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             LONDERLAND_COMMIT=${{ github.sha }}
-            BASE_REGISTRY=mirror.gcr.io/library
+          build-contexts: ${{ steps.mirror.outputs.contexts }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
