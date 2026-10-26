@@ -29,7 +29,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # The QEMU and BuildKit helper images come from Google's mirror of Docker Hub (mirror.gcr.io): pulling them
       # from Docker Hub itself failed whenever its login server timed out, before the build could start
