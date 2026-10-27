@@ -6,6 +6,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    # Also the packages that the listed libraries pull in themselves, which is where most security fixes land
+    allow:
+      - dependency-type: all
     open-pull-requests-limit: 10
     groups:
       composer-minor-and-patch:
@@ -17,6 +20,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    # Also the packages that the listed libraries pull in themselves, which is where most security fixes land
+    allow:
+      - dependency-type: all
     open-pull-requests-limit: 10
     groups:
       npm-minor-and-patch:
