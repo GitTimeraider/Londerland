@@ -174,18 +174,30 @@
 	}
 
 	function hookFunctions() {
-		wrap('switchTab', function (id, split) {
+		wrap('switchTab', function (id) {
 			if (Date.now() - startedAt < IGNORE_TABS_FOR_MS) {
 				return;
 			}
 			const tab = typeof findTab === 'function' ? findTab(id) : null;
 			if (tab && parseInt(tab.id, 10) > 0) {
 				track('tab', { tab: parseInt(tab.id, 10) });
-				if (split) {
-					track('split');
-				}
 			}
 		});
+		// Split view (Ctrl+Alt+click a tab) has its own function, which returns false when the tab can't be shown there
+		const openSplit = window.openSplitTab;
+		if (typeof openSplit === 'function') {
+			window.openSplitTab = function () {
+				const result = openSplit.apply(this, arguments);
+				if (result !== false) {
+					try {
+						track('split');
+					} catch (e) {
+						console.error(e);
+					}
+				}
+				return result;
+			};
+		}
 		// A tab in a new browser window: the top bar button, or Ctrl/middle-click on a tab
 		wrap('openInNewBrowserTab', function () {
 			track('popout');
