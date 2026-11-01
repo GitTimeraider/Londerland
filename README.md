@@ -1,7 +1,7 @@
 <p align="center"><img src="https://github.com/GitTimeraider/Assets/blob/main/Londerland/img/Londerland_1.png?raw=true" alt="Londerland" width="420"></p>
 
 #### Disclaimer: 
-While guided and checked, AI is responsible for half of the coding. Development is also 100% for own personal use, no promises.
+While guided and checked, AI is responsible for half of the coding. Development is also 100% for own personal use. If you want personal changes, please fork it for your own use/development.
 __________________________________
 
 **Londerland** is a self-hosted web portal you can put on the internet as your own website:
