@@ -29,7 +29,7 @@
     "moment": "^2.31.0",
     "moment-timezone": "^0.6.5",
     "overlayscrollbars": "^2.17.0",
-    "rapidoc": "^11.0.1",
+    "rapidoc": "^12.0.0",
     "simple-line-icons": "^2.5.5",
     "sortablejs": "^1.15.7",
     "swagger-ui-dist": "^5.34.0",
