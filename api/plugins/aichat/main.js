@@ -1031,6 +1031,63 @@
 		$send.prop('disabled', !ready).removeClass('stop').attr('title', t('Send')).html('<i class="fa fa-arrow-up"></i>');
 	}
 
+	/**
+	 * Phones and tablets: a short tap on the text of a message selected the word under the finger (Chrome's "Touch to
+	 * Search" and similar browser features do that on plain text), and the tap also took the focus from the message
+	 * field, so the on-screen keyboard closed. A short tap on plain message text is cancelled here, so neither
+	 * happens; a long press still selects text as usual, and scrolling, links, buttons and other controls inside the
+	 * messages are left alone. While text is selected a tap is not cancelled, so it can still clear the selection.
+	 */
+	function guardTextTaps(container) {
+		if (!container) {
+			return;
+		}
+		const interactive = 'a, button, input, textarea, select, label, summary, img, video, audio, [role="button"], [tabindex], [contenteditable=""], [contenteditable="true"]';
+		let tap = null;
+		container.addEventListener(
+			'touchstart',
+			function (e) {
+				const touch = e.touches.length === 1 ? e.touches[0] : null;
+				tap = touch ? { x: touch.clientX, y: touch.clientY, time: Date.now() } : null;
+			},
+			{ passive: true }
+		);
+		container.addEventListener(
+			'touchmove',
+			function (e) {
+				const touch = e.touches[0];
+				if (tap && touch && Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) > 10) {
+					tap = null;
+				}
+			},
+			{ passive: true }
+		);
+		container.addEventListener(
+			'touchend',
+			function (e) {
+				const started = tap;
+				tap = null;
+				if (!started || e.touches.length || !e.cancelable || Date.now() - started.time > 400) {
+					return;
+				}
+				const target = e.target.nodeType === 1 ? e.target : e.target.parentElement;
+				if (!target || target.closest(interactive)) {
+					return;
+				}
+				const selection = window.getSelection && window.getSelection();
+				if (selection && !selection.isCollapsed) {
+					return;
+				}
+				// no click follows, so the browser neither selects the word nor moves the focus away from the message field
+				e.preventDefault();
+			},
+			{ passive: false }
+		);
+		container.addEventListener('touchcancel', function () {
+			tap = null;
+		});
+	}
+
 	// Phones and tablets: an on-screen keyboard has no Shift+Enter, so Enter makes a new line there and the send
 	// button sends
 	function touchTyping() {
@@ -2188,6 +2245,8 @@
 		$panel.on('click', '.aichat-regenerate', function () {
 			send({ regenerate: true, content: '' });
 		});
+
+		guardTextTaps($panel.find('.aichat-messages')[0]);
 
 		// the on-screen keyboard opening or closing changes the visible part of the screen
 		if (window.visualViewport) {
