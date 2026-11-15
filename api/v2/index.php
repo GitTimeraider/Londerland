@@ -55,7 +55,7 @@ function overWriteURI()
 
 /*
  * Endpoints that visitors who are not logged in may use: the login page and its sign-in methods, reverse proxy auth,
- * robots.txt/sitemap.xml and shared AI chats. Everything else needs a login or the API key (see apiGateAllows).
+ * robots.txt/sitemap.xml/security.txt and shared AI chats. Everything else needs a login or the API key (see apiGateAllows).
  */
 $GLOBALS['publicRoutes'] = array(
 	array('GET', '#^/launch/?$#'),
@@ -71,6 +71,7 @@ $GLOBALS['publicRoutes'] = array(
 	// tab ping dots; the ping itself checks who may use it (Settings > Main > Ping)
 	array('GET', '#^/ping/[^/]+$#'),
 	array('GET', '#^/(seo/)?(robots\.txt|sitemap\.xml)$#'),
+	array('GET', '#^/(seo/|\.well-known/)?security\.txt$#'),
 	array('GET', '#^/plugins/aichat/shared/[^/]+$#'),
 );
 

@@ -126,6 +126,7 @@ return [
 	'seoStructuredData' => true,
 	'seoSitemap' => true,
 	'seoRobotsTxt' => '',
+	'seoSecurityTxt' => '',
 	'debugErrors' => false,
 	'gaTrackingID' => '',
 	'loginAttempts' => '5',
