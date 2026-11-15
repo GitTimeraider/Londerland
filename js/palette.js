@@ -153,7 +153,7 @@
 			settingsItem('tabs', 'tab-editor', 'settings-tab-editor-tabs-anchor', 'Tab Editor: Tabs', 'add tab edit'),
 			settingsItem('categories', 'tab-editor', 'settings-tab-editor-categories-anchor', 'Tab Editor: Categories'),
 			settingsItem('appearance', 'customize', 'settings-customize-appearance-anchor', 'Customize: Appearance', 'theme colours colors logo title css javascript login favicon'),
-			settingsItem('website', 'customize', 'settings-customize-site-anchor', 'Customize: Website', 'announcement banner seo robots sitemap'),
+			settingsItem('website', 'customize', 'settings-customize-site-anchor', 'Customize: Website', 'announcement banner seo robots sitemap security.txt'),
 			settingsItem('users', 'user-management', 'settings-user-manage-users-anchor', 'User Management: Users', 'accounts'),
 			settingsItem('groups', 'user-management', 'settings-user-manage-groups-anchor', 'User Management: Groups'),
 			settingsItem('images', 'image-manager', null, 'Image Manager', 'upload pictures icons'),
