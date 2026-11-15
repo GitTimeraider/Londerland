@@ -52,7 +52,7 @@ All screenshots use the default dark style. Click a picture to see it full size.
   using `api/v2/auth`.
 - **Login only from your own networks** if you want ([details below](#login-only-from-your-own-networks)).
 - **Look and feel**: themes, colours, title, description, logo, favicon, login page and splash screen, custom CSS and JavaScript.
-- **Website**: an announcement bar, and search engine and link preview settings with robots.txt and sitemap.xml
+- **Website**: an announcement bar, and search engine and link preview settings with robots.txt, sitemap.xml and security.txt
   ([details below](#website-announcement-and-seo)).
 - **Command palette**: press Ctrl+K (Cmd+K on a Mac) to jump to any tab, bookmark, settings page or action ([details below](#command-palette)).
 - **AI Chat** with web search, reading web pages, image generation and read-only public links to a chat ([details below](#ai-chat)).
@@ -295,17 +295,17 @@ npm ci && npm run build
 Point the web server at the repository folder and make the `data` folder writable for the web server user.
 Run `php cron.php` every minute (for example with cron) for scheduled jobs such as backups.
 
-`/robots.txt` and `/sitemap.xml` are made by Londerland. With Apache, add these lines inside the `<Directory>` block of
+`/robots.txt`, `/sitemap.xml` and `/.well-known/security.txt` are made by Londerland. With Apache, add these lines inside the `<Directory>` block of
 the Londerland folder in the site's configuration (the Docker image already has them); with Nginx, add the `rewrite`
 line to the `server` block:
 
 ```apache
 RewriteEngine On
-RewriteRule ^(robots\.txt|sitemap\.xml)$ api/v2/index.php [L]
+RewriteRule ^(robots\.txt|sitemap\.xml|security\.txt|\.well-known/security\.txt)$ api/v2/index.php [L]
 ```
 
 ```nginx
-rewrite ^/(robots\.txt|sitemap\.xml)$ /api/v2/index.php last;
+rewrite ^/(robots\.txt|sitemap\.xml|security\.txt|\.well-known/security\.txt)$ /api/v2/index.php last;
 ```
 
 ## Website: announcement and SEO
@@ -327,6 +327,7 @@ In Londerland, open **Settings > Customize > Website**. It has two parts; click 
 - Verification codes for **Google Search Console** and **Bing Webmaster Tools** (only the code from `content="..."`).
 - **Structured data (JSON-LD)** and **sitemap.xml** (served at `/sitemap.xml`).
 - **Own robots.txt**: leave empty for a generated one, served at `/robots.txt`.
+- **Own security.txt** ([RFC 9116](https://www.rfc-editor.org/rfc/rfc9116)): how security researchers can reach you, served at `/.well-known/security.txt` (and `/security.txt`). It needs at least a `Contact:` and an `Expires:` line; [securitytxt.org](https://securitytxt.org/) can make one. Leave empty to serve none.
 
 ## Command palette
 

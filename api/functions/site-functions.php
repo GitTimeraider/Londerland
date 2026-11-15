@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Settings > Customize > Website: the announcement bar, search engine and link preview tags, robots.txt and sitemap.xml.
+ * Settings > Customize > Website: the announcement bar, search engine and link preview tags, robots.txt, sitemap.xml
+ * and security.txt.
  * Everything here is written into index.php by the server, so a site without an announcement sends no extra bytes
  * and makes no extra requests.
  */
@@ -52,6 +53,7 @@ trait SiteFunctions
 				$this->settingsOption('switch', 'seoStructuredData', ['label' => 'Structured data (JSON-LD)', 'help' => 'Tells search engines the name and address of the site.']),
 				$this->settingsOption('switch', 'seoSitemap', ['label' => 'sitemap.xml', 'help' => 'Served at /sitemap.xml and listed in robots.txt. Needs the public address above.']),
 				$this->siteOption('textbox', 'seoRobotsTxt', ['label' => 'Own robots.txt', 'override' => 12, 'attr' => 'rows="6" spellcheck="false"', 'placeholder' => "User-agent: *\nDisallow: /api/", 'help' => 'Leave empty for a generated one that follows the Search engines setting. Served at /robots.txt.']),
+				$this->siteOption('textbox', 'seoSecurityTxt', ['label' => 'Own security.txt', 'override' => 12, 'attr' => 'rows="6" spellcheck="false"', 'placeholder' => "Contact: mailto:security@example.com\nExpires: 2027-12-31T23:00:00.000Z\nPreferred-Languages: en", 'help' => 'Tells security researchers how to report a vulnerability (RFC 9116). Contact and Expires are required; see securitytxt.org. Served at /.well-known/security.txt and /security.txt. Leave empty to serve none.']),
 			],
 		];
 	}
@@ -325,6 +327,16 @@ html.has-announcement .split-pane{top:calc(40px + var(--announcement-h,0px))}
 			}
 		}
 		return implode("\n", $lines) . "\n";
+	}
+
+	/**
+	 * The security.txt file (RFC 9116) as entered in the settings, or null when none is set: there is nothing sensible
+	 * to generate, as a security.txt is only useful with the site owner's own contact address.
+	 */
+	public function seoSecurityTxt()
+	{
+		$custom = trim(str_replace("\r\n", "\n", (string)($this->config['seoSecurityTxt'] ?? '')));
+		return $custom === '' ? null : $custom . "\n";
 	}
 
 	/**
