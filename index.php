@@ -15,6 +15,7 @@ $Londerland->seoHeaders();
 	<?php echo $Londerland->seoHead(); ?>
 	<?php echo $Londerland->favIcons(); ?>
     <title><?php echo $Londerland->config['title']; ?></title>
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="application-name" content="<?php echo $Londerland->config['title']; ?>">
