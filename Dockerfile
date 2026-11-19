@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: install PHP dependencies from composer.lock
 # ---------------------------------------------------------------------------
-FROM composer:2.10 AS vendor
+FROM composer:2.11 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
