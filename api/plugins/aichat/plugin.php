@@ -3194,6 +3194,12 @@ class AiChat extends Londerland
 			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error, 'stored' => $stored]);
 			exit;
 		}
+		if ($error && !$aborted) {
+			// a later step failed (often after a tool call): keep what was written, and say why it stops there
+			$this->setLoggerChannel('AI Chat')->warning('The answer stopped early: ' . $error, ['model' => $model]);
+			$notices[] = 'The answer stopped early. ' . $error;
+			$this->_aiChatSendEvent(['type' => 'notice', 'notices' => $notices]);
+		}
 		$meta = [];
 		if ($notices) {
 			$meta['notices'] = $notices;
