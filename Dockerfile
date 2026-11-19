@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: install PHP dependencies from composer.lock
 # ---------------------------------------------------------------------------
-FROM composer:2.10 AS vendor
+FROM composer:2.11 AS vendor
 
 WORKDIR /build/api
 COPY api/composer.json api/composer.lock ./
@@ -37,7 +37,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Pinned to an exact PHP release so a security fix ships as soon as its image exists;
 # Dependabot opens a pull request for each new PHP release.
-FROM php:8.5.12-apache
+FROM php:8.6.0-apache
 
 ARG LONDERLAND_COMMIT=unknown
 
