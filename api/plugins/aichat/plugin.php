@@ -3033,6 +3033,10 @@ class AiChat extends Londerland
 		header('Content-Type: text/event-stream; charset=UTF-8');
 		header('Cache-Control: no-cache, no-transform');
 		header('X-Accel-Buffering: no');
+		// a comment line large enough to push the first events through proxy and compression buffers, so the
+		// question shows right away instead of with the first words of the answer
+		echo ':' . str_repeat(' ', 4096) . "\n\n";
+		flush();
 		if ($userMessage) {
 			$this->_aiChatSendEvent(['type' => 'user', 'message' => $userMessage]);
 		}
