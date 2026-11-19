@@ -2809,7 +2809,7 @@ class AiChat extends Londerland
 	 */
 	private function _aiChatStreamRound($body)
 	{
-		$round = ['answer' => '', 'reasoning' => '', 'toolCalls' => [], 'errorBody' => '', 'aborted' => false, 'code' => 0, 'curlError' => ''];
+		$round = ['answer' => '', 'reasoning' => '', 'toolCalls' => [], 'errorBody' => '', 'aborted' => false, 'code' => 0, 'curlError' => '', 'finish' => null, 'raw' => ''];
 		$buffer = '';
 		$curl = $this->_aiChatCurl($this->_aiChatUrl('chat/completions'), max(30, (int)$this->config['AICHAT-requestTimeout']));
 		curl_setopt_array($curl, [
@@ -2831,6 +2831,11 @@ class AiChat extends Londerland
 					$line = trim(substr($buffer, 0, $end));
 					$buffer = substr($buffer, $end + 1);
 					if (strpos($line, 'data:') !== 0) {
+						// not server-sent events (some servers ignore "stream" or send an error as plain JSON):
+						// kept to read after the request
+						if ($line !== '' && $line[0] !== ':' && strpos($line, 'event:') !== 0 && strlen($round['raw']) < 1000000) {
+							$round['raw'] .= $line . "\n";
+						}
 						continue;
 					}
 					$payload = trim(substr($line, 5));
@@ -2842,7 +2847,16 @@ class AiChat extends Londerland
 						$round['errorBody'] .= $payload;
 						continue;
 					}
+					if (!empty($event['choices'][0]['finish_reason'])) {
+						$round['finish'] = $event['choices'][0]['finish_reason'];
+					}
 					$delta = $event['choices'][0]['delta'] ?? [];
+					// a few servers send the text as a list of parts instead of a string
+					if (is_array($delta['content'] ?? null)) {
+						$delta['content'] = implode('', array_map(function ($part) {
+							return is_array($part) ? (string)($part['text'] ?? '') : (string)$part;
+						}, $delta['content']));
+					}
 					// Reasoning models stream their thinking under different names depending on the server
 					$thinking = $delta['reasoning_content'] ?? ($delta['reasoning'] ?? null);
 					if (is_string($thinking) && $thinking !== '') {
@@ -2870,15 +2884,69 @@ class AiChat extends Londerland
 		curl_exec($curl);
 		$round['code'] = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 		$round['curlError'] = curl_error($curl);
+		$rest = trim($buffer);
+		if ($rest !== '' && strpos($rest, 'data:') !== 0 && $round['code'] < 400) {
+			$round['raw'] .= $rest;
+		}
+		if ($round['raw'] !== '' && $round['answer'] === '' && !$round['toolCalls'] && $round['errorBody'] === '') {
+			$this->_aiChatReadPlainAnswer($round);
+		}
 		ksort($round['toolCalls']);
 		$round['toolCalls'] = array_values($round['toolCalls']);
 		return $round;
+	}
+
+	/**
+	 * The server answered with one plain JSON body instead of server-sent events: a whole answer, or an error
+	 */
+	private function _aiChatReadPlainAnswer(&$round)
+	{
+		$decoded = json_decode(trim($round['raw']), true);
+		if (!is_array($decoded)) {
+			return;
+		}
+		if (isset($decoded['error'])) {
+			$round['errorBody'] = trim($round['raw']);
+			return;
+		}
+		$message = $decoded['choices'][0]['message'] ?? null;
+		if (!is_array($message)) {
+			return;
+		}
+		$round['finish'] = $decoded['choices'][0]['finish_reason'] ?? $round['finish'];
+		$thinking = $message['reasoning_content'] ?? ($message['reasoning'] ?? null);
+		if (is_string($thinking) && $thinking !== '') {
+			$round['reasoning'] .= $thinking;
+			$this->_aiChatSendEvent(['type' => 'reasoning', 'content' => $thinking]);
+		}
+		$text = $message['content'] ?? null;
+		if (is_array($text)) {
+			$text = implode('', array_map(function ($part) {
+				return is_array($part) ? (string)($part['text'] ?? '') : (string)$part;
+			}, $text));
+		}
+		if (is_string($text) && $text !== '') {
+			$round['answer'] .= $text;
+			$this->_aiChatSendEvent(['type' => 'delta', 'content' => $text]);
+		}
+		foreach ($message['tool_calls'] ?? [] as $call) {
+			$round['toolCalls'][] = ['id' => $call['id'] ?? null, 'name' => $call['function']['name'] ?? '', 'arguments' => $call['function']['arguments'] ?? ''];
+		}
 	}
 
 	private function _aiChatRoundError($round)
 	{
 		if ($round['errorBody'] !== '') {
 			return $this->_aiChatUpstreamError(json_decode($round['errorBody'], true), $round['errorBody'], $round['code'] ?: 500);
+		}
+		$nothing = !$round['aborted'] && $round['answer'] === '' && !$round['toolCalls'];
+		if ($nothing && $round['finish'] === 'length') {
+			$limit = (int)$this->config['AICHAT-maxTokens'];
+			return 'The AI reached its answer length limit before it wrote an answer' . ($round['reasoning'] !== '' ? ' (it used it all for thinking)' : '') . '. ' .
+				($limit > 0 ? 'An admin can raise "Max tokens" (now ' . $limit . ') in the AI Chat settings.' : 'Try a shorter question, or a new chat.');
+		}
+		if ($nothing && $round['finish'] === 'content_filter') {
+			return "The AI server's content filter blocked the answer. Ask in other words.";
 		}
 		if (!$round['aborted'] && $round['answer'] === '' && $round['reasoning'] === '' && !$round['toolCalls'] && ($round['code'] >= 400 || $round['curlError'])) {
 			return $round['curlError'] ?: 'The AI server answered ' . $round['code'];
@@ -3060,7 +3128,7 @@ class AiChat extends Londerland
 			// ask once more, with a note that an answer is needed
 			$empty = !$produced && !$result['aborted'] && ($error === null || preg_match('/empty (content|response|answer)/i', $error));
 			if ($empty && $answer === '' && !$images && !$retriedEmpty) {
-				$this->setLoggerChannel('AI Chat')->warning('The AI returned an empty answer, asking again', ['model' => $model, 'round' => $round, 'error' => $error]);
+				$this->setLoggerChannel('AI Chat')->warning('The AI returned an empty answer, asking again', ['model' => $model, 'round' => $round, 'error' => $error, 'http' => $result['code'], 'finish' => $result['finish'], 'thinking' => strlen($result['reasoning']), 'other' => mb_substr($result['raw'], 0, 500)]);
 				$retriedEmpty = true;
 				$retryEmpty = true;
 				$reasoning .= $result['reasoning'];
@@ -3105,7 +3173,19 @@ class AiChat extends Londerland
 		}
 
 		if (!$aborted && trim($answer) === '' && !$images && (!$error || preg_match('/empty (content|response|answer)/i', $error))) {
-			$error = 'The AI gave an empty answer, also when asked again. Use "Answer again", or ask in other words.' . ($error ? ' (' . $error . ')' : '');
+			$details = $error ? [$error] : [];
+			if (isset($result) && !$error) {
+				if ($result['finish']) {
+					$details[] = 'stop reason: ' . $result['finish'];
+				}
+				if ($result['reasoning'] !== '') {
+					$details[] = 'the AI only thought, ' . mb_strlen($result['reasoning']) . ' characters';
+				}
+				if (trim($result['raw']) !== '') {
+					$details[] = 'server sent: ' . mb_substr(trim(strip_tags($result['raw'])), 0, 300);
+				}
+			}
+			$error = 'The AI gave an empty answer, also when asked again. Use "Answer again", or ask in other words.' . ($details ? ' (' . implode('; ', $details) . ')' : '');
 		}
 		if ($error && trim($answer) === '' && !$images) {
 			$this->setLoggerChannel('AI Chat')->warning($error, ['model' => $model]);
