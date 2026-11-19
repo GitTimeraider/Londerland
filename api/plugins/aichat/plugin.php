@@ -2945,8 +2945,9 @@ class AiChat extends Londerland
 			return 'The AI reached its answer length limit before it wrote an answer' . ($round['reasoning'] !== '' ? ' (it used it all for thinking)' : '') . '. ' .
 				($limit > 0 ? 'An admin can raise "Max tokens" (now ' . $limit . ') in the AI Chat settings.' : 'Try a shorter question, or a new chat.');
 		}
-		if ($nothing && $round['finish'] === 'content_filter') {
-			return "The AI server's content filter blocked the answer. Ask in other words.";
+		if ($nothing && in_array($round['finish'], ['content_filter', 'refusal'], true)) {
+			// Claude's safety check stops an answer with "refusal"; OpenAI-style servers report it as "content_filter"
+			return "The AI's safety check stopped this answer. Ask in other words, add why you need it, or try another model.";
 		}
 		if (!$round['aborted'] && $round['answer'] === '' && $round['reasoning'] === '' && !$round['toolCalls'] && ($round['code'] >= 400 || $round['curlError'])) {
 			return $round['curlError'] ?: 'The AI server answered ' . $round['code'];
@@ -3193,6 +3194,12 @@ class AiChat extends Londerland
 			$stored = $this->_aiChatInsertMessage($chatId, 'error', $error, [], $model);
 			$this->_aiChatSendEvent(['type' => 'error', 'message' => $error, 'stored' => $stored]);
 			exit;
+		}
+		if ($error && !$aborted) {
+			// a later step failed (often after a tool call): keep what was written, and say why it stops there
+			$this->setLoggerChannel('AI Chat')->warning('The answer stopped early: ' . $error, ['model' => $model]);
+			$notices[] = 'The answer stopped early. ' . $error;
+			$this->_aiChatSendEvent(['type' => 'notice', 'notices' => $notices]);
 		}
 		$meta = [];
 		if ($notices) {
