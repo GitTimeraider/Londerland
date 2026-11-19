@@ -37,7 +37,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Pinned to an exact PHP release so a security fix ships as soon as its image exists;
 # Dependabot opens a pull request for each new PHP release.
-FROM php:8.5.12-apache
+FROM php:8.6.0RC5-apache
 
 ARG LONDERLAND_COMMIT=unknown
 
