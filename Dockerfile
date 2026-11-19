@@ -47,14 +47,15 @@ ENV LONDERLAND_PORT=80
 # Time zone for PHP and logs; override with -e TZ=Europe/Amsterdam
 ENV TZ=UTC
 
-# PHP extensions that are not in the base image (zip, ldap, mysqli).
+# PHP extensions that are not in the base image (zip, ldap, mysqli, mbstring).
+# The official image stopped building mbstring in itself from PHP 8.6; it needs libonig-dev to compile.
 # Build-only packages are removed afterwards.
 RUN set -eux; \
     apt-get update; \
     savedAptMark="$(apt-mark showmanual)"; \
-    apt-get install -y --no-install-recommends libzip-dev libldap2-dev; \
+    apt-get install -y --no-install-recommends libzip-dev libldap2-dev libonig-dev; \
     docker-php-ext-configure ldap --with-libdir="lib/$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"; \
-    docker-php-ext-install -j"$(nproc)" zip ldap mysqli; \
+    docker-php-ext-install -j"$(nproc)" zip ldap mysqli mbstring; \
     apt-mark auto '.*' > /dev/null; \
     apt-mark manual $savedAptMark; \
     find /usr/local -type f -executable -exec ldd '{}' ';' \
@@ -62,7 +63,7 @@ RUN set -eux; \
         | sort -u | xargs -r dpkg-query --search | awk 'sub(":$", "", $1) { print $1 }' | sort -u | xargs -r apt-mark manual; \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     rm -rf /var/lib/apt/lists/*; \
-    php -m | grep -qi '^zip$'; php -m | grep -qi '^ldap$'; php -m | grep -qi '^pdo_sqlite$'
+    php -m | grep -qi '^zip$'; php -m | grep -qi '^ldap$'; php -m | grep -qi '^pdo_sqlite$'; php -m | grep -qi '^mbstring$'
 
 # Apache listens on ${LONDERLAND_PORT}; its run, lock and log folders are already writable for any user
 RUN set -eux; \
