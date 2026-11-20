@@ -199,6 +199,14 @@ $app->post('/plugins/aichat/chats/{id}/stream', function ($request, $response, $
 	}
 	return aiChatJsonResponse($response);
 });
+// Stops the answer being written for this chat, also when it was started from a page that is closed now
+$app->post('/plugins/aichat/chats/{id}/stop', function ($request, $response, $args) {
+	$AiChat = new AiChat();
+	if ($AiChat->_aiChatAccess($request)) {
+		$AiChat->_aiChatStop($args['id']);
+	}
+	return aiChatJsonResponse($response);
+});
 $app->post('/plugins/aichat/files', function ($request, $response, $args) {
 	$AiChat = new AiChat();
 	if ($AiChat->_aiChatAccess($request)) {
