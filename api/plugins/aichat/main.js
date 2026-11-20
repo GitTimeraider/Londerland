@@ -18,6 +18,7 @@
 		webTools: false, // admin lets the model use the web by itself; the Web button turns it off and on per user
 		pending: [], // attachments waiting to be sent: { id, name, mime, kind, uploading, localUrl }
 		controller: null, // AbortController of the running answer
+		watchTimer: null, // checks on an answer the server writes for a chat opened later (see watchGenerating)
 		search: '',
 		librariesLoaded: null,
 		modelSelect: null,
@@ -820,7 +821,20 @@
 
 	/* ===================== messages ===================== */
 
+	// Leaving a chat while it answers (another chat, a new chat): the server keeps writing the answer, and the
+	// chat shows it again when it is opened
+	function detachAnswer() {
+		if (state.controller) {
+			const controller = state.controller;
+			controller.detached = true;
+			state.controller = null;
+			controller.abort();
+		}
+		clearTimeout(state.watchTimer);
+	}
+
 	function showWelcome() {
+		detachAnswer();
 		state.chat = null;
 		state.pending = [];
 		renderPending();
@@ -840,9 +854,7 @@
 	}
 
 	async function loadChat(id) {
-		if (state.controller) {
-			return;
-		}
+		detachAnswer();
 		try {
 			state.chat = (await api('GET', 'chats/' + id)).data;
 		} catch (error) {
@@ -861,6 +873,7 @@
 			$panel.addClass('aichat-sidebar-hidden');
 		}
 		updateSendState();
+		watchGenerating();
 	}
 
 	// Word, Excel, PowerPoint and OpenDocument files (their text is sent to the model)
@@ -1005,7 +1018,84 @@
 			return;
 		}
 		$messages.html(list.map((msg, index) => messageHtml(msg, index === list.length - 1)).join(''));
+		renderGenerating();
 		scrollToBottom(true);
+	}
+
+	/* ===================== answers written while the chat was closed ===================== */
+
+	// The answer the server is still writing for this chat (asked from a page that was closed or from another tab)
+	function renderGenerating() {
+		const $messages = $panel.find('.aichat-messages');
+		$messages.find('.aichat-live').remove();
+		const gen = state.chat && state.chat.generating;
+		if (!gen) {
+			return;
+		}
+		$messages.find('.aichat-message').removeClass('last');
+		$messages.find('.aichat-regenerate').remove();
+		const msg = {
+			id: null,
+			role: 'assistant',
+			content: gen.answer,
+			reasoning: gen.reasoning || null,
+			attachments: gen.images || [],
+			meta: { sources: gen.sources || [], notices: gen.notices || [] },
+			model: state.chat.model,
+			created: new Date().toISOString(),
+		};
+		const $live = $(messageHtml(msg, true)).addClass('aichat-live last');
+		$live.find('.aichat-icon-btn').remove();
+		if (!gen.answer) {
+			$live.find('.aichat-bubble').html('<span class="aichat-typing"><span></span><span></span><span></span></span>');
+		} else {
+			$live.find('.aichat-bubble').addClass('aichat-cursor');
+		}
+		const status = gen.status || (gen.answer ? '' : 'Answering...');
+		if (status) {
+			$live.prepend(`<div class="aichat-status"><i class="fa fa-spinner fa-spin me-2"></i>${escapeHtml(t(status))}</div>`);
+		}
+		$messages.append($live);
+		scrollToBottom();
+	}
+
+	// Checks every few seconds until the background answer is stored, then shows the chat as saved
+	function watchGenerating() {
+		clearTimeout(state.watchTimer);
+		if (!state.chat || !state.chat.generating || state.controller) {
+			return;
+		}
+		const id = state.chat.id;
+		state.watchTimer = setTimeout(async function () {
+			if (!state.chat || state.chat.id !== id || state.controller) {
+				return;
+			}
+			let chat;
+			try {
+				chat = (await api('GET', 'chats/' + id)).data;
+			} catch (error) {
+				watchGenerating();
+				return;
+			}
+			if (!state.chat || state.chat.id !== id || state.controller) {
+				return;
+			}
+			if (chat.generating) {
+				state.chat.generating = chat.generating;
+				renderGenerating();
+			} else {
+				state.chat = chat;
+				$panel.find('.aichat-title').text(chat.title);
+				const listed = state.chats.find((c) => c.id === chat.id);
+				if (listed) {
+					listed.title = chat.title;
+				}
+				renderMessages();
+				renderChatList();
+			}
+			updateSendState();
+			watchGenerating();
+		}, 1500);
 	}
 
 	function scrollToBottom(force) {
@@ -1020,7 +1110,7 @@
 
 	function updateSendState() {
 		const $send = $panel.find('.aichat-send');
-		if (state.controller) {
+		if (state.controller || (state.chat && state.chat.generating)) {
 			$send.prop('disabled', false).addClass('stop').attr('title', t('Stop')).html('<i class="fa fa-stop"></i>');
 			return;
 		}
@@ -1114,7 +1204,7 @@
 	}
 
 	async function send(options = {}) {
-		if (state.controller) {
+		if (state.controller || (state.chat && state.chat.generating)) {
 			return;
 		}
 		const $input = $panel.find('.aichat-input');
@@ -1182,7 +1272,9 @@
 		}
 		$messages.append($answer);
 		scrollToBottom(true);
-		state.controller = new AbortController();
+		const controller = new AbortController();
+		state.controller = controller;
+		clearTimeout(state.watchTimer);
 		updateSendState();
 		let answer = '';
 		let reasoning = '';
@@ -1215,13 +1307,14 @@
 			}
 		};
 		let finished = false;
+		let stopped = false;
 		try {
 			const response = await fetch(API + 'chats/' + chat.id + '/stream', {
 				method: 'POST',
 				headers: headers(),
 				body: JSON.stringify(body),
 				credentials: 'same-origin',
-				signal: state.controller.signal,
+				signal: controller.signal,
 			});
 			if (!response.ok || !(response.headers.get('Content-Type') || '').includes('text/event-stream')) {
 				let text = t('The answer could not be started') + ' (' + response.status + ')';
@@ -1310,13 +1403,18 @@
 		} catch (error) {
 			if (error.name === 'AbortError') {
 				// stopped by the user: the server keeps what was written so far
-				if (answer || reasoning) {
+				stopped = true;
+				if (!controller.detached && (answer || reasoning)) {
 					chat.messages.push({ id: null, role: 'assistant', content: answer, reasoning: reasoning || null, model: body.model, created: new Date().toISOString(), attachments: [] });
 				}
 			} else {
 				chat.messages.push(error.stored || { id: null, role: 'error', content: error.message, attachments: [] });
 			}
 		} finally {
+			if (controller.detached) {
+				// the user opened another chat; this answer is finished on the server
+				return;
+			}
 			state.controller = null;
 			updateSendState();
 			// the server refused the question before storing it: give the text back, so it is not lost
@@ -1333,8 +1431,9 @@
 				state.chats.sort((a, b) => b.pinned - a.pinned);
 			}
 			renderChatList();
-			// a stopped answer gets its real id from the server on the next load
-			if (chat.messages.some((m) => !m.id && m.role === 'assistant')) {
+			// a stopped answer gets its real id from the server on the next load (and shows the end of it, if the
+			// server was still finishing)
+			if (stopped || chat.messages.some((m) => !m.id && m.role === 'assistant')) {
 				setTimeout(function () {
 					if (state.chat && state.chat.id === chat.id && !state.controller) {
 						loadChat(chat.id);
@@ -1344,7 +1443,13 @@
 		}
 	}
 
+	// Closing the page does not stop an answer (it is stored for when the user comes back); this button does
 	function stop() {
+		if (state.chat && state.chat.id) {
+			api('POST', 'chats/' + state.chat.id + '/stop').catch(function (error) {
+				notify(error.message);
+			});
+		}
 		if (state.controller) {
 			state.controller.abort();
 		}
@@ -2166,7 +2271,7 @@
 			}
 		});
 		$panel.on('click', '.aichat-send', function () {
-			if (state.controller) {
+			if (state.controller || (state.chat && state.chat.generating)) {
 				stop();
 			} else {
 				send();

@@ -38,6 +38,13 @@ class AiChat extends Londerland
 	// fetch_url: largest download and how much page text the model gets per call
 	private const MAX_FETCH_BYTES = 5242880;
 	private const MAX_PAGE_TEXT = 20000;
+	// An answer whose progress file was not written for this long is treated as gone (its PHP process died)
+	private const LIVE_STALE_SECONDS = 600;
+
+	/** Progress of the answer this request is generating, written to a file so a reopened chat can follow it */
+	private $live = null;
+	private $liveWritten = 0;
+	private $liveStopChecked = 0;
 	// A web page with less text than this (or one that asks for JavaScript) is read again with the JavaScript reader
 	private const MIN_PAGE_TEXT = 400;
 	// Exception code for links the chat may not read at all; those are never handed to the JavaScript reader either
@@ -1471,6 +1478,16 @@ class AiChat extends Londerland
 		}
 		$formatted = $this->_aiChatFormatChat($chat);
 		$formatted['messages'] = array_map([$this, '_aiChatFormatMessage'], $this->_aiChatMessages($chatId));
+		// an answer still being written (also when the page that asked was closed)
+		$live = $this->_aiChatLiveState($chatId);
+		$formatted['generating'] = $live ? [
+			'answer' => $live['answer'],
+			'reasoning' => $live['reasoning'],
+			'status' => $live['status'],
+			'sources' => $live['sources'],
+			'notices' => $live['notices'],
+			'images' => $live['images'],
+		] : null;
 		return $formatted;
 	}
 
@@ -1539,6 +1556,10 @@ class AiChat extends Londerland
 	{
 		if (!$this->_aiChatFindChat($chatId)) {
 			return false;
+		}
+		// an answer still being written for it stops instead of being stored in a deleted chat
+		if ($this->_aiChatLiveState($chatId)) {
+			@touch($this->_aiChatLiveFile($chatId, 'stop'));
 		}
 		$this->_aiChatDeleteChatRows([(int)$chatId]);
 		$this->setAPIResponse('success', 'Chat deleted', 200);
@@ -2236,8 +2257,139 @@ class AiChat extends Londerland
 
 	private function _aiChatSendEvent($event)
 	{
-		echo 'data: ' . json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
-		flush();
+		// The browser may be gone (page closed): the answer is still generated and stored, so writing here
+		// only matters while someone is watching
+		if (!connection_aborted()) {
+			echo 'data: ' . json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+			flush();
+		}
+		if ($this->live !== null) {
+			$this->_aiChatLiveTrack($event);
+		}
+	}
+
+	/* ===================== answers that keep going without the browser ===================== */
+
+	private function _aiChatLiveDir()
+	{
+		$dir = $this->_aiChatFileDir() . DIRECTORY_SEPARATOR . 'live';
+		if (!is_dir($dir)) {
+			@mkdir($dir, 0750, true);
+		}
+		return $dir;
+	}
+
+	private function _aiChatLiveFile($chatId, $type = 'json')
+	{
+		return $this->_aiChatLiveDir() . DIRECTORY_SEPARATOR . (int)$chatId . '.' . $type;
+	}
+
+	/**
+	 * The answer being generated for a chat right now (also by another request), or null
+	 */
+	public function _aiChatLiveState($chatId)
+	{
+		$file = $this->_aiChatLiveFile($chatId);
+		if (!is_file($file)) {
+			return null;
+		}
+		$live = json_decode((string)@file_get_contents($file), true);
+		if (!is_array($live) || time() - (int)($live['updated'] ?? 0) > self::LIVE_STALE_SECONDS) {
+			@unlink($file);
+			return null;
+		}
+		return $live;
+	}
+
+	private function _aiChatLiveStart($chatId)
+	{
+		@unlink($this->_aiChatLiveFile($chatId, 'stop'));
+		$this->live = ['chatId' => (int)$chatId, 'answer' => '', 'reasoning' => '', 'status' => '', 'sources' => [], 'notices' => [], 'images' => [], 'started' => time(), 'updated' => time()];
+		$this->_aiChatLiveWrite(true);
+		// Also when the request ends in an unexpected way, the chat must not keep showing "answering"
+		register_shutdown_function(function () use ($chatId) {
+			$this->live = null;
+			@unlink($this->_aiChatLiveFile($chatId));
+			@unlink($this->_aiChatLiveFile($chatId, 'stop'));
+		});
+	}
+
+	private function _aiChatLiveTrack($event)
+	{
+		switch ($event['type']) {
+			case 'delta':
+				$this->live['answer'] .= $event['content'];
+				$this->live['status'] = '';
+				break;
+			case 'reasoning':
+				$this->live['reasoning'] .= $event['content'];
+				break;
+			case 'status':
+				$this->live['status'] = $event['text'];
+				break;
+			case 'sources':
+				$this->live['sources'] = $event['sources'];
+				break;
+			case 'notice':
+				$this->live['notices'] = $event['notices'];
+				break;
+			case 'image':
+				$this->live['images'][] = $event['image'];
+				$this->live['status'] = '';
+				break;
+			default:
+				return;
+		}
+		$this->_aiChatLiveWrite(in_array($event['type'], ['status', 'sources', 'notice', 'image'], true));
+	}
+
+	private function _aiChatLiveWrite($now = false)
+	{
+		// Text arrives in many small pieces; once a second is enough for someone following along
+		if (!$now && microtime(true) - $this->liveWritten < 1) {
+			return;
+		}
+		$this->liveWritten = microtime(true);
+		$this->live['updated'] = time();
+		$file = $this->_aiChatLiveFile($this->live['chatId']);
+		if (@file_put_contents($file . '.tmp', json_encode($this->live, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) !== false) {
+			@rename($file . '.tmp', $file);
+		}
+	}
+
+	/**
+	 * True once the user pressed stop (from any page); checked at most twice a second
+	 */
+	private function _aiChatLiveStopRequested()
+	{
+		if ($this->live === null || microtime(true) - $this->liveStopChecked < 0.5) {
+			return false;
+		}
+		$this->liveStopChecked = microtime(true);
+		clearstatcache(true, $this->_aiChatLiveFile($this->live['chatId'], 'stop'));
+		if (is_file($this->_aiChatLiveFile($this->live['chatId'], 'stop'))) {
+			return true;
+		}
+		// keep the progress file fresh during long silent steps (thinking without output, slow servers)
+		if (time() - (int)$this->live['updated'] >= 30) {
+			$this->_aiChatLiveWrite(true);
+		}
+		return false;
+	}
+
+	/**
+	 * Stop button: the request generating the answer sees this and stops, keeping what was written so far
+	 */
+	public function _aiChatStop($chatId)
+	{
+		if (!$this->_aiChatFindChat($chatId)) {
+			return false;
+		}
+		if ($this->_aiChatLiveState($chatId)) {
+			@touch($this->_aiChatLiveFile($chatId, 'stop'));
+		}
+		$this->setAPIResponse('success', 'Stopping the answer', 200);
+		return true;
 	}
 
 	/* ===================== web search ===================== */
@@ -2816,9 +2968,18 @@ class AiChat extends Londerland
 			CURLOPT_POST => true,
 			CURLOPT_POSTFIELDS => json_encode($body),
 			CURLOPT_HTTPHEADER => array_merge($this->_aiChatHeaders(), ['Accept: text/event-stream']),
+			// Called about once a second, also while the AI server sends nothing (a model thinking quietly)
+			CURLOPT_NOPROGRESS => false,
+			CURLOPT_XFERINFOFUNCTION => function () use (&$round) {
+				if ($this->_aiChatLiveStopRequested()) {
+					$round['aborted'] = true;
+					return 1;
+				}
+				return 0;
+			},
 			CURLOPT_WRITEFUNCTION => function ($curl, $chunk) use (&$round, &$buffer) {
-				if (connection_aborted()) {
-					// The user pressed stop or closed the page: end the upstream request too
+				// Only the stop button ends an answer: a closed page does not, so the answer is there when the user returns
+				if ($round['aborted'] || $this->_aiChatLiveStopRequested()) {
 					$round['aborted'] = true;
 					return 0;
 				}
@@ -3009,6 +3170,10 @@ class AiChat extends Londerland
 			$this->setAPIResponse('error', 'No model is available. Ask an admin to check the AI Chat settings.', 409);
 			return false;
 		}
+		if ($this->_aiChatLiveState($chatId)) {
+			$this->setAPIResponse('error', 'This chat is still answering. Wait for it, or press stop.', 409);
+			return false;
+		}
 		try {
 			$userMessage = $this->_aiChatPrepareTurn($chat, $data);
 		} catch (InvalidArgumentException $e) {
@@ -3042,6 +3207,8 @@ class AiChat extends Londerland
 		// question shows right away instead of with the first words of the answer
 		echo ':' . str_repeat(' ', 4096) . "\n\n";
 		flush();
+		// The answer is followed through a progress file, so the chat can be closed and reopened while it is written
+		$this->_aiChatLiveStart($chatId);
 		if ($userMessage) {
 			$this->_aiChatSendEvent(['type' => 'user', 'message' => $userMessage]);
 		}
@@ -3096,6 +3263,12 @@ class AiChat extends Londerland
 		$retryEmpty = false;
 		$noToolChoice = false;
 		for ($round = 0; $round <= $toolRounds; $round++) {
+			// stop pressed while a tool ran (web search, reading a page)
+			$this->liveStopChecked = 0;
+			if ($round > 0 && $this->_aiChatLiveStopRequested()) {
+				$aborted = true;
+				break;
+			}
 			$lastRound = $round === $toolRounds;
 			$send = $messages;
 			$notes = [];
@@ -3219,10 +3392,10 @@ class AiChat extends Londerland
 			$meta['searches'] = $searches;
 		}
 		$stored = $this->_aiChatInsertMessage($chatId, 'assistant', trim($answer), $images, $model, $reasoning !== '' ? $reasoning : null, $meta ?: null);
+		$this->_aiChatSendEvent(['type' => 'done', 'message' => $stored]);
 		if ($aborted) {
 			exit;
 		}
-		$this->_aiChatSendEvent(['type' => 'done', 'message' => $stored]);
 		$this->_aiChatFinishTitle($chat, $chatId, $model, null);
 		exit;
 	}
