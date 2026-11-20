@@ -1142,6 +1142,12 @@
 				chat.messages.pop();
 			}
 		}
+		// the question shows right away; the server's copy (with its id) replaces it once it is stored
+		let preview = null;
+		if (!options.regenerate) {
+			const attachments = options.attachments || state.pending.filter((f) => f.id);
+			preview = { id: null, role: 'user', content: content, attachments: attachments, created: new Date().toISOString() };
+		}
 		if (options.editFrom) {
 			body.editFrom = options.editFrom;
 			const index = chat.messages.findIndex((m) => m.id === options.editFrom);
@@ -1154,10 +1160,10 @@
 			state.pending = [];
 			renderPending();
 		}
-		await stream(chat, body);
+		await stream(chat, body, preview);
 	}
 
-	async function stream(chat, body) {
+	async function stream(chat, body, preview) {
 		const $messages = $panel.find('.aichat-messages');
 		if (!chat.messages.length) {
 			$messages.empty();
@@ -1167,6 +1173,13 @@
 		$messages.find('.aichat-message').removeClass('last');
 		$messages.find('.aichat-regenerate').remove();
 		const $answer = $(`<div class="aichat-message assistant last"><div class="aichat-status"></div><div class="aichat-notice-slot"></div><div class="aichat-reasoning-slot"></div><div class="aichat-bubble aichat-markdown"><span class="aichat-typing"><span></span><span></span><span></span></span></div><div class="aichat-generated-list"></div><div class="aichat-sources-slot"></div></div>`);
+		let $preview = null;
+		let questionStored = false;
+		if (preview) {
+			$preview = $(messageHtml(preview, false)).addClass('aichat-preview');
+			$preview.find('.aichat-icon-btn').remove();
+			$messages.append($preview);
+		}
 		$messages.append($answer);
 		scrollToBottom(true);
 		state.controller = new AbortController();
@@ -1239,7 +1252,12 @@
 					const event = JSON.parse(line.slice(5));
 					switch (event.type) {
 						case 'user':
+							questionStored = true;
 							chat.messages.push(event.message);
+							if ($preview) {
+								$preview.remove();
+								$preview = null;
+							}
 							$answer.before(messageHtml(event.message, false));
 							scrollToBottom(true);
 							break;
@@ -1301,6 +1319,11 @@
 		} finally {
 			state.controller = null;
 			updateSendState();
+			// the server refused the question before storing it: give the text back, so it is not lost
+			const $input = $panel.find('.aichat-input');
+			if (preview && !questionStored && preview.content && !trim($input.val())) {
+				$input.val(preview.content).trigger('input');
+			}
 			renderMessages();
 			const index = state.chats.findIndex((c) => c.id === chat.id);
 			if (index >= 0) {
@@ -1937,7 +1960,7 @@
 			if (!text) {
 				return;
 			}
-			send({ content: text, editFrom: msg.id, files: (msg.attachments || []).map((a) => a.id) });
+			send({ content: text, editFrom: msg.id, files: (msg.attachments || []).map((a) => a.id), attachments: msg.attachments || [] });
 		});
 	}
 
