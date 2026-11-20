@@ -2951,6 +2951,11 @@ class AiChat extends Londerland
 		}
 
 		// From here on the response is a live event stream, not Slim's JSON response
+		// Release a PHP session lock (if any) right away: an answer can take minutes, and a held lock would make
+		// every other request from this browser wait for it
+		if (session_status() === PHP_SESSION_ACTIVE) {
+			session_write_close();
+		}
 		set_time_limit(0);
 		ignore_user_abort(true);
 		while (ob_get_level() > 0) {

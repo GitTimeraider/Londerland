@@ -3,17 +3,25 @@
  * OIDC Authentication Routes
  */
 
-// Ensure PHP sessions are started for OIDC state management
-if (session_status() === PHP_SESSION_NONE) {
-	// Configure session cookies for cross-site requests (OIDC redirect flow)
-	session_set_cookie_params([
-		'lifetime' => 600, // 10 minutes for OIDC flow
-		'path' => '/',
-		'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-		'httponly' => true,
-		'samesite' => 'Lax' // Lax allows the session cookie to be sent on top-level navigations
-	]);
-	session_start();
+/**
+ * PHP sessions are only needed during the OIDC login (state, nonce and PKCE verifier), so they are started by the
+ * authorize and callback routes alone. Starting one for every API request would lock that session file for as long as
+ * the request runs, so one long request (such as an AI Chat answer streaming in) held up every other request
+ * from the same browser until it finished.
+ */
+function oidcStartSession()
+{
+	if (session_status() === PHP_SESSION_NONE) {
+		// Configure session cookies for cross-site requests (OIDC redirect flow)
+		session_set_cookie_params([
+			'lifetime' => 600, // 10 minutes for OIDC flow
+			'path' => '/',
+			'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+			'httponly' => true,
+			'samesite' => 'Lax' // Lax allows the session cookie to be sent on top-level navigations
+		]);
+		session_start();
+	}
 }
 
 /**
@@ -40,6 +48,7 @@ $app->get('/oidc/providers', function ($request, $response, $args) {
  * Initiate OIDC authorization flow
  */
 $app->get('/oidc/{provider}/authorize', function ($request, $response, $args) {
+	oidcStartSession();
 	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$provider = $args['provider'] ?? '';
 	if (!$Londerland->loginNetworkCheck()) {
@@ -59,6 +68,7 @@ $app->get('/oidc/{provider}/authorize', function ($request, $response, $args) {
  * OIDC callback handler
  */
 $app->get('/oidc/{provider}/callback', function ($request, $response, $args) {
+	oidcStartSession();
 	$Londerland = ($request->getAttribute('Londerland')) ?? new Londerland();
 	$provider = $args['provider'] ?? '';
 	$params = $request->getQueryParams();
