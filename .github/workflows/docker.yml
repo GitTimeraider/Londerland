@@ -111,10 +111,11 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
-      # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable; a real build
-      # error fails here the same way and stops the job
+      # Also runs when the Docker Hub build failed, which is usually Docker Hub being unreachable
       - name: Build (base images from Google's mirror of Docker Hub)
+        id: build-mirror
         if: steps.build.outcome != 'success'
+        continue-on-error: true
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -125,5 +126,23 @@ jobs:
           build-args: |
             LONDERLAND_COMMIT=${{ github.sha }}
           build-contexts: ${{ steps.mirror.outputs.contexts }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Last try: anonymous pulls from Docker Hub. This is what Dependabot pull requests need most, because they
+      # do not get the repository's Actions secrets (so no Docker Hub login), and Google's mirror only serves
+      # images it has already cached: a base image released that day (such as a new PHP version) answers 429
+      # there. A real build error fails here the same way and stops the job.
+      - name: Build (base images from Docker Hub, without login)
+        if: steps.build.outcome != 'success' && steps.build-mirror.outcome != 'success'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            LONDERLAND_COMMIT=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
