@@ -910,6 +910,17 @@ class Londerland
 		return ($this->config['favIcon'] == '') ? $favicon : $this->config['favIcon'];
 	}
 
+	// Plugins whose front end does something for visitors who are not logged in: PHP Mailer adds "Forgot pwd?" to the
+	// login page and Bookmarks can be a tab the Guest group sees. Only their settings below are sent to guests.
+	public $guestPluginEnabled = ['PHPMAILER', 'BOOKMARK'];
+	public $guestPluginIncludes = ['BOOKMARK'];
+
+	// A visitor who is not logged in (Guest group). False on a fresh install, so the wizard keeps working as before.
+	public function isGuestRequest()
+	{
+		return $this->hasDB() && !$this->qualifyRequest(998);
+	}
+
 	public function pluginGlobalList()
 	{
 		$pluginSearch = '-enabled';
@@ -920,6 +931,15 @@ class Londerland
 		$plugins['includes'] = array_filter($this->config, function ($k) use ($pluginInclude) {
 			return stripos($k, $pluginInclude) !== false;
 		}, ARRAY_FILTER_USE_KEY);
+		if ($this->isGuestRequest()) {
+			// Guests do not need to know which other plugins run, nor their settings (e.g. PHP Mailer's e-mail templates)
+			$plugins = array_filter($plugins, function ($k) {
+				return $k === 'includes' || in_array(explode('-', $k)[0], $this->guestPluginEnabled, true);
+			}, ARRAY_FILTER_USE_KEY);
+			$plugins['includes'] = array_filter($plugins['includes'], function ($k) {
+				return in_array(explode('-', $k)[0], $this->guestPluginIncludes, true);
+			}, ARRAY_FILTER_USE_KEY);
+		}
 		return $plugins;
 	}
 
@@ -4361,7 +4381,8 @@ HTML;
 		// js activeInfo
 		return [
 			'refresh' => $this->refreshList(),
-			'sso' => [
+			// Guests do not get the addresses of the SSO apps (Tautulli, Overseerr, ...): only the admin debug menu reads them
+			'sso' => $this->isGuestRequest() ? [] : [
 				'misc' => [
 					'rememberMe' => $this->config['rememberMe'],
 					'rememberMeDays' => $this->config['rememberMeDays']
