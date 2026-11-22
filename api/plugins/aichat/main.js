@@ -1213,10 +1213,28 @@
 		if (!options.regenerate && !content && !files.length) {
 			return;
 		}
+		// empty the box right away, before anything is awaited: a phone keyboard otherwise writes the word it was
+		// still composing back into the field after it was emptied
+		const clearComposer = !options.regenerate && options.content === undefined;
+		const pendingFiles = state.pending;
+		if (clearComposer) {
+			emptyComposer($input, content);
+			state.pending = [];
+			renderPending();
+		}
 		let chat;
 		try {
 			chat = await ensureChat();
 		} catch (error) {
+			if (clearComposer) {
+				// nothing was sent: give the question back
+				state.composerClearedAt = 0;
+				if (!trim($input.val())) {
+					$input.val(content).trigger('input');
+				}
+				state.pending = pendingFiles;
+				renderPending();
+			}
 			notify(error.message);
 			return;
 		}
@@ -1235,7 +1253,7 @@
 		// the question shows right away; the server's copy (with its id) replaces it once it is stored
 		let preview = null;
 		if (!options.regenerate) {
-			const attachments = options.attachments || state.pending.filter((f) => f.id);
+			const attachments = options.attachments || (clearComposer ? pendingFiles : state.pending).filter((f) => f.id);
 			preview = { id: null, role: 'user', content: content, attachments: attachments, created: new Date().toISOString() };
 		}
 		if (options.editFrom) {
@@ -1245,12 +1263,27 @@
 				chat.messages.splice(index);
 			}
 		}
-		if (!options.regenerate && options.content === undefined) {
-			$input.val('').trigger('input');
-			state.pending = [];
-			renderPending();
-		}
 		await stream(chat, body, preview);
+	}
+
+	/**
+	 * Empties the message box after a question is sent. Phone keyboards (autocorrect, word suggestions) keep the
+	 * word being typed in an unfinished composition; emptying the field does not end it, and the keyboard then
+	 * writes the text back. Taking the focus away first makes the keyboard finish the composition, and for a short
+	 * while afterwards text the keyboard still puts back is removed again.
+	 */
+	function emptyComposer($input, sent) {
+		const el = $input[0];
+		if (!el) {
+			return;
+		}
+		if (touchTyping() && document.activeElement === el) {
+			// also closes the on-screen keyboard, so the answer has the whole screen
+			el.blur();
+		}
+		$input.val('').trigger('input');
+		state.composerClearedAt = Date.now();
+		state.composerSent = sent || '';
 	}
 
 	async function stream(chat, body, preview) {
@@ -1420,6 +1453,7 @@
 			// the server refused the question before storing it: give the text back, so it is not lost
 			const $input = $panel.find('.aichat-input');
 			if (preview && !questionStored && preview.content && !trim($input.val())) {
+				state.composerClearedAt = 0;
 				$input.val(preview.content).trigger('input');
 			}
 			renderMessages();
@@ -2253,7 +2287,16 @@
 		});
 
 		// composer
-		$panel.on('input', '.aichat-composer .aichat-input', function () {
+		$panel.on('input compositionend', '.aichat-composer .aichat-input', function () {
+			// a phone keyboard putting back (part of) the question it just sent: remove it again
+			if (state.composerClearedAt && Date.now() - state.composerClearedAt < 1500) {
+				const value = trim(this.value);
+				if (value && state.composerSent && state.composerSent.endsWith(value)) {
+					this.value = '';
+				}
+			} else {
+				state.composerClearedAt = 0;
+			}
 			this.style.height = 'auto';
 			this.style.height = Math.min(this.scrollHeight, 220) + 'px';
 			updateSendState();
